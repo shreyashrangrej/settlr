@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useRouteContext, useRouter } from '@tanstack/react-router'
+import { useRouteContext, useRouter } from '@tanstack/react-router'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import {
   ArrowLeft,
-  ArrowRight,
   CircleAlert,
-  CircleCheck,
-  Loader2,
   Mail,
   MailCheck,
   ReceiptText,
@@ -23,11 +20,11 @@ import {
 } from '#/components/ui/input-otp'
 import { Label } from '#/components/ui/label'
 import { Separator } from '#/components/ui/separator'
+import { Spinner } from '#/components/ui/spinner'
 import {
   authClient,
   sendEmailOtp,
   signInWithGoogle,
-  signOut,
   verifyEmailOtp,
 } from '#/lib/auth-client'
 import { OTP_LENGTH, emailOtpRequest, emailOtpVerify } from '#/lib/schemas'
@@ -43,7 +40,7 @@ function errorMessage(error: unknown) {
 }
 
 export function LoginForm({ className }: { className?: string }) {
-  const { isAuthenticated, user } = useRouteContext({ from: '__root__' })
+  const { isAuthenticated } = useRouteContext({ from: '__root__' })
   const { data: session } = authClient.useSession()
   const router = useRouter()
   const [step, setStep] = useState<Step>('email')
@@ -115,13 +112,13 @@ export function LoginForm({ className }: { className?: string }) {
 
   const busy = pending !== null
 
+  // Signed in: the home route is redirecting to the dashboard.
   if (isAuthenticated || session) {
     return (
-      <SignedInCard
-        className={className}
-        name={user?.name}
-        email={user?.email ?? session?.user.email}
-      />
+      <Card className={cn('items-center gap-3 px-6 py-10', className)}>
+        <Spinner className="size-5 text-primary" />
+        <p className="text-sm text-muted-foreground">Signing you in…</p>
+      </Card>
     )
   }
 
@@ -174,7 +171,7 @@ export function LoginForm({ className }: { className?: string }) {
               onClick={() => run('google', signInWithGoogle)}
             >
               {pending === 'google' ? (
-                <Loader2 className="animate-spin" />
+                <Spinner />
               ) : (
                 <GoogleLogo />
               )}
@@ -220,7 +217,7 @@ export function LoginForm({ className }: { className?: string }) {
                 className="h-11 w-full text-[0.9375rem]"
                 disabled={busy}
               >
-                {pending === 'send' && <Loader2 className="animate-spin" />}
+                {pending === 'send' && <Spinner />}
                 Email me a code
               </Button>
             </form>
@@ -268,7 +265,7 @@ export function LoginForm({ className }: { className?: string }) {
               className="h-11 w-full text-[0.9375rem]"
               disabled={busy || otp.length < OTP_LENGTH}
             >
-              {pending === 'verify' && <Loader2 className="animate-spin" />}
+              {pending === 'verify' && <Spinner />}
               Verify and sign in
             </Button>
 
@@ -305,78 +302,6 @@ export function LoginForm({ className }: { className?: string }) {
         )}
       </div>
 
-    </Card>
-  )
-}
-
-function SignedInCard({
-  className,
-  name,
-  email,
-}: {
-  className?: string
-  name?: string
-  email?: string
-}) {
-  const router = useRouter()
-  const [pending, setPending] = useState(false)
-
-  async function onSignOut() {
-    setPending(true)
-    try {
-      await signOut()
-      await router.invalidate()
-    } finally {
-      setPending(false)
-    }
-  }
-
-  return (
-    <Card className={cn('gap-6 px-6 py-8 sm:px-8', className)}>
-      <header className="grid gap-4">
-        <span
-          aria-hidden="true"
-          className="grid size-11 place-items-center rounded-xl border bg-background text-primary"
-        >
-          <CircleCheck className="size-5" />
-        </span>
-        <div className="grid gap-1.5">
-          <h2 className="m-0 text-2xl font-bold tracking-tight">
-            {name ? `Hi, ${name}` : 'You’re signed in'}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {email ? (
-              <>
-                Signed in as{' '}
-                <span className="font-medium break-all text-foreground">
-                  {email}
-                </span>
-                .
-              </>
-            ) : (
-              'Welcome back.'
-            )}
-          </p>
-        </div>
-      </header>
-      <div className="grid gap-3">
-        <Button asChild className="h-11 w-full text-[0.9375rem]">
-          <Link to="/dashboard">
-            Open your dashboard
-            <ArrowRight />
-          </Link>
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-10 w-full text-muted-foreground"
-          disabled={pending}
-          onClick={onSignOut}
-        >
-          {pending && <Loader2 className="animate-spin" />}
-          Sign out
-        </Button>
-      </div>
     </Card>
   )
 }

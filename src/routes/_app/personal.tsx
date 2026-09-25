@@ -4,14 +4,38 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, stripSearchParams } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight, Trash2, Wallet } from 'lucide-react'
 
+import { ConfirmAction } from '#/components/confirm-action'
+import { AmountInput, CategorySelect, CurrencySelect } from '#/components/form-fields'
+import { useAction } from '#/components/ledger'
+import { PageHeader, SplitLayout } from '#/components/page-header'
+import { Badge } from '#/components/ui/badge'
+import { Button, buttonVariants } from '#/components/ui/button'
 import {
-  CategorySelect,
-  CurrencySelect,
-  Field,
-} from '#/components/form-fields'
-import { FormError, useAction } from '#/components/ledger'
-import { Button } from '#/components/ui/button'
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '#/components/ui/empty'
+import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from '#/components/ui/item'
+import { Progress, ProgressLabel, ProgressValue } from '#/components/ui/progress'
+import { Spinner } from '#/components/ui/spinner'
 import {
   categoryLabel,
   currentMonth,
@@ -31,6 +55,7 @@ import {
   type Currency,
 } from '#/lib/schemas'
 import type { PersonalMonth } from '#/lib/types'
+import { cn } from '#/lib/utils'
 import { api } from '#convex/_generated/api'
 
 // SSR: full. Your own spending, one month at a time (`?month=2026-09`; no
@@ -58,48 +83,71 @@ function PersonalPage() {
 
   return (
     <>
-      <div className="page-header">
-        <div>
-          <h1>Personal expenses</h1>
-          <p className="muted">Spending that’s just yours, not split with anyone.</p>
+      <PageHeader
+        title="Personal expenses"
+        description="Spending that’s just yours, not split with anyone."
+        actions={
+          <nav className="flex items-center gap-1 rounded-lg border p-1" aria-label="Month">
+            <MonthLink month={shiftMonth(month, -1)} thisMonth={thisMonth} label="Previous month">
+              <ChevronLeft />
+            </MonthLink>
+            <span className="min-w-36 text-center text-sm font-semibold">
+              {formatMonth(month)}
+            </span>
+            <MonthLink month={shiftMonth(month, 1)} thisMonth={thisMonth} label="Next month">
+              <ChevronRight />
+            </MonthLink>
+          </nav>
+        }
+      />
+
+      <SplitLayout aside={<AddExpense month={month} />}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardDescription>Spent in {formatMonth(data.month)}</CardDescription>
+              <CardTitle className="text-3xl font-bold tabular-nums">
+                {data.totals.length === 0
+                  ? '—'
+                  : data.totals.map((t) => formatMoney(t.cents, t.currency)).join(' + ')}
+              </CardTitle>
+              <CardDescription>
+                {data.items.length} expense{data.items.length === 1 ? '' : 's'}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <ByCategory data={data} />
         </div>
-        <nav className="flex items-center gap-1" aria-label="Month">
-          <MonthLink month={shiftMonth(month, -1)} thisMonth={thisMonth} label="Previous month">
-            <ChevronLeft />
-          </MonthLink>
-          <span className="min-w-36 text-center font-semibold">
-            {formatMonth(month)}
-          </span>
-          <MonthLink month={shiftMonth(month, 1)} thisMonth={thisMonth} label="Next month">
-            <ChevronRight />
-          </MonthLink>
-        </nav>
-      </div>
 
-      <div className="group-layout">
-        <section aria-label={`Spending in ${formatMonth(month)}`} className="grid gap-4">
-          <Totals data={data} />
-
-          {data.items.length === 0 ? (
-            <p className="empty">No personal expenses in {formatMonth(month)}.</p>
-          ) : (
-            <ul className="expense-list">
-              {data.items.map((expense) => (
-                <ExpenseRow key={expense.id} expense={expense} />
-              ))}
-            </ul>
-          )}
-          {data.truncated && (
-            <p className="muted text-sm">
-              Showing the first {data.items.length} expenses of this month.
-            </p>
-          )}
-
-          {data.byCategory.length > 0 && <ByCategory data={data} />}
-        </section>
-
-        <AddExpense month={month} />
-      </div>
+        <Card className="py-2">
+          <CardContent className="px-2">
+            {data.items.length === 0 ? (
+              <Empty className="py-10">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Wallet />
+                  </EmptyMedia>
+                  <EmptyTitle>No expenses in {formatMonth(month)}</EmptyTitle>
+                  <EmptyDescription>
+                    Log what you spend to see where it goes.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <ItemGroup>
+                {data.items.map((expense) => (
+                  <ExpenseRow key={expense.id} expense={expense} />
+                ))}
+              </ItemGroup>
+            )}
+          </CardContent>
+        </Card>
+        {data.truncated && (
+          <p className="text-sm text-muted-foreground">
+            Showing the first {data.items.length} expenses of this month.
+          </p>
+        )}
+      </SplitLayout>
     </>
   )
 }
@@ -116,100 +164,91 @@ function MonthLink({
   children: React.ReactNode
 }) {
   return (
-    <Button asChild variant="ghost" size="icon" aria-label={label} title={label}>
-      <Link
-        from={Route.fullPath}
-        search={{ month: month === thisMonth ? '' : month }}
-      >
-        {children}
-      </Link>
-    </Button>
-  )
-}
-
-function Totals({ data }: { data: PersonalMonth }) {
-  return (
-    <div className="card">
-      <p className="muted">Spent in {formatMonth(data.month)}</p>
-      <p className="card__stat">
-        {data.totals.length === 0
-          ? formatMoney(0, 'USD')
-          : data.totals
-              .map((t) => formatMoney(t.cents, t.currency))
-              .join(' + ')}
-      </p>
-      <p className="muted text-sm">
-        {data.items.length} expense{data.items.length === 1 ? '' : 's'}
-      </p>
-    </div>
+    <Link
+      from={Route.fullPath}
+      search={{ month: month === thisMonth ? '' : month }}
+      aria-label={label}
+      title={label}
+      className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}
+    >
+      {children}
+    </Link>
   )
 }
 
 function ByCategory({ data }: { data: PersonalMonth }) {
   const max = Math.max(...data.byCategory.map((r) => r.cents), 1)
   return (
-    <section className="card">
-      <h2>By category</h2>
-      <ul className="bar-list">
-        {data.byCategory.map((row) => (
-          <li key={`${row.currency}:${row.category}`}>
-            <div className="bar-list__label">
-              <span>{categoryLabel(row.category)}</span>
-              <span className="amount">{formatMoney(row.cents, row.currency)}</span>
-            </div>
-            <div className="bar" aria-hidden="true">
-              <span style={{ width: `${(row.cents / max) * 100}%` }} />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <Card>
+      <CardHeader>
+        <CardTitle>By category</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        {data.byCategory.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nothing to show yet.</p>
+        ) : (
+          data.byCategory.slice(0, 5).map((row) => (
+            <Progress key={`${row.currency}:${row.category}`} value={(row.cents / max) * 100}>
+              <ProgressLabel className="text-sm">{categoryLabel(row.category)}</ProgressLabel>
+              <ProgressValue className="ml-auto text-sm font-semibold tabular-nums">
+                {() => formatMoney(row.cents, row.currency)}
+              </ProgressValue>
+            </Progress>
+          ))
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
 function ExpenseRow({ expense }: { expense: PersonalMonth['items'][number] }) {
   const removeExpense = useConvexMutation(api.personal.remove)
-  const { run, pending } = useAction(removeExpense)
+  const { run } = useAction(removeExpense, { success: 'Deleted', toastErrors: true })
 
   return (
-    <li className="expense">
-      <div className="min-w-0">
-        <p className="expense__title truncate">{expense.description}</p>
-        <p className="muted">
-          {formatDate(expense.date)} · {categoryLabel(expense.category)}
-        </p>
-      </div>
-      <div className="expense__side">
-        <span className="amount">
+    <Item>
+      <ItemContent>
+        <ItemTitle>
+          {expense.description}
+          <Badge variant="secondary">{categoryLabel(expense.category)}</Badge>
+        </ItemTitle>
+        <ItemDescription>{formatDate(expense.date)}</ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        <span className="font-semibold tabular-nums">
           {formatMoney(expense.amountCents, expense.currency)}
         </span>
-        <button
-          type="button"
-          className="button button--ghost"
-          disabled={pending}
-          aria-label={`Delete ${expense.description}`}
-          onClick={() => {
-            if (window.confirm(`Delete “${expense.description}”?`)) {
-              void run({ expenseId: expense.id })
-            }
-          }}
-        >
-          <Trash2 className="size-4" />
-        </button>
-      </div>
-    </li>
+        <ConfirmAction
+          title={`Delete “${expense.description}”?`}
+          description="This can’t be undone."
+          onConfirm={async () => Boolean(await run({ expenseId: expense.id }))}
+          trigger={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Delete ${expense.description}`}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 />
+            </Button>
+          }
+        />
+      </ItemActions>
+    </Item>
   )
 }
 
 function AddExpense({ month }: { month: string }) {
   const addExpense = useConvexMutation(api.personal.add)
-  const { run, pending, error, setError } = useAction(addExpense)
+  const [savedTo, setSavedTo] = useState<string | null>(null)
+  const { run, pending, error, setError } = useAction(addExpense, {
+    success: 'Expense added',
+  })
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState<Currency>('USD')
   const [category, setCategory] = useState<Category>('food')
   const [date, setDate] = useState(todayIsoDate)
-  const [savedTo, setSavedTo] = useState<string | null>(null)
 
   // Browser preferences only exist after hydration.
   useEffect(() => setCurrency(readPreferences().defaultCurrency), [])
@@ -242,58 +281,64 @@ function AddExpense({ month }: { month: string }) {
   }
 
   return (
-    <aside className="card" aria-labelledby="add-personal-heading">
-      <form noValidate onSubmit={onSubmit} className="grid gap-3">
-        <h2 id="add-personal-heading" className="m-0 flex items-center gap-2">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
           <Wallet className="size-4 text-primary" aria-hidden="true" />
           Add an expense
-        </h2>
-        <Field label="Description" htmlFor="pe-description">
-          <Input
-            id="pe-description"
-            value={description}
-            maxLength={80}
-            placeholder="Groceries"
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </Field>
-        <div className="grid grid-cols-[1fr_6rem] gap-2">
-          <Field label="Amount" htmlFor="pe-amount">
-            <Input
-              id="pe-amount"
-              inputMode="decimal"
-              value={amount}
-              placeholder="0.00"
-              onChange={(e) => setAmount(e.target.value)}
-            />
-          </Field>
-          <Field label="Currency" htmlFor="pe-currency">
-            <CurrencySelect id="pe-currency" value={currency} onChange={setCurrency} />
-          </Field>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="Category" htmlFor="pe-category">
-            <CategorySelect id="pe-category" value={category} onChange={setCategory} />
-          </Field>
-          <Field label="Date" htmlFor="pe-date">
-            <Input
-              id="pe-date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </Field>
-        </div>
-        <FormError error={error} />
-        {savedTo && (
-          <p className="positive text-sm" role="status">
-            Saved to {savedTo}.
-          </p>
-        )}
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Saving…' : 'Add expense'}
-        </Button>
-      </form>
-    </aside>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form noValidate onSubmit={onSubmit}>
+          <FieldGroup className="gap-4">
+            <Field>
+              <FieldLabel htmlFor="pe-description">Description</FieldLabel>
+              <Input
+                id="pe-description"
+                value={description}
+                maxLength={80}
+                placeholder="Groceries"
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </Field>
+            <div className="grid grid-cols-[1fr_6.5rem] gap-3">
+              <Field>
+                <FieldLabel htmlFor="pe-amount">Amount</FieldLabel>
+                <AmountInput id="pe-amount" value={amount} onChange={setAmount} currency={currency} />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="pe-currency">Currency</FieldLabel>
+                <CurrencySelect id="pe-currency" value={currency} onChange={setCurrency} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field>
+                <FieldLabel htmlFor="pe-category">Category</FieldLabel>
+                <CategorySelect id="pe-category" value={category} onChange={setCategory} />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="pe-date">Date</FieldLabel>
+                <Input
+                  id="pe-date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </Field>
+            </div>
+            {error && <FieldError>{error}</FieldError>}
+            {savedTo && (
+              <p className={cn('text-sm text-positive')} role="status">
+                Saved to {savedTo}.
+              </p>
+            )}
+            <Button type="submit" size="lg" disabled={pending}>
+              {pending && <Spinner />}
+              Add expense
+            </Button>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

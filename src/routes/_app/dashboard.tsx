@@ -1,14 +1,42 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useRouteContext } from '@tanstack/react-router'
-import { ArrowRight, Users, UsersRound, Wallet } from 'lucide-react'
-
 import {
-  Avatar,
-  BalanceText,
-  SignedAmount,
-  sumBalances,
-} from '#/components/ledger'
+  ArrowDownLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Plus,
+  Users,
+  UsersRound,
+  Wallet,
+} from 'lucide-react'
+
+import { PageHeader } from '#/components/page-header'
+import { BalanceText, PersonAvatar, SignedAmount, sumBalances } from '#/components/ledger'
+import { buttonVariants } from '#/components/ui/button'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '#/components/ui/empty'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from '#/components/ui/item'
 import {
   categoryLabel,
   currentMonth,
@@ -17,6 +45,7 @@ import {
   formatMoney,
   formatMonth,
 } from '#/lib/format'
+import { cn } from '#/lib/utils'
 import { api } from '#convex/_generated/api'
 
 const PREVIEW = 5
@@ -57,18 +86,45 @@ function DashboardPage() {
 
   return (
     <>
-      <div className="page-header">
-        <div>
-          <h1>{firstName ? `Hi, ${firstName}` : 'Overview'}</h1>
-          <p className="muted">Everything you share, and everything that’s yours.</p>
-        </div>
-      </div>
+      <PageHeader
+        title={firstName ? `Hi, ${firstName}` : 'Overview'}
+        description="Everything you share, and everything that’s yours."
+        actions={
+          <>
+            <Link
+              to="/personal"
+              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline')}
+            >
+              <Wallet />
+              Log spending
+            </Link>
+            <Link
+              to="/groups/new"
+              className={cn(buttonVariants({ size: 'lg' }), 'no-underline')}
+            >
+              <Plus />
+              New group
+            </Link>
+          </>
+        }
+      />
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <Stat label="You are owed" tone="positive" value={formatBalances(owed)} />
-        <Stat label="You owe" tone="negative" value={formatBalances(owe)} />
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Stat
-          label={`Personal spending, ${formatMonth(month)}`}
+          label="You are owed"
+          icon={<ArrowDownLeft />}
+          tone="positive"
+          value={formatBalances(owed)}
+        />
+        <Stat
+          label="You owe"
+          icon={<ArrowUpRight />}
+          tone="negative"
+          value={formatBalances(owe)}
+        />
+        <Stat
+          label={`Personal spending · ${formatMonth(month)}`}
+          icon={<Wallet />}
           value={personal.totals
             .map((t) => formatMoney(t.cents, t.currency))
             .join(' + ')}
@@ -78,96 +134,76 @@ function DashboardPage() {
       <div className="grid items-start gap-4 lg:grid-cols-3">
         <Section
           title="Friends"
-          icon={<UsersRound className="size-4" />}
+          description="One-on-one balances"
+          icon={<UsersRound />}
           to="/friends"
-          action="All friends"
           empty={friends.length === 0 && 'Add a friend to split one-on-one.'}
         >
-          <ul className="expense-list">
-            {friends.slice(0, PREVIEW).map((friend) => (
-              <li key={friend.id}>
-                <Link
-                  to="/friends/$friendId"
-                  params={{ friendId: friend.id }}
-                  className="expense no-underline hover:bg-muted/40"
-                >
-                  <span className="flex min-w-0 items-center gap-3">
-                    <Avatar name={friend.name} />
-                    <span className="expense__title truncate">{friend.name}</span>
-                  </span>
-                  <span className="text-right text-sm">
-                    <BalanceText balances={friend.balances} />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {friends.slice(0, PREVIEW).map((friend) => (
+            <Item key={friend.id} size="sm" render={<Link to="/friends/$friendId" params={{ friendId: friend.id }} />}>
+              <ItemMedia>
+                <PersonAvatar name={friend.name} size="sm" />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>{friend.name}</ItemTitle>
+              </ItemContent>
+              <ItemActions className="text-right text-xs">
+                <BalanceText balances={friend.balances} />
+              </ItemActions>
+            </Item>
+          ))}
         </Section>
 
         <Section
           title="Groups"
-          icon={<Users className="size-4" />}
+          description="Trips, flats and dinners"
+          icon={<Users />}
           to="/groups"
-          action="All groups"
           empty={groups.length === 0 && 'Start a group for a trip or a flat.'}
         >
-          <ul className="expense-list">
-            {groups.slice(0, PREVIEW).map((group) => (
-              <li key={group.id}>
-                <Link
-                  to="/groups/$groupId"
-                  params={{ groupId: group.id }}
-                  className="expense no-underline hover:bg-muted/40"
-                >
-                  <span className="min-w-0">
-                    <span className="expense__title block truncate">{group.name}</span>
-                    <span className="muted block text-sm">
-                      {group.memberCount} members ·{' '}
-                      {formatMoney(group.totalCents, group.currency)} total
-                    </span>
-                  </span>
-                  {group.myNetCents === 0 ? (
-                    <span className="muted text-sm">Square</span>
-                  ) : (
-                    <SignedAmount
-                      cents={group.myNetCents}
-                      currency={group.currency}
-                      className="text-sm"
-                    />
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {groups.slice(0, PREVIEW).map((group) => (
+            <Item key={group.id} size="sm" render={<Link to="/groups/$groupId" params={{ groupId: group.id }} />}>
+              <ItemContent>
+                <ItemTitle>{group.name}</ItemTitle>
+                <ItemDescription>
+                  {group.memberCount} members ·{' '}
+                  {formatMoney(group.totalCents, group.currency)} total
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions className="text-xs">
+                {group.myNetCents === 0 ? (
+                  <span className="text-muted-foreground">Square</span>
+                ) : (
+                  <SignedAmount cents={group.myNetCents} currency={group.currency} />
+                )}
+              </ItemActions>
+            </Item>
+          ))}
         </Section>
 
         <Section
           title="Personal"
-          icon={<Wallet className="size-4" />}
+          description={formatMonth(month)}
+          icon={<Wallet />}
           to="/personal"
-          action="All personal expenses"
           empty={
             personal.items.length === 0 &&
             `No personal expenses in ${formatMonth(month)} yet.`
           }
         >
-          <ul className="expense-list">
-            {personal.items.slice(0, PREVIEW).map((expense) => (
-              <li key={expense.id} className="expense">
-                <span className="min-w-0">
-                  <span className="expense__title block truncate">
-                    {expense.description}
-                  </span>
-                  <span className="muted block text-sm">
-                    {formatDate(expense.date)} · {categoryLabel(expense.category)}
-                  </span>
-                </span>
-                <span className="amount text-sm">
-                  {formatMoney(expense.amountCents, expense.currency)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {personal.items.slice(0, PREVIEW).map((expense) => (
+            <Item key={expense.id} size="sm">
+              <ItemContent>
+                <ItemTitle>{expense.description}</ItemTitle>
+                <ItemDescription>
+                  {formatDate(expense.date)} · {categoryLabel(expense.category)}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions className="font-semibold tabular-nums">
+                {formatMoney(expense.amountCents, expense.currency)}
+              </ItemActions>
+            </Item>
+          ))}
         </Section>
       </div>
     </>
@@ -177,55 +213,89 @@ function DashboardPage() {
 function Stat({
   label,
   value,
+  icon,
   tone,
 }: {
   label: string
   value: string
+  icon: React.ReactNode
   tone?: 'positive' | 'negative'
 }) {
   return (
-    <div className="card">
-      <p className="muted text-sm">{label}</p>
-      <p className={`card__stat ${value ? (tone ?? '') : 'muted'}`}>
-        {value || '—'}
-      </p>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardDescription>{label}</CardDescription>
+        <CardAction
+          className={cn(
+            'grid size-8 place-items-center rounded-lg bg-muted text-muted-foreground [&_svg]:size-4',
+            tone === 'positive' && 'bg-positive/15 text-positive',
+            tone === 'negative' && 'bg-destructive/15 text-destructive',
+          )}
+        >
+          {icon}
+        </CardAction>
+        <CardTitle
+          className={cn(
+            'text-2xl font-bold tabular-nums',
+            !value && 'text-muted-foreground',
+            value && tone === 'positive' && 'text-positive',
+            value && tone === 'negative' && 'text-destructive',
+          )}
+        >
+          {value || '—'}
+        </CardTitle>
+      </CardHeader>
+    </Card>
   )
 }
 
 function Section({
   title,
+  description,
   icon,
   to,
-  action,
   empty,
   children,
 }: {
   title: string
+  description: string
   icon: React.ReactNode
   to: '/friends' | '/groups' | '/personal'
-  action: string
   empty: string | false
   children: React.ReactNode
 }) {
   return (
-    <section className="grid gap-3" aria-labelledby={`${title}-heading`}>
-      <div className="flex items-center justify-between gap-2">
-        <h2 id={`${title}-heading`} className="m-0 flex items-center gap-2">
-          <span className="grid size-7 place-items-center rounded-lg bg-primary/15 text-primary">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <span className="grid size-7 place-items-center rounded-lg bg-primary/15 text-primary [&_svg]:size-4">
             {icon}
           </span>
           {title}
-        </h2>
-        <Link
-          to={to}
-          className="group inline-flex items-center gap-1 text-sm font-medium text-primary no-underline hover:underline"
-        >
-          {action}
-          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-        </Link>
-      </div>
-      {empty ? <p className="empty">{empty}</p> : children}
-    </section>
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+        <CardAction>
+          <Link
+            to={to}
+            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'no-underline')}
+          >
+            View all
+            <ArrowRight />
+          </Link>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="px-2">
+        {empty ? (
+          <Empty className="py-6">
+            <EmptyHeader>
+              <EmptyTitle className="text-sm font-medium">Nothing here yet</EmptyTitle>
+              <EmptyDescription>{empty}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <ItemGroup>{children}</ItemGroup>
+        )}
+      </CardContent>
+    </Card>
   )
 }

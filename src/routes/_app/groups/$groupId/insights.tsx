@@ -1,6 +1,30 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { ChartColumn } from 'lucide-react'
 
 import { useGroup } from '#/components/use-group'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '#/components/ui/empty'
+import { Progress, ProgressLabel, ProgressValue } from '#/components/ui/progress'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '#/components/ui/table'
 import { categoryLabel } from '#/lib/format'
 import type { Group } from '#/lib/types'
 
@@ -21,7 +45,17 @@ function InsightsPage() {
   if (!group) return null
 
   if (group.totalCents === 0) {
-    return <p className="empty">Add some expenses to see insights.</p>
+    return (
+      <Empty className="border border-dashed">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <ChartColumn />
+          </EmptyMedia>
+          <EmptyTitle>No insights yet</EmptyTitle>
+          <EmptyDescription>Add some expenses to see where the money goes.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    )
   }
 
   // The browser's default locale as resolved by Intl. Safe here because this
@@ -33,46 +67,47 @@ function InsightsPage() {
     currency: group.currency,
   })
   const format = (cents: number) => money.format(cents / 100)
+  const monthFormat = new Intl.DateTimeFormat(locale, {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
 
   return (
-    <div className="insights">
-      <section className="card">
-        <p className="muted">Total spent</p>
-        <p className="card__stat">{format(group.totalCents)}</p>
-        {group.lastExpenseAt && (
-          <p className="muted">
-            Last expense added {relativeTime(group.lastExpenseAt, locale)}
-          </p>
-        )}
-      </section>
+    <div className="grid gap-4 md:grid-cols-2">
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardDescription>Total spent</CardDescription>
+          <CardTitle className="text-3xl font-bold tabular-nums">
+            {format(group.totalCents)}
+          </CardTitle>
+          {group.lastExpenseAt && (
+            <CardDescription>
+              Last expense added {relativeTime(group.lastExpenseAt, locale)}
+            </CardDescription>
+          )}
+        </CardHeader>
+      </Card>
 
-      <section className="card">
-        <h2>By category</h2>
-        <BarList
-          rows={group.byCategory.map((row) => ({
-            key: row.category,
-            label: categoryLabel(row.category),
-            value: row.cents,
-          }))}
-          format={format}
-        />
-      </section>
+      <BarCard
+        title="By category"
+        rows={group.byCategory.map((row) => ({
+          key: row.category,
+          label: categoryLabel(row.category),
+          value: row.cents,
+        }))}
+        format={format}
+      />
 
-      <section className="card">
-        <h2>By month</h2>
-        <BarList
-          rows={group.byMonth.map((row) => ({
-            key: row.month,
-            label: new Intl.DateTimeFormat(locale, {
-              month: 'long',
-              year: 'numeric',
-              timeZone: 'UTC',
-            }).format(new Date(`${row.month}-01T00:00:00Z`)),
-            value: row.cents,
-          }))}
-          format={format}
-        />
-      </section>
+      <BarCard
+        title="By month"
+        rows={group.byMonth.map((row) => ({
+          key: row.month,
+          label: monthFormat.format(new Date(`${row.month}-01T00:00:00Z`)),
+          value: row.cents,
+        }))}
+        format={format}
+      />
 
       <MemberShares group={group} format={format} />
     </div>
@@ -87,55 +122,65 @@ function MemberShares({
   format: (cents: number) => string
 }) {
   return (
-    <section className="card">
-      <h2>Paid vs. share</h2>
-      <table className="table">
-        <thead>
-          <tr>
-            <th scope="col">Member</th>
-            <th scope="col">Paid</th>
-            <th scope="col">Share</th>
-          </tr>
-        </thead>
-        <tbody>
-          {group.members.map((m) => (
-            <tr key={m.id}>
-              <th scope="row">
-                {m.name}
-                {m.id === group.meMemberId && ' (you)'}
-              </th>
-              <td>{format(m.paidCents)}</td>
-              <td>{format(m.owedCents)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
+    <Card className="md:col-span-2">
+      <CardHeader>
+        <CardTitle>Paid vs. share</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Member</TableHead>
+              <TableHead className="text-right">Paid</TableHead>
+              <TableHead className="text-right">Share</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {group.members.map((m) => (
+              <TableRow key={m.id}>
+                <TableCell className="font-medium">
+                  {m.name}
+                  {m.id === group.meMemberId && (
+                    <span className="text-muted-foreground"> (you)</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">{format(m.paidCents)}</TableCell>
+                <TableCell className="text-right tabular-nums">{format(m.owedCents)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   )
 }
 
-function BarList({
+function BarCard({
+  title,
   rows,
   format,
 }: {
+  title: string
   rows: Array<{ key: string; label: string; value: number }>
   format: (cents: number) => string
 }) {
   const max = Math.max(...rows.map((r) => r.value), 1)
   return (
-    <ul className="bar-list">
-      {rows.map((row) => (
-        <li key={row.key}>
-          <div className="bar-list__label">
-            <span>{row.label}</span>
-            <span className="amount">{format(row.value)}</span>
-          </div>
-          <div className="bar" aria-hidden="true">
-            <span style={{ width: `${(row.value / max) * 100}%` }} />
-          </div>
-        </li>
-      ))}
-    </ul>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        {rows.map((row) => (
+          <Progress key={row.key} value={(row.value / max) * 100}>
+            <ProgressLabel className="text-sm">{row.label}</ProgressLabel>
+            <ProgressValue className="ml-auto text-sm font-semibold tabular-nums">
+              {() => format(row.value)}
+            </ProgressValue>
+          </Progress>
+        ))}
+      </CardContent>
+    </Card>
   )
 }
 

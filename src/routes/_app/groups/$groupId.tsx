@@ -6,13 +6,32 @@ import {
   notFound,
   useNavigate,
 } from '@tanstack/react-router'
-import { Trash2 } from 'lucide-react'
+import { ArrowRight, ChartColumn, Plus, Receipt, Trash2 } from 'lucide-react'
 
-import { FormError, useAction } from '#/components/ledger'
+import { ConfirmAction } from '#/components/confirm-action'
+import { PersonAvatar, SignedAmount, useAction } from '#/components/ledger'
+import { PageHeader, SplitLayout } from '#/components/page-header'
 import { useGroup } from '#/components/use-group'
-import { Button } from '#/components/ui/button'
+import { Badge } from '#/components/ui/badge'
+import { Button, buttonVariants } from '#/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '#/components/ui/empty'
+import { Separator } from '#/components/ui/separator'
+import { tabsListVariants } from '#/components/ui/tabs'
 import { formatMoney, memberName } from '#/lib/format'
 import type { Group } from '#/lib/types'
+import { cn } from '#/lib/utils'
 import { api } from '#convex/_generated/api'
 
 // SSR: full. The group (members, balances and the settle-up plan are kept
@@ -32,62 +51,82 @@ export const Route = createFileRoute('/_app/groups/$groupId')({
   component: GroupLayout,
 })
 
+// Route links styled like shadcn's TabsList/TabsTrigger.
+const tabLink =
+  'inline-flex h-full items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted-foreground no-underline transition-colors hover:text-foreground data-[status=active]:bg-background data-[status=active]:text-foreground data-[status=active]:shadow-sm dark:data-[status=active]:bg-input/30 [&_svg]:size-4'
+
 function GroupLayout() {
   const group = useGroup()
 
   // Deleted while open (here or in another tab).
   if (!group) {
     return (
-      <p className="empty">
-        This group was deleted. <Link to="/groups">Back to groups</Link>
-      </p>
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>This group was deleted</EmptyTitle>
+          <EmptyDescription>
+            <Link to="/groups">Back to groups</Link>
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     )
   }
 
   return (
     <>
-      <div className="page-header">
-        <div>
-          <p className="eyebrow">
-            <Link to="/groups">Groups</Link> /
-          </p>
-          <h1>{group.name}</h1>
-          <p className="muted">
-            {group.members.map((m) => m.name).join(', ')} · {group.currency}
-          </p>
-        </div>
-        <Link
-          to="/groups/$groupId/expenses/new"
-          params={{ groupId: group.id }}
-          className="button button--primary"
+      <PageHeader
+        eyebrow={<Link to="/groups">Groups</Link>}
+        title={
+          <span className="flex items-center gap-3">
+            {group.name}
+            <Badge variant="secondary">{group.currency}</Badge>
+          </span>
+        }
+        description={`${group.members.length} members · ${formatMoney(group.totalCents, group.currency)} spent`}
+        actions={
+          <Link
+            to="/groups/$groupId/expenses/new"
+            params={{ groupId: group.id }}
+            className={cn(buttonVariants({ size: 'lg' }), 'no-underline')}
+          >
+            <Plus />
+            Add expense
+          </Link>
+        }
+      />
+
+      <SplitLayout
+        aside={
+          <>
+            <Balances group={group} />
+            <DeleteGroup group={group} />
+          </>
+        }
+      >
+        <nav
+          aria-label="Group sections"
+          className={cn(tabsListVariants(), 'h-9 bg-muted')}
         >
-          Add expense
-        </Link>
-      </div>
-
-      <div className="group-layout">
-        <section>
-          <nav className="tabs" aria-label="Group sections">
-            <Link
-              to="/groups/$groupId"
-              params={{ groupId: group.id }}
-              activeOptions={{ exact: true, includeSearch: false }}
-            >
-              Expenses
-            </Link>
-            <Link to="/groups/$groupId/insights" params={{ groupId: group.id }}>
-              Insights
-            </Link>
-          </nav>
-          <Outlet />
-        </section>
-
-        <aside className="card" aria-labelledby="balances-heading">
-          <h2 id="balances-heading">Balances</h2>
-          <Balances group={group} />
-          <DeleteGroup group={group} />
-        </aside>
-      </div>
+          <Link
+            to="/groups/$groupId"
+            params={{ groupId: group.id }}
+            activeOptions={{ exact: true, includeSearch: false }}
+            className={tabLink}
+          >
+            <Receipt />
+            Expenses
+          </Link>
+          <Link
+            to="/groups/$groupId/insights"
+            params={{ groupId: group.id }}
+            className={tabLink}
+          >
+            <ChartColumn />
+            Insights
+          </Link>
+        </nav>
+        <Outlet />
+      </SplitLayout>
     </>
   )
 }
@@ -95,76 +134,86 @@ function GroupLayout() {
 function Balances({ group }: { group: Group }) {
   const name = (id: string) =>
     id === group.meMemberId ? 'You' : memberName(group.members, id)
-  const money = (cents: number) => formatMoney(cents, group.currency)
 
   return (
-    <>
-      <ul className="balance-list">
-        {group.members.map((m) => (
-          <li key={m.id}>
-            <span>
-              {m.name}
-              {m.id === group.meMemberId && <span className="muted"> (you)</span>}
-            </span>
-            <span
-              className={
-                m.netCents > 0 ? 'positive' : m.netCents < 0 ? 'negative' : 'muted'
-              }
-            >
-              {m.netCents > 0 ? '+' : ''}
-              {money(m.netCents)}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      <h3>Settle up</h3>
-      {group.settlements.length === 0 ? (
-        <p className="muted">Everyone is square.</p>
-      ) : (
-        <ul className="settlement-list">
-          {group.settlements.map((s) => (
-            <li key={`${s.from}-${s.to}`}>
-              <strong>{name(s.from)}</strong>{' '}
-              {s.from === group.meMemberId ? 'pay' : 'pays'}{' '}
-              <strong>
-                {s.to === group.meMemberId ? 'you' : name(s.to)}
-              </strong>{' '}
-              <span className="amount">{money(s.amountCents)}</span>
+    <Card>
+      <CardHeader>
+        <CardTitle>Balances</CardTitle>
+        <CardDescription>Paid minus share, per member.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <ul className="grid gap-2.5">
+          {group.members.map((m) => (
+            <li key={m.id} className="flex items-center gap-2.5 text-sm">
+              <PersonAvatar name={m.name} size="sm" />
+              <span className="min-w-0 flex-1 truncate">
+                {m.name}
+                {m.id === group.meMemberId && (
+                  <span className="text-muted-foreground"> (you)</span>
+                )}
+              </span>
+              <SignedAmount cents={m.netCents} currency={group.currency} />
             </li>
           ))}
         </ul>
-      )}
-    </>
+
+        <Separator />
+
+        <div className="grid gap-2">
+          <h3 className="m-0 text-sm font-semibold">Settle up</h3>
+          {group.settlements.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Everyone is square.</p>
+          ) : (
+            <ul className="grid gap-2">
+              {group.settlements.map((s) => (
+                <li
+                  key={`${s.from}-${s.to}`}
+                  className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-2 text-sm"
+                >
+                  <span className="font-medium">{name(s.from)}</span>
+                  <ArrowRight className="size-3.5 text-muted-foreground" aria-label="pays" />
+                  <span className="font-medium">
+                    {s.to === group.meMemberId ? 'you' : name(s.to)}
+                  </span>
+                  <span className="ml-auto font-semibold tabular-nums">
+                    {formatMoney(s.amountCents, group.currency)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
 function DeleteGroup({ group }: { group: Group }) {
   const removeGroup = useConvexMutation(api.groups.remove)
   const navigate = useNavigate()
-  const { run, pending, error } = useAction(removeGroup)
+  const { run } = useAction(removeGroup, {
+    success: 'Group deleted',
+    toastErrors: true,
+  })
 
   return (
-    <div className="mt-5 grid gap-2 border-t pt-4">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="justify-self-start text-muted-foreground hover:text-destructive"
-        disabled={pending}
-        onClick={async () => {
-          if (!window.confirm(`Delete “${group.name}” and all its expenses?`)) {
-            return
-          }
-          if (await run({ groupId: group.id })) {
-            await navigate({ to: '/groups' })
-          }
-        }}
-      >
-        <Trash2 />
-        Delete group
-      </Button>
-      <FormError error={error} />
-    </div>
+    <ConfirmAction
+      title={`Delete “${group.name}”?`}
+      description="This deletes the group and all of its expenses. It can’t be undone."
+      onConfirm={async () => {
+        if (!(await run({ groupId: group.id }))) return false
+        await navigate({ to: '/groups' })
+        return true
+      }}
+      trigger={
+        <Button
+          variant="ghost"
+          className="justify-self-start text-muted-foreground hover:text-destructive"
+        >
+          <Trash2 />
+          Delete group
+        </Button>
+      }
+    />
   )
 }

@@ -1,12 +1,13 @@
-import { Link, createFileRoute, useRouteContext } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 import { LoginForm } from '#/components/login-form'
-import { Button } from '#/components/ui/button'
 
-// SSR: full. The landing hero: no loader, fully rendered HTML. Signed-in
-// visitors get shortcuts into the app instead of the sign-in form.
+// SSR: full. The landing hero and sign-in form: no loader, fully rendered
+// HTML. Signed-in visitors go straight to their dashboard.
 export const Route = createFileRoute('/')({
+  beforeLoad: ({ context }) => {
+    if (context.isAuthenticated) throw redirect({ to: '/dashboard' })
+  },
   head: () => ({
     meta: [{ title: 'Settlr · Split costs. Stay friends.' }],
   }),
@@ -14,8 +15,6 @@ export const Route = createFileRoute('/')({
 })
 
 function HomePage() {
-  const { isAuthenticated } = useRouteContext({ from: '__root__' })
-
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero__copy">
@@ -28,24 +27,6 @@ function HomePage() {
           Settlr keeps one shared tab for trips, flats and dinners, then works
           out the fewest payments to get everyone square.
         </p>
-        {isAuthenticated && (
-          <div className="hero__actions">
-            <Button asChild size="lg" className="group h-11 px-5 text-base">
-              <Link to="/dashboard">
-                Open your dashboard
-                <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="h-11 bg-background px-5 text-base dark:bg-background"
-            >
-              <Link to="/groups/new">Start a group</Link>
-            </Button>
-          </div>
-        )}
         <ul className="hero__facts">
           <li>Fair to the cent</li>
           <li>Six currencies</li>

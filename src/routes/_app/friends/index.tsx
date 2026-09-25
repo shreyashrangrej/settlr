@@ -2,18 +2,47 @@ import { useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { UserPlus } from 'lucide-react'
+import { ChevronRight, UserPlus, UsersRound } from 'lucide-react'
 
+import { PageHeader, SplitLayout } from '#/components/page-header'
 import {
-  Avatar,
   BalanceText,
-  FormError,
+  PersonAvatar,
   sumBalances,
   useAction,
 } from '#/components/ledger'
 import { Button } from '#/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '#/components/ui/empty'
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
-import { Label } from '#/components/ui/label'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from '#/components/ui/item'
+import { Spinner } from '#/components/ui/spinner'
 import { formatBalances } from '#/lib/format'
 import { addFriendInput } from '#/lib/schemas'
 import { api } from '#convex/_generated/api'
@@ -33,65 +62,74 @@ function FriendsPage() {
 
   return (
     <>
-      <div className="page-header">
-        <div>
-          <h1>Friends</h1>
-          <p className="muted">
-            One-on-one expenses and settle-ups, outside any group.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Friends"
+        description="One-on-one expenses and settle-ups, outside any group."
+      />
 
-      <div className="group-layout">
-        <section aria-label="Your friends" className="grid gap-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="card">
-              <p className="muted">You are owed</p>
-              <p className="card__stat positive">
+      <SplitLayout aside={<AddFriend />}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card size="sm">
+            <CardHeader>
+              <CardDescription>Friends owe you</CardDescription>
+              <CardTitle className="text-2xl font-bold text-positive tabular-nums">
                 {formatBalances(owed) || '—'}
-              </p>
-            </div>
-            <div className="card">
-              <p className="muted">You owe</p>
-              <p className="card__stat negative">{formatBalances(owe) || '—'}</p>
-            </div>
-          </div>
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card size="sm">
+            <CardHeader>
+              <CardDescription>You owe friends</CardDescription>
+              <CardTitle className="text-2xl font-bold text-destructive tabular-nums">
+                {formatBalances(owe) || '—'}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
 
-          {friends.length === 0 ? (
-            <p className="empty">
-              No friends yet. Add someone to start tracking what you owe each
-              other.
-            </p>
-          ) : (
-            <ul className="expense-list">
-              {friends.map((friend) => (
-                <li key={friend.id}>
-                  <Link
-                    to="/friends/$friendId"
-                    params={{ friendId: friend.id }}
-                    className="expense no-underline hover:bg-muted/40"
+        {friends.length === 0 ? (
+          <Empty className="border border-dashed">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <UsersRound />
+              </EmptyMedia>
+              <EmptyTitle>No friends yet</EmptyTitle>
+              <EmptyDescription>
+                Add someone to start tracking what you owe each other.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <Card className="py-2">
+            <CardContent className="px-2">
+              <ItemGroup>
+                {friends.map((friend) => (
+                  <Item
+                    key={friend.id}
+                    render={
+                      <Link to="/friends/$friendId" params={{ friendId: friend.id }} />
+                    }
                   >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <Avatar name={friend.name} />
-                      <div className="min-w-0">
-                        <p className="expense__title truncate">{friend.name}</p>
-                        {friend.email && (
-                          <p className="muted truncate">{friend.email}</p>
-                        )}
-                      </div>
-                    </div>
-                    <span className="text-right text-sm">
+                    <ItemMedia>
+                      <PersonAvatar name={friend.name} />
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>{friend.name}</ItemTitle>
+                      {friend.email && (
+                        <ItemDescription>{friend.email}</ItemDescription>
+                      )}
+                    </ItemContent>
+                    <ItemActions className="text-right text-sm">
                       <BalanceText balances={friend.balances} />
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <AddFriend />
-      </div>
+                      <ChevronRight className="size-4 text-muted-foreground" />
+                    </ItemActions>
+                  </Item>
+                ))}
+              </ItemGroup>
+            </CardContent>
+          </Card>
+        )}
+      </SplitLayout>
     </>
   )
 }
@@ -101,7 +139,9 @@ function AddFriend() {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const { run, pending, error, setError } = useAction(createFriend)
+  const { run, pending, error, setError } = useAction(createFriend, {
+    success: 'Friend added',
+  })
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -120,41 +160,49 @@ function AddFriend() {
   }
 
   return (
-    <aside className="card" aria-labelledby="add-friend-heading">
-      <form noValidate onSubmit={onSubmit} className="grid gap-4">
-        <h2 id="add-friend-heading" className="m-0 flex items-center gap-2">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
           <UserPlus className="size-4 text-primary" aria-hidden="true" />
           Add a friend
-        </h2>
-        <div className="grid gap-2">
-          <Label htmlFor="friend-name">Name</Label>
-          <Input
-            id="friend-name"
-            value={name}
-            maxLength={60}
-            placeholder="Priya Shah"
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="friend-email">
-            Email{' '}
-            <span className="font-normal text-muted-foreground">(optional)</span>
-          </Label>
-          <Input
-            id="friend-email"
-            type="email"
-            value={email}
-            maxLength={254}
-            placeholder="priya@example.com"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <FormError error={error} />
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Adding…' : 'Add friend'}
-        </Button>
-      </form>
-    </aside>
+        </CardTitle>
+        <CardDescription>They don’t need a Settlr account.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form noValidate onSubmit={onSubmit}>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="friend-name">Name</FieldLabel>
+              <Input
+                id="friend-name"
+                value={name}
+                maxLength={60}
+                placeholder="Priya Shah"
+                onChange={(e) => setName(e.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="friend-email">
+                Email
+                <span className="font-normal text-muted-foreground">(optional)</span>
+              </FieldLabel>
+              <Input
+                id="friend-email"
+                type="email"
+                value={email}
+                maxLength={254}
+                placeholder="priya@example.com"
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </Field>
+            {error && <FieldError>{error}</FieldError>}
+            <Button type="submit" size="lg" disabled={pending}>
+              {pending && <Spinner />}
+              Add friend
+            </Button>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

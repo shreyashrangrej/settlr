@@ -3,7 +3,9 @@
 Split shared expenses with friends, flatmates or trips, and settle up with the
 fewest payments. Built with [TanStack Start](https://tanstack.com/start)
 (React, file-based TanStack Router, Vite, Nitro), [Convex](https://convex.dev)
-for data and [Better Auth](https://better-auth.com) for sign-in.
+for data, [Better Auth](https://better-auth.com) for sign-in and
+[shadcn/ui](https://ui.shadcn.com) on [Base UI](https://base-ui.com) for the
+interface.
 
 ```bash
 pnpm install
@@ -46,7 +48,7 @@ src/
   server/                  server-only code (Better Auth proxy and token)
   lib/                     isomorphic code: zod schemas, types, formatting,
                            client-only preferences
-  components/              shared UI (shadcn/ui in components/ui)
+  components/              app components; shadcn/ui (Base UI) in components/ui
   start.ts                 global request middleware (CSRF)
   router.tsx               router, TanStack Query and Convex clients
 ```

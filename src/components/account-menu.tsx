@@ -1,20 +1,30 @@
 import { useState } from 'react'
 import { useRouteContext, useRouter } from '@tanstack/react-router'
-import { LogOut } from 'lucide-react'
+import { LayoutDashboard, LogOut, Settings } from 'lucide-react'
+import { toast } from 'sonner'
 
+import { PersonAvatar } from '#/components/ledger'
 import { Button } from '#/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
 import { signOut } from '#/lib/auth-client'
 
-// Signed-in user and sign-out, in the header. Renders nothing when signed
-// out; the sign-in form lives on the home page. The user comes from route
-// context, so the server and first client render agree.
+// The signed-in user's avatar in the header, opening a menu with their
+// details, shortcuts and sign-out. Renders nothing when signed out. The user
+// comes from route context, so the server and first client render agree.
 export function AccountMenu() {
   const { user } = useRouteContext({ from: '__root__' })
   const router = useRouter()
   const [pending, setPending] = useState(false)
 
   if (!user) return null
-
   const label = user.name || user.email
 
   async function onSignOut() {
@@ -23,35 +33,62 @@ export function AccountMenu() {
       await signOut()
       await router.invalidate()
       await router.navigate({ to: '/' })
+    } catch {
+      toast.error('Couldn’t sign out. Try again.')
     } finally {
       setPending(false)
     }
   }
 
   return (
-    <div className="ml-1 flex items-center gap-2 border-l pl-3">
-      <span
-        aria-hidden="true"
-        className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/15 text-sm font-semibold text-primary uppercase"
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-lg"
+            className="rounded-full"
+            aria-label="Account menu"
+          />
+        }
       >
-        {label.charAt(0)}
-      </span>
-      <span
-        className="hidden max-w-44 truncate text-sm text-muted-foreground md:inline"
-        title={user.name ? user.email : undefined}
-      >
-        {label}
-      </span>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onSignOut}
-        disabled={pending}
-        aria-label="Sign out"
-        title="Sign out"
-      >
-        <LogOut />
-      </Button>
-    </div>
+        <PersonAvatar name={label} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex items-center gap-2.5 py-2 text-foreground">
+            <PersonAvatar name={label} />
+            <span className="grid min-w-0">
+              {user.name && (
+                <span className="truncate text-sm font-semibold">{user.name}</span>
+              )}
+              <span className="truncate text-xs font-normal text-muted-foreground">
+                {user.email}
+              </span>
+            </span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => router.navigate({ to: '/dashboard' })}>
+            <LayoutDashboard />
+            Overview
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.navigate({ to: '/settings' })}>
+            <Settings />
+            Settings
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant="destructive"
+          disabled={pending}
+          onClick={onSignOut}
+        >
+          <LogOut />
+          Log out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 
+import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 
 // The signed-in area's sections. The header shows them on wide screens and
@@ -15,14 +16,21 @@ export function AppTabs({ className }: { className?: string }) {
   return (
     <nav
       aria-label="Sections"
-      className={cn('-mx-1 flex gap-1 overflow-x-auto pb-1', className)}
+      className={cn(
+        '-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none]',
+        className,
+      )}
     >
       {APP_SECTIONS.map((section) => (
         <Link
           key={section.to}
           to={section.to}
           activeOptions={{ exact: section.exact }}
-          className="shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium text-muted-foreground no-underline data-[status=active]:border-primary data-[status=active]:bg-primary data-[status=active]:text-primary-foreground"
+          className={cn(
+            buttonVariants({ variant: 'outline' }),
+            // Repeated under dark: to beat the outline variant's dark styles.
+            'shrink-0 rounded-full px-3.5 no-underline data-[status=active]:border-primary data-[status=active]:bg-primary data-[status=active]:text-primary-foreground dark:data-[status=active]:border-primary dark:data-[status=active]:bg-primary',
+          )}
         >
           {section.label}
         </Link>

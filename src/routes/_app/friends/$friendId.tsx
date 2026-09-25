@@ -10,15 +10,44 @@ import {
 } from '@tanstack/react-router'
 import { HandCoins, Receipt, Trash2 } from 'lucide-react'
 
-import { Avatar, BalanceText, FormError, useAction } from '#/components/ledger'
-import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
-import { NativeSelect } from '#/components/ui/native-select'
+import { ConfirmAction } from '#/components/confirm-action'
 import {
+  AmountInput,
   CategorySelect,
   CurrencySelect,
-  Field,
+  SelectField,
 } from '#/components/form-fields'
+import { BalanceText, PersonAvatar, useAction } from '#/components/ledger'
+import { PageHeader, SplitLayout } from '#/components/page-header'
+import { Badge } from '#/components/ui/badge'
+import { Button, buttonVariants } from '#/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '#/components/ui/empty'
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '#/components/ui/field'
+import { Input } from '#/components/ui/input'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from '#/components/ui/item'
+import { Spinner } from '#/components/ui/spinner'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import {
   categoryLabel,
   formatDate,
@@ -67,8 +96,6 @@ export const Route = createFileRoute('/_app/friends/$friendId')({
   component: FriendPage,
 })
 
-type Panel = 'expense' | 'payment'
-
 function FriendPage() {
   const { friendId } = Route.useParams()
   const { limit } = Route.useSearch()
@@ -78,96 +105,103 @@ function FriendPage() {
   const { data: ledger } = useSuspenseQuery(
     convexQuery(api.friends.entries, { friendId, limit }),
   )
-  const [panel, setPanel] = useState<Panel>('expense')
 
   // Deleted while open (here or in another tab).
   if (!friend) {
     return (
-      <p className="empty">
-        This friend was removed. <Link to="/friends">Back to friends</Link>
-      </p>
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>This friend was removed</EmptyTitle>
+          <EmptyDescription>
+            <Link to="/friends">Back to friends</Link>
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     )
   }
 
   return (
     <>
-      <div className="page-header">
-        <div className="flex items-center gap-3">
-          <Avatar name={friend.name} />
-          <div>
-            <p className="eyebrow">
-              <Link to="/friends">Friends</Link> /
-            </p>
-            <h1 className="m-0">{friend.name}</h1>
-            {friend.email && <p className="muted">{friend.email}</p>}
-          </div>
-        </div>
-        <div className="text-right text-lg font-semibold">
-          <BalanceText balances={friend.balances} them={friend.name} />
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={<Link to="/friends">Friends</Link>}
+        media={<PersonAvatar name={friend.name} size="lg" />}
+        title={friend.name}
+        description={friend.email ?? undefined}
+        actions={
+          <BalanceText
+            balances={friend.balances}
+            them={friend.name}
+            className="text-right text-lg"
+          />
+        }
+      />
 
-      <div className="group-layout">
-        <section aria-labelledby="activity-heading" className="grid gap-3">
-          <h2 id="activity-heading" className="m-0">
-            Activity
-          </h2>
-          {ledger.items.length === 0 ? (
-            <p className="empty">
-              Nothing yet. Add an expense you shared with {friend.name}.
-            </p>
-          ) : (
-            <ul className="expense-list">
-              {ledger.items.map((entry) => (
-                <EntryRow key={entry.id} entry={entry} friendName={friend.name} />
-              ))}
-            </ul>
-          )}
-          {ledger.hasMore && (
-            <Link
-              from={Route.fullPath}
-              search={(prev) => ({ ...prev, limit: prev.limit + LIST_STEP })}
-              resetScroll={false}
-              className="button justify-self-center"
-            >
-              Show more
-            </Link>
-          )}
-        </section>
-
-        <aside className="card grid gap-4">
-          <div className="tabs m-0" role="tablist" aria-label="Record">
-            {(
-              [
-                ['expense', 'Add expense', Receipt],
-                ['payment', 'Settle up', HandCoins],
-              ] as const
-            ).map(([key, label, Icon]) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={panel === key}
-                data-status={panel === key ? 'active' : undefined}
-                onClick={() => setPanel(key)}
-                className={cn(
-                  'inline-flex cursor-pointer items-center gap-1.5 border-0 border-b-2 border-transparent bg-transparent px-3 py-2 text-sm text-muted-foreground',
-                  panel === key && 'border-primary font-semibold text-foreground',
-                )}
-              >
-                <Icon className="size-4" aria-hidden="true" />
-                {label}
-              </button>
-            ))}
-          </div>
-          {panel === 'expense' ? (
-            <ExpenseForm friend={friend} />
-          ) : (
-            <PaymentForm friend={friend} />
-          )}
-          <RemoveFriend friend={friend} />
-        </aside>
-      </div>
+      <SplitLayout
+        aside={
+          <>
+            <Card>
+              <CardContent>
+                <Tabs defaultValue="expense">
+                  <TabsList className="mb-4 w-full">
+                    <TabsTrigger value="expense">
+                      <Receipt />
+                      Add expense
+                    </TabsTrigger>
+                    <TabsTrigger value="payment">
+                      <HandCoins />
+                      Settle up
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="expense">
+                    <ExpenseForm friend={friend} />
+                  </TabsContent>
+                  <TabsContent value="payment">
+                    <PaymentForm friend={friend} />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+            <RemoveFriend friend={friend} />
+          </>
+        }
+      >
+        <Card className="py-2">
+          <CardHeader className="px-4 pt-2">
+            <CardTitle>Activity</CardTitle>
+          </CardHeader>
+          <CardContent className="px-2">
+            {ledger.items.length === 0 ? (
+              <Empty className="py-8">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Receipt />
+                  </EmptyMedia>
+                  <EmptyTitle>Nothing yet</EmptyTitle>
+                  <EmptyDescription>
+                    Add an expense you shared with {friend.name}.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <ItemGroup>
+                {ledger.items.map((entry) => (
+                  <EntryRow key={entry.id} entry={entry} friendName={friend.name} />
+                ))}
+              </ItemGroup>
+            )}
+          </CardContent>
+        </Card>
+        {ledger.hasMore && (
+          <Link
+            from={Route.fullPath}
+            search={(prev) => ({ ...prev, limit: prev.limit + LIST_STEP })}
+            resetScroll={false}
+            className={cn(buttonVariants({ variant: 'outline' }), 'justify-self-center no-underline')}
+          >
+            Show more
+          </Link>
+        )}
+      </SplitLayout>
     </>
   )
 }
@@ -180,7 +214,10 @@ function EntryRow({
   friendName: string
 }) {
   const removeEntry = useConvexMutation(api.friends.removeEntry)
-  const { run, pending } = useAction(removeEntry)
+  const { run } = useAction(removeEntry, {
+    success: 'Deleted',
+    toastErrors: true,
+  })
   const title =
     entry.kind === 'expense'
       ? entry.description
@@ -191,54 +228,63 @@ function EntryRow({
     entry.kind === 'expense'
       ? `${entry.paidBy === 'me' ? 'You' : friendName} paid ${formatMoney(entry.amountCents, entry.currency)} · ${
           entry.split === 'equal' ? 'split equally' : 'owed in full'
-        } · ${categoryLabel(entry.category)}`
+        }`
       : (entry.note ?? 'Settle-up payment')
 
   return (
-    <li className="expense">
-      <div className="min-w-0">
-        <p className="expense__title flex items-center gap-2">
-          {entry.kind === 'payment' && (
-            <HandCoins className="size-4 text-primary" aria-hidden="true" />
+    <Item>
+      <ItemMedia variant="icon" className="grid size-9 place-items-center rounded-lg bg-muted">
+        {entry.kind === 'payment' ? (
+          <HandCoins className="text-primary" />
+        ) : (
+          <Receipt className="text-muted-foreground" />
+        )}
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>
+          {title}
+          {entry.kind === 'expense' && (
+            <Badge variant="secondary">{categoryLabel(entry.category)}</Badge>
           )}
-          <span className="truncate">{title}</span>
-        </p>
-        <p className="muted">
+        </ItemTitle>
+        <ItemDescription>
           {formatDate(entry.date)} · {detail}
-        </p>
-      </div>
-      <div className="expense__side">
+        </ItemDescription>
+      </ItemContent>
+      <ItemActions>
         {entry.kind === 'payment' ? (
           // The title already says who paid whom.
-          <span className="amount text-sm">
+          <span className="font-semibold tabular-nums">
             {formatMoney(entry.amountCents, entry.currency)}
           </span>
         ) : (
           <span
             className={cn(
-              'amount text-sm',
-              entry.effectCents > 0 ? 'positive' : 'negative',
+              'text-sm font-semibold tabular-nums',
+              entry.effectCents > 0 ? 'text-positive' : 'text-destructive',
             )}
           >
             {entry.effectCents > 0 ? `${friendName} owes ` : 'You owe '}
             {formatMoney(Math.abs(entry.effectCents), entry.currency)}
           </span>
         )}
-        <button
-          type="button"
-          className="button button--ghost"
-          disabled={pending}
-          aria-label={`Delete ${title}`}
-          onClick={() => {
-            if (window.confirm(`Delete “${title}”?`)) {
-              void run({ entryId: entry.id })
-            }
-          }}
-        >
-          <Trash2 className="size-4" />
-        </button>
-      </div>
-    </li>
+        <ConfirmAction
+          title={`Delete “${title}”?`}
+          description="Balances will be updated. This can’t be undone."
+          onConfirm={async () => Boolean(await run({ entryId: entry.id }))}
+          trigger={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Delete ${title}`}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 />
+            </Button>
+          }
+        />
+      </ItemActions>
+    </Item>
   )
 }
 
@@ -255,7 +301,9 @@ function useDefaultCurrency(friend: Friend) {
 
 function ExpenseForm({ friend }: { friend: Friend }) {
   const addExpense = useConvexMutation(api.friends.addExpense)
-  const { run, pending, error, setError } = useAction(addExpense)
+  const { run, pending, error, setError } = useAction(addExpense, {
+    success: 'Expense added',
+  })
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useDefaultCurrency(friend)
@@ -292,78 +340,84 @@ function ExpenseForm({ friend }: { friend: Friend }) {
   }
 
   return (
-    <form noValidate onSubmit={onSubmit} className="grid gap-3">
-      <Field label="Description" htmlFor="fe-description">
-        <Input
-          id="fe-description"
-          value={description}
-          maxLength={80}
-          placeholder="Dinner"
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </Field>
-      <div className="grid grid-cols-[1fr_6rem] gap-2">
-        <Field label="Amount" htmlFor="fe-amount">
+    <form noValidate onSubmit={onSubmit}>
+      <FieldGroup className="gap-4">
+        <Field>
+          <FieldLabel htmlFor="fe-description">Description</FieldLabel>
           <Input
-            id="fe-amount"
-            inputMode="decimal"
-            value={amount}
-            placeholder="0.00"
-            onChange={(e) => setAmount(e.target.value)}
+            id="fe-description"
+            value={description}
+            maxLength={80}
+            placeholder="Dinner"
+            onChange={(e) => setDescription(e.target.value)}
           />
         </Field>
-        <Field label="Currency" htmlFor="fe-currency">
-          <CurrencySelect id="fe-currency" value={currency} onChange={setCurrency} />
-        </Field>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Paid by" htmlFor="fe-paid-by">
-          <NativeSelect
-            id="fe-paid-by"
-            value={paidBy}
-            onChange={(e) => setPaidBy(e.target.value as 'me' | 'friend')}
-          >
-            <option value="me">You</option>
-            <option value="friend">{friend.name}</option>
-          </NativeSelect>
-        </Field>
-        <Field label="Split" htmlFor="fe-split">
-          <NativeSelect
-            id="fe-split"
-            value={split}
-            onChange={(e) => setSplit(e.target.value as 'equal' | 'full')}
-          >
-            <option value="equal">Equally</option>
-            <option value="full">
-              {other} owe{other === 'You' ? '' : 's'} it all
-            </option>
-          </NativeSelect>
-        </Field>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Category" htmlFor="fe-category">
-          <CategorySelect id="fe-category" value={category} onChange={setCategory} />
-        </Field>
-        <Field label="Date" htmlFor="fe-date">
-          <Input
-            id="fe-date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </Field>
-      </div>
-      <FormError error={error} />
-      <Button type="submit" disabled={pending}>
-        {pending ? 'Saving…' : 'Add expense'}
-      </Button>
+        <div className="grid grid-cols-[1fr_6.5rem] gap-3">
+          <Field>
+            <FieldLabel htmlFor="fe-amount">Amount</FieldLabel>
+            <AmountInput id="fe-amount" value={amount} onChange={setAmount} currency={currency} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="fe-currency">Currency</FieldLabel>
+            <CurrencySelect id="fe-currency" value={currency} onChange={setCurrency} />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field>
+            <FieldLabel htmlFor="fe-paid-by">Paid by</FieldLabel>
+            <SelectField
+              id="fe-paid-by"
+              value={paidBy}
+              onChange={setPaidBy}
+              options={[
+                { value: 'me', label: 'You' },
+                { value: 'friend', label: friend.name },
+              ]}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="fe-split">Split</FieldLabel>
+            <SelectField
+              id="fe-split"
+              value={split}
+              onChange={setSplit}
+              options={[
+                { value: 'equal', label: 'Equally' },
+                { value: 'full', label: `${other} owe${other === 'You' ? '' : 's'} all` },
+              ]}
+            />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field>
+            <FieldLabel htmlFor="fe-category">Category</FieldLabel>
+            <CategorySelect id="fe-category" value={category} onChange={setCategory} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="fe-date">Date</FieldLabel>
+            <Input
+              id="fe-date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </Field>
+        </div>
+        {error && <FieldError>{error}</FieldError>}
+        <Button type="submit" size="lg" disabled={pending}>
+          {pending && <Spinner />}
+          Add expense
+        </Button>
+      </FieldGroup>
     </form>
   )
 }
 
 function PaymentForm({ friend }: { friend: Friend }) {
   const addPayment = useConvexMutation(api.friends.addPayment)
-  const { run, pending, error, setError } = useAction(addPayment)
+  const { run, pending, error, setError } = useAction(addPayment, {
+    success: 'Payment recorded',
+  })
   const [currency, setCurrency] = useDefaultCurrency(friend)
   const outstanding = friend.balances[currency] ?? 0
   // Whoever owes pays; default to clearing the whole balance.
@@ -408,57 +462,58 @@ function PaymentForm({ friend }: { friend: Friend }) {
   }
 
   return (
-    <form noValidate onSubmit={onSubmit} className="grid gap-3">
-      <p className="text-sm text-muted-foreground">
-        Record money that changed hands to settle up.
-      </p>
-      <Field label="Who paid?" htmlFor="fp-paid-by">
-        <NativeSelect
-          id="fp-paid-by"
-          value={paidBy}
-          onChange={(e) => setPaidBy(e.target.value as 'me' | 'friend')}
-        >
-          <option value="me">You paid {friend.name}</option>
-          <option value="friend">{friend.name} paid you</option>
-        </NativeSelect>
-      </Field>
-      <div className="grid grid-cols-[1fr_6rem] gap-2">
-        <Field label="Amount" htmlFor="fp-amount">
-          <Input
-            id="fp-amount"
-            inputMode="decimal"
-            value={amount}
-            placeholder="0.00"
-            onChange={(e) => setAmount(e.target.value)}
+    <form noValidate onSubmit={onSubmit}>
+      <FieldGroup className="gap-4">
+        <Field>
+          <FieldLabel htmlFor="fp-paid-by">Who paid?</FieldLabel>
+          <SelectField
+            id="fp-paid-by"
+            value={paidBy}
+            onChange={setPaidBy}
+            options={[
+              { value: 'me', label: `You paid ${friend.name}` },
+              { value: 'friend', label: `${friend.name} paid you` },
+            ]}
           />
+          <FieldDescription>Record money that changed hands.</FieldDescription>
         </Field>
-        <Field label="Currency" htmlFor="fp-currency">
-          <CurrencySelect id="fp-currency" value={currency} onChange={pickCurrency} />
-        </Field>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Date" htmlFor="fp-date">
-          <Input
-            id="fp-date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </Field>
-        <Field label="Note" htmlFor="fp-note">
-          <Input
-            id="fp-note"
-            value={note}
-            maxLength={80}
-            placeholder="Bank transfer"
-            onChange={(e) => setNote(e.target.value)}
-          />
-        </Field>
-      </div>
-      <FormError error={error} />
-      <Button type="submit" disabled={pending}>
-        {pending ? 'Saving…' : 'Record payment'}
-      </Button>
+        <div className="grid grid-cols-[1fr_6.5rem] gap-3">
+          <Field>
+            <FieldLabel htmlFor="fp-amount">Amount</FieldLabel>
+            <AmountInput id="fp-amount" value={amount} onChange={setAmount} currency={currency} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="fp-currency">Currency</FieldLabel>
+            <CurrencySelect id="fp-currency" value={currency} onChange={pickCurrency} />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field>
+            <FieldLabel htmlFor="fp-date">Date</FieldLabel>
+            <Input
+              id="fp-date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="fp-note">Note</FieldLabel>
+            <Input
+              id="fp-note"
+              value={note}
+              maxLength={80}
+              placeholder="Bank transfer"
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </Field>
+        </div>
+        {error && <FieldError>{error}</FieldError>}
+        <Button type="submit" size="lg" disabled={pending}>
+          {pending && <Spinner />}
+          Record payment
+        </Button>
+      </FieldGroup>
     </form>
   )
 }
@@ -466,33 +521,30 @@ function PaymentForm({ friend }: { friend: Friend }) {
 function RemoveFriend({ friend }: { friend: Friend }) {
   const removeFriend = useConvexMutation(api.friends.remove)
   const navigate = useNavigate()
-  const { run, pending, error } = useAction(removeFriend)
+  const { run } = useAction(removeFriend, {
+    success: `${friend.name} removed`,
+    toastErrors: true,
+  })
 
   return (
-    <div className="grid gap-2 border-t pt-4">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="justify-self-start text-muted-foreground hover:text-destructive"
-        disabled={pending}
-        onClick={async () => {
-          if (
-            !window.confirm(
-              `Remove ${friend.name}? This deletes all of your shared history.`,
-            )
-          ) {
-            return
-          }
-          if (await run({ friendId: friend.id })) {
-            await navigate({ to: '/friends' })
-          }
-        }}
-      >
-        <Trash2 />
-        Remove friend
-      </Button>
-      <FormError error={error} />
-    </div>
+    <ConfirmAction
+      title={`Remove ${friend.name}?`}
+      description="This deletes every expense and payment between you. It can’t be undone."
+      confirmLabel="Remove"
+      onConfirm={async () => {
+        if (!(await run({ friendId: friend.id }))) return false
+        await navigate({ to: '/friends' })
+        return true
+      }}
+      trigger={
+        <Button
+          variant="ghost"
+          className="justify-self-start text-muted-foreground hover:text-destructive"
+        >
+          <Trash2 />
+          Remove friend
+        </Button>
+      }
+    />
   )
 }

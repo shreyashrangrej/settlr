@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useRouter } from '@tanstack/react-router'
-import { CircleAlert, Loader2, UserRound } from 'lucide-react'
+import { CircleAlert, UserRound } from 'lucide-react'
 
 import { Alert, AlertDescription } from '#/components/ui/alert'
 import { Button } from '#/components/ui/button'
 import { Card } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
-import { Label } from '#/components/ui/label'
+import { Field, FieldError, FieldLabel } from '#/components/ui/field'
+import { Spinner } from '#/components/ui/spinner'
 import { updateName } from '#/lib/auth-client'
 import { NAME_MAX_LENGTH, profileName } from '#/lib/schemas'
 
@@ -73,8 +74,8 @@ export function NameForm({ email }: { email: string }) {
         </header>
 
         <form noValidate onSubmit={onSubmit} className="grid gap-3">
-          <div className="grid gap-2">
-            <Label htmlFor="profile-name">Full name</Label>
+          <Field>
+            <FieldLabel htmlFor="profile-name">Full name</FieldLabel>
             <Input
               id="profile-name"
               name="name"
@@ -89,17 +90,15 @@ export function NameForm({ email }: { email: string }) {
               aria-describedby={fieldError ? 'profile-name-error' : undefined}
             />
             {fieldError && (
-              <p id="profile-name-error" className="text-sm text-destructive">
-                {fieldError}
-              </p>
+              <FieldError id="profile-name-error">{fieldError}</FieldError>
             )}
-          </div>
+          </Field>
           <Button
             type="submit"
             className="h-11 w-full text-[0.9375rem]"
             disabled={pending}
           >
-            {pending && <Loader2 className="animate-spin" />}
+            {pending && <Spinner />}
             Continue
           </Button>
         </form>

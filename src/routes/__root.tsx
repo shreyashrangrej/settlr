@@ -14,6 +14,7 @@ import { APP_SECTIONS } from '#/components/app-nav'
 import { NameForm } from '#/components/name-form'
 import { ThemeToggle } from '#/components/theme-toggle'
 import { buttonVariants } from '#/components/ui/button'
+import { Toaster } from '#/components/ui/sonner'
 import { getAuthSession } from '#/functions/auth.functions'
 import { authClient } from '#/lib/auth-client'
 import { themeInitScript } from '#/lib/theme'
@@ -79,8 +80,8 @@ export const Route = createRootRouteWithContext<{
 })
 
 const navLink = cn(
-  buttonVariants({ variant: 'ghost', size: 'sm' }),
-  'text-muted-foreground data-[status=active]:font-semibold data-[status=active]:text-foreground',
+  buttonVariants({ variant: 'ghost' }),
+  'text-muted-foreground no-underline data-[status=active]:bg-muted data-[status=active]:text-foreground',
 )
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -103,8 +104,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           authClient={authClient}
           initialToken={token}
         >
-          <header className="border-b">
-            <div className="container flex h-14 items-center justify-between gap-2">
+          <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
+            <div className="container flex h-16 items-center justify-between gap-2">
               <Link
                 to={user ? '/dashboard' : '/'}
                 className="text-lg font-bold tracking-tight text-primary no-underline"
@@ -127,9 +128,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                     ))}
                   </div>
                 )}
-                <Link to="/settings" className={navLink}>
-                  Settings
-                </Link>
+                {/* Signed in, Settings is in the account menu. */}
+                {!user && (
+                  <Link to="/settings" className={navLink}>
+                    Settings
+                  </Link>
+                )}
                 <ThemeToggle />
                 <AccountMenu />
               </nav>
@@ -138,6 +142,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <main className="container">
             {needsName ? <NameForm email={user.email} /> : children}
           </main>
+          <Toaster position="bottom-right" />
         </ConvexBetterAuthProvider>
         <Scripts />
       </body>

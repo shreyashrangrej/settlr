@@ -54,11 +54,18 @@ force-push `main`.
   search params, forms and server functions. The rest is `types.ts`,
   `format.ts`, `preferences.ts` (localStorage, via `createClientOnlyFn`),
   `theme.ts` (light/dark) and `utils.ts` (shadcn's `cn`).
-- `src/components/ui/`: shadcn/ui components (Tailwind v4, `components.json`).
+- `src/components/ui/`: shadcn/ui components built on **Base UI**
+  (`@base-ui/react`, style `base-nova` in `components.json`), not Radix.
   Add more with `pnpm dlx shadcn@latest add <name>`.
+- `src/components/`: app components. `page-header.tsx` (`PageHeader`,
+  `SplitLayout`), `ledger.tsx` (`useAction` for mutations with toasts,
+  `SignedAmount`, `BalanceText`, `PersonAvatar`), `form-fields.tsx`
+  (`SelectField`, `CurrencySelect`, `CategorySelect`, `AmountInput`),
+  `confirm-action.tsx` (destructive actions behind an alert dialog),
+  `account-menu.tsx` (avatar dropdown with sign-out).
 - `src/styles.css`: design tokens (`--bg`, `--surface`, `--accent`, ...),
-  mapped to shadcn color names in `@theme inline`, plus hand-written CSS for
-  the older pages.
+  mapped to shadcn color names in `@theme inline` (plus `positive`), and the
+  landing hero's CSS.
 - Auth on the web side: `src/lib/auth-client.ts` (browser client and the
   sign-in actions), `src/server/auth.server.ts` (proxy handler and token),
   `src/routes/api/auth/$.ts` (forwards `/api/auth/*` to Convex) and
@@ -108,7 +115,13 @@ force-push `main`.
   or `ssr: false` route, or in a `useEffect`. For the viewer's locale use
   `new Intl.NumberFormat().resolvedOptions().locale`, not
   `navigator.language`, which can be an invalid tag such as `en-US@posix`.
-- **Styling**: prefer shadcn components and Tailwind utilities for new UI.
+- **Styling**: use shadcn components and Tailwind utilities (no new
+  hand-written CSS). Base UI uses a `render` prop, not `asChild`: e.g.
+  `<Item render={<Link to="..." />}>` or `<DropdownMenuTrigger
+  render={<Button />}>`. For a link that looks like a button, put
+  `buttonVariants(...)` on a `<Link>`. Confirm destructive actions with
+  `ConfirmAction`, not `window.confirm`, and report success with
+  `useAction(fn, { success: '...' })` (a sonner toast).
   Dark mode is the `.dark` class on `<html>` (set before paint by the inline
   script in `__root.tsx`), not `prefers-color-scheme`, so style dark variants
   with `.dark` / `dark:`. Theme-dependent markup must render the same on the
@@ -143,7 +156,14 @@ force-push `main`.
   are needed. `nitro` is a beta and is pinned to an exact version on purpose.
 - `shadcn add` writes `import { cn } from "cn"` and installs an unrelated npm
   package named `cn`. After adding components, change the import to
-  `#/lib/utils` and run `pnpm remove cn`.
+  `#/lib/utils` and run `pnpm remove cn`. It may also add `next-themes`
+  (for sonner); this app's toaster follows the `.dark` class instead, so
+  remove it. Don't re-run `shadcn init`: it would overwrite the theme in
+  `styles.css`. The `data-horizontal`/`data-vertical` variants that init
+  would add are defined there by hand.
+- After adding packages while `pnpm dev` is running, Vite may re-bundle
+  dependencies mid-session and the page errors with "Invalid hook call"
+  (two copies of React). Reload the page.
 
 <!-- convex-ai-start -->
 

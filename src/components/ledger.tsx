@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 
+import { Avatar, AvatarFallback } from '#/components/ui/avatar'
 import { errorMessage } from '#/lib/errors'
 import { formatMoney } from '#/lib/format'
 import type { Currency } from '#/lib/schemas'
@@ -7,22 +9,31 @@ import { cn } from '#/lib/utils'
 
 // Small pieces shared by the friends, groups and personal pages.
 
-/** Runs a mutation with pending and error state for a form or button. */
+/**
+ * Runs a mutation with pending and error state for a form or button. On
+ * success it shows `success` as a toast. On failure the message is in
+ * `error` for a form to show next to its fields, or, with `toastErrors`
+ * (for buttons and dialogs that have nowhere to show it), a toast.
+ */
 export function useAction<Args extends Array<unknown>, Result>(
   action: (...args: Args) => Promise<Result>,
+  { success, toastErrors }: { success?: string; toastErrors?: boolean } = {},
 ) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Resolves to the action's result, or null if it failed (the error is
-  // then in `error`).
+  // Resolves to the action's result, or null if it failed.
   async function run(...args: Args): Promise<{ value: Result } | null> {
     setPending(true)
     setError(null)
     try {
-      return { value: await action(...args) }
+      const value = await action(...args)
+      if (success) toast.success(success)
+      return { value }
     } catch (err) {
-      setError(errorMessage(err))
+      const message = errorMessage(err)
+      setError(message)
+      if (toastErrors) toast.error(message)
       return null
     } finally {
       setPending(false)
@@ -45,8 +56,8 @@ export function SignedAmount({
   return (
     <span
       className={cn(
-        'amount',
-        cents > 0 ? 'positive' : cents < 0 ? 'negative' : 'muted',
+        'font-semibold whitespace-nowrap tabular-nums',
+        cents > 0 ? 'text-positive' : cents < 0 ? 'text-destructive' : 'text-muted-foreground',
         className,
       )}
     >
@@ -56,24 +67,31 @@ export function SignedAmount({
   )
 }
 
-/** "owes you $12.00" / "you owe $4.50" / "settled up", per currency. */
+/** "They owe you $12.00" / "You owe $4.50" / "Settled up", per currency. */
 export function BalanceText({
   balances,
   them = 'They',
+  className,
 }: {
   balances: Partial<Record<string, number>>
   them?: string
+  className?: string
 }) {
   const entries = Object.entries(balances).filter(
     (entry): entry is [string, number] => Boolean(entry[1]),
   )
-  if (entries.length === 0) return <span className="muted">Settled up</span>
+  if (entries.length === 0) {
+    return <span className={cn('text-muted-foreground', className)}>Settled up</span>
+  }
   return (
-    <span className="grid justify-items-end gap-0.5">
+    <span className={cn('grid justify-items-end gap-0.5', className)}>
       {entries.map(([currency, cents]) => (
-        <span key={currency} className={cents > 0 ? 'positive' : 'negative'}>
+        <span
+          key={currency}
+          className={cents > 0 ? 'text-positive' : 'text-destructive'}
+        >
           {cents > 0 ? `${them} owe${them === 'They' ? '' : 's'} you ` : 'You owe '}
-          <span className="amount">
+          <span className="font-semibold tabular-nums">
             {formatMoney(Math.abs(cents), currency as Currency)}
           </span>
         </span>
@@ -82,23 +100,27 @@ export function BalanceText({
   )
 }
 
-export function Avatar({ name }: { name: string }) {
+export function PersonAvatar({
+  name,
+  size = 'default',
+  className,
+}: {
+  name: string
+  size?: 'default' | 'sm' | 'lg'
+  className?: string
+}) {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join('')
   return (
-    <span
-      aria-hidden="true"
-      className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-sm font-semibold text-primary uppercase"
-    >
-      {name.charAt(0)}
-    </span>
-  )
-}
-
-export function FormError({ error }: { error: string | null }) {
-  if (!error) return null
-  return (
-    <p className="form-error" role="alert">
-      {error}
-    </p>
+    <Avatar size={size} className={className}>
+      <AvatarFallback className="bg-primary/15 font-semibold text-primary uppercase">
+        {initials || '?'}
+      </AvatarFallback>
+    </Avatar>
   )
 }
 
