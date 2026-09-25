@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "settlr-prod",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".output/server/index.mjs"],
+      "env": { "PORT": "3100" },
+      "port": 3100
+    }
+  ]
+}
