@@ -39,7 +39,13 @@ force-push `main`.
   via `createServerOnlyFn`.
 - `src/lib/`: isomorphic code. `schemas.ts` holds the zod schemas shared by
   search params, forms and server functions. The rest is `types.ts`,
-  `format.ts`, and `preferences.ts` (localStorage, via `createClientOnlyFn`).
+  `format.ts`, `preferences.ts` (localStorage, via `createClientOnlyFn`),
+  `theme.ts` (light/dark) and `utils.ts` (shadcn's `cn`).
+- `src/components/ui/`: shadcn/ui components (Tailwind v4, `components.json`).
+  Add more with `pnpm dlx shadcn@latest add <name>`.
+- `src/styles.css`: design tokens (`--bg`, `--surface`, `--accent`, ...),
+  mapped to shadcn color names in `@theme inline`, plus hand-written CSS for
+  the older pages.
 - `src/start.ts`: global request middleware (CSRF on non-GET requests).
 - `src/router.tsx`: router instance with default pending, error and not-found
   components.
@@ -70,6 +76,13 @@ force-push `main`.
   or `ssr: false` route, or in a `useEffect`. For the viewer's locale use
   `new Intl.NumberFormat().resolvedOptions().locale`, not
   `navigator.language`, which can be an invalid tag such as `en-US@posix`.
+- **Styling**: prefer shadcn components and Tailwind utilities for new UI.
+  Dark mode is the `.dark` class on `<html>` (set before paint by the inline
+  script in `__root.tsx`), not `prefers-color-scheme`, so style dark variants
+  with `.dark` / `dark:`. Theme-dependent markup must render the same on the
+  server, e.g. render both icons and hide one with `dark:hidden`.
+  Element-level CSS rules go in `@layer base`, or they override Tailwind
+  utilities.
 - **Streaming**: slow, non-critical loader data is returned as an unawaited
   promise and rendered with `<Await>`. Await only what the first paint needs.
 - Imports use the `#/` alias for `src/` (e.g. `#/lib/schemas`).
@@ -84,3 +97,6 @@ force-push `main`.
   Override it with `SETTLR_BALANCES_LATENCY_MS` (production default: 0).
 - Deployment target: `NITRO_PRESET=<preset> pnpm build`. No app code changes
   are needed. `nitro` is a beta and is pinned to an exact version on purpose.
+- `shadcn add` writes `import { cn } from "cn"` and installs an unrelated npm
+  package named `cn`. After adding components, change the import to
+  `#/lib/utils` and run `pnpm remove cn`.

@@ -5,6 +5,11 @@ import {
   createRootRoute,
 } from '@tanstack/react-router'
 
+import { ThemeToggle } from '#/components/theme-toggle'
+import { buttonVariants } from '#/components/ui/button'
+import { themeInitScript } from '#/lib/theme'
+import { cn } from '#/lib/utils'
+
 import appCss from '../styles.css?url'
 
 // The root route renders the full HTML document on the server (`shellComponent`),
@@ -39,21 +44,37 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
 })
 
+const navLink = cn(
+  buttonVariants({ variant: 'ghost', size: 'sm' }),
+  'text-muted-foreground data-[status=active]:font-semibold data-[status=active]:text-foreground',
+)
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // The theme script adds `.dark` to <html> before hydration, so its class
+    // is expected to differ from the server render.
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
       </head>
       <body>
-        <header className="site-header">
-          <div className="container site-header__inner">
-            <Link to="/" className="brand">
+        <header>
+          <div className="container flex h-14 items-center justify-between">
+            <Link
+              to="/"
+              className="text-lg font-bold tracking-tight text-primary no-underline"
+            >
               Settlr
             </Link>
-            <nav className="site-nav">
-              <Link to="/groups">Groups</Link>
-              <Link to="/settings">Settings</Link>
+            <nav className="flex items-center gap-1">
+              <Link to="/groups" className={navLink}>
+                Groups
+              </Link>
+              <Link to="/settings" className={navLink}>
+                Settings
+              </Link>
+              <ThemeToggle />
             </nav>
           </div>
         </header>
