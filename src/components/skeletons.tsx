@@ -194,7 +194,7 @@ export function PersonalSkeleton() {
       <Split
         aside={
           <>
-            <SideCardSkeleton lines={4} />
+            <SideCardSkeleton lines={5} />
             <SideCardSkeleton lines={2} />
           </>
         }
@@ -202,6 +202,42 @@ export function PersonalSkeleton() {
         <StatRowSkeleton />
         <TableSkeleton />
       </Split>
+    </Status>
+  )
+}
+
+/** The monthly budget page: figures, the breakdown and the budget card. */
+export function BudgetSkeleton() {
+  return (
+    <Status>
+      <HeaderSkeleton actions={1} />
+      <Split aside={<SideCardSkeleton lines={4} />}>
+        <StatRowSkeleton />
+        <TableSkeleton rows={3} />
+      </Split>
+    </Status>
+  )
+}
+
+/** The receipt viewer: a centered header and the file. */
+export function ReceiptSkeleton() {
+  return (
+    <Status>
+      <div className="mx-auto w-full max-w-4xl">
+        <HeaderSkeleton back actions={1} />
+        <Skeleton className="h-[60vh] w-full rounded-xl" />
+      </div>
+    </Status>
+  )
+}
+
+/** A form page inside a group (add or edit an expense). */
+export function FormSkeleton() {
+  return (
+    <Status>
+      <div className="max-w-3xl">
+        <SideCardSkeleton lines={5} />
+      </div>
     </Status>
   )
 }

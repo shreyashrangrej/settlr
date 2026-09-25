@@ -10,6 +10,7 @@ export const APP_SECTIONS = [
   { to: '/friends', label: 'Friends', exact: false },
   { to: '/groups', label: 'Groups', exact: false },
   { to: '/personal', label: 'Personal', exact: false },
+  { to: '/budget', label: 'Budget', exact: false },
 ] as const
 
 export function AppTabs({ className }: { className?: string }) {

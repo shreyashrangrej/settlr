@@ -1,22 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, stripSearchParams } from '@tanstack/react-router'
-import {
-  ChevronLeft,
-  ChevronRight,
-  Receipt,
-  Tag,
-  Trash2,
-  TrendingUp,
-  Wallet,
-} from 'lucide-react'
+import { PiggyBank, Receipt, Tag, Trash2, TrendingUp, Wallet } from 'lucide-react'
 
-import { BudgetCard } from '#/components/budget'
 import { ConfirmAction } from '#/components/confirm-action'
-import { AmountInput, CategorySelect, CurrencySelect } from '#/components/form-fields'
+import { EditDialog } from '#/components/edit-dialog'
+import {
+  AmountInput,
+  CategorySelect,
+  CurrencySelect,
+  DatePicker,
+} from '#/components/form-fields'
 import { useAction } from '#/components/ledger'
+import { MonthNav } from '#/components/month-nav'
 import { PageHeader, SplitLayout } from '#/components/page-header'
+import {
+  ReceiptField,
+  ReceiptLink,
+  existingReceipt,
+  type ReceiptValue,
+} from '#/components/receipts'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -52,15 +56,15 @@ import {
   formatMoney,
   formatMonth,
   parseAmountToCents,
-  shiftMonth,
   todayIsoDate,
 } from '#/lib/format'
 import { readPreferences } from '#/lib/preferences'
 import {
+  monthSearchDefaults,
+  monthSearchSchema,
   personalExpenseInput,
-  personalSearchDefaults,
-  personalSearchSchema,
   type Category,
+  type PersonalExpenseInput,
   type Currency,
 } from '#/lib/schemas'
 import type { PersonalMonth } from '#/lib/types'
@@ -73,19 +77,15 @@ import { api } from '#convex/_generated/api'
 // server during SSR, and the component reads it from loader data so the
 // server and client render the same month.
 export const Route = createFileRoute('/_app/personal')({
-  validateSearch: personalSearchSchema,
-  search: { middlewares: [stripSearchParams(personalSearchDefaults)] },
+  validateSearch: monthSearchSchema,
+  search: { middlewares: [stripSearchParams(monthSearchDefaults)] },
   loaderDeps: ({ search }) => search,
   loader: async ({ context, deps }) => {
     const month = deps.month || currentMonth()
-    await Promise.all([
-      context.queryClient.ensureQueryData(convexQuery(api.personal.month, { month })),
-      context.queryClient.ensureQueryData(convexQuery(api.budgets.list, {})),
-      context.queryClient.ensureQueryData(convexQuery(api.budgets.monthSpending, { month })),
-    ])
+    await context.queryClient.ensureQueryData(convexQuery(api.personal.month, { month }))
     // Read the clock here (on the server during SSR) so the page renders the
-    // same "today" on both sides.
-    return { month, thisMonth: currentMonth(), today: todayIsoDate() }
+    // same month on both sides.
+    return { month, thisMonth: currentMonth() }
   },
   head: () => ({ meta: [{ title: 'Personal expenses · Settlr' }] }),
   pendingComponent: PersonalSkeleton,
@@ -93,12 +93,8 @@ export const Route = createFileRoute('/_app/personal')({
 })
 
 function PersonalPage() {
-  const { month, thisMonth, today } = Route.useLoaderData()
+  const { month, thisMonth } = Route.useLoaderData()
   const { data } = useSuspenseQuery(convexQuery(api.personal.month, { month }))
-  const { data: budgets } = useSuspenseQuery(convexQuery(api.budgets.list, {}))
-  const { data: spending } = useSuspenseQuery(
-    convexQuery(api.budgets.monthSpending, { month }),
-  )
 
   return (
     <>
@@ -106,30 +102,23 @@ function PersonalPage() {
         title="Personal expenses"
         description="Spending that’s just yours, not split with anyone."
         actions={
-          <nav className="flex items-center gap-1 rounded-lg border p-1" aria-label="Month">
-            <MonthLink month={shiftMonth(month, -1)} thisMonth={thisMonth} label="Previous month">
-              <ChevronLeft />
-            </MonthLink>
-            <span className="min-w-36 text-center text-sm font-semibold">
-              {formatMonth(month)}
-            </span>
-            <MonthLink month={shiftMonth(month, 1)} thisMonth={thisMonth} label="Next month">
-              <ChevronRight />
-            </MonthLink>
-          </nav>
+          <>
+            <Link
+              to="/budget"
+              search={{ month: month === thisMonth ? '' : month }}
+              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline')}
+            >
+              <PiggyBank />
+              Monthly budget
+            </Link>
+            <MonthNav to="/personal" month={month} thisMonth={thisMonth} />
+          </>
         }
       />
 
       <SplitLayout
         aside={
           <>
-            <BudgetCard
-              month={month}
-              today={today}
-              budgets={budgets}
-              spending={spending}
-              defaultCurrency={spending[0]?.currency}
-            />
             <AddExpense month={month} />
             <ByCategory data={data} />
           </>
@@ -152,14 +141,15 @@ function PersonalPage() {
                 </EmptyHeader>
               </Empty>
             ) : (
-              <Table>
+              // Fixed layout: the data columns share the width equally.
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Description</TableHead>
                     <TableHead className="hidden md:table-cell">Category</TableHead>
                     <TableHead className="hidden md:table-cell">Date</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="w-10">
+                    <TableHead className="w-20">
                       <span className="sr-only">Actions</span>
                     </TableHead>
                   </TableRow>
@@ -180,30 +170,6 @@ function PersonalPage() {
         )}
       </SplitLayout>
     </>
-  )
-}
-
-function MonthLink({
-  month,
-  thisMonth,
-  label,
-  children,
-}: {
-  month: string
-  thisMonth: string
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <Link
-      from={Route.fullPath}
-      search={{ month: month === thisMonth ? '' : month }}
-      aria-label={label}
-      title={label}
-      className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}
-    >
-      {children}
-    </Link>
   )
 }
 
@@ -272,62 +238,113 @@ function ByCategory({ data }: { data: PersonalMonth }) {
   )
 }
 
-function ExpenseRow({ expense }: { expense: PersonalMonth['items'][number] }) {
+type PersonalExpense = PersonalMonth['items'][number]
+
+function ExpenseRow({ expense }: { expense: PersonalExpense }) {
   const removeExpense = useConvexMutation(api.personal.remove)
   const { run } = useAction(removeExpense, { success: 'Deleted', toastErrors: true })
 
   return (
     <TableRow>
-      <TableCell className="max-w-0 font-medium">
-        <span className="block truncate">{expense.description}</span>
-        <span className="block text-xs font-normal text-muted-foreground md:hidden">
+      <TableCell className="font-medium">
+        <span className="flex items-center gap-1">
+          <span className="truncate" title={expense.description}>
+            {expense.description}
+          </span>
+          {expense.receiptId && <ReceiptLink source="personal" expenseId={expense.id} />}
+        </span>
+        <span className="block truncate text-xs font-normal text-muted-foreground md:hidden">
           {formatDate(expense.date)} · {categoryLabel(expense.category)}
         </span>
       </TableCell>
-      <TableCell className="hidden w-40 md:table-cell">
+      <TableCell className="hidden md:table-cell">
         <Badge variant="secondary">{categoryLabel(expense.category)}</Badge>
       </TableCell>
-      <TableCell className="hidden w-36 text-muted-foreground md:table-cell">
+      <TableCell className="hidden text-muted-foreground md:table-cell">
         {formatDate(expense.date)}
       </TableCell>
-      <TableCell className="w-32 text-right font-semibold tabular-nums">
+      <TableCell className="text-right font-semibold tabular-nums">
         {formatMoney(expense.amountCents, expense.currency)}
       </TableCell>
-      <TableCell className="w-10 text-right">
-        <ConfirmAction
-          title={`Delete “${expense.description}”?`}
-          description="This can’t be undone."
-          onConfirm={async () => Boolean(await run({ expenseId: expense.id }))}
-          trigger={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Delete ${expense.description}`}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 />
-            </Button>
-          }
-        />
+      <TableCell>
+        <span className="flex justify-end gap-1">
+          <EditDialog label={`Edit ${expense.description}`} title="Edit expense">
+            {(close) => <ExpenseForm expense={expense} onSaved={close} />}
+          </EditDialog>
+          <ConfirmAction
+            title={`Delete “${expense.description}”?`}
+            description="This can’t be undone."
+            onConfirm={async () => Boolean(await run({ expenseId: expense.id }))}
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Delete ${expense.description}`}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 />
+              </Button>
+            }
+          />
+        </span>
       </TableCell>
     </TableRow>
   )
 }
 
 function AddExpense({ month }: { month: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Wallet className="size-4 text-primary" aria-hidden="true" />
+          Add an expense
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ExpenseForm month={month} />
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
+ * Adds a personal expense, or with `expense`, edits it. `month` is the month
+ * on screen, so a new expense saved to another month can say where it went.
+ */
+function ExpenseForm({
+  expense,
+  month,
+  onSaved,
+}: {
+  expense?: PersonalExpense
+  month?: string
+  onSaved?: () => void
+}) {
+  const id = useId()
   const addExpense = useConvexMutation(api.personal.add)
+  const updateExpense = useConvexMutation(api.personal.update)
   const [savedTo, setSavedTo] = useState<string | null>(null)
-  const { run, pending, error, setError } = useAction(addExpense, {
-    success: 'Expense added',
-  })
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
-  const [currency, setCurrency] = useState<Currency>('USD')
-  const [category, setCategory] = useState<Category>('food')
-  const [date, setDate] = useState(todayIsoDate)
+  const { run, pending, error, setError } = useAction(
+    async (input: PersonalExpenseInput, receipt: ReceiptValue) =>
+      expense
+        ? updateExpense({ expenseId: expense.id, ...input, receiptId: receipt?.id ?? null })
+        : addExpense({ ...input, receiptId: receipt?.id }),
+    { success: expense ? 'Expense updated' : 'Expense added' },
+  )
+  const [description, setDescription] = useState(expense?.description ?? '')
+  const [amount, setAmount] = useState(
+    expense ? (expense.amountCents / 100).toFixed(2) : '',
+  )
+  const [currency, setCurrency] = useState<Currency>(expense?.currency ?? 'USD')
+  const [category, setCategory] = useState<Category>(expense?.category ?? 'food')
+  const [date, setDate] = useState(expense?.date ?? todayIsoDate)
+  const [receipt, setReceipt] = useState<ReceiptValue>(() => existingReceipt(expense?.receiptId))
 
   // Browser preferences only exist after hydration.
-  useEffect(() => setCurrency(readPreferences().defaultCurrency), [])
+  useEffect(() => {
+    if (!expense) setCurrency(readPreferences().defaultCurrency)
+  }, [expense])
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -347,74 +364,67 @@ function AddExpense({ month }: { month: string }) {
       setError(parsed.error.issues[0]?.message ?? 'Check the form')
       return
     }
-    if (await run(parsed.data)) {
-      setDescription('')
-      setAmount('')
-      // Say where it went if it's not in the month on screen.
-      const expenseMonth = parsed.data.date.slice(0, 7)
-      setSavedTo(expenseMonth === month ? null : formatMonth(expenseMonth))
+    if (!(await run(parsed.data, receipt))) return
+    if (expense) {
+      onSaved?.()
+      return
     }
+    setDescription('')
+    setAmount('')
+    setReceipt(null)
+    // Say where it went if it's not in the month on screen.
+    const expenseMonth = parsed.data.date.slice(0, 7)
+    setSavedTo(expenseMonth === month ? null : formatMonth(expenseMonth))
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wallet className="size-4 text-primary" aria-hidden="true" />
-          Add an expense
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form noValidate onSubmit={onSubmit}>
-          <FieldGroup className="gap-4">
-            <Field>
-              <FieldLabel htmlFor="pe-description">Description</FieldLabel>
-              <Input
-                id="pe-description"
-                value={description}
-                maxLength={80}
-                placeholder="Groceries"
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </Field>
-            <div className="grid grid-cols-[1fr_6.5rem] gap-3">
-              <Field>
-                <FieldLabel htmlFor="pe-amount">Amount</FieldLabel>
-                <AmountInput id="pe-amount" value={amount} onChange={setAmount} currency={currency} />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="pe-currency">Currency</FieldLabel>
-                <CurrencySelect id="pe-currency" value={currency} onChange={setCurrency} />
-              </Field>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field>
-                <FieldLabel htmlFor="pe-category">Category</FieldLabel>
-                <CategorySelect id="pe-category" value={category} onChange={setCategory} />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="pe-date">Date</FieldLabel>
-                <Input
-                  id="pe-date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              </Field>
-            </div>
-            {error && <FieldError>{error}</FieldError>}
-            {savedTo && (
-              <p className={cn('text-sm text-positive')} role="status">
-                Saved to {savedTo}.
-              </p>
-            )}
-            <Button type="submit" size="lg" disabled={pending}>
-              {pending && <Spinner />}
-              Add expense
-            </Button>
-          </FieldGroup>
-        </form>
-      </CardContent>
-    </Card>
+    <form noValidate onSubmit={onSubmit}>
+      <FieldGroup className="gap-4">
+        <Field>
+          <FieldLabel htmlFor={`${id}-description`}>Description</FieldLabel>
+          <Input
+            id={`${id}-description`}
+            value={description}
+            maxLength={80}
+            placeholder="Groceries"
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </Field>
+        <div className="grid grid-cols-[1fr_6.5rem] gap-3">
+          <Field>
+            <FieldLabel htmlFor={`${id}-amount`}>Amount</FieldLabel>
+            <AmountInput id={`${id}-amount`} value={amount} onChange={setAmount} currency={currency} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-currency`}>Currency</FieldLabel>
+            <CurrencySelect id={`${id}-currency`} value={currency} onChange={setCurrency} />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field>
+            <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
+            <CategorySelect id={`${id}-category`} value={category} onChange={setCategory} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-date`}>Date</FieldLabel>
+            <DatePicker id={`${id}-date`} value={date} onChange={setDate} />
+          </Field>
+        </div>
+        <Field>
+          <FieldLabel htmlFor={`${id}-receipt`}>Receipt</FieldLabel>
+          <ReceiptField id={`${id}-receipt`} value={receipt} onChange={setReceipt} />
+        </Field>
+        {error && <FieldError>{error}</FieldError>}
+        {savedTo && (
+          <p className="text-sm text-positive" role="status">
+            Saved to {savedTo}.
+          </p>
+        )}
+        <Button type="submit" size="lg" disabled={pending}>
+          {pending && <Spinner />}
+          {expense ? 'Save changes' : 'Add expense'}
+        </Button>
+      </FieldGroup>
+    </form>
   )
 }

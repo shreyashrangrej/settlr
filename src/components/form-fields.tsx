@@ -1,9 +1,15 @@
+import { useState } from 'react'
+import { CalendarIcon } from 'lucide-react'
+
+import { Button } from '#/components/ui/button'
+import { Calendar } from '#/components/ui/calendar'
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
 } from '#/components/ui/input-group'
+import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -11,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { categoryLabel } from '#/lib/format'
+import { categoryLabel, formatDate } from '#/lib/format'
 import {
   CATEGORIES,
   CURRENCIES,
@@ -113,5 +119,70 @@ export function AmountInput({
         <InputGroupText>{currency}</InputGroupText>
       </InputGroupAddon>
     </InputGroup>
+  )
+}
+
+// The calendar works with local-time Dates; the app stores `YYYY-MM-DD`.
+function fromIsoDate(value: string) {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function toIsoDate(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+/**
+ * A date field: a button showing the date that opens shadcn's calendar in a
+ * popover. `value` is a `YYYY-MM-DD` string. The label uses the fixed-locale
+ * `formatDate`, so it renders the same on the server; the calendar itself
+ * only renders in the browser, once opened.
+ */
+export function DatePicker({
+  id,
+  value,
+  onChange,
+  className,
+}: {
+  id?: string
+  value: string
+  onChange: (value: string) => void
+  className?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const selected = value ? fromIsoDate(value) : undefined
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <Button
+            id={id}
+            type="button"
+            variant="outline"
+            className={cn('w-full justify-start px-2.5 font-normal', className)}
+          />
+        }
+      >
+        <CalendarIcon className="text-muted-foreground" />
+        {value ? formatDate(value) : <span className="text-muted-foreground">Pick a date</span>}
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={selected}
+          defaultMonth={selected}
+          captionLayout="dropdown"
+          startMonth={new Date(2000, 0)}
+          endMonth={new Date(new Date().getFullYear() + 5, 11)}
+          onSelect={(date) => {
+            if (!date) return
+            onChange(toIsoDate(date))
+            setOpen(false)
+          }}
+        />
+      </PopoverContent>
+    </Popover>
   )
 }

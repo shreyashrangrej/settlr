@@ -57,7 +57,10 @@ type GroupExpense = Pick<
  * Splits an amount equally in integer cents. Leftover cents go to the first
  * participants (in group member order) so shares always sum to the total.
  */
-export function shares(expense: GroupExpense, memberOrder: Array<string>) {
+export function shares(
+  expense: Pick<GroupExpense, 'amountCents' | 'splitAmong'>,
+  memberOrder: Array<string>,
+) {
   const participants = [...expense.splitAmong].sort(
     (a, b) => memberOrder.indexOf(a) - memberOrder.indexOf(b),
   )

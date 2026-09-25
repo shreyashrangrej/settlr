@@ -10,10 +10,11 @@ import {
   type QueryCtx,
 } from './_generated/server'
 import { requireUser } from './lib/auth'
-import { linkedCounterpart, mirrorEntry, type NewEntry } from './lib/friendship'
+import { flip, linkedCounterpart, mirrorEntry, type NewEntry } from './lib/friendship'
 import * as input from './lib/input'
 import { addToBalance, friendDelta } from './lib/ledger'
 import { notify } from './lib/notify'
+import { attachReceipt, deleteReceipt } from './lib/receipts'
 import { category, currency } from './lib/validators'
 
 const MAX_FRIENDS = 500
@@ -225,7 +226,16 @@ export const deleteEntries = internalMutation({
       .query('friendEntries')
       .withIndex('by_friendId_and_date', (q) => q.eq('friendId', args.friendId))
       .take(200)
-    for (const row of batch) await ctx.db.delete('friendEntries', row._id)
+    for (const row of batch) {
+      await ctx.db.delete('friendEntries', row._id)
+      // A linked friend's twin keeps a shared receipt alive.
+      if (row.kind === 'expense' && row.receiptId) {
+        const twin = row.mirrorId ? await ctx.db.get('friendEntries', row.mirrorId) : null
+        if (twin?.kind !== 'expense' || twin.receiptId !== row.receiptId) {
+          await deleteReceipt(ctx, row.receiptId)
+        }
+      }
+    }
     if (batch.length === 200) {
       await ctx.scheduler.runAfter(0, internal.friends.deleteEntries, args)
     }
@@ -298,10 +308,12 @@ export const addExpense = mutation({
     paidBy,
     split: v.union(v.literal('equal'), v.literal('full')),
     date: v.string(),
+    receiptId: v.optional(v.id('receipts')),
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx)
     const friend = await requireFriend(ctx, me.userId, args.friendId)
+    const receiptId = await attachReceipt(ctx, me.userId, args.receiptId)
     await record(ctx, me, friend, {
       kind: 'expense',
       userId: me.userId,
@@ -313,6 +325,7 @@ export const addExpense = mutation({
       paidBy: args.paidBy,
       split: args.split,
       date: input.isoDate(args.date),
+      receiptId,
     })
     return null
   },
@@ -345,23 +358,140 @@ export const addPayment = mutation({
   },
 })
 
+async function requireEntry(ctx: QueryCtx, userId: string, entryId: Id<'friendEntries'>) {
+  const entry = await ctx.db.get('friendEntries', entryId)
+  if (!entry || entry.userId !== userId) {
+    throw new ConvexError('That entry doesn’t exist.')
+  }
+  return entry
+}
+
+// The entry's twin in a linked friend's ledger, if it's still paired.
+async function twinOf(ctx: QueryCtx, entry: Doc<'friendEntries'>) {
+  const twin = entry.mirrorId ? await ctx.db.get('friendEntries', entry.mirrorId) : null
+  return twin && twin.mirrorId === entry._id ? twin : null
+}
+
+// Replaces an entry with `next` in your ledger and, if linked, its twin in
+// theirs, moving both balances and telling them what changed.
+async function replaceEntry(
+  ctx: MutationCtx,
+  me: User,
+  entry: Doc<'friendEntries'>,
+  next: NewEntry,
+) {
+  const friend = await requireFriend(ctx, me.userId, entry.friendId)
+  const now = Date.now()
+  await ctx.db.replace('friendEntries', entry._id, next)
+  const balances = addToBalance(friend.balances, entry.currency, -friendDelta(entry))
+  await ctx.db.patch('friends', friend._id, {
+    balances: addToBalance(balances, next.currency, friendDelta(next)),
+    lastActivityAt: now,
+  })
+
+  const twin = await twinOf(ctx, entry)
+  const theirFriend = twin ? await ctx.db.get('friends', twin.friendId) : null
+  if (!twin || !theirFriend) return
+  const nextTwin = { ...flip(next, theirFriend), mirrorId: entry._id }
+  await ctx.db.replace('friendEntries', twin._id, nextTwin)
+  const theirs = addToBalance(theirFriend.balances, twin.currency, -friendDelta(twin))
+  const theirDelta = friendDelta(nextTwin)
+  await ctx.db.patch('friends', theirFriend._id, {
+    balances: addToBalance(theirs, nextTwin.currency, theirDelta),
+    lastActivityAt: now,
+  })
+  await notify(ctx, {
+    userId: theirFriend.userId,
+    kind: 'friend_entry_updated',
+    actorName: me.name,
+    description: next.kind === 'expense' ? next.description : next.note,
+    amountCents: theirDelta,
+    currency: next.currency,
+    friendId: theirFriend._id,
+  })
+}
+
+/**
+ * Edits an expense (and its twin, if you're linked). `receiptId` is the
+ * receipt it should end up with.
+ */
+export const updateExpense = mutation({
+  args: {
+    entryId: v.id('friendEntries'),
+    description: v.string(),
+    amountCents: v.number(),
+    currency,
+    category,
+    paidBy,
+    split: v.union(v.literal('equal'), v.literal('full')),
+    date: v.string(),
+    receiptId: v.union(v.id('receipts'), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const entry = await requireEntry(ctx, me.userId, args.entryId)
+    if (entry.kind !== 'expense') throw new ConvexError('That entry is a payment.')
+    await replaceEntry(ctx, me, entry, {
+      kind: 'expense',
+      userId: entry.userId,
+      friendId: entry.friendId,
+      description: input.text(args.description, 'Description', 80),
+      amountCents: input.amount(args.amountCents),
+      currency: args.currency,
+      category: args.category,
+      paidBy: args.paidBy,
+      split: args.split,
+      date: input.isoDate(args.date),
+      mirrorId: entry.mirrorId,
+      receiptId: await attachReceipt(ctx, me.userId, args.receiptId, entry.receiptId),
+    })
+    return null
+  },
+})
+
+/** Edits a settle-up payment (and its twin, if you're linked). */
+export const updatePayment = mutation({
+  args: {
+    entryId: v.id('friendEntries'),
+    amountCents: v.number(),
+    currency,
+    paidBy,
+    note: v.optional(v.string()),
+    date: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const entry = await requireEntry(ctx, me.userId, args.entryId)
+    if (entry.kind !== 'payment') throw new ConvexError('That entry is an expense.')
+    await replaceEntry(ctx, me, entry, {
+      kind: 'payment',
+      userId: entry.userId,
+      friendId: entry.friendId,
+      amountCents: input.amount(args.amountCents),
+      currency: args.currency,
+      paidBy: args.paidBy,
+      note: input.optionalText(args.note, 'Note', 80),
+      date: input.isoDate(args.date),
+      mirrorId: entry.mirrorId,
+    })
+    return null
+  },
+})
+
 /** Deletes an entry, and its twin in a linked friend's ledger. */
 export const removeEntry = mutation({
   args: { entryId: v.id('friendEntries') },
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx)
-    const entry = await ctx.db.get('friendEntries', args.entryId)
-    if (!entry || entry.userId !== userId) {
-      throw new ConvexError('That entry doesn’t exist.')
-    }
+    const entry = await requireEntry(ctx, userId, args.entryId)
     const friend = await requireFriend(ctx, userId, entry.friendId)
     await ctx.db.delete('friendEntries', entry._id)
     await ctx.db.patch('friends', friend._id, {
       balances: addToBalance(friend.balances, entry.currency, -friendDelta(entry)),
     })
 
-    const twin = entry.mirrorId ? await ctx.db.get('friendEntries', entry.mirrorId) : null
-    if (twin && twin.mirrorId === entry._id) {
+    const twin = await twinOf(ctx, entry)
+    if (twin) {
       const theirFriend = await ctx.db.get('friends', twin.friendId)
       await ctx.db.delete('friendEntries', twin._id)
       if (theirFriend) {
@@ -369,6 +499,10 @@ export const removeEntry = mutation({
           balances: addToBalance(theirFriend.balances, twin.currency, -friendDelta(twin)),
         })
       }
+    }
+    // The twin (now gone too) shared the receipt.
+    if (entry.kind === 'expense' && entry.receiptId) {
+      await deleteReceipt(ctx, entry.receiptId)
     }
     return null
   },

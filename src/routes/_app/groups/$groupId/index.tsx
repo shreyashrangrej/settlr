@@ -1,11 +1,12 @@
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, stripSearchParams } from '@tanstack/react-router'
-import { Receipt, Search, Trash2 } from 'lucide-react'
+import { Pencil, Receipt, Search, Trash2 } from 'lucide-react'
 
 import { ConfirmAction } from '#/components/confirm-action'
 import { SelectField } from '#/components/form-fields'
 import { useAction } from '#/components/ledger'
+import { ReceiptLink } from '#/components/receipts'
 import { useGroup } from '#/components/use-group'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -113,7 +114,8 @@ function ExpensesPage() {
               </EmptyHeader>
             </Empty>
           ) : (
-            <Table>
+            // Fixed layout: the data columns share the width equally.
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
                   <TableHead>Description</TableHead>
@@ -122,7 +124,7 @@ function ExpensesPage() {
                   <TableHead className="hidden md:table-cell">Paid by</TableHead>
                   <TableHead className="hidden xl:table-cell">Split</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="w-10">
+                  <TableHead className="w-20">
                     <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
@@ -236,43 +238,58 @@ function ExpenseRow({ group, expense }: { group: Group; expense: GroupExpense })
 
   return (
     <TableRow>
-      <TableCell className="max-w-0 font-medium">
-        <span className="block truncate">{expense.description}</span>
-        <span className="block text-xs font-normal text-muted-foreground md:hidden">
+      <TableCell className="font-medium">
+        <span className="flex items-center gap-1">
+          <span className="truncate" title={expense.description}>
+            {expense.description}
+          </span>
+          {expense.receiptId && <ReceiptLink source="group" expenseId={expense.id} />}
+        </span>
+        <span className="block truncate text-xs font-normal text-muted-foreground md:hidden">
           {formatDate(expense.date)} · {payer} paid · {split}
         </span>
       </TableCell>
-      <TableCell className="hidden w-40 lg:table-cell">
+      <TableCell className="hidden lg:table-cell">
         <Badge variant="secondary">{categoryLabel(expense.category)}</Badge>
       </TableCell>
-      <TableCell className="hidden w-36 text-muted-foreground md:table-cell">
+      <TableCell className="hidden text-muted-foreground md:table-cell">
         {formatDate(expense.date)}
       </TableCell>
-      <TableCell className="hidden w-40 md:table-cell">
-        <span className="block truncate">{payer}</span>
-      </TableCell>
-      <TableCell className="hidden w-32 text-muted-foreground xl:table-cell">
-        {split}
-      </TableCell>
-      <TableCell className="w-32 text-right font-semibold tabular-nums">
+      <TableCell className="hidden truncate md:table-cell">{payer}</TableCell>
+      <TableCell className="hidden text-muted-foreground xl:table-cell">{split}</TableCell>
+      <TableCell className="text-right font-semibold tabular-nums">
         {formatMoney(expense.amountCents, group.currency)}
       </TableCell>
-      <TableCell className="w-10 text-right">
-        <ConfirmAction
-          title={`Delete “${expense.description}”?`}
-          description="Balances will be updated. This can’t be undone."
-          onConfirm={async () => Boolean(await run({ expenseId: expense.id }))}
-          trigger={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Delete ${expense.description}`}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 />
-            </Button>
-          }
-        />
+      <TableCell>
+        <span className="flex justify-end gap-1">
+          <Link
+            to="/groups/$groupId/expenses/$expenseId/edit"
+            params={{ groupId: group.id, expenseId: expense.id }}
+            aria-label={`Edit ${expense.description}`}
+            title="Edit"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'icon-sm' }),
+              'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Pencil />
+          </Link>
+          <ConfirmAction
+            title={`Delete “${expense.description}”?`}
+            description="Balances will be updated. This can’t be undone."
+            onConfirm={async () => Boolean(await run({ expenseId: expense.id }))}
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Delete ${expense.description}`}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 />
+              </Button>
+            }
+          />
+        </span>
       </TableCell>
     </TableRow>
   )

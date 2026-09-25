@@ -54,6 +54,8 @@ export default defineSchema({
         date: v.string(),
         // The same entry in the linked friend's ledger.
         mirrorId: v.optional(v.id('friendEntries')),
+        // Shared with the twin: both entries point at the same receipt.
+        receiptId: v.optional(v.id('receipts')),
       }),
       v.object({
         kind: v.literal('payment'),
@@ -95,6 +97,10 @@ export default defineSchema({
       v.literal('group_expense'),
       v.literal('group_added'),
       v.literal('request_accepted'),
+      // Someone edited an expense or payment you share. Amounts are the
+      // edited entry's effect on you.
+      v.literal('friend_entry_updated'),
+      v.literal('group_expense_updated'),
     ),
     actorName: v.string(),
     description: v.optional(v.string()),
@@ -150,6 +156,7 @@ export default defineSchema({
     splitAmong: v.array(v.string()),
     category,
     date: v.string(),
+    receiptId: v.optional(v.id('receipts')),
   })
     .index('by_groupId_and_date', ['groupId', 'date'])
     .index('by_groupId_and_amountCents', ['groupId', 'amountCents'])
@@ -157,6 +164,19 @@ export default defineSchema({
       searchField: 'description',
       filterFields: ['groupId', 'category', 'paidBy'],
     }),
+
+  // A receipt (an image or a PDF in Convex file storage) uploaded by
+  // `userId`. It starts unattached; adding or editing an expense attaches
+  // it, after which it belongs to that expense (and is deleted with it).
+  // Unattached receipts are deleted a day after upload.
+  receipts: defineTable({
+    userId: v.string(),
+    storageId: v.id('_storage'),
+    fileName: v.string(),
+    contentType: v.string(),
+    size: v.number(),
+    attached: v.boolean(),
+  }).index('by_storageId', ['storageId']),
 
   // Monthly budget for your personal spending, one per currency. It applies
   // to every month.
@@ -173,5 +193,6 @@ export default defineSchema({
     currency,
     category,
     date: v.string(),
+    receiptId: v.optional(v.id('receipts')),
   }).index('by_userId_and_date', ['userId', 'date']),
 })

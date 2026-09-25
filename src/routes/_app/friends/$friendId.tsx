@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import {
@@ -11,10 +11,12 @@ import {
 import { HandCoins, Receipt, Trash2, UserPlus } from 'lucide-react'
 
 import { ConfirmAction } from '#/components/confirm-action'
+import { EditDialog } from '#/components/edit-dialog'
 import {
   AmountInput,
   CategorySelect,
   CurrencySelect,
+  DatePicker,
   SelectField,
 } from '#/components/form-fields'
 import {
@@ -24,6 +26,12 @@ import {
   useAction,
 } from '#/components/ledger'
 import { PageHeader, SplitLayout } from '#/components/page-header'
+import {
+  ReceiptField,
+  ReceiptLink,
+  existingReceipt,
+  type ReceiptValue,
+} from '#/components/receipts'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
@@ -68,6 +76,8 @@ import {
   listSearchSchema,
   type Category,
   type Currency,
+  type FriendExpenseInput,
+  type FriendPaymentInput,
 } from '#/lib/schemas'
 import type { Friend, FriendEntry } from '#/lib/types'
 import { cn } from '#/lib/utils'
@@ -202,21 +212,22 @@ function FriendPage() {
                 </EmptyHeader>
               </Empty>
             ) : (
-              <Table>
+              // Fixed layout: the data columns share the width equally.
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Description</TableHead>
                     <TableHead className="hidden md:table-cell">Date</TableHead>
                     <TableHead className="hidden lg:table-cell">Details</TableHead>
                     <TableHead className="text-right">Effect</TableHead>
-                    <TableHead className="w-10">
+                    <TableHead className="w-20">
                       <span className="sr-only">Actions</span>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {ledger.items.map((entry) => (
-                    <EntryRow key={entry.id} entry={entry} friendName={friend.name} />
+                    <EntryRow key={entry.id} entry={entry} friend={friend} />
                   ))}
                 </TableBody>
               </Table>
@@ -238,13 +249,8 @@ function FriendPage() {
   )
 }
 
-function EntryRow({
-  entry,
-  friendName,
-}: {
-  entry: FriendEntry
-  friendName: string
-}) {
+function EntryRow({ entry, friend }: { entry: FriendEntry; friend: Friend }) {
+  const friendName = friend.name
   const removeEntry = useConvexMutation(api.friends.removeEntry)
   const { run } = useAction(removeEntry, {
     success: 'Deleted',
@@ -265,7 +271,7 @@ function EntryRow({
 
   return (
     <TableRow>
-      <TableCell className="max-w-0">
+      <TableCell>
         <span className="flex items-center gap-3">
           <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted [&_svg]:size-4">
             {entry.kind === 'payment' ? (
@@ -275,7 +281,14 @@ function EntryRow({
             )}
           </span>
           <span className="min-w-0">
-            <span className="block truncate font-medium">{title}</span>
+            <span className="flex items-center gap-1">
+              <span className="truncate font-medium" title={title}>
+                {title}
+              </span>
+              {entry.kind === 'expense' && entry.receiptId && (
+                <ReceiptLink source="friend" expenseId={entry.id} />
+              )}
+            </span>
             <span className="block truncate text-xs text-muted-foreground lg:hidden">
               <span className="md:hidden">{formatDate(entry.date)} · </span>
               {detail}
@@ -283,18 +296,20 @@ function EntryRow({
           </span>
         </span>
       </TableCell>
-      <TableCell className="hidden w-36 text-muted-foreground md:table-cell">
+      <TableCell className="hidden text-muted-foreground md:table-cell">
         {formatDate(entry.date)}
       </TableCell>
-      <TableCell className="hidden max-w-0 text-muted-foreground lg:table-cell">
+      <TableCell className="hidden text-muted-foreground lg:table-cell">
         <span className="flex items-center gap-2">
           {entry.kind === 'expense' && (
             <Badge variant="secondary">{categoryLabel(entry.category)}</Badge>
           )}
-          <span className="truncate">{detail}</span>
+          <span className="truncate" title={detail}>
+            {detail}
+          </span>
         </span>
       </TableCell>
-      <TableCell className="w-44 text-right">
+      <TableCell className="text-right">
         {entry.kind === 'payment' ? (
           // The description already says who paid whom.
           <span className="font-semibold tabular-nums">
@@ -303,7 +318,7 @@ function EntryRow({
         ) : (
           <span
             className={cn(
-              'font-semibold tabular-nums',
+              'block truncate font-semibold tabular-nums',
               entry.effectCents > 0 ? 'text-positive' : 'text-destructive',
             )}
           >
@@ -312,50 +327,89 @@ function EntryRow({
           </span>
         )}
       </TableCell>
-      <TableCell className="w-10 text-right">
-        <ConfirmAction
-          title={`Delete “${title}”?`}
-          description="Balances will be updated. This can’t be undone."
-          onConfirm={async () => Boolean(await run({ entryId: entry.id }))}
-          trigger={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Delete ${title}`}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 />
-            </Button>
-          }
-        />
+      <TableCell>
+        <span className="flex justify-end gap-1">
+          <EditDialog
+            label={`Edit ${title}`}
+            title={entry.kind === 'expense' ? 'Edit expense' : 'Edit payment'}
+            description={
+              friend.status === 'linked'
+                ? `${friendName} sees this ${entry.kind} too, and will be told about the change.`
+                : undefined
+            }
+          >
+            {(close) =>
+              entry.kind === 'expense' ? (
+                <ExpenseForm friend={friend} entry={entry} onSaved={close} />
+              ) : (
+                <PaymentForm friend={friend} entry={entry} onSaved={close} />
+              )
+            }
+          </EditDialog>
+          <ConfirmAction
+            title={`Delete “${title}”?`}
+            description="Balances will be updated. This can’t be undone."
+            onConfirm={async () => Boolean(await run({ entryId: entry.id }))}
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Delete ${title}`}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 />
+              </Button>
+            }
+          />
+        </span>
       </TableCell>
     </TableRow>
   )
 }
 
-// Defaults to a currency this friend already has a balance in, then to the
-// currency picked in Settings (read after hydration).
-function useDefaultCurrency(friend: Friend) {
+type ExpenseEntry = Extract<FriendEntry, { kind: 'expense' }>
+type PaymentEntry = Extract<FriendEntry, { kind: 'payment' }>
+
+// Starts from `initial` (an edited entry's currency), else a currency this
+// friend already has a balance in, then the one picked in Settings (read
+// after hydration).
+function useDefaultCurrency(friend: Friend, initial?: Currency) {
   const fromBalance = Object.keys(friend.balances)[0] as Currency | undefined
-  const [currency, setCurrency] = useState<Currency>(fromBalance ?? 'USD')
+  const [currency, setCurrency] = useState<Currency>(initial ?? fromBalance ?? 'USD')
   useEffect(() => {
-    if (!fromBalance) setCurrency(readPreferences().defaultCurrency)
-  }, [fromBalance])
+    if (!initial && !fromBalance) setCurrency(readPreferences().defaultCurrency)
+  }, [initial, fromBalance])
   return [currency, setCurrency] as const
 }
 
-function ExpenseForm({ friend }: { friend: Friend }) {
+/** Adds a shared expense, or with `entry`, edits it. */
+function ExpenseForm({
+  friend,
+  entry,
+  onSaved,
+}: {
+  friend: Friend
+  entry?: ExpenseEntry
+  onSaved?: () => void
+}) {
+  const id = useId()
   const addExpense = useConvexMutation(api.friends.addExpense)
-  const { run, pending, error, setError } = useAction(addExpense, {
-    success: 'Expense added',
-  })
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
-  const [currency, setCurrency] = useDefaultCurrency(friend)
-  const [category, setCategory] = useState<Category>('food')
-  const [date, setDate] = useState(todayIsoDate)
-  const [paidBy, setPaidBy] = useState<'me' | 'friend'>('me')
-  const [split, setSplit] = useState<'equal' | 'full'>('equal')
+  const updateExpense = useConvexMutation(api.friends.updateExpense)
+  const { run, pending, error, setError } = useAction(
+    async (input: FriendExpenseInput, receipt: ReceiptValue) =>
+      entry
+        ? updateExpense({ entryId: entry.id, ...input, receiptId: receipt?.id ?? null })
+        : addExpense({ friendId: friend.id, ...input, receiptId: receipt?.id }),
+    { success: entry ? 'Expense updated' : 'Expense added' },
+  )
+  const [description, setDescription] = useState(entry?.description ?? '')
+  const [amount, setAmount] = useState(entry ? (entry.amountCents / 100).toFixed(2) : '')
+  const [currency, setCurrency] = useDefaultCurrency(friend, entry?.currency)
+  const [category, setCategory] = useState<Category>(entry?.category ?? 'food')
+  const [date, setDate] = useState(entry?.date ?? todayIsoDate)
+  const [paidBy, setPaidBy] = useState<'me' | 'friend'>(entry?.paidBy ?? 'me')
+  const [split, setSplit] = useState<'equal' | 'full'>(entry?.split ?? 'equal')
+  const [receipt, setReceipt] = useState<ReceiptValue>(() => existingReceipt(entry?.receiptId))
   const other = paidBy === 'me' ? friend.name : 'You'
 
   async function onSubmit(event: React.FormEvent) {
@@ -378,19 +432,23 @@ function ExpenseForm({ friend }: { friend: Friend }) {
       setError(parsed.error.issues[0]?.message ?? 'Check the form')
       return
     }
-    if (await run({ friendId: friend.id, ...parsed.data })) {
-      setDescription('')
-      setAmount('')
+    if (!(await run(parsed.data, receipt))) return
+    if (entry) {
+      onSaved?.()
+      return
     }
+    setDescription('')
+    setAmount('')
+    setReceipt(null)
   }
 
   return (
     <form noValidate onSubmit={onSubmit}>
       <FieldGroup className="gap-4">
         <Field>
-          <FieldLabel htmlFor="fe-description">Description</FieldLabel>
+          <FieldLabel htmlFor={`${id}-description`}>Description</FieldLabel>
           <Input
-            id="fe-description"
+            id={`${id}-description`}
             value={description}
             maxLength={80}
             placeholder="Dinner"
@@ -399,19 +457,19 @@ function ExpenseForm({ friend }: { friend: Friend }) {
         </Field>
         <div className="grid grid-cols-[1fr_6.5rem] gap-3">
           <Field>
-            <FieldLabel htmlFor="fe-amount">Amount</FieldLabel>
-            <AmountInput id="fe-amount" value={amount} onChange={setAmount} currency={currency} />
+            <FieldLabel htmlFor={`${id}-amount`}>Amount</FieldLabel>
+            <AmountInput id={`${id}-amount`} value={amount} onChange={setAmount} currency={currency} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="fe-currency">Currency</FieldLabel>
-            <CurrencySelect id="fe-currency" value={currency} onChange={setCurrency} />
+            <FieldLabel htmlFor={`${id}-currency`}>Currency</FieldLabel>
+            <CurrencySelect id={`${id}-currency`} value={currency} onChange={setCurrency} />
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field>
-            <FieldLabel htmlFor="fe-paid-by">Paid by</FieldLabel>
+            <FieldLabel htmlFor={`${id}-paid-by`}>Paid by</FieldLabel>
             <SelectField
-              id="fe-paid-by"
+              id={`${id}-paid-by`}
               value={paidBy}
               onChange={setPaidBy}
               options={[
@@ -421,9 +479,9 @@ function ExpenseForm({ friend }: { friend: Friend }) {
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="fe-split">Split</FieldLabel>
+            <FieldLabel htmlFor={`${id}-split`}>Split</FieldLabel>
             <SelectField
-              id="fe-split"
+              id={`${id}-split`}
               value={split}
               onChange={setSplit}
               options={[
@@ -435,48 +493,70 @@ function ExpenseForm({ friend }: { friend: Friend }) {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field>
-            <FieldLabel htmlFor="fe-category">Category</FieldLabel>
-            <CategorySelect id="fe-category" value={category} onChange={setCategory} />
+            <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
+            <CategorySelect id={`${id}-category`} value={category} onChange={setCategory} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="fe-date">Date</FieldLabel>
-            <Input
-              id="fe-date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+            <FieldLabel htmlFor={`${id}-date`}>Date</FieldLabel>
+            <DatePicker id={`${id}-date`} value={date} onChange={setDate} />
           </Field>
         </div>
+        <Field>
+          <FieldLabel htmlFor={`${id}-receipt`}>Receipt</FieldLabel>
+          <ReceiptField id={`${id}-receipt`} value={receipt} onChange={setReceipt} />
+        </Field>
         {error && <FieldError>{error}</FieldError>}
         <Button type="submit" size="lg" disabled={pending}>
           {pending && <Spinner />}
-          Add expense
+          {entry ? 'Save changes' : 'Add expense'}
         </Button>
       </FieldGroup>
     </form>
   )
 }
 
-function PaymentForm({ friend }: { friend: Friend }) {
+/**
+ * Records a settle-up payment, or with `entry`, edits it. A new payment
+ * starts from the outstanding balance in its currency.
+ */
+function PaymentForm({
+  friend,
+  entry,
+  onSaved,
+}: {
+  friend: Friend
+  entry?: PaymentEntry
+  onSaved?: () => void
+}) {
+  const id = useId()
   const addPayment = useConvexMutation(api.friends.addPayment)
-  const { run, pending, error, setError } = useAction(addPayment, {
-    success: 'Payment recorded',
-  })
-  const [currency, setCurrency] = useDefaultCurrency(friend)
+  const updatePayment = useConvexMutation(api.friends.updatePayment)
+  const { run, pending, error, setError } = useAction(
+    async (input: FriendPaymentInput) =>
+      entry
+        ? updatePayment({ entryId: entry.id, ...input })
+        : addPayment({ friendId: friend.id, ...input }),
+    { success: entry ? 'Payment updated' : 'Payment recorded' },
+  )
+  const [currency, setCurrency] = useDefaultCurrency(friend, entry?.currency)
   const outstanding = friend.balances[currency] ?? 0
   // Whoever owes pays; default to clearing the whole balance.
   const [paidBy, setPaidBy] = useState<'me' | 'friend'>(
-    outstanding < 0 ? 'me' : 'friend',
+    entry?.paidBy ?? (outstanding < 0 ? 'me' : 'friend'),
   )
   const [amount, setAmount] = useState(
-    outstanding ? (Math.abs(outstanding) / 100).toFixed(2) : '',
+    entry
+      ? (entry.amountCents / 100).toFixed(2)
+      : outstanding
+        ? (Math.abs(outstanding) / 100).toFixed(2)
+        : '',
   )
-  const [date, setDate] = useState(todayIsoDate)
-  const [note, setNote] = useState('')
+  const [date, setDate] = useState(entry?.date ?? todayIsoDate)
+  const [note, setNote] = useState(entry?.note ?? '')
 
   function pickCurrency(next: Currency) {
     setCurrency(next)
+    if (entry) return
     const balance = friend.balances[next] ?? 0
     setPaidBy(balance < 0 ? 'me' : 'friend')
     setAmount(balance ? (Math.abs(balance) / 100).toFixed(2) : '')
@@ -500,19 +580,22 @@ function PaymentForm({ friend }: { friend: Friend }) {
       setError(parsed.error.issues[0]?.message ?? 'Check the form')
       return
     }
-    if (await run({ friendId: friend.id, ...parsed.data })) {
-      setAmount('')
-      setNote('')
+    if (!(await run(parsed.data))) return
+    if (entry) {
+      onSaved?.()
+      return
     }
+    setAmount('')
+    setNote('')
   }
 
   return (
     <form noValidate onSubmit={onSubmit}>
       <FieldGroup className="gap-4">
         <Field>
-          <FieldLabel htmlFor="fp-paid-by">Who paid?</FieldLabel>
+          <FieldLabel htmlFor={`${id}-paid-by`}>Who paid?</FieldLabel>
           <SelectField
-            id="fp-paid-by"
+            id={`${id}-paid-by`}
             value={paidBy}
             onChange={setPaidBy}
             options={[
@@ -524,28 +607,23 @@ function PaymentForm({ friend }: { friend: Friend }) {
         </Field>
         <div className="grid grid-cols-[1fr_6.5rem] gap-3">
           <Field>
-            <FieldLabel htmlFor="fp-amount">Amount</FieldLabel>
-            <AmountInput id="fp-amount" value={amount} onChange={setAmount} currency={currency} />
+            <FieldLabel htmlFor={`${id}-amount`}>Amount</FieldLabel>
+            <AmountInput id={`${id}-amount`} value={amount} onChange={setAmount} currency={currency} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="fp-currency">Currency</FieldLabel>
-            <CurrencySelect id="fp-currency" value={currency} onChange={pickCurrency} />
+            <FieldLabel htmlFor={`${id}-currency`}>Currency</FieldLabel>
+            <CurrencySelect id={`${id}-currency`} value={currency} onChange={pickCurrency} />
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field>
-            <FieldLabel htmlFor="fp-date">Date</FieldLabel>
-            <Input
-              id="fp-date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+            <FieldLabel htmlFor={`${id}-date`}>Date</FieldLabel>
+            <DatePicker id={`${id}-date`} value={date} onChange={setDate} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="fp-note">Note</FieldLabel>
+            <FieldLabel htmlFor={`${id}-note`}>Note</FieldLabel>
             <Input
-              id="fp-note"
+              id={`${id}-note`}
               value={note}
               maxLength={80}
               placeholder="Bank transfer"
@@ -556,7 +634,7 @@ function PaymentForm({ friend }: { friend: Friend }) {
         {error && <FieldError>{error}</FieldError>}
         <Button type="submit" size="lg" disabled={pending}>
           {pending && <Spinner />}
-          Record payment
+          {entry ? 'Save changes' : 'Record payment'}
         </Button>
       </FieldGroup>
     </form>

@@ -139,7 +139,7 @@ function MemberShares({
         <CardTitle>Paid vs. share</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
               <TableHead>Member</TableHead>
@@ -150,7 +150,7 @@ function MemberShares({
           <TableBody>
             {group.members.map((m) => (
               <TableRow key={m.id}>
-                <TableCell className="font-medium">
+                <TableCell className="truncate font-medium">
                   {m.name}
                   {m.id === group.meMemberId && (
                     <span className="text-muted-foreground"> (you)</span>

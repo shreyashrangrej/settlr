@@ -10,11 +10,15 @@ const PAGE = 50
 // The badge shows "99+" past this.
 const COUNT_CAP = 99
 
-/** Friend requests waiting for you, and your recent notifications. */
+/**
+ * Friend requests waiting for you, and your recent notifications: up to
+ * `limit` of each (the header dropdown shows a few, the page a full page).
+ */
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
     const me = await requireUser(ctx)
+    const take = Math.min(Math.max(Math.floor(args.limit ?? PAGE), 1), PAGE)
     const requests = me.email
       ? await ctx.db
           .query('friendRequests')
@@ -22,13 +26,13 @@ export const list = query({
             q.eq('toEmail', me.email).eq('status', 'pending'),
           )
           .order('desc')
-          .take(PAGE)
+          .take(take)
       : []
     const items = await ctx.db
       .query('notifications')
       .withIndex('by_userId', (q) => q.eq('userId', me.userId))
       .order('desc')
-      .take(PAGE)
+      .take(take)
     return {
       requests: requests
         // Never show someone their own request (same email on two accounts).

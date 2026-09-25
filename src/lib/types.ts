@@ -20,4 +20,7 @@ export type Group = NonNullable<FunctionReturnType<typeof api.groups.get>>
 export type GroupExpense = FunctionReturnType<
   typeof api.groups.expenses
 >['items'][number]
+export type GroupExpenseDetail = NonNullable<
+  FunctionReturnType<typeof api.groups.expense>
+>
 export type PersonalMonth = FunctionReturnType<typeof api.personal.month>

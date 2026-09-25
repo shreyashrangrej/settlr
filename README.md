@@ -19,7 +19,7 @@ pnpm start        # runs the node-server build
 ## What it does
 
 After signing in (Google, or a one-time code by email) people land on an
-overview of three areas:
+overview of these areas:
 
 - **Friends**: one-on-one expenses with a single person, outside any group.
   Each expense is split equally or owed in full by the other person, and
@@ -33,13 +33,22 @@ overview of three areas:
   Groups can be renamed and members added, renamed or removed (removing is
   only allowed for people who aren't on any expense, and the currency only
   changes while a group has no expenses).
-- **Personal**: your own spending, month by month, with totals by category
-  and an optional monthly budget per currency. The budget counts everything
-  you spend: personal expenses plus your share of friend and group expenses
-  (progress, what's left and a daily allowance for the rest of the month).
+- **Personal**: your own spending, month by month, with totals by category.
+- **Budget**: an optional monthly budget per currency, on its own page
+  because it counts everything you spend: personal expenses plus your share
+  of friend and group expenses (progress, what's left, a daily allowance for
+  the rest of the month, and where the money went).
 - **Notifications**: friend requests to accept or decline, and a note
-  whenever someone adds an expense that involves you, records a payment with
-  you, adds you to a group or accepts your request. The bell shows the count.
+  whenever someone adds or edits an expense that involves you, records a
+  payment with you, adds you to a group or accepts your request. The bell
+  shows the count and opens a dropdown with the latest ones; "More" opens the
+  full list.
+
+Every expense can be edited after it's added (a linked friend's copy and
+group balances follow), and can carry a **receipt**: an image (JPEG, PNG,
+WebP, GIF) or PDF up to 10 MB, kept in Convex file storage. Clicking the
+paperclip opens it in an in-app viewer. Dates are picked with shadcn's
+calendar.
 
 Friends and group members are people you track by name; they don't need an
 account. A group's owner can link members to friends who have accepted a
@@ -51,13 +60,15 @@ notified, but only the owner can edit or delete it.
 ```
 convex/                    backend: schema, queries and mutations
   schema.ts                tables and indexes
-  friends.ts groups.ts personal.ts
-  lib/                     auth helper, input checks, balance math
+  friends.ts groups.ts personal.ts budgets.ts notifications.ts
+  receipts.ts              receipt uploads (Convex file storage) and viewing
+  lib/                     auth helper, input checks, balance math, receipts
   auth.ts http.ts          Better Auth running inside Convex
 src/
   routes/                  file-based routes (routeTree.gen.ts is generated)
     _app.tsx               signed-in layout; redirects signed-out visitors
-    _app/                  dashboard, friends, groups, personal
+    _app/                  dashboard, friends, groups, personal, budget,
+                           notifications, receipts/$source/$expenseId
   functions/               server functions (the auth session for SSR)
   server/                  server-only code (Better Auth proxy and token)
   lib/                     isomorphic code: zod schemas, types, formatting,
@@ -108,8 +119,10 @@ request middleware in `src/start.ts`.
 | Route                                  | `ssr`         | Why                                                                                                                                            |
 | -------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/` (landing hero)                     | `true`        | Marketing page and sign-in form. Signed-in visitors are redirected to `/dashboard`.                                                           |
-| `/dashboard`, `/friends`, `/personal`  | `true`        | Queries are prefetched on the server with the visitor's token, so the first HTML is complete.                                                 |
-| `/groups/$groupId` (+ expenses)        | `true`        | Shareable, filterable URLs render fully on the server.                                                                                         |
+| `/dashboard`, `/friends`, `/personal`, `/budget` | `true` | Queries are prefetched on the server with the visitor's token, so the first HTML is complete.                                         |
+| `/groups/$groupId` (+ expenses)        | `true`        | Shareable, filterable URLs render fully on the server. Adding and editing an expense are pages under it.                                       |
+| `/receipts/$source/$expenseId`         | `true`        | The receipt's URL and its expense are prefetched; images show inline and PDFs in the browser's viewer.                                         |
+| `/notifications`                       | `'data-only'` | The full list behind the bell's "More". Times are relative to the viewer's clock, so it renders in the browser.                                |
 | `/groups/$groupId/insights`            | `'data-only'` | The data is prefetched on the server, but the UI uses the viewer's locale, time zone and clock, so it renders only in the browser.            |
 | `/settings`                            | `false`       | Preferences live in localStorage, so the loader and UI can only run in the browser.                                                           |
 | `/api/health`                          | server route  | JSON liveness probe for load balancers and platform health checks.                                                                           |
@@ -133,3 +146,8 @@ NITRO_PRESET=bun pnpm build
 
 Deploy the backend with `pnpm exec convex deploy`, and set `VITE_CONVEX_URL`
 and `VITE_CONVEX_SITE_URL` for the web build.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[code of conduct](CODE_OF_CONDUCT.md).

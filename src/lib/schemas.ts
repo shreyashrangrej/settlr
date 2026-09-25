@@ -70,8 +70,8 @@ export const listSearchDefaults = { limit: LIST_STEP } as const
 export const listSearchSchema = z.object({ limit })
 
 // An empty month means "the current month".
-export const personalSearchDefaults = { month: '' } as const
-export const personalSearchSchema = z.object({
+export const monthSearchDefaults = { month: '' } as const
+export const monthSearchSchema = z.object({
   month: z
     .string()
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
@@ -79,6 +79,18 @@ export const personalSearchSchema = z.object({
     .default('')
     .catch(''),
 })
+
+// --- Receipts -------------------------------------------------------------
+// The same limits as convex/lib/receipts.ts, which re-checks every upload.
+
+export const RECEIPT_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+] as const
+export const MAX_RECEIPT_BYTES = 10 * 1024 * 1024
 
 // --- Form input -----------------------------------------------------------
 // The Convex functions re-check the same limits (convex/lib/input.ts).
@@ -151,6 +163,8 @@ export const friendExpenseInput = z.object({
   date: isoDate,
 })
 
+export type FriendExpenseInput = z.infer<typeof friendExpenseInput>
+
 export const friendPaymentInput = z.object({
   amountCents,
   currency: z.enum(CURRENCIES),
@@ -158,6 +172,7 @@ export const friendPaymentInput = z.object({
   note: z.string().trim().max(80).optional(),
   date: isoDate,
 })
+export type FriendPaymentInput = z.infer<typeof friendPaymentInput>
 
 export const personalExpenseInput = z.object({
   description,
@@ -166,6 +181,7 @@ export const personalExpenseInput = z.object({
   category: z.enum(CATEGORIES),
   date: isoDate,
 })
+export type PersonalExpenseInput = z.infer<typeof personalExpenseInput>
 
 // --- Forms ----------------------------------------------------------------
 

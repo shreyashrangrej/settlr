@@ -13,6 +13,7 @@ import { requireUser } from './lib/auth'
 import * as input from './lib/input'
 import { applyGroupExpense, settleUp, shares } from './lib/ledger'
 import { notify } from './lib/notify'
+import { attachReceipt, deleteReceipt } from './lib/receipts'
 import { category, currency } from './lib/validators'
 
 const MAX_GROUPS = 200
@@ -34,7 +35,7 @@ function viewerMemberId(group: Doc<'groups'>, userId: string) {
 // A group the caller owns or is a linked member of, or null if the id is
 // malformed, missing or not theirs. Taking a string (not v.id) lets pages
 // turn bad URLs into a 404.
-async function findGroup(ctx: QueryCtx, userId: string, groupId: string) {
+export async function findGroup(ctx: QueryCtx, userId: string, groupId: string) {
   const id = ctx.db.normalizeId('groups', groupId)
   const group = id ? await ctx.db.get('groups', id) : null
   return group && viewerMemberId(group, userId) !== null ? group : null
@@ -234,8 +235,31 @@ export const expenses = query({
         splitAmong: e.splitAmong,
         category: e.category,
         date: e.date,
+        receiptId: e.receiptId ?? null,
       })),
       hasMore: rows.length > limit,
+    }
+  },
+})
+
+/** One expense, for the edit form. Null if it's missing or not in a group of yours. */
+export const expense = query({
+  args: { groupId: v.string(), expenseId: v.string() },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const group = await findGroup(ctx, userId, args.groupId)
+    const id = ctx.db.normalizeId('groupExpenses', args.expenseId)
+    const expense = group && id ? await ctx.db.get('groupExpenses', id) : null
+    if (!group || !expense || expense.groupId !== group._id) return null
+    return {
+      id: expense._id,
+      description: expense.description,
+      amountCents: expense.amountCents,
+      paidBy: expense.paidBy,
+      splitAmong: expense.splitAmong,
+      category: expense.category,
+      date: expense.date,
+      receiptId: expense.receiptId ?? null,
     }
   },
 })
@@ -459,7 +483,10 @@ export const deleteExpenses = internalMutation({
       .query('groupExpenses')
       .withIndex('by_groupId_and_date', (q) => q.eq('groupId', args.groupId))
       .take(200)
-    for (const row of batch) await ctx.db.delete('groupExpenses', row._id)
+    for (const row of batch) {
+      await ctx.db.delete('groupExpenses', row._id)
+      if (row.receiptId) await deleteReceipt(ctx, row.receiptId)
+    }
     if (batch.length === 200) {
       await ctx.scheduler.runAfter(0, internal.groups.deleteExpenses, args)
     }
@@ -467,39 +494,69 @@ export const deleteExpenses = internalMutation({
   },
 })
 
-export const addExpense = mutation({
+const expenseFields = {
+  description: v.string(),
+  amountCents: v.number(),
+  paidBy: v.string(),
+  splitAmong: v.array(v.string()),
+  category,
+  date: v.string(),
+}
+
+// Checks an expense's fields against the group and cleans them up.
+function checkExpense(
+  group: Doc<'groups'>,
   args: {
-    groupId: v.id('groups'),
-    description: v.string(),
-    amountCents: v.number(),
-    paidBy: v.string(),
-    splitAmong: v.array(v.string()),
-    category,
-    date: v.string(),
+    description: string
+    amountCents: number
+    paidBy: string
+    splitAmong: Array<string>
+    category: Doc<'groupExpenses'>['category']
+    date: string
   },
+) {
+  const memberIds = new Set(group.members.map((m) => m.id))
+  const splitAmong = [...new Set(args.splitAmong)]
+  if (!memberIds.has(args.paidBy)) {
+    throw new ConvexError('The payer is not a member of this group.')
+  }
+  if (splitAmong.length === 0) {
+    throw new ConvexError('Split between at least one person.')
+  }
+  if (!splitAmong.every((id) => memberIds.has(id))) {
+    throw new ConvexError('Expenses can only be split between group members.')
+  }
+  return {
+    groupId: group._id,
+    description: input.text(args.description, 'Description', 80),
+    amountCents: input.amount(args.amountCents),
+    paidBy: args.paidBy,
+    splitAmong,
+    category: args.category,
+    date: input.isoDate(args.date),
+  }
+}
+
+type ExpenseEffect = Pick<Doc<'groupExpenses'>, 'amountCents' | 'paidBy' | 'splitAmong'>
+
+// What an expense means for one member: what they paid minus their share.
+function memberEffect(group: Doc<'groups'>, expense: ExpenseEffect, memberId: string) {
+  const owed = shares(expense, group.members.map((m) => m.id))
+  return (memberId === expense.paidBy ? expense.amountCents : 0) - (owed.get(memberId) ?? 0)
+}
+
+function isPartOf(expense: ExpenseEffect, memberId: string) {
+  return expense.paidBy === memberId || expense.splitAmong.includes(memberId)
+}
+
+export const addExpense = mutation({
+  args: { groupId: v.id('groups'), ...expenseFields, receiptId: v.optional(v.id('receipts')) },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx)
     const group = await requireGroup(ctx, me.userId, args.groupId)
-    const memberIds = new Set(group.members.map((m) => m.id))
-    const splitAmong = [...new Set(args.splitAmong)]
-    if (!memberIds.has(args.paidBy)) {
-      throw new ConvexError('The payer is not a member of this group.')
-    }
-    if (splitAmong.length === 0) {
-      throw new ConvexError('Split between at least one person.')
-    }
-    if (!splitAmong.every((id) => memberIds.has(id))) {
-      throw new ConvexError('Expenses can only be split between group members.')
-    }
-
     const expense = {
-      groupId: group._id,
-      description: input.text(args.description, 'Description', 80),
-      amountCents: input.amount(args.amountCents),
-      paidBy: args.paidBy,
-      splitAmong,
-      category: args.category,
-      date: input.isoDate(args.date),
+      ...checkExpense(group, args),
+      receiptId: await attachReceipt(ctx, me.userId, args.receiptId),
     }
     await ctx.db.insert('groupExpenses', expense)
     await ctx.db.patch('groups', group._id, {
@@ -509,18 +566,59 @@ export const addExpense = mutation({
 
     // Tell everyone on Settlr who's part of it (except whoever added it)
     // what it means for them: paid minus their share.
-    const owed = shares(expense, group.members.map((m) => m.id))
     for (const member of group.members) {
       const memberUser = memberUserId(group, member)
       if (!memberUser || memberUser === me.userId) continue
-      if (member.id !== expense.paidBy && !owed.has(member.id)) continue
+      if (!isPartOf(expense, member.id)) continue
       await notify(ctx, {
         userId: memberUser,
         kind: 'group_expense',
         actorName: me.name,
         description: expense.description,
-        amountCents:
-          (member.id === expense.paidBy ? expense.amountCents : 0) - (owed.get(member.id) ?? 0),
+        amountCents: memberEffect(group, expense, member.id),
+        currency: group.currency,
+        groupId: group._id,
+        groupName: group.name,
+      })
+    }
+    return null
+  },
+})
+
+/**
+ * Edits an expense. Any member can, like adding or deleting one. `receiptId`
+ * is the receipt it should end up with.
+ */
+export const updateExpense = mutation({
+  args: {
+    expenseId: v.id('groupExpenses'),
+    ...expenseFields,
+    receiptId: v.union(v.id('receipts'), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const old = await ctx.db.get('groupExpenses', args.expenseId)
+    const group = old ? await findGroup(ctx, me.userId, old.groupId) : null
+    if (!old || !group) throw new ConvexError('That expense doesn’t exist.')
+    const next = {
+      ...checkExpense(group, args),
+      receiptId: await attachReceipt(ctx, me.userId, args.receiptId, old.receiptId),
+    }
+    await ctx.db.replace('groupExpenses', old._id, next)
+    const without = { ...group, ...applyGroupExpense(group, old, -1) }
+    await ctx.db.patch('groups', group._id, applyGroupExpense(without, next, 1))
+
+    // Tell everyone on Settlr who was or is part of it where they stand now.
+    for (const member of group.members) {
+      const memberUser = memberUserId(group, member)
+      if (!memberUser || memberUser === me.userId) continue
+      if (!isPartOf(old, member.id) && !isPartOf(next, member.id)) continue
+      await notify(ctx, {
+        userId: memberUser,
+        kind: 'group_expense_updated',
+        actorName: me.name,
+        description: next.description,
+        amountCents: memberEffect(group, next, member.id),
         currency: group.currency,
         groupId: group._id,
         groupName: group.name,
@@ -539,6 +637,7 @@ export const removeExpense = mutation({
     if (!expense || !group) throw new ConvexError('That expense doesn’t exist.')
     await ctx.db.delete('groupExpenses', expense._id)
     await ctx.db.patch('groups', group._id, applyGroupExpense(group, expense, -1))
+    if (expense.receiptId) await deleteReceipt(ctx, expense.receiptId)
     return null
   },
 })

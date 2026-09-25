@@ -19,9 +19,11 @@ import type * as lib_friendship from "../lib/friendship.js";
 import type * as lib_input from "../lib/input.js";
 import type * as lib_ledger from "../lib/ledger.js";
 import type * as lib_notify from "../lib/notify.js";
+import type * as lib_receipts from "../lib/receipts.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as notifications from "../notifications.js";
 import type * as personal from "../personal.js";
+import type * as receipts from "../receipts.js";
 
 import type {
   ApiFromModules,
@@ -41,9 +43,11 @@ declare const fullApi: ApiFromModules<{
   "lib/input": typeof lib_input;
   "lib/ledger": typeof lib_ledger;
   "lib/notify": typeof lib_notify;
+  "lib/receipts": typeof lib_receipts;
   "lib/validators": typeof lib_validators;
   notifications: typeof notifications;
   personal: typeof personal;
+  receipts: typeof receipts;
 }>;
 
 /**

@@ -1,9 +1,10 @@
 import { ConvexError, v } from 'convex/values'
 
-import type { Doc } from './_generated/dataModel'
-import { mutation, query } from './_generated/server'
+import type { Doc, Id } from './_generated/dataModel'
+import { mutation, query, type QueryCtx } from './_generated/server'
 import { requireUser } from './lib/auth'
 import * as input from './lib/input'
+import { attachReceipt, deleteReceipt } from './lib/receipts'
 import { category, currency } from './lib/validators'
 
 // Enough for any realistic month; the page says so if a month has more.
@@ -60,6 +61,7 @@ export const month = query({
         currency: e.currency,
         category: e.category,
         date: e.date,
+        receiptId: e.receiptId ?? null,
       })),
       truncated: rows.length > MAX_PER_MONTH,
       totals: [...totals]
@@ -70,14 +72,24 @@ export const month = query({
   },
 })
 
+const fields = {
+  description: v.string(),
+  amountCents: v.number(),
+  currency,
+  category,
+  date: v.string(),
+}
+
+async function requireExpense(ctx: QueryCtx, userId: string, expenseId: Id<'personalExpenses'>) {
+  const expense = await ctx.db.get('personalExpenses', expenseId)
+  if (!expense || expense.userId !== userId) {
+    throw new ConvexError('That expense doesn’t exist.')
+  }
+  return expense
+}
+
 export const add = mutation({
-  args: {
-    description: v.string(),
-    amountCents: v.number(),
-    currency,
-    category,
-    date: v.string(),
-  },
+  args: { ...fields, receiptId: v.optional(v.id('receipts')) },
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx)
     await ctx.db.insert('personalExpenses', {
@@ -87,6 +99,29 @@ export const add = mutation({
       currency: args.currency,
       category: args.category,
       date: input.isoDate(args.date),
+      receiptId: await attachReceipt(ctx, userId, args.receiptId),
+    })
+    return null
+  },
+})
+
+/** Edits an expense. `receiptId` is the receipt it should end up with. */
+export const update = mutation({
+  args: {
+    expenseId: v.id('personalExpenses'),
+    ...fields,
+    receiptId: v.union(v.id('receipts'), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const expense = await requireExpense(ctx, userId, args.expenseId)
+    await ctx.db.patch('personalExpenses', expense._id, {
+      description: input.text(args.description, 'Description', 80),
+      amountCents: input.amount(args.amountCents),
+      currency: args.currency,
+      category: args.category,
+      date: input.isoDate(args.date),
+      receiptId: await attachReceipt(ctx, userId, args.receiptId, expense.receiptId),
     })
     return null
   },
@@ -96,11 +131,9 @@ export const remove = mutation({
   args: { expenseId: v.id('personalExpenses') },
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx)
-    const expense = await ctx.db.get('personalExpenses', args.expenseId)
-    if (!expense || expense.userId !== userId) {
-      throw new ConvexError('That expense doesn’t exist.')
-    }
+    const expense = await requireExpense(ctx, userId, args.expenseId)
     await ctx.db.delete('personalExpenses', expense._id)
+    if (expense.receiptId) await deleteReceipt(ctx, expense.receiptId)
     return null
   },
 })

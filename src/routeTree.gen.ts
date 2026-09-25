@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as AppBudgetRouteImport } from './routes/_app/budget'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppPersonalRouteImport } from './routes/_app/personal'
@@ -25,7 +26,9 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppGroupsGroupIdIndexRouteImport } from './routes/_app/groups/$groupId/index'
 import { Route as AppGroupsGroupIdEditRouteImport } from './routes/_app/groups/$groupId/edit'
 import { Route as AppGroupsGroupIdInsightsRouteImport } from './routes/_app/groups/$groupId/insights'
+import { Route as AppReceiptsSourceExpenseIdRouteImport } from './routes/_app/receipts/$source/$expenseId'
 import { Route as AppGroupsGroupIdExpensesNewRouteImport } from './routes/_app/groups/$groupId/expenses/new'
+import { Route as AppGroupsGroupIdExpensesExpenseIdEditRouteImport } from './routes/_app/groups/$groupId/expenses/$expenseId/edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +43,11 @@ const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppBudgetRoute = AppBudgetRouteImport.update({
+  id: '/budget',
+  path: '/budget',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
@@ -107,16 +115,29 @@ const AppGroupsGroupIdInsightsRoute =
     path: '/insights',
     getParentRoute: () => AppGroupsGroupIdRoute,
   } as any)
+const AppReceiptsSourceExpenseIdRoute =
+  AppReceiptsSourceExpenseIdRouteImport.update({
+    id: '/receipts/$source/$expenseId',
+    path: '/receipts/$source/$expenseId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppGroupsGroupIdExpensesNewRoute =
   AppGroupsGroupIdExpensesNewRouteImport.update({
     id: '/expenses/new',
     path: '/expenses/new',
     getParentRoute: () => AppGroupsGroupIdRoute,
   } as any)
+const AppGroupsGroupIdExpensesExpenseIdEditRoute =
+  AppGroupsGroupIdExpensesExpenseIdEditRouteImport.update({
+    id: '/expenses/$expenseId/edit',
+    path: '/expenses/$expenseId/edit',
+    getParentRoute: () => AppGroupsGroupIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/budget': typeof AppBudgetRoute
   '/dashboard': typeof AppDashboardRoute
   '/notifications': typeof AppNotificationsRoute
   '/personal': typeof AppPersonalRoute
@@ -129,12 +150,15 @@ export interface FileRoutesByFullPath {
   '/groups/': typeof AppGroupsIndexRoute
   '/groups/$groupId/edit': typeof AppGroupsGroupIdEditRoute
   '/groups/$groupId/insights': typeof AppGroupsGroupIdInsightsRoute
+  '/receipts/$source/$expenseId': typeof AppReceiptsSourceExpenseIdRoute
   '/groups/$groupId/': typeof AppGroupsGroupIdIndexRoute
   '/groups/$groupId/expenses/new': typeof AppGroupsGroupIdExpensesNewRoute
+  '/groups/$groupId/expenses/$expenseId/edit': typeof AppGroupsGroupIdExpensesExpenseIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/budget': typeof AppBudgetRoute
   '/dashboard': typeof AppDashboardRoute
   '/notifications': typeof AppNotificationsRoute
   '/personal': typeof AppPersonalRoute
@@ -146,14 +170,17 @@ export interface FileRoutesByTo {
   '/groups': typeof AppGroupsIndexRoute
   '/groups/$groupId/edit': typeof AppGroupsGroupIdEditRoute
   '/groups/$groupId/insights': typeof AppGroupsGroupIdInsightsRoute
+  '/receipts/$source/$expenseId': typeof AppReceiptsSourceExpenseIdRoute
   '/groups/$groupId': typeof AppGroupsGroupIdIndexRoute
   '/groups/$groupId/expenses/new': typeof AppGroupsGroupIdExpensesNewRoute
+  '/groups/$groupId/expenses/$expenseId/edit': typeof AppGroupsGroupIdExpensesExpenseIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/_app/budget': typeof AppBudgetRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/personal': typeof AppPersonalRoute
@@ -166,14 +193,17 @@ export interface FileRoutesById {
   '/_app/groups/': typeof AppGroupsIndexRoute
   '/_app/groups/$groupId/edit': typeof AppGroupsGroupIdEditRoute
   '/_app/groups/$groupId/insights': typeof AppGroupsGroupIdInsightsRoute
+  '/_app/receipts/$source/$expenseId': typeof AppReceiptsSourceExpenseIdRoute
   '/_app/groups/$groupId/': typeof AppGroupsGroupIdIndexRoute
   '/_app/groups/$groupId/expenses/new': typeof AppGroupsGroupIdExpensesNewRoute
+  '/_app/groups/$groupId/expenses/$expenseId/edit': typeof AppGroupsGroupIdExpensesExpenseIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/settings'
+    | '/budget'
     | '/dashboard'
     | '/notifications'
     | '/personal'
@@ -186,12 +216,15 @@ export interface FileRouteTypes {
     | '/groups/'
     | '/groups/$groupId/edit'
     | '/groups/$groupId/insights'
+    | '/receipts/$source/$expenseId'
     | '/groups/$groupId/'
     | '/groups/$groupId/expenses/new'
+    | '/groups/$groupId/expenses/$expenseId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/settings'
+    | '/budget'
     | '/dashboard'
     | '/notifications'
     | '/personal'
@@ -203,13 +236,16 @@ export interface FileRouteTypes {
     | '/groups'
     | '/groups/$groupId/edit'
     | '/groups/$groupId/insights'
+    | '/receipts/$source/$expenseId'
     | '/groups/$groupId'
     | '/groups/$groupId/expenses/new'
+    | '/groups/$groupId/expenses/$expenseId/edit'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/settings'
+    | '/_app/budget'
     | '/_app/dashboard'
     | '/_app/notifications'
     | '/_app/personal'
@@ -222,8 +258,10 @@ export interface FileRouteTypes {
     | '/_app/groups/'
     | '/_app/groups/$groupId/edit'
     | '/_app/groups/$groupId/insights'
+    | '/_app/receipts/$source/$expenseId'
     | '/_app/groups/$groupId/'
     | '/_app/groups/$groupId/expenses/new'
+    | '/_app/groups/$groupId/expenses/$expenseId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -256,6 +294,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/budget': {
+      id: '/_app/budget'
+      path: '/budget'
+      fullPath: '/budget'
+      preLoaderRoute: typeof AppBudgetRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
       id: '/_app/dashboard'
@@ -348,11 +393,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppGroupsGroupIdInsightsRouteImport
       parentRoute: typeof AppGroupsGroupIdRoute
     }
+    '/_app/receipts/$source/$expenseId': {
+      id: '/_app/receipts/$source/$expenseId'
+      path: '/receipts/$source/$expenseId'
+      fullPath: '/receipts/$source/$expenseId'
+      preLoaderRoute: typeof AppReceiptsSourceExpenseIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/groups/$groupId/expenses/new': {
       id: '/_app/groups/$groupId/expenses/new'
       path: '/expenses/new'
       fullPath: '/groups/$groupId/expenses/new'
       preLoaderRoute: typeof AppGroupsGroupIdExpensesNewRouteImport
+      parentRoute: typeof AppGroupsGroupIdRoute
+    }
+    '/_app/groups/$groupId/expenses/$expenseId/edit': {
+      id: '/_app/groups/$groupId/expenses/$expenseId/edit'
+      path: '/expenses/$expenseId/edit'
+      fullPath: '/groups/$groupId/expenses/$expenseId/edit'
+      preLoaderRoute: typeof AppGroupsGroupIdExpensesExpenseIdEditRouteImport
       parentRoute: typeof AppGroupsGroupIdRoute
     }
   }
@@ -363,6 +422,7 @@ interface AppGroupsGroupIdRouteChildren {
   AppGroupsGroupIdInsightsRoute: typeof AppGroupsGroupIdInsightsRoute
   AppGroupsGroupIdIndexRoute: typeof AppGroupsGroupIdIndexRoute
   AppGroupsGroupIdExpensesNewRoute: typeof AppGroupsGroupIdExpensesNewRoute
+  AppGroupsGroupIdExpensesExpenseIdEditRoute: typeof AppGroupsGroupIdExpensesExpenseIdEditRoute
 }
 
 const AppGroupsGroupIdRouteChildren: AppGroupsGroupIdRouteChildren = {
@@ -370,12 +430,15 @@ const AppGroupsGroupIdRouteChildren: AppGroupsGroupIdRouteChildren = {
   AppGroupsGroupIdInsightsRoute: AppGroupsGroupIdInsightsRoute,
   AppGroupsGroupIdIndexRoute: AppGroupsGroupIdIndexRoute,
   AppGroupsGroupIdExpensesNewRoute: AppGroupsGroupIdExpensesNewRoute,
+  AppGroupsGroupIdExpensesExpenseIdEditRoute:
+    AppGroupsGroupIdExpensesExpenseIdEditRoute,
 }
 
 const AppGroupsGroupIdRouteWithChildren =
   AppGroupsGroupIdRoute._addFileChildren(AppGroupsGroupIdRouteChildren)
 
 interface AppRouteChildren {
+  AppBudgetRoute: typeof AppBudgetRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPersonalRoute: typeof AppPersonalRoute
@@ -384,9 +447,11 @@ interface AppRouteChildren {
   AppGroupsNewRoute: typeof AppGroupsNewRoute
   AppFriendsIndexRoute: typeof AppFriendsIndexRoute
   AppGroupsIndexRoute: typeof AppGroupsIndexRoute
+  AppReceiptsSourceExpenseIdRoute: typeof AppReceiptsSourceExpenseIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBudgetRoute: AppBudgetRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppPersonalRoute: AppPersonalRoute,
@@ -395,6 +460,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppGroupsNewRoute: AppGroupsNewRoute,
   AppFriendsIndexRoute: AppFriendsIndexRoute,
   AppGroupsIndexRoute: AppGroupsIndexRoute,
+  AppReceiptsSourceExpenseIdRoute: AppReceiptsSourceExpenseIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
