@@ -19,6 +19,24 @@ export function friendDelta(entry: FriendEntry) {
   return entry.paidBy === 'me' ? owedByOther : -owedByOther
 }
 
+/**
+ * Your own share of a one-on-one expense (what it cost you): the non-payer
+ * owes half rounded down on an equal split, or everything when owed in full.
+ */
+export function myFriendShare(entry: {
+  amountCents: number
+  paidBy: 'me' | 'friend'
+  split: 'equal' | 'full'
+}) {
+  const otherOwes =
+    entry.split === 'equal' ? Math.floor(entry.amountCents / 2) : entry.amountCents
+  return entry.paidBy === 'me'
+    ? entry.amountCents - otherOwes
+    : entry.split === 'equal'
+      ? Math.floor(entry.amountCents / 2)
+      : entry.amountCents
+}
+
 export function addToBalance(
   balances: Record<string, number>,
   currency: string,

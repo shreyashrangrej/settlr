@@ -33,6 +33,15 @@ import { api } from '#convex/_generated/api'
 
 export type Budget = { currency: Currency; amountCents: number }
 
+/** A month's spending in one currency (see budgets.monthSpending). */
+export type Spending = {
+  currency: Currency
+  personal: number
+  friends: number
+  groups: number
+  total: number
+}
+
 // How close spending is to a budget.
 export function budgetStatus(spentCents: number, budgetCents: number) {
   const ratio = budgetCents > 0 ? spentCents / budgetCents : 0
@@ -54,26 +63,33 @@ const badgeTone = {
 } as const
 
 /**
- * The monthly budget(s) for personal spending in `month`: spent against
- * budget, what's left, and (for the current month) a daily allowance.
- * `today` is a `YYYY-MM-DD` date from the loader, so SSR and the client agree.
+ * The monthly budget(s) for `month`: everything you spent (personal, plus
+ * your share with friends and in groups) against the budget, what's left,
+ * and (for the current month) a daily allowance. `today` is a `YYYY-MM-DD`
+ * date from the loader, so SSR and the client agree.
  */
 export function BudgetCard({
   month,
   today,
   budgets,
-  totals,
+  spending,
   defaultCurrency,
 }: {
   month: string
   today: string
   budgets: Array<Budget>
-  totals: Array<{ currency: Currency; cents: number }>
+  spending: Array<Spending>
   /** Where "Set budget" starts; falls back to the Settings default. */
   defaultCurrency?: Currency
 }) {
-  const spentIn = (currency: Currency) =>
-    totals.find((t) => t.currency === currency)?.cents ?? 0
+  const spentIn = (currency: Currency): Spending =>
+    spending.find((s) => s.currency === currency) ?? {
+      currency,
+      personal: 0,
+      friends: 0,
+      groups: 0,
+      total: 0,
+    }
 
   if (budgets.length === 0) {
     return (
@@ -84,7 +100,8 @@ export function BudgetCard({
             Monthly budget
           </CardTitle>
           <CardDescription>
-            Set a limit for your personal spending and see how the month is going.
+            Set a limit for what you spend each month, including your share
+            with friends and groups, and see how the month is going.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -127,7 +144,7 @@ export function BudgetCard({
           <BudgetProgress
             key={budget.currency}
             budget={budget}
-            spentCents={spentIn(budget.currency)}
+            spent={spentIn(budget.currency)}
             month={month}
             today={today}
             budgets={budgets}
@@ -140,18 +157,26 @@ export function BudgetCard({
 
 function BudgetProgress({
   budget,
-  spentCents,
+  spent,
   month,
   today,
   budgets,
 }: {
   budget: Budget
-  spentCents: number
+  spent: Spending
   month: string
   today: string
   budgets: Array<Budget>
 }) {
+  const spentCents = spent.total
   const status = budgetStatus(spentCents, budget.amountCents)
+  const parts = (
+    [
+      ['Personal', spent.personal],
+      ['Friends', spent.friends],
+      ['Groups', spent.groups],
+    ] as const
+  ).filter(([, cents]) => cents > 0)
   const money = (cents: number) => formatMoney(cents, budget.currency)
   const left = budget.amountCents - spentCents
 
@@ -203,6 +228,11 @@ function BudgetProgress({
           style={{ width: `${Math.min(status.ratio, 1) * 100}%` }}
         />
       </div>
+      {parts.length > 1 && (
+        <p className="text-xs text-muted-foreground">
+          {parts.map(([label, cents]) => `${label} ${money(cents)}`).join(' · ')}
+        </p>
+      )}
       <p className="flex flex-wrap justify-between gap-x-3 text-xs text-muted-foreground">
         <span className={cn(left < 0 && 'font-medium text-destructive')}>
           {left >= 0 ? `${money(left)} left` : `${money(-left)} over`}
@@ -265,8 +295,8 @@ export function BudgetDialog({
           <DialogHeader>
             <DialogTitle>{existing ? 'Edit monthly budget' : 'Set monthly budget'}</DialogTitle>
             <DialogDescription>
-              A limit for your personal spending each month. Shared expenses
-              with friends and groups don’t count towards it.
+              A limit for what you spend each month: your personal expenses
+              plus your share of expenses with friends and in groups.
             </DialogDescription>
           </DialogHeader>
           <FieldGroup className="gap-4">

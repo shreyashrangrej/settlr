@@ -66,6 +66,7 @@ export const Route = createFileRoute('/_app/dashboard')({
         convexQuery(api.personal.month, { month }),
       ),
       context.queryClient.ensureQueryData(convexQuery(api.budgets.list, {})),
+      context.queryClient.ensureQueryData(convexQuery(api.budgets.monthSpending, { month })),
     ])
     return { month }
   },
@@ -83,13 +84,17 @@ function DashboardPage() {
     convexQuery(api.personal.month, { month }),
   )
   const { data: budgets } = useSuspenseQuery(convexQuery(api.budgets.list, {}))
-  // Personal spending against the budget in its main currency.
-  const mainSpend = personal.totals[0]
+  const { data: spending } = useSuspenseQuery(
+    convexQuery(api.budgets.monthSpending, { month }),
+  )
+  // Everything you spent this month (personal, plus your share with friends
+  // and in groups) against the budget in its main currency.
+  const mainSpend = spending[0]
   const budget = budgets.find(
     (b) => b.currency === (mainSpend?.currency ?? budgets[0]?.currency),
   )
   const budgetState = budget
-    ? budgetStatus(mainSpend?.cents ?? 0, budget.amountCents)
+    ? budgetStatus(mainSpend?.total ?? 0, budget.amountCents)
     : null
 
   // Where you stand overall: friends' balances plus your net in each group.
@@ -138,18 +143,14 @@ function DashboardPage() {
           value={formatBalances(owe)}
         />
         <StatCard
-          label={`Personal · ${formatMonth(month)}`}
+          label={`Spent · ${formatMonth(month)}`}
           icon={<Wallet />}
-          value={personal.totals
-            .map((t) => formatMoney(t.cents, t.currency))
-            .join(' + ')}
+          value={spending.map((t) => formatMoney(t.total, t.currency)).join(' + ')}
           tone={budgetState?.tone === 'over' ? 'negative' : undefined}
           hint={
             budget
               ? `of ${formatMoney(budget.amountCents, budget.currency)} budget · ${budgetState?.label}`
-              : personal.items.length
-                ? plural(personal.items.length, 'expense')
-                : undefined
+              : 'Personal, friends and groups'
           }
         />
         <StatCard
