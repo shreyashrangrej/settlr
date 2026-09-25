@@ -2,6 +2,12 @@ import type { Category, Currency } from './schemas'
 
 // Plain serializable shapes shared by server functions and UI.
 
+// The signed-in user. `name` is empty until an email-code sign-up gives one.
+export interface AuthUser {
+  name: string
+  email: string
+}
+
 export interface Member {
   id: string
   name: string

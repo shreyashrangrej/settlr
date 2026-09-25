@@ -50,6 +50,11 @@ export async function signInWithGoogle(callbackURL = '/groups') {
   throwIfError(error)
 }
 
+export async function updateName(name: string) {
+  const { error } = await authClient.updateUser({ name })
+  throwIfError(error)
+}
+
 export async function signOut() {
   const { error } = await authClient.signOut()
   throwIfError(error)

@@ -102,3 +102,15 @@ export const emailOtpVerify = emailOtpRequest.extend({
     .string()
     .regex(new RegExp(`^\\d{${OTP_LENGTH}}$`), `Enter the ${OTP_LENGTH}-digit code`),
 })
+
+// Email-code sign-ups start without a name and are asked for one; Google
+// sign-ups use the name on the Google account. convex/auth.ts re-checks it.
+export const NAME_MAX_LENGTH = 80
+
+export const profileName = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Enter your full name')
+    .max(NAME_MAX_LENGTH, `Keep it under ${NAME_MAX_LENGTH} characters`),
+})

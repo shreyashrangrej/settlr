@@ -1,23 +1,21 @@
 import { useState } from 'react'
 import { useRouteContext, useRouter } from '@tanstack/react-router'
-import { LogOut, UserRound } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 
 import { Button } from '#/components/ui/button'
-import { authClient, signOut } from '#/lib/auth-client'
+import { signOut } from '#/lib/auth-client'
 
 // Signed-in user and sign-out, in the header. Renders nothing when signed
-// out; the sign-in form lives on the home page.
+// out; the sign-in form lives on the home page. The user comes from route
+// context, so the server and first client render agree.
 export function AccountMenu() {
-  // SSR knows whether there is a session; the details (email) load on the
-  // client, so the server and first client render agree.
-  const { isAuthenticated } = useRouteContext({ from: '__root__' })
-  const { data: session } = authClient.useSession()
+  const { user } = useRouteContext({ from: '__root__' })
   const router = useRouter()
   const [pending, setPending] = useState(false)
 
-  if (!session && !isAuthenticated) return null
+  if (!user) return null
 
-  const email = session?.user.email
+  const label = user.name || user.email
 
   async function onSignOut() {
     setPending(true)
@@ -36,10 +34,13 @@ export function AccountMenu() {
         aria-hidden="true"
         className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/15 text-sm font-semibold text-primary uppercase"
       >
-        {email ? email.charAt(0) : <UserRound className="size-4" />}
+        {label.charAt(0)}
       </span>
-      <span className="hidden max-w-44 truncate text-sm text-muted-foreground md:inline">
-        {email}
+      <span
+        className="hidden max-w-44 truncate text-sm text-muted-foreground md:inline"
+        title={user.name ? user.email : undefined}
+      >
+        {label}
       </span>
       <Button
         variant="ghost"

@@ -10,9 +10,11 @@ import type { ConvexReactClient } from 'convex/react'
 import { AccountMenu } from '#/components/account-menu'
 import { ThemeToggle } from '#/components/theme-toggle'
 import { buttonVariants } from '#/components/ui/button'
-import { getAuthToken } from '#/functions/auth.functions'
+import { NameForm } from '#/components/name-form'
+import { getAuthSession } from '#/functions/auth.functions'
 import { authClient } from '#/lib/auth-client'
 import { themeInitScript } from '#/lib/theme'
+import type { AuthUser } from '#/lib/types'
 import { cn } from '#/lib/utils'
 
 import appCss from '../styles.css?url'
@@ -26,15 +28,18 @@ export const Route = createRootRouteWithContext<{
 }>()({
   // Resolve the session up front so SSR renders the right signed-in state.
   beforeLoad: async () => {
-    let token: string | null = null
+    let session: { token: string | null; user: AuthUser | null } = {
+      token: null,
+      user: null,
+    }
     try {
-      token = await getAuthToken()
+      session = await getAuthSession()
     } catch (error) {
       // An unreachable auth backend shouldn't take the whole site down;
       // render signed out instead.
       console.error('Could not load the auth session', error)
     }
-    return { token, isAuthenticated: token !== null }
+    return { ...session, isAuthenticated: session.token !== null }
   },
   head: () => ({
     meta: [
@@ -69,7 +74,10 @@ const navLink = cn(
 )
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { convexClient, token } = Route.useRouteContext()
+  const { convexClient, token, user } = Route.useRouteContext()
+  // New email-code accounts have no name yet. Ask for it before showing any
+  // page; the header stays so they can still sign out.
+  const needsName = user !== null && user.name === ''
 
   return (
     // The theme script adds `.dark` to <html> before hydration, so its class
@@ -105,7 +113,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
           </header>
-          <main className="container">{children}</main>
+          <main className="container">
+            {needsName ? <NameForm email={user.email} /> : children}
+          </main>
         </ConvexBetterAuthProvider>
         <Scripts />
       </body>

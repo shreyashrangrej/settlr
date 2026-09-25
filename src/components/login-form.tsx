@@ -43,7 +43,7 @@ function errorMessage(error: unknown) {
 }
 
 export function LoginForm({ className }: { className?: string }) {
-  const { isAuthenticated } = useRouteContext({ from: '__root__' })
+  const { isAuthenticated, user } = useRouteContext({ from: '__root__' })
   const { data: session } = authClient.useSession()
   const router = useRouter()
   const [step, setStep] = useState<Step>('email')
@@ -116,7 +116,13 @@ export function LoginForm({ className }: { className?: string }) {
   const busy = pending !== null
 
   if (isAuthenticated || session) {
-    return <SignedInCard className={className} email={session?.user.email} />
+    return (
+      <SignedInCard
+        className={className}
+        name={user?.name}
+        email={user?.email ?? session?.user.email}
+      />
+    )
   }
 
   return (
@@ -315,9 +321,11 @@ export function LoginForm({ className }: { className?: string }) {
 
 function SignedInCard({
   className,
+  name,
   email,
 }: {
   className?: string
+  name?: string
   email?: string
 }) {
   const router = useRouter()
@@ -344,7 +352,7 @@ function SignedInCard({
         </span>
         <div className="grid gap-1.5">
           <h2 className="m-0 text-2xl font-bold tracking-tight">
-            You’re signed in
+            {name ? `Hi, ${name}` : 'You’re signed in'}
           </h2>
           <p className="text-sm text-muted-foreground">
             {email ? (

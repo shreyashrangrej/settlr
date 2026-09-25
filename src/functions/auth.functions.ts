@@ -1,9 +1,13 @@
 import { createServerFn } from '@tanstack/react-start'
 
-import { getToken } from '#/server/auth.server'
+import { getToken, userFromToken } from '#/server/auth.server'
 
-// The Convex auth token for the current session, or undefined when signed
-// out. The root route loads it so SSR knows who is signed in.
-export const getAuthToken = createServerFn({ method: 'GET' }).handler(
-  async () => (await getToken()) ?? null,
+// The Convex auth token for the current session and the signed-in user, or
+// nulls when signed out. The root route loads it so SSR knows who is signed
+// in (and whether they still need to give their name).
+export const getAuthSession = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const token = (await getToken()) ?? null
+    return { token, user: token ? userFromToken(token) : null }
+  },
 )
