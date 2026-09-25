@@ -22,6 +22,7 @@ import { Route as AppGroupsGroupIdRouteImport } from './routes/_app/groups/$grou
 import { Route as AppGroupsNewRouteImport } from './routes/_app/groups/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppGroupsGroupIdIndexRouteImport } from './routes/_app/groups/$groupId/index'
+import { Route as AppGroupsGroupIdEditRouteImport } from './routes/_app/groups/$groupId/edit'
 import { Route as AppGroupsGroupIdInsightsRouteImport } from './routes/_app/groups/$groupId/insights'
 import { Route as AppGroupsGroupIdExpensesNewRouteImport } from './routes/_app/groups/$groupId/expenses/new'
 
@@ -89,6 +90,11 @@ const AppGroupsGroupIdIndexRoute = AppGroupsGroupIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppGroupsGroupIdRoute,
 } as any)
+const AppGroupsGroupIdEditRoute = AppGroupsGroupIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AppGroupsGroupIdRoute,
+} as any)
 const AppGroupsGroupIdInsightsRoute =
   AppGroupsGroupIdInsightsRouteImport.update({
     id: '/insights',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/friends/': typeof AppFriendsIndexRoute
   '/groups/': typeof AppGroupsIndexRoute
+  '/groups/$groupId/edit': typeof AppGroupsGroupIdEditRoute
   '/groups/$groupId/insights': typeof AppGroupsGroupIdInsightsRoute
   '/groups/$groupId/': typeof AppGroupsGroupIdIndexRoute
   '/groups/$groupId/expenses/new': typeof AppGroupsGroupIdExpensesNewRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/friends': typeof AppFriendsIndexRoute
   '/groups': typeof AppGroupsIndexRoute
+  '/groups/$groupId/edit': typeof AppGroupsGroupIdEditRoute
   '/groups/$groupId/insights': typeof AppGroupsGroupIdInsightsRoute
   '/groups/$groupId': typeof AppGroupsGroupIdIndexRoute
   '/groups/$groupId/expenses/new': typeof AppGroupsGroupIdExpensesNewRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_app/friends/': typeof AppFriendsIndexRoute
   '/_app/groups/': typeof AppGroupsIndexRoute
+  '/_app/groups/$groupId/edit': typeof AppGroupsGroupIdEditRoute
   '/_app/groups/$groupId/insights': typeof AppGroupsGroupIdInsightsRoute
   '/_app/groups/$groupId/': typeof AppGroupsGroupIdIndexRoute
   '/_app/groups/$groupId/expenses/new': typeof AppGroupsGroupIdExpensesNewRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/friends/'
     | '/groups/'
+    | '/groups/$groupId/edit'
     | '/groups/$groupId/insights'
     | '/groups/$groupId/'
     | '/groups/$groupId/expenses/new'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/friends'
     | '/groups'
+    | '/groups/$groupId/edit'
     | '/groups/$groupId/insights'
     | '/groups/$groupId'
     | '/groups/$groupId/expenses/new'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/_app/friends/'
     | '/_app/groups/'
+    | '/_app/groups/$groupId/edit'
     | '/_app/groups/$groupId/insights'
     | '/_app/groups/$groupId/'
     | '/_app/groups/$groupId/expenses/new'
@@ -303,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppGroupsGroupIdIndexRouteImport
       parentRoute: typeof AppGroupsGroupIdRoute
     }
+    '/_app/groups/$groupId/edit': {
+      id: '/_app/groups/$groupId/edit'
+      path: '/edit'
+      fullPath: '/groups/$groupId/edit'
+      preLoaderRoute: typeof AppGroupsGroupIdEditRouteImport
+      parentRoute: typeof AppGroupsGroupIdRoute
+    }
     '/_app/groups/$groupId/insights': {
       id: '/_app/groups/$groupId/insights'
       path: '/insights'
@@ -321,12 +340,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppGroupsGroupIdRouteChildren {
+  AppGroupsGroupIdEditRoute: typeof AppGroupsGroupIdEditRoute
   AppGroupsGroupIdInsightsRoute: typeof AppGroupsGroupIdInsightsRoute
   AppGroupsGroupIdIndexRoute: typeof AppGroupsGroupIdIndexRoute
   AppGroupsGroupIdExpensesNewRoute: typeof AppGroupsGroupIdExpensesNewRoute
 }
 
 const AppGroupsGroupIdRouteChildren: AppGroupsGroupIdRouteChildren = {
+  AppGroupsGroupIdEditRoute: AppGroupsGroupIdEditRoute,
   AppGroupsGroupIdInsightsRoute: AppGroupsGroupIdInsightsRoute,
   AppGroupsGroupIdIndexRoute: AppGroupsGroupIdIndexRoute,
   AppGroupsGroupIdExpensesNewRoute: AppGroupsGroupIdExpensesNewRoute,

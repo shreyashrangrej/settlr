@@ -27,6 +27,9 @@ overview of three areas:
 - **Groups**: trips, flats and dinners with up to 20 members (you are always
   one of them). Expenses are split equally between chosen members, balances
   are worked out to the cent, and a settle-up plan uses the fewest payments.
+  Groups can be renamed and members added, renamed or removed (removing is
+  only allowed for people who aren't on any expense, and the currency only
+  changes while a group has no expenses).
 - **Personal**: your own spending, month by month, with totals by category.
 
 Friends and group members are people you track by name; they don't need an

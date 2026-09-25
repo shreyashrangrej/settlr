@@ -99,6 +99,27 @@ export const createGroupInput = z.object({
 })
 export type CreateGroupInput = z.infer<typeof createGroupInput>
 
+// The whole member list after editing: members with an `id` are kept (and
+// may be renamed), those without are new, and anyone missing is removed.
+export const editGroupInput = z.object({
+  name: z.string().trim().min(1, 'Give the group a name').max(60),
+  currency: z.enum(CURRENCIES),
+  members: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        name: z.string().trim().min(1, 'Every member needs a name').max(40),
+      }),
+    )
+    .min(2, 'A group needs at least two members')
+    .max(20, 'A group can have up to 20 members')
+    .refine(
+      (members) =>
+        new Set(members.map((m) => m.name.toLowerCase())).size === members.length,
+      'Member names must be unique',
+    ),
+})
+
 export const addExpenseInput = z.object({
   description,
   amountCents,

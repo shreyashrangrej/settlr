@@ -212,6 +212,105 @@ export const create = mutation({
   },
 })
 
+// Above this many expenses, `update` won't scan to confirm a member is unused.
+const MAX_SCAN_FOR_REMOVAL = 5000
+
+/**
+ * Edits a group: its name, its currency (only while it has no expenses) and
+ * its members. `members` is the full new list: entries with an `id` keep
+ * (and may rename) that member, entries without one are added, and members
+ * left out are removed, which is only allowed for people who aren't part of
+ * any expense. You can't remove yourself.
+ */
+export const update = mutation({
+  args: {
+    groupId: v.id('groups'),
+    name: v.string(),
+    currency,
+    members: v.array(v.object({ id: v.optional(v.string()), name: v.string() })),
+  },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const group = await requireGroup(ctx, userId, args.groupId)
+    const name = input.text(args.name, 'Group name', 60)
+
+    if (args.currency !== group.currency && group.expenseCount > 0) {
+      throw new ConvexError(
+        'The currency can only change while the group has no expenses.',
+      )
+    }
+
+    const current = new Map(group.members.map((m) => [m.id, m]))
+    const kept = new Set<string>()
+    for (const member of args.members) {
+      if (member.id === undefined) continue
+      if (!current.has(member.id)) {
+        throw new ConvexError('That member is no longer in this group.')
+      }
+      if (kept.has(member.id)) throw new ConvexError('A member is listed twice.')
+      kept.add(member.id)
+    }
+    if (!kept.has(group.meMemberId)) {
+      throw new ConvexError('You can’t remove yourself from your own group.')
+    }
+
+    // Removing someone who is on an expense would change everyone's
+    // balances, so only unused members can go.
+    const removed = group.members.filter((m) => !kept.has(m.id))
+    const onExpenses = removed.filter((m) => m.paidCents !== 0 || m.owedCents !== 0)
+    if (onExpenses.length > 0) {
+      throw new ConvexError(
+        `${onExpenses[0].name} is part of expenses in this group. Delete those expenses before removing them.`,
+      )
+    }
+    if (removed.length > 0 && group.expenseCount > 0) {
+      // Zero totals can still hide a 0¢ share of a tiny expense; check.
+      if (group.expenseCount > MAX_SCAN_FOR_REMOVAL) {
+        throw new ConvexError('This group has too many expenses to remove members.')
+      }
+      const removedIds = new Set(removed.map((m) => m.id))
+      for await (const expense of ctx.db
+        .query('groupExpenses')
+        .withIndex('by_groupId_and_date', (q) => q.eq('groupId', group._id))) {
+        const hit = [expense.paidBy, ...expense.splitAmong].find((id) =>
+          removedIds.has(id),
+        )
+        if (hit) {
+          const who = removed.find((m) => m.id === hit)?.name ?? 'A member'
+          throw new ConvexError(
+            `${who} is part of “${expense.description}”. Delete that expense before removing them.`,
+          )
+        }
+      }
+    }
+
+    // New ids continue after the highest one in use.
+    let nextNumber =
+      Math.max(0, ...group.members.map((m) => Number(m.id.slice(1)) || 0)) + 1
+    const members = args.members.map((member) => {
+      const memberName =
+        member.id === group.meMemberId
+          ? current.get(member.id)!.name
+          : input.text(member.name, 'Member name', 40)
+      if (member.id !== undefined) {
+        return { ...current.get(member.id)!, name: memberName }
+      }
+      return { id: `m${nextNumber++}`, name: memberName, paidCents: 0, owedCents: 0 }
+    })
+
+    if (members.length < 2) throw new ConvexError('A group needs at least two members.')
+    if (members.length > MAX_MEMBERS) {
+      throw new ConvexError(`A group can have up to ${MAX_MEMBERS} members.`)
+    }
+    if (new Set(members.map((m) => m.name.toLowerCase())).size !== members.length) {
+      throw new ConvexError('Member names must be unique.')
+    }
+
+    await ctx.db.patch('groups', group._id, { name, currency: args.currency, members })
+    return null
+  },
+})
+
 /** Deletes a group and all of its expenses. */
 export const remove = mutation({
   args: { groupId: v.id('groups') },

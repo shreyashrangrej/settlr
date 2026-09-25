@@ -1,19 +1,17 @@
-import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
+import { convexQuery } from '@convex-dev/react-query'
 import {
   Link,
   Outlet,
   createFileRoute,
   notFound,
-  useNavigate,
 } from '@tanstack/react-router'
-import { ArrowRight, ChartColumn, Plus, Receipt, Trash2 } from 'lucide-react'
+import { ArrowRight, ChartColumn, Pencil, Plus, Receipt } from 'lucide-react'
 
-import { ConfirmAction } from '#/components/confirm-action'
-import { PersonAvatar, SignedAmount, useAction } from '#/components/ledger'
+import { PersonAvatar, SignedAmount } from '#/components/ledger'
 import { PageHeader, SplitLayout } from '#/components/page-header'
 import { useGroup } from '#/components/use-group'
 import { Badge } from '#/components/ui/badge'
-import { Button, buttonVariants } from '#/components/ui/button'
+import { buttonVariants } from '#/components/ui/button'
 import {
   Card,
   CardContent,
@@ -84,24 +82,29 @@ function GroupLayout() {
         }
         description={`${group.members.length} members · ${formatMoney(group.totalCents, group.currency)} spent`}
         actions={
-          <Link
-            to="/groups/$groupId/expenses/new"
-            params={{ groupId: group.id }}
-            className={cn(buttonVariants({ size: 'lg' }), 'no-underline')}
-          >
-            <Plus />
-            Add expense
-          </Link>
+          <>
+            <Link
+              to="/groups/$groupId/edit"
+              params={{ groupId: group.id }}
+              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline')}
+            >
+              <Pencil />
+              Edit group
+            </Link>
+            <Link
+              to="/groups/$groupId/expenses/new"
+              params={{ groupId: group.id }}
+              className={cn(buttonVariants({ size: 'lg' }), 'no-underline')}
+            >
+              <Plus />
+              Add expense
+            </Link>
+          </>
         }
       />
 
       <SplitLayout
-        aside={
-          <>
-            <Balances group={group} />
-            <DeleteGroup group={group} />
-          </>
-        }
+        aside={<Balances group={group} />}
       >
         <nav
           aria-label="Group sections"
@@ -185,35 +188,5 @@ function Balances({ group }: { group: Group }) {
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-function DeleteGroup({ group }: { group: Group }) {
-  const removeGroup = useConvexMutation(api.groups.remove)
-  const navigate = useNavigate()
-  const { run } = useAction(removeGroup, {
-    success: 'Group deleted',
-    toastErrors: true,
-  })
-
-  return (
-    <ConfirmAction
-      title={`Delete “${group.name}”?`}
-      description="This deletes the group and all of its expenses. It can’t be undone."
-      onConfirm={async () => {
-        if (!(await run({ groupId: group.id }))) return false
-        await navigate({ to: '/groups' })
-        return true
-      }}
-      trigger={
-        <Button
-          variant="ghost"
-          className="justify-self-start text-muted-foreground hover:text-destructive"
-        >
-          <Trash2 />
-          Delete group
-        </Button>
-      }
-    />
   )
 }
