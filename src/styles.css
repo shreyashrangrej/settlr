@@ -159,12 +159,16 @@ main.app-shell {
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  /* Copy takes the room it needs; the card keeps its own width beside it. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
   align-items: center;
-  gap: clamp(3rem, 6vw, 6rem);
-  min-height: calc(100svh - 3.5rem);
+  gap: clamp(2.5rem, 5vw, 4.5rem);
+  min-height: calc(100svh - 4rem);
+  /* The app pages use the full width, but the hero's copy and sign-in card
+     read as one piece, so they sit together in a centred column. */
+  max-width: 68rem;
   /* Cancels main's block padding so the hero fills the first screen. */
-  margin-block: -2rem -4rem;
+  margin: -2rem auto -4rem;
   padding-block: clamp(3rem, 8vh, 6rem);
 }
 
