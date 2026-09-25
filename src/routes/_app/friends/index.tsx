@@ -119,13 +119,10 @@ function FriendsPage() {
                     <CardHeader>
                       <div className="flex min-w-0 items-center gap-3">
                         <PersonAvatar name={friend.name} size="lg" />
-                        <div className="grid min-w-0">
-                          <CardTitle className="flex items-center gap-2">
-                            <span className="truncate">{friend.name}</span>
-                            <FriendStatusBadge status={friend.status} />
-                          </CardTitle>
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <CardTitle className="truncate">{friend.name}</CardTitle>
                           {friend.email && (
-                            <CardDescription className="truncate">
+                            <CardDescription className="truncate" title={friend.email}>
                               {friend.email}
                             </CardDescription>
                           )}
@@ -135,11 +132,12 @@ function FriendsPage() {
                         <ChevronRight className="size-4 text-muted-foreground" />
                       </CardAction>
                     </CardHeader>
-                    <CardContent className="mt-auto text-sm">
+                    <CardContent className="mt-auto flex flex-wrap items-end justify-between gap-2 text-sm">
                       <BalanceText
                         balances={friend.balances}
                         className="justify-items-start"
                       />
+                      <FriendStatusBadge status={friend.status} />
                     </CardContent>
                   </Card>
                 </Link>
