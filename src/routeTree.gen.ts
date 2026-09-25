@@ -15,6 +15,7 @@ import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as GroupsIndexRouteImport } from './routes/groups/index'
 import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
 import { Route as GroupsNewRouteImport } from './routes/groups/new'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as GroupsGroupIdIndexRouteImport } from './routes/groups/$groupId/index'
 import { Route as GroupsGroupIdInsightsRouteImport } from './routes/groups/$groupId/insights'
 import { Route as GroupsGroupIdExpensesNewRouteImport } from './routes/groups/$groupId/expenses/new'
@@ -49,6 +50,11 @@ const GroupsNewRoute = GroupsNewRouteImport.update({
   path: '/groups/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GroupsGroupIdIndexRoute = GroupsGroupIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/groups/$groupId': typeof GroupsGroupIdRouteWithChildren
   '/groups/new': typeof GroupsNewRoute
   '/groups/': typeof GroupsIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/groups/$groupId/insights': typeof GroupsGroupIdInsightsRoute
   '/groups/$groupId/': typeof GroupsGroupIdIndexRoute
   '/groups/$groupId/expenses/new': typeof GroupsGroupIdExpensesNewRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/groups/new': typeof GroupsNewRoute
   '/groups': typeof GroupsIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/groups/$groupId/insights': typeof GroupsGroupIdInsightsRoute
   '/groups/$groupId': typeof GroupsGroupIdIndexRoute
   '/groups/$groupId/expenses/new': typeof GroupsGroupIdExpensesNewRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/groups/$groupId': typeof GroupsGroupIdRouteWithChildren
   '/groups/new': typeof GroupsNewRoute
   '/groups/': typeof GroupsIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/groups/$groupId/insights': typeof GroupsGroupIdInsightsRoute
   '/groups/$groupId/': typeof GroupsGroupIdIndexRoute
   '/groups/$groupId/expenses/new': typeof GroupsGroupIdExpensesNewRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/groups/$groupId'
     | '/groups/new'
     | '/groups/'
+    | '/api/auth/$'
     | '/groups/$groupId/insights'
     | '/groups/$groupId/'
     | '/groups/$groupId/expenses/new'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/groups/new'
     | '/groups'
+    | '/api/auth/$'
     | '/groups/$groupId/insights'
     | '/groups/$groupId'
     | '/groups/$groupId/expenses/new'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/groups/$groupId'
     | '/groups/new'
     | '/groups/'
+    | '/api/auth/$'
     | '/groups/$groupId/insights'
     | '/groups/$groupId/'
     | '/groups/$groupId/expenses/new'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   GroupsGroupIdRoute: typeof GroupsGroupIdRouteWithChildren
   GroupsNewRoute: typeof GroupsNewRoute
   GroupsIndexRoute: typeof GroupsIndexRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       path: '/groups/new'
       fullPath: '/groups/new'
       preLoaderRoute: typeof GroupsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/groups/$groupId/': {
@@ -234,6 +254,7 @@ const rootRouteChildren: RootRouteChildren = {
   GroupsGroupIdRoute: GroupsGroupIdRouteWithChildren,
   GroupsNewRoute: GroupsNewRoute,
   GroupsIndexRoute: GroupsIndexRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

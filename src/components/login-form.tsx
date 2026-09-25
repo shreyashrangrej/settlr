@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouteContext, useRouter } from '@tanstack/react-router'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import {
   ArrowLeft,
   ArrowRight,
   CircleAlert,
+  CircleCheck,
   Loader2,
   Mail,
   MailCheck,
@@ -23,8 +24,10 @@ import {
 import { Label } from '#/components/ui/label'
 import { Separator } from '#/components/ui/separator'
 import {
+  authClient,
   sendEmailOtp,
   signInWithGoogle,
+  signOut,
   verifyEmailOtp,
 } from '#/lib/auth-client'
 import { OTP_LENGTH, emailOtpRequest, emailOtpVerify } from '#/lib/schemas'
@@ -40,6 +43,9 @@ function errorMessage(error: unknown) {
 }
 
 export function LoginForm({ className }: { className?: string }) {
+  const { isAuthenticated } = useRouteContext({ from: '__root__' })
+  const { data: session } = authClient.useSession()
+  const router = useRouter()
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
@@ -91,7 +97,13 @@ export function LoginForm({ className }: { className?: string }) {
       return
     }
     setFieldError(null)
-    await run('verify', () => verifyEmailOtp(parsed.data.email, parsed.data.otp))
+    const signedIn = await run('verify', () =>
+      verifyEmailOtp(parsed.data.email, parsed.data.otp),
+    )
+    if (signedIn) {
+      await router.invalidate()
+      await router.navigate({ to: '/groups' })
+    }
   }
 
   function changeEmail() {
@@ -102,6 +114,10 @@ export function LoginForm({ className }: { className?: string }) {
   }
 
   const busy = pending !== null
+
+  if (isAuthenticated || session) {
+    return <SignedInCard className={className} email={session?.user.email} />
+  }
 
   return (
     <Card className={cn('gap-0 overflow-hidden py-0', className)}>
@@ -292,6 +308,76 @@ export function LoginForm({ className }: { className?: string }) {
           Continue as guest
           <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
+      </div>
+    </Card>
+  )
+}
+
+function SignedInCard({
+  className,
+  email,
+}: {
+  className?: string
+  email?: string
+}) {
+  const router = useRouter()
+  const [pending, setPending] = useState(false)
+
+  async function onSignOut() {
+    setPending(true)
+    try {
+      await signOut()
+      await router.invalidate()
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <Card className={cn('gap-6 px-6 py-8 sm:px-8', className)}>
+      <header className="grid gap-4">
+        <span
+          aria-hidden="true"
+          className="grid size-11 place-items-center rounded-xl border bg-background text-primary"
+        >
+          <CircleCheck className="size-5" />
+        </span>
+        <div className="grid gap-1.5">
+          <h2 className="m-0 text-2xl font-bold tracking-tight">
+            You’re signed in
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {email ? (
+              <>
+                Signed in as{' '}
+                <span className="font-medium break-all text-foreground">
+                  {email}
+                </span>
+                .
+              </>
+            ) : (
+              'Welcome back.'
+            )}
+          </p>
+        </div>
+      </header>
+      <div className="grid gap-3">
+        <Button asChild className="h-11 w-full text-[0.9375rem]">
+          <Link to="/groups">
+            Go to your groups
+            <ArrowRight />
+          </Link>
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-10 w-full text-muted-foreground"
+          disabled={pending}
+          onClick={onSignOut}
+        >
+          {pending && <Loader2 className="animate-spin" />}
+          Sign out
+        </Button>
       </div>
     </Card>
   )

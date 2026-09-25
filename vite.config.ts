@@ -8,6 +8,9 @@ import { nitro } from 'nitro/vite'
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
+  // The Better Auth component ships ESM that must go through Vite's SSR
+  // transform rather than be loaded by Node directly.
+  ssr: { noExternal: ['@convex-dev/better-auth'] },
   plugins: [
     // Nitro packages the server for the deployment runtime. The target is
     // picked at build time with NITRO_PRESET (node-server by default; e.g.
