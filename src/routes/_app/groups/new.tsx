@@ -1,34 +1,29 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
+import { useConvexMutation } from '@convex-dev/react-query'
+import { createFileRoute, useNavigate, useRouteContext } from '@tanstack/react-router'
 
-import { createGroup } from '#/functions/groups.functions'
+import { FormError, useAction } from '#/components/ledger'
 import { readPreferences } from '#/lib/preferences'
 import { CURRENCIES, createGroupInput, type Currency } from '#/lib/schemas'
+import { api } from '#convex/_generated/api'
 
 // SSR: full. The form renders on the server with neutral defaults; browser
 // preferences (localStorage) are applied after hydration in an effect.
-export const Route = createFileRoute('/groups/new')({
+export const Route = createFileRoute('/_app/groups/new')({
   head: () => ({ meta: [{ title: 'New group · Settlr' }] }),
   component: NewGroupPage,
 })
 
 function NewGroupPage() {
-  const submitGroup = useServerFn(createGroup)
+  const { user } = useRouteContext({ from: '__root__' })
+  const createGroup = useConvexMutation(api.groups.create)
+  const navigate = useNavigate()
+  const { run, pending, error, setError } = useAction(createGroup)
   const [currency, setCurrency] = useState<Currency>('USD')
-  const [members, setMembers] = useState(['', ''])
-  const [error, setError] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
+  // Everyone but you; you're added as the first member.
+  const [members, setMembers] = useState([''])
 
-  useEffect(() => {
-    const prefs = readPreferences()
-    setCurrency(prefs.defaultCurrency)
-    if (prefs.displayName) {
-      setMembers((current) =>
-        current[0] === '' ? [prefs.displayName, ...current.slice(1)] : current,
-      )
-    }
-  }, [])
+  useEffect(() => setCurrency(readPreferences().defaultCurrency), [])
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -42,16 +37,12 @@ function NewGroupPage() {
       setError(parsed.error.issues[0]?.message ?? 'Check the form')
       return
     }
-
-    setError(null)
-    setPending(true)
-    try {
-      // The server function throws a redirect to the new group, which
-      // `useServerFn` follows as a client-side navigation.
-      await submitGroup({ data: parsed.data })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create group')
-      setPending(false)
+    const created = await run(parsed.data)
+    if (created) {
+      await navigate({
+        to: '/groups/$groupId',
+        params: { groupId: created.value },
+      })
     }
   }
 
@@ -82,24 +73,34 @@ function NewGroupPage() {
 
       <fieldset>
         <legend>Members</legend>
+        <div className="member-input">
+          <input
+            aria-label="You"
+            value={`${user?.name || 'You'} (you)`}
+            readOnly
+            disabled
+          />
+        </div>
         {members.map((member, i) => (
           <div key={i} className="member-input">
             <input
-              aria-label={`Member ${i + 1}`}
+              aria-label={`Member ${i + 2}`}
               value={member}
               maxLength={40}
-              placeholder={`Member ${i + 1}`}
+              placeholder={`Member ${i + 2}`}
+              // Focus a row added with "Add member" (not the first one).
+              autoFocus={i > 0 && i === members.length - 1}
               onChange={(event) =>
                 setMembers((current) =>
                   current.map((m, j) => (j === i ? event.target.value : m)),
                 )
               }
             />
-            {members.length > 2 && (
+            {members.length > 1 && (
               <button
                 type="button"
                 className="button button--ghost"
-                aria-label={`Remove member ${i + 1}`}
+                aria-label={`Remove member ${i + 2}`}
                 onClick={() =>
                   setMembers((current) => current.filter((_, j) => j !== i))
                 }
@@ -109,7 +110,7 @@ function NewGroupPage() {
             )}
           </div>
         ))}
-        {members.length < 20 && (
+        {members.length < 19 && (
           <button
             type="button"
             className="button"
@@ -120,11 +121,7 @@ function NewGroupPage() {
         )}
       </fieldset>
 
-      {error && (
-        <p className="form-error" role="alert">
-          {error}
-        </p>
-      )}
+      <FormError error={error} />
 
       <div className="form-actions">
         <button type="submit" className="button button--primary" disabled={pending}>

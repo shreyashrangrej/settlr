@@ -42,7 +42,7 @@ export async function verifyEmailOtp(email: string, otp: string) {
 }
 
 // Redirects the browser to Google; it comes back to `callbackURL`.
-export async function signInWithGoogle(callbackURL = '/groups') {
+export async function signInWithGoogle(callbackURL = '/dashboard') {
   const { error } = await authClient.signIn.social({
     provider: 'google',
     callbackURL,

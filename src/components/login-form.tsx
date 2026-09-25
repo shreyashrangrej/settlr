@@ -102,7 +102,7 @@ export function LoginForm({ className }: { className?: string }) {
     )
     if (signedIn) {
       await router.invalidate()
-      await router.navigate({ to: '/groups' })
+      await router.navigate({ to: '/dashboard' })
     }
   }
 
@@ -305,16 +305,6 @@ export function LoginForm({ className }: { className?: string }) {
         )}
       </div>
 
-      <div className="border-t px-6 py-4 text-center text-sm text-muted-foreground sm:px-8">
-        Just looking?{' '}
-        <Link
-          to="/groups"
-          className="group inline-flex items-center gap-1 font-medium text-primary no-underline underline-offset-4 hover:underline"
-        >
-          Continue as guest
-          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-        </Link>
-      </div>
     </Card>
   )
 }
@@ -371,8 +361,8 @@ function SignedInCard({
       </header>
       <div className="grid gap-3">
         <Button asChild className="h-11 w-full text-[0.9375rem]">
-          <Link to="/groups">
-            Go to your groups
+          <Link to="/dashboard">
+            Open your dashboard
             <ArrowRight />
           </Link>
         </Button>

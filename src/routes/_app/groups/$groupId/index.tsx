@@ -1,47 +1,49 @@
-import { useState } from 'react'
-import {
-  Link,
-  createFileRoute,
-  getRouteApi,
-  stripSearchParams,
-  useRouter,
-} from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { Link, createFileRoute, stripSearchParams } from '@tanstack/react-router'
 
-import { deleteExpense, listExpenses } from '#/functions/groups.functions'
-import { formatDate, formatMoney, memberName } from '#/lib/format'
+import { useAction } from '#/components/ledger'
+import { useGroup } from '#/components/use-group'
+import { categoryLabel, formatDate, formatMoney, memberName } from '#/lib/format'
 import {
   CATEGORIES,
+  LIST_STEP,
   expenseSearchDefaults,
   expenseSearchSchema,
   type ExpenseSearch,
 } from '#/lib/schemas'
-import type { Expense, Group } from '#/lib/types'
+import type { Group, GroupExpense } from '#/lib/types'
+import { api } from '#convex/_generated/api'
 
-const groupRoute = getRouteApi('/groups/$groupId')
-
-// SSR: full. Filters, sorting and pagination live in the URL, validated by a
-// zod schema, so a filtered view is shareable and renders fully on the server.
-export const Route = createFileRoute('/groups/$groupId/')({
+// SSR: full. Filters, sorting and the list length live in the URL, validated
+// by a zod schema, so a filtered view is shareable and renders fully on the
+// server. The list is a live Convex query.
+export const Route = createFileRoute('/_app/groups/$groupId/')({
   validateSearch: expenseSearchSchema,
   // Keep URLs clean: params equal to their defaults are dropped.
   search: { middlewares: [stripSearchParams(expenseSearchDefaults)] },
   // Only re-run the loader when the search params it uses change.
   loaderDeps: ({ search }) => search,
-  loader: ({ params, deps }) =>
-    listExpenses({ data: { groupId: params.groupId, ...deps } }),
+  loader: ({ context, params, deps }) =>
+    context.queryClient.ensureQueryData(
+      convexQuery(api.groups.expenses, { groupId: params.groupId, ...deps }),
+    ),
   component: ExpensesPage,
 })
 
 function ExpensesPage() {
-  const { group } = groupRoute.useLoaderData()
-  const page = Route.useLoaderData()
+  const group = useGroup()
+  const { groupId } = Route.useParams()
   const search = Route.useSearch()
+  const { data: page } = useSuspenseQuery(
+    convexQuery(api.groups.expenses, { groupId, ...search }),
+  )
   const navigate = Route.useNavigate()
+  if (!group) return null
 
   const setSearch = (patch: Partial<ExpenseSearch>) =>
     navigate({
-      search: (prev) => ({ ...prev, page: 1, ...patch }),
+      search: (prev) => ({ ...prev, limit: LIST_STEP, ...patch }),
       replace: true,
     })
 
@@ -51,7 +53,7 @@ function ExpensesPage() {
 
       {page.items.length === 0 ? (
         <p className="empty">
-          {page.total === 0 && isDefaultSearch(search)
+          {group.expenseCount === 0
             ? 'No expenses yet.'
             : 'No expenses match these filters.'}
         </p>
@@ -63,35 +65,20 @@ function ExpensesPage() {
         </ul>
       )}
 
-      {page.pageCount > 1 && (
-        <nav className="pagination" aria-label="Pagination">
+      {page.hasMore && (
+        <nav className="pagination justify-center" aria-label="More expenses">
           <Link
             from={Route.fullPath}
-            search={(prev) => ({ ...prev, page: page.page - 1 })}
-            disabled={page.page <= 1}
+            search={(prev) => ({ ...prev, limit: prev.limit + LIST_STEP })}
+            resetScroll={false}
+            className="button"
           >
-            ← Newer
-          </Link>
-          <span className="muted">
-            Page {page.page} of {page.pageCount} · {page.total} expenses
-          </span>
-          <Link
-            from={Route.fullPath}
-            search={(prev) => ({ ...prev, page: page.page + 1 })}
-            disabled={page.page >= page.pageCount}
-          >
-            Older →
+            Show more
           </Link>
         </nav>
       )}
     </>
   )
-}
-
-function isDefaultSearch(search: ExpenseSearch) {
-  return (Object.keys(expenseSearchDefaults) as Array<keyof ExpenseSearch>)
-    .filter((key) => key !== 'page' && key !== 'sort' && key !== 'order')
-    .every((key) => search[key] === expenseSearchDefaults[key])
 }
 
 function Filters({
@@ -132,7 +119,7 @@ function Filters({
         <option value="all">All categories</option>
         {CATEGORIES.map((c) => (
           <option key={c} value={c}>
-            {capitalize(c)}
+            {categoryLabel(c)}
           </option>
         ))}
       </select>
@@ -144,7 +131,7 @@ function Filters({
         <option value="">Anyone paid</option>
         {group.members.map((m) => (
           <option key={m.id} value={m.id}>
-            {m.name} paid
+            {m.id === group.meMemberId ? 'You paid' : `${m.name} paid`}
           </option>
         ))}
       </select>
@@ -168,19 +155,22 @@ function Filters({
   )
 }
 
-function ExpenseRow({ group, expense }: { group: Group; expense: Expense }) {
-  const router = useRouter()
-  const removeExpense = useServerFn(deleteExpense)
-  const [pending, setPending] = useState(false)
+function ExpenseRow({ group, expense }: { group: Group; expense: GroupExpense }) {
+  const removeExpense = useConvexMutation(api.groups.removeExpense)
+  const { run, pending } = useAction(removeExpense)
   const splitCount = expense.splitAmong.length
+  const payer =
+    expense.paidBy === group.meMemberId
+      ? 'You'
+      : memberName(group.members, expense.paidBy)
 
   return (
     <li className="expense">
       <div>
         <p className="expense__title">{expense.description}</p>
         <p className="muted">
-          {formatDate(expense.date)} · {capitalize(expense.category)} ·{' '}
-          {memberName(group.members, expense.paidBy)} paid · split{' '}
+          {formatDate(expense.date)} · {categoryLabel(expense.category)} ·{' '}
+          {payer} paid · split{' '}
           {splitCount === group.members.length ? 'evenly' : `${splitCount} ways`}
         </p>
       </div>
@@ -193,17 +183,9 @@ function ExpenseRow({ group, expense }: { group: Group; expense: Expense }) {
           className="button button--ghost"
           disabled={pending}
           aria-label={`Delete ${expense.description}`}
-          onClick={async () => {
-            if (!window.confirm(`Delete “${expense.description}”?`)) return
-            setPending(true)
-            try {
-              await removeExpense({
-                data: { groupId: group.id, expenseId: expense.id },
-              })
-              // Refetch every active loader: the list and the balances.
-              await router.invalidate()
-            } finally {
-              setPending(false)
+          onClick={() => {
+            if (window.confirm(`Delete “${expense.description}”?`)) {
+              void run({ expenseId: expense.id })
             }
           }}
         >
@@ -212,8 +194,4 @@ function ExpenseRow({ group, expense }: { group: Group; expense: Expense }) {
       </div>
     </li>
   )
-}
-
-function capitalize(value: string) {
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }

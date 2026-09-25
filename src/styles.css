@@ -81,7 +81,6 @@
     color: var(--text);
     font-family: var(--font);
     line-height: 1.5;
-    /* The full-bleed hero spans 100vw, which includes the scrollbar. */
     overflow-x: clip;
   }
 
@@ -139,9 +138,10 @@
   }
 }
 
+/* Full width, with a gutter that grows with the viewport. */
 .container {
-  width: min(72rem, calc(100% - 2rem));
-  margin-inline: auto;
+  width: 100%;
+  padding-inline: clamp(1rem, 3vw, 2.5rem);
 }
 
 main.container {
@@ -188,7 +188,7 @@ main.container {
 
 .group-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 18rem;
+  grid-template-columns: minmax(0, 1fr) 22rem;
   gap: 1.5rem;
   align-items: start;
 }
@@ -590,9 +590,9 @@ fieldset > .button {
   align-items: center;
   gap: clamp(3rem, 6vw, 6rem);
   min-height: calc(100svh - 3.5rem);
-  /* Full-bleed section; content aligns with .container (72rem). */
-  margin: -2rem calc(50% - 50vw) -4rem;
-  padding: clamp(3rem, 8vh, 6rem) max(1rem, calc(50vw - 36rem));
+  /* Cancels main's block padding so the hero fills the first screen. */
+  margin-block: -2rem -4rem;
+  padding-block: clamp(3rem, 8vh, 6rem);
 }
 
 .hero__copy > * {

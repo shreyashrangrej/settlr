@@ -10,7 +10,6 @@ import { CURRENCIES } from './schemas'
 const STORAGE_KEY = 'settlr:preferences'
 
 export const preferencesSchema = z.object({
-  displayName: z.string().trim().max(40).default('').catch(''),
   defaultCurrency: z.enum(CURRENCIES).default('USD').catch('USD'),
 })
 export type Preferences = z.infer<typeof preferencesSchema>

@@ -1,30 +1,29 @@
-import { useState } from 'react'
-import { createFileRoute, getRouteApi, useRouter } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start'
+import { useConvexMutation } from '@convex-dev/react-query'
+import { createFileRoute } from '@tanstack/react-router'
 
-import { addExpense } from '#/functions/groups.functions'
-import { parseAmountToCents, todayIsoDate } from '#/lib/format'
+import { FormError, useAction } from '#/components/ledger'
+import { useGroup } from '#/components/use-group'
+import { categoryLabel, parseAmountToCents, todayIsoDate } from '#/lib/format'
 import { CATEGORIES, addExpenseInput } from '#/lib/schemas'
-
-const groupRoute = getRouteApi('/groups/$groupId')
+import { api } from '#convex/_generated/api'
 
 // SSR: full. The form is plain HTML until hydration; it needs no data beyond
 // the group, which the parent route has already loaded.
-export const Route = createFileRoute('/groups/$groupId/expenses/new')({
+export const Route = createFileRoute('/_app/groups/$groupId/expenses/new')({
   head: () => ({ meta: [{ title: 'Add expense · Settlr' }] }),
   component: NewExpensePage,
 })
 
 function NewExpensePage() {
-  const { group } = groupRoute.useLoaderData()
-  const router = useRouter()
+  const group = useGroup()
   const navigate = Route.useNavigate()
-  const submitExpense = useServerFn(addExpense)
-  const [error, setError] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
+  const addExpense = useConvexMutation(api.groups.addExpense)
+  const { run, pending, error, setError } = useAction(addExpense)
+  if (!group) return null
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!group) return
     const form = new FormData(event.currentTarget)
     const amountCents = parseAmountToCents(String(form.get('amount') ?? ''))
     if (amountCents === null) {
@@ -32,9 +31,8 @@ function NewExpensePage() {
       return
     }
 
-    // Same schema the server function validates with.
+    // Same limits the Convex mutation checks.
     const parsed = addExpenseInput.safeParse({
-      groupId: group.id,
       description: form.get('description'),
       amountCents,
       paidBy: form.get('paidBy'),
@@ -47,16 +45,8 @@ function NewExpensePage() {
       return
     }
 
-    setError(null)
-    setPending(true)
-    try {
-      await submitExpense({ data: parsed.data })
-      await router.invalidate()
+    if (await run({ groupId: group.id, ...parsed.data })) {
       await navigate({ to: '/groups/$groupId', params: { groupId: group.id } })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save expense')
-    } finally {
-      setPending(false)
     }
   }
 
@@ -83,10 +73,10 @@ function NewExpensePage() {
       <div className="form-row">
         <label>
           Paid by
-          <select name="paidBy" defaultValue={group.members[0]?.id}>
+          <select name="paidBy" defaultValue={group.meMemberId}>
             {group.members.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.name}
+                {m.id === group.meMemberId ? `${m.name} (you)` : m.name}
               </option>
             ))}
           </select>
@@ -96,7 +86,7 @@ function NewExpensePage() {
           <select name="category" defaultValue="food">
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c.charAt(0).toUpperCase() + c.slice(1)}
+                {categoryLabel(c)}
               </option>
             ))}
           </select>
@@ -115,11 +105,7 @@ function NewExpensePage() {
         </div>
       </fieldset>
 
-      {error && (
-        <p className="form-error" role="alert">
-          {error}
-        </p>
-      )}
+      <FormError error={error} />
 
       <div className="form-actions">
         <button type="submit" className="button button--primary" disabled={pending}>

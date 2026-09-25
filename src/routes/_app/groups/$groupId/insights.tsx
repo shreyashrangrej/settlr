@@ -1,30 +1,26 @@
-import { createFileRoute, getRouteApi } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
-import { getGroupInsights } from '#/functions/groups.functions'
-import { memberName } from '#/lib/format'
-import type { Group, GroupInsights } from '#/lib/types'
+import { useGroup } from '#/components/use-group'
+import { categoryLabel } from '#/lib/format'
+import type { Group } from '#/lib/types'
 
-const groupRoute = getRouteApi('/groups/$groupId')
-
-// SSR: data-only. The loader runs on the server during the document request
-// (no extra round trip after hydration), but the component only renders in
-// the browser: everything here is formatted in the viewer's own locale, time
+// SSR: data-only. The group is already loaded by the layout (its totals are
+// kept on the group document), but this component only renders in the
+// browser: everything here is formatted in the viewer's own locale, time
 // zone and clock ("3 days ago"), which the server cannot know and would
 // otherwise cause hydration mismatches. The server sends the pending
 // component in its place.
-export const Route = createFileRoute('/groups/$groupId/insights')({
+export const Route = createFileRoute('/_app/groups/$groupId/insights')({
   ssr: 'data-only',
-  loader: ({ params }) =>
-    getGroupInsights({ data: { groupId: params.groupId } }),
   head: () => ({ meta: [{ title: 'Insights · Settlr' }] }),
   component: InsightsPage,
 })
 
 function InsightsPage() {
-  const { group } = groupRoute.useLoaderData()
-  const insights = Route.useLoaderData()
+  const group = useGroup()
+  if (!group) return null
 
-  if (insights.totalCents === 0) {
+  if (group.totalCents === 0) {
     return <p className="empty">Add some expenses to see insights.</p>
   }
 
@@ -42,10 +38,10 @@ function InsightsPage() {
     <div className="insights">
       <section className="card">
         <p className="muted">Total spent</p>
-        <p className="card__stat">{format(insights.totalCents)}</p>
-        {insights.lastExpenseAt && (
+        <p className="card__stat">{format(group.totalCents)}</p>
+        {group.lastExpenseAt && (
           <p className="muted">
-            Last expense added {relativeTime(insights.lastExpenseAt, locale)}
+            Last expense added {relativeTime(group.lastExpenseAt, locale)}
           </p>
         )}
       </section>
@@ -53,9 +49,9 @@ function InsightsPage() {
       <section className="card">
         <h2>By category</h2>
         <BarList
-          rows={insights.byCategory.map((row) => ({
+          rows={group.byCategory.map((row) => ({
             key: row.category,
-            label: row.category.charAt(0).toUpperCase() + row.category.slice(1),
+            label: categoryLabel(row.category),
             value: row.cents,
           }))}
           format={format}
@@ -65,7 +61,7 @@ function InsightsPage() {
       <section className="card">
         <h2>By month</h2>
         <BarList
-          rows={insights.byMonth.map((row) => ({
+          rows={group.byMonth.map((row) => ({
             key: row.month,
             label: new Intl.DateTimeFormat(locale, {
               month: 'long',
@@ -78,18 +74,16 @@ function InsightsPage() {
         />
       </section>
 
-      <MemberShares group={group} insights={insights} format={format} />
+      <MemberShares group={group} format={format} />
     </div>
   )
 }
 
 function MemberShares({
   group,
-  insights,
   format,
 }: {
   group: Group
-  insights: GroupInsights
   format: (cents: number) => string
 }) {
   return (
@@ -104,11 +98,14 @@ function MemberShares({
           </tr>
         </thead>
         <tbody>
-          {insights.byMember.map((row) => (
-            <tr key={row.memberId}>
-              <th scope="row">{memberName(group.members, row.memberId)}</th>
-              <td>{format(row.paidCents)}</td>
-              <td>{format(row.owedCents)}</td>
+          {group.members.map((m) => (
+            <tr key={m.id}>
+              <th scope="row">
+                {m.name}
+                {m.id === group.meMemberId && ' (you)'}
+              </th>
+              <td>{format(m.paidCents)}</td>
+              <td>{format(m.owedCents)}</td>
             </tr>
           ))}
         </tbody>
@@ -142,8 +139,8 @@ function BarList({
   )
 }
 
-function relativeTime(iso: string, locale: string) {
-  const seconds = (new Date(iso).getTime() - Date.now()) / 1000
+function relativeTime(epochMs: number, locale: string) {
+  const seconds = (epochMs - Date.now()) / 1000
   const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
     ['year', 31_536_000],
     ['month', 2_592_000],

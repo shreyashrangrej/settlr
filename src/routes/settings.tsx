@@ -32,7 +32,6 @@ function SettingsPage() {
         const form = new FormData(event.currentTarget)
         writePreferences(
           preferencesSchema.parse({
-            displayName: form.get('displayName'),
             defaultCurrency: form.get('defaultCurrency'),
           }),
         )
@@ -43,17 +42,7 @@ function SettingsPage() {
       <p className="muted">Stored in this browser only.</p>
 
       <label>
-        Your name
-        <input
-          name="displayName"
-          maxLength={40}
-          defaultValue={initial.displayName}
-          placeholder="Pre-filled as the first member of new groups"
-        />
-      </label>
-
-      <label>
-        Default currency for new groups
+        Default currency for new groups and expenses
         <select name="defaultCurrency" defaultValue={initial.defaultCurrency}>
           {CURRENCIES.map((c) => (
             <option key={c} value={c}>

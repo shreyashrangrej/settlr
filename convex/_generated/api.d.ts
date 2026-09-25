@@ -10,7 +10,14 @@
 
 import type * as auth from "../auth.js";
 import type * as email from "../email.js";
+import type * as friends from "../friends.js";
+import type * as groups from "../groups.js";
 import type * as http from "../http.js";
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_input from "../lib/input.js";
+import type * as lib_ledger from "../lib/ledger.js";
+import type * as lib_validators from "../lib/validators.js";
+import type * as personal from "../personal.js";
 
 import type {
   ApiFromModules,
@@ -21,7 +28,14 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   email: typeof email;
+  friends: typeof friends;
+  groups: typeof groups;
   http: typeof http;
+  "lib/auth": typeof lib_auth;
+  "lib/input": typeof lib_input;
+  "lib/ledger": typeof lib_ledger;
+  "lib/validators": typeof lib_validators;
+  personal: typeof personal;
 }>;
 
 /**

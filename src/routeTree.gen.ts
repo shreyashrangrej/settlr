@@ -10,19 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppPersonalRouteImport } from './routes/_app/personal'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
-import { Route as GroupsIndexRouteImport } from './routes/groups/index'
-import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
-import { Route as GroupsNewRouteImport } from './routes/groups/new'
+import { Route as AppFriendsIndexRouteImport } from './routes/_app/friends/index'
+import { Route as AppFriendsFriendIdRouteImport } from './routes/_app/friends/$friendId'
+import { Route as AppGroupsIndexRouteImport } from './routes/_app/groups/index'
+import { Route as AppGroupsGroupIdRouteImport } from './routes/_app/groups/$groupId'
+import { Route as AppGroupsNewRouteImport } from './routes/_app/groups/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as GroupsGroupIdIndexRouteImport } from './routes/groups/$groupId/index'
-import { Route as GroupsGroupIdInsightsRouteImport } from './routes/groups/$groupId/insights'
-import { Route as GroupsGroupIdExpensesNewRouteImport } from './routes/groups/$groupId/expenses/new'
+import { Route as AppGroupsGroupIdIndexRouteImport } from './routes/_app/groups/$groupId/index'
+import { Route as AppGroupsGroupIdInsightsRouteImport } from './routes/_app/groups/$groupId/insights'
+import { Route as AppGroupsGroupIdExpensesNewRouteImport } from './routes/_app/groups/$groupId/expenses/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -30,94 +39,132 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPersonalRoute = AppPersonalRouteImport.update({
+  id: '/personal',
+  path: '/personal',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GroupsIndexRoute = GroupsIndexRouteImport.update({
+const AppFriendsIndexRoute = AppFriendsIndexRouteImport.update({
+  id: '/friends/',
+  path: '/friends/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFriendsFriendIdRoute = AppFriendsFriendIdRouteImport.update({
+  id: '/friends/$friendId',
+  path: '/friends/$friendId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppGroupsIndexRoute = AppGroupsIndexRouteImport.update({
   id: '/groups/',
   path: '/groups/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
+const AppGroupsGroupIdRoute = AppGroupsGroupIdRouteImport.update({
   id: '/groups/$groupId',
   path: '/groups/$groupId',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const GroupsNewRoute = GroupsNewRouteImport.update({
+const AppGroupsNewRoute = AppGroupsNewRouteImport.update({
   id: '/groups/new',
   path: '/groups/new',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GroupsGroupIdIndexRoute = GroupsGroupIdIndexRouteImport.update({
+const AppGroupsGroupIdIndexRoute = AppGroupsGroupIdIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => GroupsGroupIdRoute,
+  getParentRoute: () => AppGroupsGroupIdRoute,
 } as any)
-const GroupsGroupIdInsightsRoute = GroupsGroupIdInsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
-  getParentRoute: () => GroupsGroupIdRoute,
-} as any)
-const GroupsGroupIdExpensesNewRoute =
-  GroupsGroupIdExpensesNewRouteImport.update({
+const AppGroupsGroupIdInsightsRoute =
+  AppGroupsGroupIdInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
+    getParentRoute: () => AppGroupsGroupIdRoute,
+  } as any)
+const AppGroupsGroupIdExpensesNewRoute =
+  AppGroupsGroupIdExpensesNewRouteImport.update({
     id: '/expenses/new',
     path: '/expenses/new',
-    getParentRoute: () => GroupsGroupIdRoute,
+    getParentRoute: () => AppGroupsGroupIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/personal': typeof AppPersonalRoute
   '/api/health': typeof ApiHealthRoute
-  '/groups/$groupId': typeof GroupsGroupIdRouteWithChildren
-  '/groups/new': typeof GroupsNewRoute
-  '/groups/': typeof GroupsIndexRoute
+  '/friends/$friendId': typeof AppFriendsFriendIdRoute
+  '/groups/$groupId': typeof AppGroupsGroupIdRouteWithChildren
+  '/groups/new': typeof AppGroupsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/groups/$groupId/insights': typeof GroupsGroupIdInsightsRoute
-  '/groups/$groupId/': typeof GroupsGroupIdIndexRoute
-  '/groups/$groupId/expenses/new': typeof GroupsGroupIdExpensesNewRoute
+  '/friends/': typeof AppFriendsIndexRoute
+  '/groups/': typeof AppGroupsIndexRoute
+  '/groups/$groupId/insights': typeof AppGroupsGroupIdInsightsRoute
+  '/groups/$groupId/': typeof AppGroupsGroupIdIndexRoute
+  '/groups/$groupId/expenses/new': typeof AppGroupsGroupIdExpensesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/personal': typeof AppPersonalRoute
   '/api/health': typeof ApiHealthRoute
-  '/groups/new': typeof GroupsNewRoute
-  '/groups': typeof GroupsIndexRoute
+  '/friends/$friendId': typeof AppFriendsFriendIdRoute
+  '/groups/new': typeof AppGroupsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/groups/$groupId/insights': typeof GroupsGroupIdInsightsRoute
-  '/groups/$groupId': typeof GroupsGroupIdIndexRoute
-  '/groups/$groupId/expenses/new': typeof GroupsGroupIdExpensesNewRoute
+  '/friends': typeof AppFriendsIndexRoute
+  '/groups': typeof AppGroupsIndexRoute
+  '/groups/$groupId/insights': typeof AppGroupsGroupIdInsightsRoute
+  '/groups/$groupId': typeof AppGroupsGroupIdIndexRoute
+  '/groups/$groupId/expenses/new': typeof AppGroupsGroupIdExpensesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/personal': typeof AppPersonalRoute
   '/api/health': typeof ApiHealthRoute
-  '/groups/$groupId': typeof GroupsGroupIdRouteWithChildren
-  '/groups/new': typeof GroupsNewRoute
-  '/groups/': typeof GroupsIndexRoute
+  '/_app/friends/$friendId': typeof AppFriendsFriendIdRoute
+  '/_app/groups/$groupId': typeof AppGroupsGroupIdRouteWithChildren
+  '/_app/groups/new': typeof AppGroupsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/groups/$groupId/insights': typeof GroupsGroupIdInsightsRoute
-  '/groups/$groupId/': typeof GroupsGroupIdIndexRoute
-  '/groups/$groupId/expenses/new': typeof GroupsGroupIdExpensesNewRoute
+  '/_app/friends/': typeof AppFriendsIndexRoute
+  '/_app/groups/': typeof AppGroupsIndexRoute
+  '/_app/groups/$groupId/insights': typeof AppGroupsGroupIdInsightsRoute
+  '/_app/groups/$groupId/': typeof AppGroupsGroupIdIndexRoute
+  '/_app/groups/$groupId/expenses/new': typeof AppGroupsGroupIdExpensesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/settings'
+    | '/dashboard'
+    | '/personal'
     | '/api/health'
+    | '/friends/$friendId'
     | '/groups/$groupId'
     | '/groups/new'
-    | '/groups/'
     | '/api/auth/$'
+    | '/friends/'
+    | '/groups/'
     | '/groups/$groupId/insights'
     | '/groups/$groupId/'
     | '/groups/$groupId/expenses/new'
@@ -125,34 +172,41 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/settings'
+    | '/dashboard'
+    | '/personal'
     | '/api/health'
+    | '/friends/$friendId'
     | '/groups/new'
-    | '/groups'
     | '/api/auth/$'
+    | '/friends'
+    | '/groups'
     | '/groups/$groupId/insights'
     | '/groups/$groupId'
     | '/groups/$groupId/expenses/new'
   id:
     | '__root__'
     | '/'
+    | '/_app'
     | '/settings'
+    | '/_app/dashboard'
+    | '/_app/personal'
     | '/api/health'
-    | '/groups/$groupId'
-    | '/groups/new'
-    | '/groups/'
+    | '/_app/friends/$friendId'
+    | '/_app/groups/$groupId'
+    | '/_app/groups/new'
     | '/api/auth/$'
-    | '/groups/$groupId/insights'
-    | '/groups/$groupId/'
-    | '/groups/$groupId/expenses/new'
+    | '/_app/friends/'
+    | '/_app/groups/'
+    | '/_app/groups/$groupId/insights'
+    | '/_app/groups/$groupId/'
+    | '/_app/groups/$groupId/expenses/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   ApiHealthRoute: typeof ApiHealthRoute
-  GroupsGroupIdRoute: typeof GroupsGroupIdRouteWithChildren
-  GroupsNewRoute: typeof GroupsNewRoute
-  GroupsIndexRoute: typeof GroupsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -165,12 +219,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/personal': {
+      id: '/_app/personal'
+      path: '/personal'
+      fullPath: '/personal'
+      preLoaderRoute: typeof AppPersonalRouteImport
+      parentRoute: typeof AppRoute
     }
     '/api/health': {
       id: '/api/health'
@@ -179,26 +254,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/groups/': {
-      id: '/groups/'
+    '/_app/friends/': {
+      id: '/_app/friends/'
+      path: '/friends'
+      fullPath: '/friends/'
+      preLoaderRoute: typeof AppFriendsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/friends/$friendId': {
+      id: '/_app/friends/$friendId'
+      path: '/friends/$friendId'
+      fullPath: '/friends/$friendId'
+      preLoaderRoute: typeof AppFriendsFriendIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/groups/': {
+      id: '/_app/groups/'
       path: '/groups'
       fullPath: '/groups/'
-      preLoaderRoute: typeof GroupsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppGroupsIndexRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/groups/$groupId': {
-      id: '/groups/$groupId'
+    '/_app/groups/$groupId': {
+      id: '/_app/groups/$groupId'
       path: '/groups/$groupId'
       fullPath: '/groups/$groupId'
-      preLoaderRoute: typeof GroupsGroupIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppGroupsGroupIdRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/groups/new': {
-      id: '/groups/new'
+    '/_app/groups/new': {
+      id: '/_app/groups/new'
       path: '/groups/new'
       fullPath: '/groups/new'
-      preLoaderRoute: typeof GroupsNewRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppGroupsNewRouteImport
+      parentRoute: typeof AppRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -207,53 +296,72 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/groups/$groupId/': {
-      id: '/groups/$groupId/'
+    '/_app/groups/$groupId/': {
+      id: '/_app/groups/$groupId/'
       path: '/'
       fullPath: '/groups/$groupId/'
-      preLoaderRoute: typeof GroupsGroupIdIndexRouteImport
-      parentRoute: typeof GroupsGroupIdRoute
+      preLoaderRoute: typeof AppGroupsGroupIdIndexRouteImport
+      parentRoute: typeof AppGroupsGroupIdRoute
     }
-    '/groups/$groupId/insights': {
-      id: '/groups/$groupId/insights'
+    '/_app/groups/$groupId/insights': {
+      id: '/_app/groups/$groupId/insights'
       path: '/insights'
       fullPath: '/groups/$groupId/insights'
-      preLoaderRoute: typeof GroupsGroupIdInsightsRouteImport
-      parentRoute: typeof GroupsGroupIdRoute
+      preLoaderRoute: typeof AppGroupsGroupIdInsightsRouteImport
+      parentRoute: typeof AppGroupsGroupIdRoute
     }
-    '/groups/$groupId/expenses/new': {
-      id: '/groups/$groupId/expenses/new'
+    '/_app/groups/$groupId/expenses/new': {
+      id: '/_app/groups/$groupId/expenses/new'
       path: '/expenses/new'
       fullPath: '/groups/$groupId/expenses/new'
-      preLoaderRoute: typeof GroupsGroupIdExpensesNewRouteImport
-      parentRoute: typeof GroupsGroupIdRoute
+      preLoaderRoute: typeof AppGroupsGroupIdExpensesNewRouteImport
+      parentRoute: typeof AppGroupsGroupIdRoute
     }
   }
 }
 
-interface GroupsGroupIdRouteChildren {
-  GroupsGroupIdInsightsRoute: typeof GroupsGroupIdInsightsRoute
-  GroupsGroupIdIndexRoute: typeof GroupsGroupIdIndexRoute
-  GroupsGroupIdExpensesNewRoute: typeof GroupsGroupIdExpensesNewRoute
+interface AppGroupsGroupIdRouteChildren {
+  AppGroupsGroupIdInsightsRoute: typeof AppGroupsGroupIdInsightsRoute
+  AppGroupsGroupIdIndexRoute: typeof AppGroupsGroupIdIndexRoute
+  AppGroupsGroupIdExpensesNewRoute: typeof AppGroupsGroupIdExpensesNewRoute
 }
 
-const GroupsGroupIdRouteChildren: GroupsGroupIdRouteChildren = {
-  GroupsGroupIdInsightsRoute: GroupsGroupIdInsightsRoute,
-  GroupsGroupIdIndexRoute: GroupsGroupIdIndexRoute,
-  GroupsGroupIdExpensesNewRoute: GroupsGroupIdExpensesNewRoute,
+const AppGroupsGroupIdRouteChildren: AppGroupsGroupIdRouteChildren = {
+  AppGroupsGroupIdInsightsRoute: AppGroupsGroupIdInsightsRoute,
+  AppGroupsGroupIdIndexRoute: AppGroupsGroupIdIndexRoute,
+  AppGroupsGroupIdExpensesNewRoute: AppGroupsGroupIdExpensesNewRoute,
 }
 
-const GroupsGroupIdRouteWithChildren = GroupsGroupIdRoute._addFileChildren(
-  GroupsGroupIdRouteChildren,
-)
+const AppGroupsGroupIdRouteWithChildren =
+  AppGroupsGroupIdRoute._addFileChildren(AppGroupsGroupIdRouteChildren)
+
+interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppPersonalRoute: typeof AppPersonalRoute
+  AppFriendsFriendIdRoute: typeof AppFriendsFriendIdRoute
+  AppGroupsGroupIdRoute: typeof AppGroupsGroupIdRouteWithChildren
+  AppGroupsNewRoute: typeof AppGroupsNewRoute
+  AppFriendsIndexRoute: typeof AppFriendsIndexRoute
+  AppGroupsIndexRoute: typeof AppGroupsIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
+  AppPersonalRoute: AppPersonalRoute,
+  AppFriendsFriendIdRoute: AppFriendsFriendIdRoute,
+  AppGroupsGroupIdRoute: AppGroupsGroupIdRouteWithChildren,
+  AppGroupsNewRoute: AppGroupsNewRoute,
+  AppFriendsIndexRoute: AppFriendsIndexRoute,
+  AppGroupsIndexRoute: AppGroupsIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   SettingsRoute: SettingsRoute,
   ApiHealthRoute: ApiHealthRoute,
-  GroupsGroupIdRoute: GroupsGroupIdRouteWithChildren,
-  GroupsNewRoute: GroupsNewRoute,
-  GroupsIndexRoute: GroupsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

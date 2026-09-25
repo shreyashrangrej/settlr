@@ -1,4 +1,6 @@
+import type { ConvexQueryClient } from '@convex-dev/react-query'
 import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
+import type { QueryClient } from '@tanstack/react-query'
 import {
   HeadContent,
   Link,
@@ -8,9 +10,10 @@ import {
 import type { ConvexReactClient } from 'convex/react'
 
 import { AccountMenu } from '#/components/account-menu'
+import { APP_SECTIONS } from '#/components/app-nav'
+import { NameForm } from '#/components/name-form'
 import { ThemeToggle } from '#/components/theme-toggle'
 import { buttonVariants } from '#/components/ui/button'
-import { NameForm } from '#/components/name-form'
 import { getAuthSession } from '#/functions/auth.functions'
 import { authClient } from '#/lib/auth-client'
 import { themeInitScript } from '#/lib/theme'
@@ -21,13 +24,14 @@ import appCss from '../styles.css?url'
 
 // The root route renders the full HTML document on the server (`shellComponent`),
 // including <head> tags collected from every matched route. The response is
-// streamed: the shell flushes first and deferred loader data follows as it
-// resolves.
+// streamed: the shell flushes first and query results follow as they resolve.
 export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient
+  convexQueryClient: ConvexQueryClient
   convexClient: ConvexReactClient
 }>()({
   // Resolve the session up front so SSR renders the right signed-in state.
-  beforeLoad: async () => {
+  beforeLoad: async ({ context }) => {
     let session: { token: string | null; user: AuthUser | null } = {
       token: null,
       user: null,
@@ -38,6 +42,12 @@ export const Route = createRootRouteWithContext<{
       // An unreachable auth backend shouldn't take the whole site down;
       // render signed out instead.
       console.error('Could not load the auth session', error)
+    }
+    // During SSR, loaders run Convex queries over HTTP as this user. (The
+    // router, and so this client, is created per request.) In the browser
+    // the WebSocket client gets the token from ConvexBetterAuthProvider.
+    if (session.token) {
+      context.convexQueryClient.serverHttpClient?.setAuth(session.token)
     }
     return { ...session, isAuthenticated: session.token !== null }
   },
@@ -93,18 +103,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           authClient={authClient}
           initialToken={token}
         >
-          <header>
+          <header className="border-b">
             <div className="container flex h-14 items-center justify-between gap-2">
               <Link
-                to="/"
+                to={user ? '/dashboard' : '/'}
                 className="text-lg font-bold tracking-tight text-primary no-underline"
               >
                 Settlr
               </Link>
-              <nav className="flex items-center gap-1">
-                <Link to="/groups" className={navLink}>
-                  Groups
-                </Link>
+              <nav className="flex items-center gap-1" aria-label="Main">
+                {user && !needsName && (
+                  // On small screens the app layout shows these as tabs.
+                  <div className="hidden items-center gap-1 md:flex">
+                    {APP_SECTIONS.map((section) => (
+                      <Link
+                        key={section.to}
+                        to={section.to}
+                        activeOptions={{ exact: section.exact }}
+                        className={navLink}
+                      >
+                        {section.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
                 <Link to="/settings" className={navLink}>
                   Settings
                 </Link>
