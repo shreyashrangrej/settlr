@@ -22,7 +22,19 @@ export const Route = createRootRoute({
         content: 'Track shared expenses and settle up with the fewest payments.',
       },
     ],
-    links: [{ rel: 'stylesheet', href: appCss }],
+    links: [
+      { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossOrigin: 'anonymous',
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Geist:wght@400..700&display=swap',
+      },
+      { rel: 'stylesheet', href: appCss },
+    ],
   }),
   shellComponent: RootDocument,
 })
@@ -40,9 +52,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               Settlr
             </Link>
             <nav className="site-nav">
-              <Link to="/" activeOptions={{ exact: true }}>
-                Groups
-              </Link>
+              <Link to="/groups">Groups</Link>
               <Link to="/settings">Settings</Link>
             </nav>
           </div>

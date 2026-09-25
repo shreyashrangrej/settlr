@@ -31,7 +31,7 @@ function GroupLayout() {
       <div className="page-header">
         <div>
           <p className="eyebrow">
-            <Link to="/">Groups</Link> /
+            <Link to="/groups">Groups</Link> /
           </p>
           <h1>{group.name}</h1>
           <p className="muted">

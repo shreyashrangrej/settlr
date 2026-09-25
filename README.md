@@ -75,7 +75,8 @@ balances query has an artificial 700 ms delay so the streaming is visible. Set
 
 | Route                            | `ssr`         | Why                                                                                                                                            |
 | -------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`, `/groups/new`               | `true`        | Content and forms belong in the first HTML response.                                                                                           |
+| `/` (landing hero)              | `true`        | Static marketing page with no loader; ships as plain HTML.                                                                                     |
+| `/groups`, `/groups/new`         | `true`        | The group list and forms belong in the first HTML response.                                                                                    |
 | `/groups/$groupId` (+ expenses)  | `true`        | Shareable, filterable URLs render fully on the server; balances stream in.                                                                    |
 | `/groups/$groupId/expenses/new`  | `true`        | Plain form; its data comes from the parent route.                                                                                              |
 | `/groups/$groupId/insights`      | `'data-only'` | The loader runs on the server (no extra round trip), but the UI uses the viewer's locale, time zone and clock, so it renders only in the browser to avoid hydration mismatches. |

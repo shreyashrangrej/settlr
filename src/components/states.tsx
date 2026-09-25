@@ -18,7 +18,7 @@ export function NotFound() {
     <div className="state">
       <h2>Not found</h2>
       <p className="muted">That page or group doesn’t exist.</p>
-      <Link to="/" className="button">
+      <Link to="/groups" className="button">
         Back to groups
       </Link>
     </div>
