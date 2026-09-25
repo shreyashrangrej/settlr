@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- The "S" of the Settlr wordmark on the brand green (the accent token in styles.css). -->
+  <!-- The "S" of the Settlr wordmark on the brand green (the accent token in
+       styles.css). The S is the Geist Bold outline as a path, centred on its
+       bounding box, so it looks the same whatever fonts the browser has. -->
   <rect width="64" height="64" rx="14" fill="#2f6f5e"/>
-  <text x="32" y="33" text-anchor="middle" dominant-baseline="central"
-    font-family="Geist, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif"
-    font-size="46" font-weight="700" fill="#ffffff">S</text>
+  <path fill="#ffffff" d="M32.74 51Q25.68 51 21.65 47.52Q17.63 44.04 17.23 38.20L25.06 37.84Q25.52 41.06 27.42 42.81Q29.31 44.55 32.85 44.55Q35.71 44.55 37.33 43.50Q38.94 42.45 38.94 40.35Q38.94 39.07 38.32 38.12Q37.71 37.17 35.97 36.38Q34.23 35.58 30.85 34.82Q26.19 33.74 23.35 32.41Q20.50 31.08 19.22 29.06Q17.94 27.03 17.94 23.96Q17.94 20.73 19.56 18.25Q21.17 15.77 24.24 14.38Q27.31 13 31.56 13Q36.07 13 39.20 14.59Q42.32 16.18 44.06 18.94Q45.80 21.71 46.21 25.29L38.43 25.70Q38.12 22.88 36.35 21.17Q34.59 19.45 31.46 19.45Q28.80 19.45 27.29 20.63Q25.78 21.81 25.78 23.70Q25.78 25.04 26.44 25.93Q27.11 26.83 28.75 27.49Q30.39 28.16 33.36 28.77Q38.43 29.80 41.35 31.36Q44.27 32.92 45.52 35.07Q46.77 37.22 46.77 39.99Q46.77 43.37 45.06 45.85Q43.34 48.34 40.19 49.67Q37.04 51 32.74 51"/>
 </svg>
