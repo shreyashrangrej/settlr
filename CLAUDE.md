@@ -122,6 +122,14 @@ force-push `main`.
   `buttonVariants(...)` on a `<Link>`. Confirm destructive actions with
   `ConfirmAction`, not `window.confirm`, and report success with
   `useAction(fn, { success: '...' })` (a sonner toast).
+- **Layout**: pages span the full width, so use the width for more content,
+  not wider components. Summary figures go in a `StatGrid` of `StatCard`s
+  (`src/components/stat-card.tsx`), lists of records are tables whose extra
+  columns appear on wider screens (`hidden md:table-cell`, with the details
+  folded into the first cell below that), collections of things (friends,
+  groups) are card grids with `repeat(auto-fill,minmax(…,1fr))`, and forms
+  get a max width. `SplitLayout` gives a page a main area and a 24rem
+  sidebar.
   Dark mode is the `.dark` class on `<html>` (set before paint by the inline
   script in `__root.tsx`), not `prefers-color-scheme`, so style dark variants
   with `.dark` / `dark:`. Theme-dependent markup must render the same on the

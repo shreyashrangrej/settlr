@@ -87,7 +87,7 @@ function ExpenseForm({ group }: { group: Group }) {
   }
 
   return (
-    <Card>
+    <Card className="max-w-3xl">
       <CardHeader>
         <CardTitle>Add an expense</CardTitle>
         <CardDescription>Split equally between the people who shared it.</CardDescription>

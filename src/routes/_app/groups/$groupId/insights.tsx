@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ChartColumn } from 'lucide-react'
+import { ChartColumn, Clock, Receipt, Users, Wallet } from 'lucide-react'
 
+import { StatCard, StatGrid } from '#/components/stat-card'
 import { useGroup } from '#/components/use-group'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '#/components/ui/card'
@@ -74,20 +74,29 @@ function InsightsPage() {
   })
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardDescription>Total spent</CardDescription>
-          <CardTitle className="text-3xl font-bold tabular-nums">
-            {format(group.totalCents)}
-          </CardTitle>
-          {group.lastExpenseAt && (
-            <CardDescription>
-              Last expense added {relativeTime(group.lastExpenseAt, locale)}
-            </CardDescription>
-          )}
-        </CardHeader>
-      </Card>
+    <div className="grid gap-4">
+      <StatGrid>
+        <StatCard label="Total spent" icon={<Wallet />} value={format(group.totalCents)} />
+        <StatCard
+          label="Expenses"
+          icon={<Receipt />}
+          value={group.expenseCount}
+          hint={`Avg ${format(Math.round(group.totalCents / group.expenseCount))}`}
+        />
+        <StatCard
+          label="Per member"
+          icon={<Users />}
+          value={format(Math.round(group.totalCents / group.members.length))}
+          hint={`${group.members.length} members`}
+        />
+        <StatCard
+          label="Last expense"
+          icon={<Clock />}
+          value={group.lastExpenseAt ? relativeTime(group.lastExpenseAt, locale) : ''}
+        />
+      </StatGrid>
+
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(22rem,1fr))] items-start gap-4">
 
       <BarCard
         title="By category"
@@ -110,6 +119,7 @@ function InsightsPage() {
       />
 
       <MemberShares group={group} format={format} />
+      </div>
     </div>
   )
 }
@@ -122,7 +132,7 @@ function MemberShares({
   format: (cents: number) => string
 }) {
   return (
-    <Card className="md:col-span-2">
+    <Card>
       <CardHeader>
         <CardTitle>Paid vs. share</CardTitle>
       </CardHeader>

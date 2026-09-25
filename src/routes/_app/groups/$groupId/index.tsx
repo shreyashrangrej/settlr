@@ -23,13 +23,13 @@ import {
   InputGroupInput,
 } from '#/components/ui/input-group'
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemTitle,
-} from '#/components/ui/item'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '#/components/ui/table'
 import { categoryLabel, formatDate, formatMoney, memberName } from '#/lib/format'
 import {
   CATEGORIES,
@@ -111,11 +111,26 @@ function ExpensesPage() {
               </EmptyHeader>
             </Empty>
           ) : (
-            <ItemGroup>
-              {page.items.map((expense) => (
-                <ExpenseRow key={expense.id} group={group} expense={expense} />
-              ))}
-            </ItemGroup>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="hidden lg:table-cell">Category</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Paid by</TableHead>
+                  <TableHead className="hidden xl:table-cell">Split</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-10">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {page.items.map((expense) => (
+                  <ExpenseRow key={expense.id} group={group} expense={expense} />
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
@@ -214,22 +229,33 @@ function ExpenseRow({ group, expense }: { group: Group; expense: GroupExpense })
       ? 'You'
       : memberName(group.members, expense.paidBy)
 
+  const split =
+    splitCount === group.members.length ? 'Everyone' : `${splitCount} people`
+
   return (
-    <Item>
-      <ItemContent>
-        <ItemTitle>
-          {expense.description}
-          <Badge variant="secondary">{categoryLabel(expense.category)}</Badge>
-        </ItemTitle>
-        <ItemDescription>
-          {formatDate(expense.date)} · {payer} paid · split{' '}
-          {splitCount === group.members.length ? 'evenly' : `${splitCount} ways`}
-        </ItemDescription>
-      </ItemContent>
-      <ItemActions>
-        <span className="font-semibold tabular-nums">
-          {formatMoney(expense.amountCents, group.currency)}
+    <TableRow>
+      <TableCell className="max-w-0 font-medium">
+        <span className="block truncate">{expense.description}</span>
+        <span className="block text-xs font-normal text-muted-foreground md:hidden">
+          {formatDate(expense.date)} · {payer} paid · {split}
         </span>
+      </TableCell>
+      <TableCell className="hidden w-40 lg:table-cell">
+        <Badge variant="secondary">{categoryLabel(expense.category)}</Badge>
+      </TableCell>
+      <TableCell className="hidden w-36 text-muted-foreground md:table-cell">
+        {formatDate(expense.date)}
+      </TableCell>
+      <TableCell className="hidden w-40 md:table-cell">
+        <span className="block truncate">{payer}</span>
+      </TableCell>
+      <TableCell className="hidden w-32 text-muted-foreground xl:table-cell">
+        {split}
+      </TableCell>
+      <TableCell className="w-32 text-right font-semibold tabular-nums">
+        {formatMoney(expense.amountCents, group.currency)}
+      </TableCell>
+      <TableCell className="w-10 text-right">
         <ConfirmAction
           title={`Delete “${expense.description}”?`}
           description="Balances will be updated. This can’t be undone."
@@ -245,7 +271,7 @@ function ExpenseRow({ group, expense }: { group: Group; expense: GroupExpense })
             </Button>
           }
         />
-      </ItemActions>
-    </Item>
+      </TableCell>
+    </TableRow>
   )
 }

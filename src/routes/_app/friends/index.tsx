@@ -2,9 +2,17 @@ import { useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ChevronRight, UserPlus, UsersRound } from 'lucide-react'
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  ChevronRight,
+  CircleCheck,
+  UserPlus,
+  UsersRound,
+} from 'lucide-react'
 
 import { PageHeader, SplitLayout } from '#/components/page-header'
+import { StatCard, StatGrid } from '#/components/stat-card'
 import {
   BalanceText,
   PersonAvatar,
@@ -14,6 +22,7 @@ import {
 import { Button } from '#/components/ui/button'
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -33,15 +42,6 @@ import {
   FieldLabel,
 } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from '#/components/ui/item'
 import { Spinner } from '#/components/ui/spinner'
 import { formatBalances } from '#/lib/format'
 import { addFriendInput } from '#/lib/schemas'
@@ -59,6 +59,7 @@ export const Route = createFileRoute('/_app/friends/')({
 function FriendsPage() {
   const { data: friends } = useSuspenseQuery(convexQuery(api.friends.list, {}))
   const { owed, owe } = sumBalances(friends.map((f) => f.balances))
+  const settled = friends.filter((f) => Object.keys(f.balances).length === 0).length
 
   return (
     <>
@@ -68,24 +69,26 @@ function FriendsPage() {
       />
 
       <SplitLayout aside={<AddFriend />}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card size="sm">
-            <CardHeader>
-              <CardDescription>Friends owe you</CardDescription>
-              <CardTitle className="text-2xl font-bold text-positive tabular-nums">
-                {formatBalances(owed) || '—'}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card size="sm">
-            <CardHeader>
-              <CardDescription>You owe friends</CardDescription>
-              <CardTitle className="text-2xl font-bold text-destructive tabular-nums">
-                {formatBalances(owe) || '—'}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-        </div>
+        <StatGrid>
+          <StatCard
+            label="Friends owe you"
+            icon={<ArrowDownLeft />}
+            tone="positive"
+            value={formatBalances(owed)}
+          />
+          <StatCard
+            label="You owe friends"
+            icon={<ArrowUpRight />}
+            tone="negative"
+            value={formatBalances(owe)}
+          />
+          <StatCard label="Friends" icon={<UsersRound />} value={friends.length || ''} />
+          <StatCard
+            label="Settled up"
+            icon={<CircleCheck />}
+            value={friends.length ? `${settled} of ${friends.length}` : ''}
+          />
+        </StatGrid>
 
         {friends.length === 0 ? (
           <Empty className="border border-dashed">
@@ -100,34 +103,42 @@ function FriendsPage() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <Card className="py-2">
-            <CardContent className="px-2">
-              <ItemGroup>
-                {friends.map((friend) => (
-                  <Item
-                    key={friend.id}
-                    render={
-                      <Link to="/friends/$friendId" params={{ friendId: friend.id }} />
-                    }
-                  >
-                    <ItemMedia>
-                      <PersonAvatar name={friend.name} />
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle>{friend.name}</ItemTitle>
-                      {friend.email && (
-                        <ItemDescription>{friend.email}</ItemDescription>
-                      )}
-                    </ItemContent>
-                    <ItemActions className="text-right text-sm">
-                      <BalanceText balances={friend.balances} />
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </ItemActions>
-                  </Item>
-                ))}
-              </ItemGroup>
-            </CardContent>
-          </Card>
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-4">
+            {friends.map((friend) => (
+              <li key={friend.id}>
+                <Link
+                  to="/friends/$friendId"
+                  params={{ friendId: friend.id }}
+                  className="block h-full rounded-xl no-underline outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  <Card size="sm" className="h-full transition-shadow hover:ring-primary/50">
+                    <CardHeader>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <PersonAvatar name={friend.name} size="lg" />
+                        <div className="grid min-w-0">
+                          <CardTitle className="truncate">{friend.name}</CardTitle>
+                          {friend.email && (
+                            <CardDescription className="truncate">
+                              {friend.email}
+                            </CardDescription>
+                          )}
+                        </div>
+                      </div>
+                      <CardAction>
+                        <ChevronRight className="size-4 text-muted-foreground" />
+                      </CardAction>
+                    </CardHeader>
+                    <CardContent className="mt-auto text-sm">
+                      <BalanceText
+                        balances={friend.balances}
+                        className="justify-items-start"
+                      />
+                    </CardContent>
+                  </Card>
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
       </SplitLayout>
     </>

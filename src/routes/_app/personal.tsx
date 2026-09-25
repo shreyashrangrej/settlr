@@ -2,18 +2,26 @@ import { useEffect, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, stripSearchParams } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Trash2, Wallet } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Receipt,
+  Tag,
+  Trash2,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react'
 
 import { ConfirmAction } from '#/components/confirm-action'
 import { AmountInput, CategorySelect, CurrencySelect } from '#/components/form-fields'
 import { useAction } from '#/components/ledger'
 import { PageHeader, SplitLayout } from '#/components/page-header'
+import { StatCard, StatGrid } from '#/components/stat-card'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '#/components/ui/card'
@@ -26,16 +34,16 @@ import {
 } from '#/components/ui/empty'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemTitle,
-} from '#/components/ui/item'
 import { Progress, ProgressLabel, ProgressValue } from '#/components/ui/progress'
 import { Spinner } from '#/components/ui/spinner'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '#/components/ui/table'
 import {
   categoryLabel,
   currentMonth,
@@ -101,23 +109,15 @@ function PersonalPage() {
         }
       />
 
-      <SplitLayout aside={<AddExpense month={month} />}>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardDescription>Spent in {formatMonth(data.month)}</CardDescription>
-              <CardTitle className="text-3xl font-bold tabular-nums">
-                {data.totals.length === 0
-                  ? '—'
-                  : data.totals.map((t) => formatMoney(t.cents, t.currency)).join(' + ')}
-              </CardTitle>
-              <CardDescription>
-                {data.items.length} expense{data.items.length === 1 ? '' : 's'}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <ByCategory data={data} />
-        </div>
+      <SplitLayout
+        aside={
+          <>
+            <AddExpense month={month} />
+            <ByCategory data={data} />
+          </>
+        }
+      >
+        <MonthStats data={data} />
 
         <Card className="py-2">
           <CardContent className="px-2">
@@ -134,11 +134,24 @@ function PersonalPage() {
                 </EmptyHeader>
               </Empty>
             ) : (
-              <ItemGroup>
-                {data.items.map((expense) => (
-                  <ExpenseRow key={expense.id} expense={expense} />
-                ))}
-              </ItemGroup>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="hidden md:table-cell">Category</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="w-10">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.items.map((expense) => (
+                    <ExpenseRow key={expense.id} expense={expense} />
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>
@@ -176,6 +189,46 @@ function MonthLink({
   )
 }
 
+function MonthStats({ data }: { data: PersonalMonth }) {
+  // Averages and the top category are for the main currency (the one with
+  // the most spent); other currencies still count in the total.
+  const main = data.totals[0]
+  const inMain = main ? data.items.filter((e) => e.currency === main.currency) : []
+  const top = main ? data.byCategory.find((row) => row.currency === main.currency) : undefined
+  const largest = inMain.reduce<(typeof inMain)[number] | undefined>(
+    (max, e) => (!max || e.amountCents > max.amountCents ? e : max),
+    undefined,
+  )
+
+  return (
+    <StatGrid>
+      <StatCard
+        label={`Spent in ${formatMonth(data.month)}`}
+        icon={<Wallet />}
+        value={data.totals.map((t) => formatMoney(t.cents, t.currency)).join(' + ')}
+      />
+      <StatCard
+        label="Expenses"
+        icon={<Receipt />}
+        value={data.items.length || ''}
+        hint={main && `Avg ${formatMoney(Math.round(main.cents / inMain.length), main.currency)}`}
+      />
+      <StatCard
+        label="Top category"
+        icon={<Tag />}
+        value={top ? categoryLabel(top.category) : ''}
+        hint={top && formatMoney(top.cents, top.currency)}
+      />
+      <StatCard
+        label="Largest expense"
+        icon={<TrendingUp />}
+        value={largest ? formatMoney(largest.amountCents, largest.currency) : ''}
+        hint={largest?.description}
+      />
+    </StatGrid>
+  )
+}
+
 function ByCategory({ data }: { data: PersonalMonth }) {
   const max = Math.max(...data.byCategory.map((r) => r.cents), 1)
   return (
@@ -187,7 +240,7 @@ function ByCategory({ data }: { data: PersonalMonth }) {
         {data.byCategory.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing to show yet.</p>
         ) : (
-          data.byCategory.slice(0, 5).map((row) => (
+          data.byCategory.map((row) => (
             <Progress key={`${row.currency}:${row.category}`} value={(row.cents / max) * 100}>
               <ProgressLabel className="text-sm">{categoryLabel(row.category)}</ProgressLabel>
               <ProgressValue className="ml-auto text-sm font-semibold tabular-nums">
@@ -206,18 +259,23 @@ function ExpenseRow({ expense }: { expense: PersonalMonth['items'][number] }) {
   const { run } = useAction(removeExpense, { success: 'Deleted', toastErrors: true })
 
   return (
-    <Item>
-      <ItemContent>
-        <ItemTitle>
-          {expense.description}
-          <Badge variant="secondary">{categoryLabel(expense.category)}</Badge>
-        </ItemTitle>
-        <ItemDescription>{formatDate(expense.date)}</ItemDescription>
-      </ItemContent>
-      <ItemActions>
-        <span className="font-semibold tabular-nums">
-          {formatMoney(expense.amountCents, expense.currency)}
+    <TableRow>
+      <TableCell className="max-w-0 font-medium">
+        <span className="block truncate">{expense.description}</span>
+        <span className="block text-xs font-normal text-muted-foreground md:hidden">
+          {formatDate(expense.date)} · {categoryLabel(expense.category)}
         </span>
+      </TableCell>
+      <TableCell className="hidden w-40 md:table-cell">
+        <Badge variant="secondary">{categoryLabel(expense.category)}</Badge>
+      </TableCell>
+      <TableCell className="hidden w-36 text-muted-foreground md:table-cell">
+        {formatDate(expense.date)}
+      </TableCell>
+      <TableCell className="w-32 text-right font-semibold tabular-nums">
+        {formatMoney(expense.amountCents, expense.currency)}
+      </TableCell>
+      <TableCell className="w-10 text-right">
         <ConfirmAction
           title={`Delete “${expense.description}”?`}
           description="This can’t be undone."
@@ -233,8 +291,8 @@ function ExpenseRow({ expense }: { expense: PersonalMonth['items'][number] }) {
             </Button>
           }
         />
-      </ItemActions>
-    </Item>
+      </TableCell>
+    </TableRow>
   )
 }
 

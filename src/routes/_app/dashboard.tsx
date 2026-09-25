@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 
 import { PageHeader } from '#/components/page-header'
+import { StatCard, StatGrid } from '#/components/stat-card'
 import { BalanceText, PersonAvatar, SignedAmount, sumBalances } from '#/components/ledger'
 import { buttonVariants } from '#/components/ui/button'
 import {
@@ -109,27 +110,34 @@ function DashboardPage() {
         }
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Stat
+      <StatGrid className="mb-6">
+        <StatCard
           label="You are owed"
           icon={<ArrowDownLeft />}
           tone="positive"
           value={formatBalances(owed)}
         />
-        <Stat
+        <StatCard
           label="You owe"
           icon={<ArrowUpRight />}
           tone="negative"
           value={formatBalances(owe)}
         />
-        <Stat
-          label={`Personal spending · ${formatMonth(month)}`}
+        <StatCard
+          label={`Personal · ${formatMonth(month)}`}
           icon={<Wallet />}
           value={personal.totals
             .map((t) => formatMoney(t.cents, t.currency))
             .join(' + ')}
+          hint={personal.items.length ? `${personal.items.length} expenses` : undefined}
         />
-      </div>
+        <StatCard
+          label="Friends and groups"
+          icon={<Users />}
+          value={friends.length + groups.length || ''}
+          hint={`${friends.length} friends · ${groups.length} groups`}
+        />
+      </StatGrid>
 
       <div className="grid items-start gap-4 lg:grid-cols-3">
         <Section
@@ -207,45 +215,6 @@ function DashboardPage() {
         </Section>
       </div>
     </>
-  )
-}
-
-function Stat({
-  label,
-  value,
-  icon,
-  tone,
-}: {
-  label: string
-  value: string
-  icon: React.ReactNode
-  tone?: 'positive' | 'negative'
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardAction
-          className={cn(
-            'grid size-8 place-items-center rounded-lg bg-muted text-muted-foreground [&_svg]:size-4',
-            tone === 'positive' && 'bg-positive/15 text-positive',
-            tone === 'negative' && 'bg-destructive/15 text-destructive',
-          )}
-        >
-          {icon}
-        </CardAction>
-        <CardTitle
-          className={cn(
-            'text-2xl font-bold tabular-nums',
-            !value && 'text-muted-foreground',
-            value && tone === 'positive' && 'text-positive',
-            value && tone === 'negative' && 'text-destructive',
-          )}
-        >
-          {value || '—'}
-        </CardTitle>
-      </CardHeader>
-    </Card>
   )
 }
 

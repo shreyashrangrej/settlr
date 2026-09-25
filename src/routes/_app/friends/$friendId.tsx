@@ -38,14 +38,13 @@ import {
 } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from '#/components/ui/item'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '#/components/ui/table'
 import { Spinner } from '#/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import {
@@ -183,11 +182,24 @@ function FriendPage() {
                 </EmptyHeader>
               </Empty>
             ) : (
-              <ItemGroup>
-                {ledger.items.map((entry) => (
-                  <EntryRow key={entry.id} entry={entry} friendName={friend.name} />
-                ))}
-              </ItemGroup>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="hidden lg:table-cell">Details</TableHead>
+                    <TableHead className="text-right">Effect</TableHead>
+                    <TableHead className="w-10">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ledger.items.map((entry) => (
+                    <EntryRow key={entry.id} entry={entry} friendName={friend.name} />
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>
@@ -232,35 +244,46 @@ function EntryRow({
       : (entry.note ?? 'Settle-up payment')
 
   return (
-    <Item>
-      <ItemMedia variant="icon" className="grid size-9 place-items-center rounded-lg bg-muted">
-        {entry.kind === 'payment' ? (
-          <HandCoins className="text-primary" />
-        ) : (
-          <Receipt className="text-muted-foreground" />
-        )}
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle>
-          {title}
+    <TableRow>
+      <TableCell className="max-w-0">
+        <span className="flex items-center gap-3">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted [&_svg]:size-4">
+            {entry.kind === 'payment' ? (
+              <HandCoins className="text-primary" />
+            ) : (
+              <Receipt className="text-muted-foreground" />
+            )}
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate font-medium">{title}</span>
+            <span className="block truncate text-xs text-muted-foreground lg:hidden">
+              <span className="md:hidden">{formatDate(entry.date)} · </span>
+              {detail}
+            </span>
+          </span>
+        </span>
+      </TableCell>
+      <TableCell className="hidden w-36 text-muted-foreground md:table-cell">
+        {formatDate(entry.date)}
+      </TableCell>
+      <TableCell className="hidden max-w-0 text-muted-foreground lg:table-cell">
+        <span className="flex items-center gap-2">
           {entry.kind === 'expense' && (
             <Badge variant="secondary">{categoryLabel(entry.category)}</Badge>
           )}
-        </ItemTitle>
-        <ItemDescription>
-          {formatDate(entry.date)} · {detail}
-        </ItemDescription>
-      </ItemContent>
-      <ItemActions>
+          <span className="truncate">{detail}</span>
+        </span>
+      </TableCell>
+      <TableCell className="w-44 text-right">
         {entry.kind === 'payment' ? (
-          // The title already says who paid whom.
+          // The description already says who paid whom.
           <span className="font-semibold tabular-nums">
             {formatMoney(entry.amountCents, entry.currency)}
           </span>
         ) : (
           <span
             className={cn(
-              'text-sm font-semibold tabular-nums',
+              'font-semibold tabular-nums',
               entry.effectCents > 0 ? 'text-positive' : 'text-destructive',
             )}
           >
@@ -268,6 +291,8 @@ function EntryRow({
             {formatMoney(Math.abs(entry.effectCents), entry.currency)}
           </span>
         )}
+      </TableCell>
+      <TableCell className="w-10 text-right">
         <ConfirmAction
           title={`Delete “${title}”?`}
           description="Balances will be updated. This can’t be undone."
@@ -283,8 +308,8 @@ function EntryRow({
             </Button>
           }
         />
-      </ItemActions>
-    </Item>
+      </TableCell>
+    </TableRow>
   )
 }
 
