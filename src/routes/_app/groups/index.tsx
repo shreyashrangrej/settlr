@@ -24,8 +24,9 @@ import {
   EmptyTitle,
 } from '#/components/ui/empty'
 import { Badge } from '#/components/ui/badge'
-import { formatMoney } from '#/lib/format'
+import { formatMoney, plural } from '#/lib/format'
 import { cn } from '#/lib/utils'
+import { GroupsSkeleton } from '#/components/skeletons'
 import { api } from '#convex/_generated/api'
 
 // SSR: full. The group list belongs in the first HTML response; after
@@ -34,6 +35,7 @@ export const Route = createFileRoute('/_app/groups/')({
   loader: ({ context }) =>
     context.queryClient.ensureQueryData(convexQuery(api.groups.list, {})),
   head: () => ({ meta: [{ title: 'Groups · Settlr' }] }),
+  pendingComponent: GroupsSkeleton,
   component: GroupsPage,
 })
 
@@ -88,7 +90,7 @@ function GroupsPage() {
                   <CardHeader>
                     <CardTitle className="text-base">{group.name}</CardTitle>
                     <CardDescription>
-                      {group.memberCount} members · {group.expenseCount} expenses
+                      {group.memberCount} members · {plural(group.expenseCount, 'expense')}
                     </CardDescription>
                     <CardAction>
                       <Badge variant="secondary">{group.currency}</Badge>

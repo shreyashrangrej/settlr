@@ -45,6 +45,7 @@ import { Input } from '#/components/ui/input'
 import { Spinner } from '#/components/ui/spinner'
 import { formatBalances } from '#/lib/format'
 import { addFriendInput } from '#/lib/schemas'
+import { FriendsSkeleton } from '#/components/skeletons'
 import { api } from '#convex/_generated/api'
 
 // SSR: full. The loader prefetches the friends list over HTTP during SSR;
@@ -53,6 +54,7 @@ export const Route = createFileRoute('/_app/friends/')({
   loader: ({ context }) =>
     context.queryClient.ensureQueryData(convexQuery(api.friends.list, {})),
   head: () => ({ meta: [{ title: 'Friends · Settlr' }] }),
+  pendingComponent: FriendsSkeleton,
   component: FriendsPage,
 })
 

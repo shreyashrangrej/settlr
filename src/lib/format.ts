@@ -62,6 +62,11 @@ export function currentMonth() {
   return new Date().toISOString().slice(0, 7)
 }
 
+/** "1 expense", "3 expenses". */
+export function plural(count: number, word: string, many = `${word}s`) {
+  return `${count} ${count === 1 ? word : many}`
+}
+
 export function categoryLabel(category: string) {
   return category.charAt(0).toUpperCase() + category.slice(1)
 }

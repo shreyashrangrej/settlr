@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { ChartColumn, Clock, Receipt, Users, Wallet } from 'lucide-react'
 
 import { StatCard, StatGrid } from '#/components/stat-card'
+import { InsightsSkeleton } from '#/components/skeletons'
 import { useGroup } from '#/components/use-group'
 import {
   Card,
@@ -37,6 +38,7 @@ import type { Group } from '#/lib/types'
 export const Route = createFileRoute('/_app/groups/$groupId/insights')({
   ssr: 'data-only',
   head: () => ({ meta: [{ title: 'Insights · Settlr' }] }),
+  pendingComponent: InsightsSkeleton,
   component: InsightsPage,
 })
 

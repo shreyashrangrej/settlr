@@ -14,21 +14,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '#/components/ui/empty'
-import { Spinner } from '#/components/ui/spinner'
 import { errorMessage } from '#/lib/errors'
-
-export function PageSpinner() {
-  return (
-    <div
-      className="grid place-items-center gap-3 py-24 text-sm text-muted-foreground"
-      role="status"
-      aria-live="polite"
-    >
-      <Spinner className="size-6 text-primary" />
-      Loading…
-    </div>
-  )
-}
 
 export function NotFound() {
   return (

@@ -12,6 +12,7 @@ import {
   Wallet,
 } from 'lucide-react'
 
+import { BudgetCard, type Budget } from '#/components/budget'
 import { ConfirmAction } from '#/components/confirm-action'
 import { AmountInput, CategorySelect, CurrencySelect } from '#/components/form-fields'
 import { useAction } from '#/components/ledger'
@@ -64,6 +65,7 @@ import {
 } from '#/lib/schemas'
 import type { PersonalMonth } from '#/lib/types'
 import { cn } from '#/lib/utils'
+import { PersonalSkeleton } from '#/components/skeletons'
 import { api } from '#convex/_generated/api'
 
 // SSR: full. Your own spending, one month at a time (`?month=2026-09`; no
@@ -76,18 +78,23 @@ export const Route = createFileRoute('/_app/personal')({
   loaderDeps: ({ search }) => search,
   loader: async ({ context, deps }) => {
     const month = deps.month || currentMonth()
-    await context.queryClient.ensureQueryData(
-      convexQuery(api.personal.month, { month }),
-    )
-    return { month, thisMonth: currentMonth() }
+    await Promise.all([
+      context.queryClient.ensureQueryData(convexQuery(api.personal.month, { month })),
+      context.queryClient.ensureQueryData(convexQuery(api.budgets.list, {})),
+    ])
+    // Read the clock here (on the server during SSR) so the page renders the
+    // same "today" on both sides.
+    return { month, thisMonth: currentMonth(), today: todayIsoDate() }
   },
   head: () => ({ meta: [{ title: 'Personal expenses · Settlr' }] }),
+  pendingComponent: PersonalSkeleton,
   component: PersonalPage,
 })
 
 function PersonalPage() {
-  const { month, thisMonth } = Route.useLoaderData()
+  const { month, thisMonth, today } = Route.useLoaderData()
   const { data } = useSuspenseQuery(convexQuery(api.personal.month, { month }))
+  const { data: budgets } = useSuspenseQuery(convexQuery(api.budgets.list, {}))
 
   return (
     <>
@@ -112,12 +119,19 @@ function PersonalPage() {
       <SplitLayout
         aside={
           <>
+            <BudgetCard
+              month={month}
+              today={today}
+              budgets={budgets}
+              totals={data.totals}
+              defaultCurrency={data.totals[0]?.currency}
+            />
             <AddExpense month={month} />
             <ByCategory data={data} />
           </>
         }
       >
-        <MonthStats data={data} />
+        <MonthStats data={data} budgets={budgets} />
 
         <Card className="py-2">
           <CardContent className="px-2">
@@ -189,7 +203,13 @@ function MonthLink({
   )
 }
 
-function MonthStats({ data }: { data: PersonalMonth }) {
+function MonthStats({
+  data,
+  budgets,
+}: {
+  data: PersonalMonth
+  budgets: Array<Budget>
+}) {
   // Averages and the top category are for the main currency (the one with
   // the most spent); other currencies still count in the total.
   const main = data.totals[0]
@@ -206,6 +226,7 @@ function MonthStats({ data }: { data: PersonalMonth }) {
         label={`Spent in ${formatMonth(data.month)}`}
         icon={<Wallet />}
         value={data.totals.map((t) => formatMoney(t.cents, t.currency)).join(' + ')}
+        hint={budgetHint(data, budgets)}
       />
       <StatCard
         label="Expenses"
@@ -227,6 +248,13 @@ function MonthStats({ data }: { data: PersonalMonth }) {
       />
     </StatGrid>
   )
+}
+
+// "of ₹5,000.00 budget" for the main currency's budget, if there is one.
+function budgetHint(data: PersonalMonth, budgets: Array<Budget>) {
+  const currency = data.totals[0]?.currency ?? budgets[0]?.currency
+  const budget = budgets.find((b) => b.currency === currency)
+  return budget ? `of ${formatMoney(budget.amountCents, budget.currency)} budget` : undefined
 }
 
 function ByCategory({ data }: { data: PersonalMonth }) {

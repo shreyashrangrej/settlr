@@ -34,7 +34,11 @@ function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="Settings" description="Stored in this browser only." />
+      <PageHeader
+        back={{ fallback: { to: '/' }, label: 'Back' }}
+        title="Settings"
+        description="Stored in this browser only."
+      />
       <Card>
         <form
           onSubmit={(event) => {

@@ -12,13 +12,18 @@ import type { ConvexReactClient } from 'convex/react'
 import { AccountMenu } from '#/components/account-menu'
 import { APP_SECTIONS } from '#/components/app-nav'
 import { NameForm } from '#/components/name-form'
+import { NavigationProgress } from '#/components/navigation-progress'
 import { ThemeToggle } from '#/components/theme-toggle'
 import { buttonVariants } from '#/components/ui/button'
 import { Toaster } from '#/components/ui/sonner'
 import { getAuthSession } from '#/functions/auth.functions'
 import { authClient } from '#/lib/auth-client'
+import {
+  readCachedSession,
+  writeCachedSession,
+  type AuthSession,
+} from '#/lib/auth-session-cache'
 import { themeInitScript } from '#/lib/theme'
-import type { AuthUser } from '#/lib/types'
 import { cn } from '#/lib/utils'
 
 import appCss from '../styles.css?url'
@@ -33,16 +38,18 @@ export const Route = createRootRouteWithContext<{
 }>()({
   // Resolve the session up front so SSR renders the right signed-in state.
   beforeLoad: async ({ context }) => {
-    let session: { token: string | null; user: AuthUser | null } = {
-      token: null,
-      user: null,
-    }
-    try {
-      session = await getAuthSession()
-    } catch (error) {
-      // An unreachable auth backend shouldn't take the whole site down;
-      // render signed out instead.
-      console.error('Could not load the auth session', error)
+    // In the browser this is usually cached, so navigating doesn't wait on
+    // a server round trip (see auth-session-cache.ts).
+    let session: AuthSession = readCachedSession() ?? { token: null, user: null }
+    if (!readCachedSession()) {
+      try {
+        session = await getAuthSession()
+        writeCachedSession(session)
+      } catch (error) {
+        // An unreachable auth backend shouldn't take the whole site down;
+        // render signed out instead.
+        console.error('Could not load the auth session', error)
+      }
     }
     // During SSR, loaders run Convex queries over HTTP as this user. (The
     // router, and so this client, is created per request.) In the browser
@@ -100,13 +107,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <NavigationProgress />
         <ConvexBetterAuthProvider
           client={convexClient}
           authClient={authClient}
           initialToken={token}
         >
           <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
-            <div className="app-shell flex h-16 items-center justify-between gap-2">
+            <div className="app-shell flex h-14 items-center justify-between gap-2">
               <Link
                 to={user ? '/dashboard' : '/'}
                 className="text-lg font-bold tracking-tight text-primary no-underline"

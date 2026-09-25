@@ -30,7 +30,9 @@ overview of three areas:
   Groups can be renamed and members added, renamed or removed (removing is
   only allowed for people who aren't on any expense, and the currency only
   changes while a group has no expenses).
-- **Personal**: your own spending, month by month, with totals by category.
+- **Personal**: your own spending, month by month, with totals by category
+  and an optional monthly budget per currency (progress, what's left and a
+  daily allowance for the rest of the month).
 
 Friends and group members are people you track by name; they don't need an
 account. Everything is private to the signed-in user.

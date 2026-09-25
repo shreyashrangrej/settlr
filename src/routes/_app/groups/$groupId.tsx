@@ -30,6 +30,7 @@ import { tabsListVariants } from '#/components/ui/tabs'
 import { formatMoney, memberName } from '#/lib/format'
 import type { Group } from '#/lib/types'
 import { cn } from '#/lib/utils'
+import { DetailSkeleton } from '#/components/skeletons'
 import { api } from '#convex/_generated/api'
 
 // SSR: full. The group (members, balances and the settle-up plan are kept
@@ -46,6 +47,7 @@ export const Route = createFileRoute('/_app/groups/$groupId')({
   head: ({ loaderData }) => ({
     meta: loaderData ? [{ title: `${loaderData.name} · Settlr` }] : [],
   }),
+  pendingComponent: DetailSkeleton,
   component: GroupLayout,
 })
 
@@ -73,7 +75,7 @@ function GroupLayout() {
   return (
     <>
       <PageHeader
-        eyebrow={<Link to="/groups">Groups</Link>}
+        back={{ fallback: { to: '/groups' }, label: 'Back' }}
         title={
           <span className="flex items-center gap-3">
             {group.name}

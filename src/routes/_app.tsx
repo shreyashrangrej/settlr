@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_app')({
 function AppLayout() {
   return (
     <>
-      <AppTabs className="mb-6 md:hidden" />
+      <AppTabs className="mb-4 md:hidden" />
       <Outlet />
     </>
   )

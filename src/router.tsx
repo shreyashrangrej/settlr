@@ -3,7 +3,8 @@ import { QueryClient } from '@tanstack/react-query'
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
 
-import { ErrorState, NotFound, PageSpinner } from './components/states'
+import { PageSkeleton } from './components/skeletons'
+import { ErrorState, NotFound } from './components/states'
 import { routeTree } from './routeTree.gen'
 
 export function getRouter() {
@@ -39,8 +40,14 @@ export function getRouter() {
     // Query data is kept fresh by Convex, so the router needn't re-run
     // loaders to refresh it.
     defaultPreloadStaleTime: 0,
-    // Also rendered on the server for routes with `ssr: false`/`'data-only'`.
-    defaultPendingComponent: PageSpinner,
+    // Show a page-shaped skeleton if a route takes more than 150ms to load
+    // (the router's default wait is 1s), and keep it up for at least 200ms
+    // so it doesn't flicker. Routes set their own shape with
+    // `pendingComponent`. Also rendered on the server for routes with
+    // `ssr: false`/`'data-only'`.
+    defaultPendingComponent: PageSkeleton,
+    defaultPendingMs: 150,
+    defaultPendingMinMs: 200,
     defaultErrorComponent: ErrorState,
     defaultNotFoundComponent: NotFound,
   })

@@ -11,6 +11,7 @@ import {
   Wallet,
 } from 'lucide-react'
 
+import { budgetStatus } from '#/components/budget'
 import { PageHeader } from '#/components/page-header'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import { BalanceText, PersonAvatar, SignedAmount, sumBalances } from '#/components/ledger'
@@ -45,8 +46,10 @@ import {
   formatDate,
   formatMoney,
   formatMonth,
+  plural,
 } from '#/lib/format'
 import { cn } from '#/lib/utils'
+import { DashboardSkeleton } from '#/components/skeletons'
 import { api } from '#convex/_generated/api'
 
 const PREVIEW = 5
@@ -62,10 +65,12 @@ export const Route = createFileRoute('/_app/dashboard')({
       context.queryClient.ensureQueryData(
         convexQuery(api.personal.month, { month }),
       ),
+      context.queryClient.ensureQueryData(convexQuery(api.budgets.list, {})),
     ])
     return { month }
   },
   head: () => ({ meta: [{ title: 'Overview · Settlr' }] }),
+  pendingComponent: DashboardSkeleton,
   component: DashboardPage,
 })
 
@@ -77,6 +82,15 @@ function DashboardPage() {
   const { data: personal } = useSuspenseQuery(
     convexQuery(api.personal.month, { month }),
   )
+  const { data: budgets } = useSuspenseQuery(convexQuery(api.budgets.list, {}))
+  // Personal spending against the budget in its main currency.
+  const mainSpend = personal.totals[0]
+  const budget = budgets.find(
+    (b) => b.currency === (mainSpend?.currency ?? budgets[0]?.currency),
+  )
+  const budgetState = budget
+    ? budgetStatus(mainSpend?.cents ?? 0, budget.amountCents)
+    : null
 
   // Where you stand overall: friends' balances plus your net in each group.
   const { owed, owe } = sumBalances([
@@ -129,13 +143,20 @@ function DashboardPage() {
           value={personal.totals
             .map((t) => formatMoney(t.cents, t.currency))
             .join(' + ')}
-          hint={personal.items.length ? `${personal.items.length} expenses` : undefined}
+          tone={budgetState?.tone === 'over' ? 'negative' : undefined}
+          hint={
+            budget
+              ? `of ${formatMoney(budget.amountCents, budget.currency)} budget · ${budgetState?.label}`
+              : personal.items.length
+                ? plural(personal.items.length, 'expense')
+                : undefined
+          }
         />
         <StatCard
           label="Friends and groups"
           icon={<Users />}
           value={friends.length + groups.length || ''}
-          hint={`${friends.length} friends · ${groups.length} groups`}
+          hint={`${plural(friends.length, 'friend')} · ${plural(groups.length, 'group')}`}
         />
       </StatGrid>
 

@@ -91,6 +91,14 @@ export default defineSchema({
       filterFields: ['groupId', 'category', 'paidBy'],
     }),
 
+  // Monthly budget for your personal spending, one per currency. It applies
+  // to every month.
+  budgets: defineTable({
+    userId: v.string(),
+    currency,
+    amountCents: v.number(),
+  }).index('by_userId_and_currency', ['userId', 'currency']),
+
   personalExpenses: defineTable({
     userId: v.string(),
     description: v.string(),

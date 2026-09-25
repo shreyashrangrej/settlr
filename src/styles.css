@@ -152,7 +152,7 @@
 }
 
 main.app-shell {
-  padding-block: 2rem 4rem;
+  padding-block: 1rem 3rem;
 }
 
 /* Home hero */
@@ -163,12 +163,12 @@ main.app-shell {
   grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
   align-items: center;
   gap: clamp(2.5rem, 5vw, 4.5rem);
-  min-height: calc(100svh - 4rem);
+  min-height: calc(100svh - 3.5rem);
   /* The app pages use the full width, but the hero's copy and sign-in card
      read as one piece, so they sit together in a centred column. */
   max-width: 68rem;
   /* Cancels main's block padding so the hero fills the first screen. */
-  margin: -2rem auto -4rem;
+  margin: -1rem auto -3rem;
   padding-block: clamp(3rem, 8vh, 6rem);
 }
 

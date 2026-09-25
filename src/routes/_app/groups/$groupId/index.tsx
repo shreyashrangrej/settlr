@@ -40,6 +40,7 @@ import {
 } from '#/lib/schemas'
 import type { Group, GroupExpense } from '#/lib/types'
 import { cn } from '#/lib/utils'
+import { TableSkeleton } from '#/components/skeletons'
 import { api } from '#convex/_generated/api'
 
 // SSR: full. Filters, sorting and the list length live in the URL, validated
@@ -55,6 +56,7 @@ export const Route = createFileRoute('/_app/groups/$groupId/')({
     context.queryClient.ensureQueryData(
       convexQuery(api.groups.expenses, { groupId: params.groupId, ...deps }),
     ),
+  pendingComponent: TableSkeleton,
   component: ExpensesPage,
 })
 

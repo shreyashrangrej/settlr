@@ -2,6 +2,8 @@ import { convexClient } from '@convex-dev/better-auth/client/plugins'
 import { emailOTPClient } from 'better-auth/client/plugins'
 import { createAuthClient } from 'better-auth/react'
 
+import { clearCachedSession } from './auth-session-cache'
+
 // Browser half of Better Auth. Requests go to this app's /api/auth/* route,
 // which forwards them to Convex.
 export const authClient = createAuthClient({
@@ -39,6 +41,7 @@ export async function sendEmailOtp(email: string) {
 export async function verifyEmailOtp(email: string, otp: string) {
   const { error } = await authClient.signIn.emailOtp({ email, otp })
   throwIfError(error)
+  clearCachedSession()
 }
 
 // Redirects the browser to Google; it comes back to `callbackURL`.
@@ -53,9 +56,11 @@ export async function signInWithGoogle(callbackURL = '/dashboard') {
 export async function updateName(name: string) {
   const { error } = await authClient.updateUser({ name })
   throwIfError(error)
+  clearCachedSession()
 }
 
 export async function signOut() {
   const { error } = await authClient.signOut()
+  clearCachedSession()
   throwIfError(error)
 }

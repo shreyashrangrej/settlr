@@ -130,6 +130,14 @@ force-push `main`.
   groups) are card grids with `repeat(auto-fill,minmax(…,1fr))`, and forms
   get a max width. `SplitLayout` gives a page a main area and a 24rem
   sidebar.
+- **Loading**: give each route a page-shaped `pendingComponent` from
+  `src/components/skeletons.tsx` (the router shows it after 150ms). The top
+  bar (`navigation-progress.tsx`) is automatic. Nested pages pass
+  `back={{ fallback, label }}` to `PageHeader` for a back button.
+- **Auth session in the browser** is cached by `src/lib/auth-session-cache.ts`
+  so navigations don't wait on a server round trip. Anything that changes who
+  is signed in or their profile must call `clearCachedSession()` (the
+  helpers in `auth-client.ts` already do) before `router.invalidate()`.
   Dark mode is the `.dark` class on `<html>` (set before paint by the inline
   script in `__root.tsx`), not `prefers-color-scheme`, so style dark variants
   with `.dark` / `dark:`. Theme-dependent markup must render the same on the

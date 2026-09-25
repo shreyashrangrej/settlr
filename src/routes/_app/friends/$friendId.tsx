@@ -66,6 +66,7 @@ import {
 } from '#/lib/schemas'
 import type { Friend, FriendEntry } from '#/lib/types'
 import { cn } from '#/lib/utils'
+import { DetailSkeleton } from '#/components/skeletons'
 import { api } from '#convex/_generated/api'
 
 // SSR: full. The friend and their ledger are prefetched during SSR, then
@@ -92,6 +93,7 @@ export const Route = createFileRoute('/_app/friends/$friendId')({
   head: ({ loaderData }) => ({
     meta: loaderData ? [{ title: `${loaderData.name} · Settlr` }] : [],
   }),
+  pendingComponent: DetailSkeleton,
   component: FriendPage,
 })
 
@@ -122,7 +124,7 @@ function FriendPage() {
   return (
     <>
       <PageHeader
-        eyebrow={<Link to="/friends">Friends</Link>}
+        back={{ fallback: { to: '/friends' }, label: 'Back to friends' }}
         media={<PersonAvatar name={friend.name} size="lg" />}
         title={friend.name}
         description={friend.email ?? undefined}

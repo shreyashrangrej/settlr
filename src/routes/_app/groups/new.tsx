@@ -68,7 +68,7 @@ function NewGroupPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader
-        eyebrow={<Link to="/groups">Groups</Link>}
+        back={{ fallback: { to: '/groups' }, label: 'Back to groups' }}
         title="New group"
         description="Add the people you’re sharing costs with. They don’t need an account."
       />
