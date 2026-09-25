@@ -1,6 +1,9 @@
-import { useCanGoBack, useRouter, type NavigateOptions } from '@tanstack/react-router'
+'use client'
+
 import { ArrowLeft } from 'lucide-react'
 
+import { useAppRouter } from '#/components/navigation-progress'
+import { canGoBack } from '#/components/providers'
 import { Button } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 
@@ -12,11 +15,11 @@ export function BackButton({
   fallback,
   label,
 }: {
-  fallback: NavigateOptions
+  /** Where to go when there's no previous page, e.g. '/friends'. */
+  fallback: string
   label: string
 }) {
-  const router = useRouter()
-  const canGoBack = useCanGoBack()
+  const router = useAppRouter()
   return (
     <Button
       variant="outline"
@@ -24,7 +27,7 @@ export function BackButton({
       className="shrink-0 rounded-full"
       aria-label={label}
       title={label}
-      onClick={() => (canGoBack ? router.history.back() : router.navigate(fallback))}
+      onClick={() => (canGoBack() ? router.back() : router.push(fallback))}
     >
       <ArrowLeft />
     </Button>
@@ -42,7 +45,7 @@ export function PageHeader({
 }: {
   title: React.ReactNode
   description?: React.ReactNode
-  back?: { fallback: NavigateOptions; label: string }
+  back?: { fallback: string; label: string }
   media?: React.ReactNode
   actions?: React.ReactNode
   className?: string

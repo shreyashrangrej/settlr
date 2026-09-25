@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 
 // Placeholders shaped like each page, shown while a route loads (see the
-// \`pendingComponent\`s in src/routes). They reuse the real layout classes so
+// `loading.tsx` files in src/app). They reuse the real layout classes so
 // nothing jumps when the content arrives.
 
 function Status({ children }: { children: React.ReactNode }) {

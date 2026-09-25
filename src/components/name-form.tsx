@@ -1,5 +1,7 @@
+'use client'
+
 import { useState } from 'react'
-import { useRouter } from '@tanstack/react-router'
+import { useRouter } from 'next/navigation'
 import { CircleAlert, UserRound } from 'lucide-react'
 
 import { Alert, AlertDescription } from '#/components/ui/alert'
@@ -33,7 +35,7 @@ export function NameForm({ email }: { email: string }) {
     try {
       await updateName(parsed.data.name)
       // Reloads the session, so the page this replaced renders.
-      await router.invalidate()
+      router.refresh()
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Something went wrong. Try again.',

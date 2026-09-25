@@ -3,9 +3,8 @@
   "configurations": [
     {
       "name": "settlr-prod",
-      "runtimeExecutable": "node",
-      "runtimeArgs": [".output/server/index.mjs"],
-      "env": { "PORT": "3100" },
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "next", "start", "--port", "3100"],
       "port": 3100
     }
   ]

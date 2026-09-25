@@ -1,9 +1,8 @@
 # Settlr
 
 Split shared expenses with friends, flatmates or trips, and settle up with the
-fewest payments. Built with [TanStack Start](https://tanstack.com/start)
-(React, file-based TanStack Router, Vite, Nitro), [Convex](https://convex.dev)
-for data, [Better Auth](https://better-auth.com) for sign-in and
+fewest payments. Built with [Next.js](https://nextjs.org) (App Router,
+React 19), [Convex](https://convex.dev) for data, [Better Auth](https://better-auth.com) for sign-in and
 [shadcn/ui](https://ui.shadcn.com) on [Base UI](https://base-ui.com) for the
 interface.
 
@@ -12,8 +11,8 @@ pnpm install
 pnpm dev          # http://localhost:3000
 pnpm dev:convex   # push convex/ to your dev deployment on every change
 pnpm typecheck
-pnpm build        # outputs .output/ for the selected runtime
-pnpm start        # runs the node-server build
+pnpm build        # next build → .next/
+pnpm start        # runs the production build
 ```
 
 ## What it does
@@ -65,30 +64,37 @@ convex/                    backend: schema, queries and mutations
   lib/                     auth helper, input checks, balance math, receipts
   auth.ts http.ts          Better Auth running inside Convex
 src/
-  routes/                  file-based routes (routeTree.gen.ts is generated)
-    _app.tsx               signed-in layout; redirects signed-out visitors
-    _app/                  dashboard, friends, groups, personal, budget,
-                           notifications, receipts/$source/$expenseId
-  functions/               server functions (the auth session for SSR)
-  server/                  server-only code (Better Auth proxy and token)
+  app/                     Next.js App Router
+    layout.tsx             root document: session, header, providers
+    page.tsx               landing hero and sign-in
+    (app)/                 signed-in area; its layout redirects signed-out
+                           visitors. dashboard, friends, groups, personal,
+                           budget, notifications, receipts/[source]/[expenseId]
+    settings/              browser preferences
+    api/auth/[...all]/     Better Auth proxy to Convex
+    api/health/            liveness probe
+  server/                  server-only code (auth session, Convex prefetch)
   lib/                     isomorphic code: zod schemas, types, formatting,
-                           client-only preferences
+                           search params, client-only preferences
   components/              app components; shadcn/ui (Base UI) in components/ui
-  start.ts                 global request middleware (CSRF)
-  router.tsx               router, TanStack Query and Convex clients
 ```
+
+Each page is a server component (`page.tsx`) that prefetches its data and
+renders a client component (`view.tsx`) next to it; `loading.tsx` is the
+page-shaped skeleton shown while it loads.
 
 ## How it's built
 
-**Convex, through TanStack Query.** `src/router.tsx` connects a
-`ConvexQueryClient` to TanStack Query. Route loaders prefetch Convex queries
-with `queryClient.ensureQueryData(convexQuery(api.x.y, args))`, and
-components read them with `useSuspenseQuery`. During SSR those queries run
-over HTTP with the visitor's auth token (set in the root route's
-`beforeLoad`), and the results are dehydrated into the HTML. In the browser
-each query becomes a live WebSocket subscription, so pages update themselves
-after a mutation or a change in another tab: there is no refetching or
-`router.invalidate()`. Mutations are called with `useConvexMutation`.
+**Convex, through TanStack Query.** `src/components/providers.tsx` connects
+a `ConvexQueryClient` to TanStack Query. Server pages prefetch Convex queries
+as the signed-in user with `prefetchQuery(api.x.y, args)`
+(`src/server/convex.server.ts`) and pass the results to `<Prefetched>`,
+which seeds them into the browser's query cache. Client components read them
+with `useSuspenseQuery(convexQuery(api.x.y, args))`, so the first HTML is
+complete, and in the browser each query becomes a live WebSocket
+subscription: pages update themselves after a mutation or a change in
+another tab, with no refetching or `router.refresh()`. Mutations are called
+with `useConvexMutation`.
 
 **Precomputed totals.** Friend balances, group member totals, and group
 category and month totals live on the friend or group document and are
@@ -102,50 +108,34 @@ and values with `convex/lib/input.ts` (same limits), and derive the user from
 the auth token, never from arguments.
 
 **Validated search params.** A group's expense filters, sort order and list
-length live in the URL (`?category=food&sort=amount&limit=40`). They are
-validated by zod schemas; invalid values fall back to defaults instead of
-throwing, and `stripSearchParams` removes defaults so URLs stay clean.
-`loaderDeps` re-runs the loader only when those params change. Lists grow
-with "Show more" rather than page numbers.
+length live in the URL (`?category=food&sort=amount&limit=40`). Pages parse
+them on the server with zod schemas (`src/lib/search.ts`); invalid values
+fall back to defaults instead of throwing, and links leave defaults out so
+URLs stay clean. Lists grow with "Show more" rather than page numbers.
 
-**Server-only boundaries.** `*.server.ts` files are blocked from the client
-bundle by Start's import protection; a violation fails `pnpm build`.
-`createClientOnlyFn` guards the localStorage preferences in
-`src/lib/preferences.ts`. POST server functions are protected by the CSRF
-request middleware in `src/start.ts`.
+**Server-only boundaries.** Files in `src/server/` import `server-only`, so
+the build fails if one reaches a client bundle. The localStorage
+preferences in `src/lib/preferences.ts` throw if called on the server.
 
-### SSR mode per route
+### Rendering per route
 
-| Route                                  | `ssr`         | Why                                                                                                                                            |
-| -------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/` (landing hero)                     | `true`        | Marketing page and sign-in form. Signed-in visitors are redirected to `/dashboard`.                                                           |
-| `/dashboard`, `/friends`, `/personal`, `/budget` | `true` | Queries are prefetched on the server with the visitor's token, so the first HTML is complete.                                         |
-| `/groups/$groupId` (+ expenses)        | `true`        | Shareable, filterable URLs render fully on the server. Adding and editing an expense are pages under it.                                       |
-| `/receipts/$source/$expenseId`         | `true`        | The receipt's URL and its expense are prefetched; images show inline and PDFs in the browser's viewer.                                         |
-| `/notifications`                       | `'data-only'` | The full list behind the bell's "More". Times are relative to the viewer's clock, so it renders in the browser.                                |
-| `/groups/$groupId/insights`            | `'data-only'` | The data is prefetched on the server, but the UI uses the viewer's locale, time zone and clock, so it renders only in the browser.            |
-| `/settings`                            | `false`       | Preferences live in localStorage, so the loader and UI can only run in the browser.                                                           |
-| `/api/health`                          | server route  | JSON liveness probe for load balancers and platform health checks.                                                                           |
-
-For `false` and `'data-only'` routes, the server renders the router's
-`defaultPendingComponent` in place of the route component.
+| Route                                  | Rendering            | Why                                                                                                                  |
+| -------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `/` (landing hero)                     | server               | Marketing page and sign-in form. Signed-in visitors are redirected to `/dashboard`.                                  |
+| `/dashboard`, `/friends`, `/personal`, `/budget` | server     | Queries are prefetched on the server with the visitor's token, so the first HTML is complete.                        |
+| `/groups/[groupId]` (+ expenses)       | server               | Shareable, filterable URLs render fully on the server. Adding and editing an expense are pages under it.            |
+| `/receipts/[source]/[expenseId]`       | server               | The receipt's URL and its expense are prefetched; images show inline and PDFs in the browser's viewer.               |
+| `/groups/[groupId]/insights`, `/notifications` | data on the server, UI in the browser | The UI uses the viewer's locale, time zone and clock, so it renders in `<ClientOnly>` (the server sends the skeleton). |
+| `/settings`                            | browser              | Preferences live in localStorage.                                                                                    |
+| `/api/health`                          | route handler        | JSON liveness probe for load balancers and platform health checks.                                                  |
 
 ## Deployment
 
-The server is packaged by [Nitro](https://nitro.build) (`nitro()` in
-`vite.config.ts`). The target runtime is chosen at build time, and the
-application code stays the same:
+It's a standard Next.js app: deploy it to Vercel, or anywhere Node.js runs
+with `pnpm build && pnpm start`.
 
-```bash
-pnpm build                                  # node-server (default) → pnpm start
-NITRO_PRESET=vercel pnpm build
-NITRO_PRESET=netlify pnpm build
-NITRO_PRESET=cloudflare-module pnpm build
-NITRO_PRESET=bun pnpm build
-```
-
-Deploy the backend with `pnpm exec convex deploy`, and set `VITE_CONVEX_URL`
-and `VITE_CONVEX_SITE_URL` for the web build.
+Deploy the backend with `pnpm exec convex deploy`, and set
+`NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL` for the web build.
 
 ## Contributing
 

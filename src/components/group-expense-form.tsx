@@ -1,9 +1,12 @@
+'use client'
+
 import { useState } from 'react'
 import { useConvexMutation } from '@convex-dev/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
+import Link from 'next/link'
 
 import { AmountInput, CategorySelect, DatePicker, SelectField } from '#/components/form-fields'
 import { useAction } from '#/components/ledger'
+import { useAppRouter } from '#/components/navigation-progress'
 import { ReceiptField, existingReceipt, type ReceiptValue } from '#/components/receipts'
 import { Button, buttonVariants } from '#/components/ui/button'
 import {
@@ -42,7 +45,7 @@ export function GroupExpenseForm({
   group: Group
   expense?: GroupExpenseDetail
 }) {
-  const navigate = useNavigate()
+  const router = useAppRouter()
   const addExpense = useConvexMutation(api.groups.addExpense)
   const updateExpense = useConvexMutation(api.groups.updateExpense)
   const { run, pending, error, setError } = useAction(
@@ -89,7 +92,7 @@ export function GroupExpenseForm({
       return
     }
     if (await run(parsed.data, receipt)) {
-      await navigate({ to: '/groups/$groupId', params: { groupId: group.id } })
+      router.push(`/groups/${group.id}`)
     }
   }
 
@@ -191,8 +194,7 @@ export function GroupExpenseForm({
         </CardContent>
         <CardFooter className="mt-6 justify-end gap-2 border-t py-4">
           <Link
-            to="/groups/$groupId"
-            params={{ groupId: group.id }}
+            href={`/groups/${group.id}`}
             className={buttonVariants({ variant: 'ghost', size: 'lg' })}
           >
             Cancel

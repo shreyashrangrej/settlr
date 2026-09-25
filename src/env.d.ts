@@ -1,11 +1,7 @@
-/// <reference types="vite/client" />
-
-interface ImportMetaEnv {
-  // Convex deployment URLs, written to .env.local by `convex dev`.
-  readonly VITE_CONVEX_URL: string
-  readonly VITE_CONVEX_SITE_URL: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
+declare namespace NodeJS {
+  interface ProcessEnv {
+    // Convex deployment URLs, written to .env.local by `convex dev`.
+    readonly NEXT_PUBLIC_CONVEX_URL: string
+    readonly NEXT_PUBLIC_CONVEX_SITE_URL: string
+  }
 }

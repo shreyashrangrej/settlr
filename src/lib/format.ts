@@ -57,7 +57,10 @@ export function shiftMonth(month: string, delta: number) {
   return date.toISOString().slice(0, 7)
 }
 
-/** The current month in UTC. Call it in loaders, not while rendering. */
+/**
+ * The current month in UTC. Call it in server components (and pass it down),
+ * not while rendering client ones.
+ */
 export function currentMonth() {
   return new Date().toISOString().slice(0, 7)
 }

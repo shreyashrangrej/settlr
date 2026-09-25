@@ -1,5 +1,6 @@
-import { Link } from '@tanstack/react-router'
+'use client'
 
+import { NavLink } from '#/components/nav-link'
 import { buttonVariants } from '#/components/ui/button'
 import { cn } from '#/lib/utils'
 
@@ -23,10 +24,10 @@ export function AppTabs({ className }: { className?: string }) {
       )}
     >
       {APP_SECTIONS.map((section) => (
-        <Link
+        <NavLink
           key={section.to}
-          to={section.to}
-          activeOptions={{ exact: section.exact }}
+          href={section.to}
+          exact={section.exact}
           className={cn(
             buttonVariants({ variant: 'outline' }),
             // Repeated under dark: to beat the outline variant's dark styles.
@@ -34,7 +35,7 @@ export function AppTabs({ className }: { className?: string }) {
           )}
         >
           {section.label}
-        </Link>
+        </NavLink>
       ))}
     </nav>
   )

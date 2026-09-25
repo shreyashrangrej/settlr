@@ -26,7 +26,10 @@ pnpm dev:convex   # creates your dev deployment and writes .env.local
 pnpm dev          # http://localhost:3000, in a second terminal
 ```
 
-Then set the Convex deployment's environment variables:
+`.env.local` needs `NEXT_PUBLIC_CONVEX_URL` (the `.convex.cloud` URL) and
+`NEXT_PUBLIC_CONVEX_SITE_URL` (the same deployment's `.convex.site` URL); add
+whichever `convex dev` didn't write. Then set the Convex deployment's
+environment variables:
 
 ```bash
 pnpm exec convex env set SITE_URL=http://localhost:3000
@@ -48,11 +51,11 @@ environment and its gotchas.
      values with `convex/lib/input.ts` using the same limits as the zod
      schemas in `src/lib/schemas.ts`.
    - Money is integer minor units (`amountCents`), never floats.
-   - Server-only code lives in `*.server.ts` files and is reached from the UI
-     through server functions only.
+   - Server-only code lives in `src/server/` (it imports `server-only`) and
+     is used only by server components and route handlers.
    - Use the shadcn/ui components (built on Base UI) and Tailwind utilities
      rather than new hand-written CSS.
-   - Commit `src/routeTree.gen.ts` and `convex/_generated/` when they change.
+   - Commit `convex/_generated/` when it changes.
 4. Check your work before pushing:
 
    ```bash

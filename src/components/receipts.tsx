@@ -1,6 +1,8 @@
+'use client'
+
 import { useRef, useState } from 'react'
 import { useConvexMutation } from '@convex-dev/react-query'
-import { Link } from '@tanstack/react-router'
+import Link from 'next/link'
 import { FileText, Paperclip, X } from 'lucide-react'
 
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -162,8 +164,7 @@ export function ReceiptLink({
 }) {
   return (
     <Link
-      to="/receipts/$source/$expenseId"
-      params={{ source, expenseId }}
+      href={`/receipts/${source}/${expenseId}`}
       aria-label="View receipt"
       title="View receipt"
       className={cn(

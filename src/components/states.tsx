@@ -1,8 +1,8 @@
-import {
-  Link,
-  useRouter,
-  type ErrorComponentProps,
-} from '@tanstack/react-router'
+'use client'
+
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { startTransition } from 'react'
 import { CircleAlert, SearchX } from 'lucide-react'
 
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -27,7 +27,7 @@ export function NotFound() {
         <EmptyDescription>That page doesn’t exist, or it isn’t yours.</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Link to="/" className={buttonVariants({ variant: 'outline' })}>
+        <Link href="/" className={buttonVariants({ variant: 'outline' })}>
           Go home
         </Link>
       </EmptyContent>
@@ -35,7 +35,7 @@ export function NotFound() {
   )
 }
 
-export function ErrorState({ error, reset }: ErrorComponentProps) {
+export function ErrorState({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter()
   return (
     <Empty className="py-20" role="alert">
@@ -49,10 +49,13 @@ export function ErrorState({ error, reset }: ErrorComponentProps) {
       <EmptyContent>
         <Button
           variant="outline"
-          onClick={() => {
-            reset()
-            void router.invalidate()
-          }}
+          onClick={() =>
+            // Load the page's data again, then retry rendering it.
+            startTransition(() => {
+              router.refresh()
+              reset()
+            })
+          }
         >
           Try again
         </Button>

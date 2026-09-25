@@ -32,7 +32,8 @@ const amountCents = z
   .positive('Amount must be greater than zero')
   .max(100_000_000, 'That amount is too large')
 const description = z.string().trim().min(1, 'Describe the expense').max(80)
-const limit = z
+// Search params arrive as strings, so the number is coerced.
+const limit = z.coerce
   .number()
   .int()
   .min(1)

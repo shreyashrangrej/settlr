@@ -1,7 +1,9 @@
+'use client'
+
 import { useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import Link from 'next/link'
 import { ArrowRight, Bell } from 'lucide-react'
 
 import { NotificationRow, RequestRow } from '#/components/notifications'
@@ -107,7 +109,7 @@ export function NotificationBell() {
         <Separator />
         <div className="p-1.5">
           <Link
-            to="/notifications"
+            href="/notifications"
             onClick={close}
             className={cn(
               buttonVariants({ variant: 'ghost' }),

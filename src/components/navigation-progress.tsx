@@ -1,36 +1,97 @@
+'use client'
+
 import { useEffect, useRef, useState } from 'react'
-import { useRouterState } from '@tanstack/react-router'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '#/lib/utils'
 
 type Phase = 'idle' | 'loading' | 'done'
 
 // Waits this long before showing the bar, so instant navigations (cached
-// data, preloaded on hover) don't flash it.
+// pages, prefetched links) don't flash it.
 const SHOW_AFTER_MS = 80
+// Gives up after this long (a navigation to the same URL, or one that failed).
+const GIVE_UP_AFTER_MS = 10_000
+
+// Next.js has no global "navigating" state, so the bar starts on clicks on
+// in-app links (and on `startNavigation()` for programmatic ones) and
+// finishes when the URL changes.
+const listeners = new Set<() => void>()
+
+/** Shows the bar for a navigation started in code (e.g. `router.push`). */
+export function startNavigation() {
+  for (const listener of listeners) listener()
+}
+
+/** `router.push`/`replace` that also shows the progress bar. */
+export function useAppRouter() {
+  const router = useRouter()
+  return {
+    ...router,
+    push: (href: string, options?: { scroll?: boolean }) => {
+      startNavigation()
+      router.push(href, options)
+    },
+    replace: (href: string, options?: { scroll?: boolean }) => {
+      startNavigation()
+      router.replace(href, options)
+    },
+  }
+}
+
+// A plain left click on a same-origin link to another page.
+function isInAppNavigation(event: MouseEvent) {
+  if (event.defaultPrevented || event.button !== 0) return false
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false
+  const anchor = (event.target as Element | null)?.closest('a')
+  if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return false
+  const url = new URL(anchor.href, window.location.href)
+  if (url.origin !== window.location.origin) return false
+  return url.pathname + url.search !== window.location.pathname + window.location.search
+}
 
 /**
- * A thin bar across the top of the page while the router loads the next
- * route. It creeps towards 85% while loading, then fills and fades out.
+ * A thin bar across the top of the page while the next page loads. It
+ * creeps towards 85% while loading, then fills and fades out.
  */
 export function NavigationProgress() {
-  const loading = useRouterState({
-    select: (state) => state.isLoading || state.status === 'pending',
-  })
+  const pathname = usePathname()
+  const search = useSearchParams().toString()
   const [phase, setPhase] = useState<Phase>('idle')
   const phaseRef = useRef(phase)
   phaseRef.current = phase
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const giveUp = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => setPhase('loading'), SHOW_AFTER_MS)
-      return () => clearTimeout(timer)
+    const start = () => {
+      clearTimeout(timer.current)
+      clearTimeout(giveUp.current)
+      timer.current = setTimeout(() => setPhase('loading'), SHOW_AFTER_MS)
+      giveUp.current = setTimeout(() => {
+        clearTimeout(timer.current)
+        setPhase('idle')
+      }, GIVE_UP_AFTER_MS)
     }
+    const onClick = (event: MouseEvent) => {
+      if (isInAppNavigation(event)) start()
+    }
+    listeners.add(start)
+    document.addEventListener('click', onClick)
+    return () => {
+      listeners.delete(start)
+      document.removeEventListener('click', onClick)
+    }
+  }, [])
+
+  // The URL changed: the navigation is done.
+  useEffect(() => {
+    clearTimeout(timer.current)
+    clearTimeout(giveUp.current)
     if (phaseRef.current !== 'loading') return
     setPhase('done')
-    const timer = setTimeout(() => setPhase('idle'), 400)
-    return () => clearTimeout(timer)
-  }, [loading])
+    timer.current = setTimeout(() => setPhase('idle'), 400)
+  }, [pathname, search])
 
   return (
     <div

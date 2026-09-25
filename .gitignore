@@ -4,11 +4,9 @@ dist
 dist-ssr
 *.local
 .env
-.nitro
-.tanstack
-.wrangler
-.output
-.vinxi
+.next
+next-env.d.ts
+*.tsbuildinfo
 __unconfig*
 todos.json
 .vercel

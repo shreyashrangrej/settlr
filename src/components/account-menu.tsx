@@ -1,9 +1,12 @@
+'use client'
+
 import { useState } from 'react'
-import { useRouteContext, useRouter } from '@tanstack/react-router'
+import { useRouter } from 'next/navigation'
 import { LayoutDashboard, LogOut, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { PersonAvatar } from '#/components/ledger'
+import { useSession } from '#/components/providers'
 import { Button } from '#/components/ui/button'
 import {
   DropdownMenu,
@@ -20,7 +23,7 @@ import { signOut } from '#/lib/auth-client'
 // details, shortcuts and sign-out. Renders nothing when signed out. The user
 // comes from route context, so the server and first client render agree.
 export function AccountMenu() {
-  const { user } = useRouteContext({ from: '__root__' })
+  const { user } = useSession()
   const router = useRouter()
   const [pending, setPending] = useState(false)
 
@@ -31,8 +34,8 @@ export function AccountMenu() {
     setPending(true)
     try {
       await signOut()
-      await router.invalidate()
-      await router.navigate({ to: '/' })
+      // A full page load, so nothing of this account stays in memory.
+      window.location.assign('/')
     } catch {
       toast.error('Couldn’t sign out. Try again.')
     } finally {
@@ -70,11 +73,11 @@ export function AccountMenu() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => router.navigate({ to: '/dashboard' })}>
+          <DropdownMenuItem onClick={() => router.push('/dashboard')}>
             <LayoutDashboard />
             Overview
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.navigate({ to: '/settings' })}>
+          <DropdownMenuItem onClick={() => router.push('/settings')}>
             <Settings />
             Settings
           </DropdownMenuItem>

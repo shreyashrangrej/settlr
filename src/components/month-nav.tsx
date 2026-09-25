@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { buttonVariants } from '#/components/ui/button'
@@ -6,7 +6,7 @@ import { formatMonth, shiftMonth } from '#/lib/format'
 
 /**
  * Previous/next month links for a page with a `?month=YYYY-MM` param (none
- * means this month, which the loader resolved as `thisMonth`).
+ * means this month, which the page resolved on the server as `thisMonth`).
  */
 export function MonthNav({
   to,
@@ -19,8 +19,7 @@ export function MonthNav({
 }) {
   const link = (target: string, label: string, icon: React.ReactNode) => (
     <Link
-      to={to}
-      search={{ month: target === thisMonth ? '' : target }}
+      href={target === thisMonth ? to : `${to}?month=${target}`}
       aria-label={label}
       title={label}
       className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}

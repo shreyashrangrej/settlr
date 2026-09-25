@@ -1,9 +1,12 @@
+'use client'
+
 import { useConvexMutation } from '@convex-dev/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
+import Link from 'next/link'
 import type { FunctionReturnType } from 'convex/server'
 import { HandCoins, Pencil, Receipt, UserCheck, Users } from 'lucide-react'
 
 import { PersonAvatar, useAction } from '#/components/ledger'
+import { useAppRouter } from '#/components/navigation-progress'
 import { Button } from '#/components/ui/button'
 import {
   Item,
@@ -38,7 +41,7 @@ export function RequestRow({
   /** Called after accepting (which opens the friend) or declining. */
   onDone?: () => void
 }) {
-  const navigate = useNavigate()
+  const router = useAppRouter()
   const accept = useAction(useConvexMutation(api.notifications.acceptRequest), {
     success: `You and ${request.fromName} are now connected`,
     toastErrors: true,
@@ -79,10 +82,7 @@ export function RequestRow({
             const linked = await accept.run({ requestId: request.id })
             if (!linked) return
             onDone?.()
-            await navigate({
-              to: '/friends/$friendId',
-              params: { friendId: linked.value },
-            })
+            router.push(`/friends/${linked.value}`)
           }}
         >
           {accept.pending && <Spinner />}
@@ -103,12 +103,8 @@ function describe(item: Notification) {
       : item.amountCents > 0
         ? { text: `You’re owed ${money(item.amountCents)}`, tone: 'positive' as const }
         : { text: `You owe ${money(item.amountCents)}`, tone: 'negative' as const }
-  const friendLink = item.friendId
-    ? { to: '/friends/$friendId', params: { friendId: item.friendId } }
-    : null
-  const groupLink = item.groupId
-    ? { to: '/groups/$groupId', params: { groupId: item.groupId } }
-    : null
+  const friendLink = item.friendId ? `/friends/${item.friendId}` : null
+  const groupLink = item.groupId ? `/groups/${item.groupId}` : null
 
   switch (item.kind) {
     case 'friend_expense':
@@ -221,13 +217,7 @@ export function NotificationRow({
   return (
     <Item
       size={size}
-      render={
-        // The link's params match its route; the union confuses Link's types.
-        <Link
-          {...(link as { to: '/friends/$friendId'; params: { friendId: string } })}
-          onClick={onNavigate}
-        />
-      }
+      render={<Link href={link} onClick={onNavigate} />}
     >
       {body}
     </Item>

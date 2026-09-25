@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 import { useConvexMutation } from '@convex-dev/react-query'
 import { Pencil, PiggyBank, Plus } from 'lucide-react'
@@ -66,7 +68,7 @@ const badgeTone = {
  * The monthly budget(s) for `month`: everything you spent (personal, plus
  * your share with friends and in groups) against the budget, what's left,
  * and (for the current month) a daily allowance. `today` is a `YYYY-MM-DD`
- * date from the loader, so SSR and the client agree.
+ * date from the page (read on the server), so SSR and the client agree.
  */
 export function BudgetCard({
   month,

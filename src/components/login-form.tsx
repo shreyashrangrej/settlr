@@ -1,5 +1,7 @@
+'use client'
+
 import { useEffect, useState } from 'react'
-import { useRouteContext, useRouter } from '@tanstack/react-router'
+import { useRouter } from 'next/navigation'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import {
   ArrowLeft,
@@ -9,6 +11,7 @@ import {
   ReceiptText,
 } from 'lucide-react'
 
+import { useSession } from '#/components/providers'
 import { Alert, AlertDescription } from '#/components/ui/alert'
 import { Button } from '#/components/ui/button'
 import { Card } from '#/components/ui/card'
@@ -40,7 +43,7 @@ function errorMessage(error: unknown) {
 }
 
 export function LoginForm({ className }: { className?: string }) {
-  const { isAuthenticated } = useRouteContext({ from: '__root__' })
+  const isAuthenticated = useSession().user !== null
   const { data: session } = authClient.useSession()
   const router = useRouter()
   const [step, setStep] = useState<Step>('email')
@@ -98,8 +101,9 @@ export function LoginForm({ className }: { className?: string }) {
       verifyEmailOtp(parsed.data.email, parsed.data.otp),
     )
     if (signedIn) {
-      await router.invalidate()
-      await router.navigate({ to: '/dashboard' })
+      // Render the server components again as the signed-in user.
+      router.push('/dashboard')
+      router.refresh()
     }
   }
 
