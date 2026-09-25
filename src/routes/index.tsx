@@ -2,7 +2,6 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 
 import { LoginForm } from '#/components/login-form'
-import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 
 // SSR: full. A static landing hero: no loader, fully rendered HTML.
@@ -17,13 +16,6 @@ function HomePage() {
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero__copy">
-        <Badge
-          variant="outline"
-          className="gap-2 bg-background px-3 py-1 text-[0.8125rem] text-muted-foreground"
-        >
-          <span className="hero__pulse" aria-hidden="true" />
-          Fewest-payment settle-up
-        </Badge>
         <h1 id="hero-title" className="hero__title">
           Split costs.
           <br />

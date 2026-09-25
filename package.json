@@ -19,6 +19,8 @@
     "@tanstack/react-start": "^1.168.58",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "convex": "^1.46.0",
+    "input-otp": "^1.5.0",
     "lucide-react": "^1.48.0",
     "nitro": "3.0.260903-beta",
     "radix-ui": "^1.6.7",

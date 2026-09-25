@@ -1,183 +1,321 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, Eye, EyeOff, Info, Lock, Mail } from 'lucide-react'
+import { REGEXP_ONLY_DIGITS } from 'input-otp'
+import {
+  ArrowLeft,
+  ArrowRight,
+  CircleAlert,
+  Loader2,
+  Mail,
+  MailCheck,
+  ReceiptText,
+} from 'lucide-react'
 
 import { Alert, AlertDescription } from '#/components/ui/alert'
 import { Button } from '#/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card'
-import { Checkbox } from '#/components/ui/checkbox'
+import { Card } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '#/components/ui/input-otp'
 import { Label } from '#/components/ui/label'
 import { Separator } from '#/components/ui/separator'
-import { loginInput } from '#/lib/schemas'
+import {
+  sendEmailOtp,
+  signInWithGoogle,
+  verifyEmailOtp,
+} from '#/lib/auth-client'
+import { OTP_LENGTH, emailOtpRequest, emailOtpVerify } from '#/lib/schemas'
 import { cn } from '#/lib/utils'
 
-type FieldErrors = Partial<Record<'email' | 'password', string>>
+const RESEND_COOLDOWN_S = 30
+
+type Step = 'email' | 'code'
+type Pending = 'google' | 'send' | 'verify' | null
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Something went wrong. Try again.'
+}
 
 export function LoginForm({ className }: { className?: string }) {
-  const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors] = useState<FieldErrors>({})
-  const [submitted, setSubmitted] = useState(false)
+  const [step, setStep] = useState<Step>('email')
+  const [email, setEmail] = useState('')
+  const [otp, setOtp] = useState('')
+  const [pending, setPending] = useState<Pending>(null)
+  const [fieldError, setFieldError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [resendIn, setResendIn] = useState(0)
 
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    const result = loginInput.safeParse({
-      email: form.get('email'),
-      password: form.get('password'),
-      remember: form.get('remember') === 'on',
-    })
+  useEffect(() => {
+    if (resendIn <= 0) return
+    const timer = setTimeout(() => setResendIn((s) => s - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [resendIn])
 
-    if (!result.success) {
-      const fieldErrors: FieldErrors = {}
-      for (const issue of result.error.issues) {
-        const field = issue.path[0]
-        if ((field === 'email' || field === 'password') && !fieldErrors[field]) {
-          fieldErrors[field] = issue.message
-        }
-      }
-      setErrors(fieldErrors)
-      setSubmitted(false)
-      return
+  async function run(kind: Exclude<Pending, null>, action: () => Promise<void>) {
+    setPending(kind)
+    setError(null)
+    try {
+      await action()
+      return true
+    } catch (err) {
+      setError(errorMessage(err))
+      return false
+    } finally {
+      setPending(null)
     }
-
-    // There is no account system yet (the data store is anonymous and in
-    // memory), so a valid submission can't sign anyone in. Say so plainly.
-    setErrors({})
-    setSubmitted(true)
   }
 
+  async function requestCode(event?: React.FormEvent) {
+    event?.preventDefault()
+    const parsed = emailOtpRequest.safeParse({ email: email.trim() })
+    if (!parsed.success) {
+      setFieldError(parsed.error.issues[0]?.message ?? 'Enter a valid email')
+      return
+    }
+    setFieldError(null)
+    const sent = await run('send', () => sendEmailOtp(parsed.data.email))
+    if (sent) {
+      setOtp('')
+      setStep('code')
+      setResendIn(RESEND_COOLDOWN_S)
+    }
+  }
+
+  async function verifyCode(code: string) {
+    const parsed = emailOtpVerify.safeParse({ email: email.trim(), otp: code })
+    if (!parsed.success) {
+      setFieldError(parsed.error.issues[0]?.message ?? 'Enter the code')
+      return
+    }
+    setFieldError(null)
+    await run('verify', () => verifyEmailOtp(parsed.data.email, parsed.data.otp))
+  }
+
+  function changeEmail() {
+    setStep('email')
+    setOtp('')
+    setError(null)
+    setFieldError(null)
+  }
+
+  const busy = pending !== null
+
   return (
-    <Card className={cn('gap-5', className)}>
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold tracking-tight">
-          Welcome back
-        </CardTitle>
-        <CardDescription>
-          Sign in to pick up where your groups left off.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="grid gap-5">
-        <form noValidate onSubmit={onSubmit} className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="login-email">Email</Label>
-            <div className="relative">
-              <Mail
-                aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                id="login-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                className="h-10 pl-9"
-                aria-invalid={errors.email ? true : undefined}
-                aria-describedby={errors.email ? 'login-email-error' : undefined}
-              />
-            </div>
-            {errors.email && (
-              <p id="login-email-error" className="text-sm text-destructive">
-                {errors.email}
-              </p>
+    <Card className={cn('gap-0 overflow-hidden py-0', className)}>
+      <div className="grid gap-6 px-6 pt-8 pb-6 sm:px-8">
+        <header className="grid gap-4">
+          <span
+            aria-hidden="true"
+            className="grid size-11 place-items-center rounded-xl border bg-background text-primary"
+          >
+            {step === 'email' ? (
+              <ReceiptText className="size-5" />
+            ) : (
+              <MailCheck className="size-5" />
             )}
-          </div>
+          </span>
+          {step === 'email' ? (
+            <div className="grid gap-1.5">
+              <h2 className="m-0 text-2xl font-bold tracking-tight">
+                Sign in to Settlr
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                No password needed. Use Google, or get a one-time code by email.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-1.5">
+              <h2 className="m-0 text-2xl font-bold tracking-tight">
+                Check your inbox
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                We sent a {OTP_LENGTH}-digit code to{' '}
+                <span className="font-medium break-all text-foreground">
+                  {email.trim()}
+                </span>
+                . It expires in 5 minutes.
+              </p>
+            </div>
+          )}
+        </header>
 
-          <div className="grid gap-2">
-            <Label htmlFor="login-password">Password</Label>
-            <div className="relative">
-              <Lock
-                aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                id="login-password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
-                placeholder="••••••••"
-                className="h-10 pr-10 pl-9"
-                aria-invalid={errors.password ? true : undefined}
-                aria-describedby={
-                  errors.password ? 'login-password-error' : undefined
-                }
-              />
+        {step === 'email' ? (
+          <div className="grid gap-5">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full gap-3 bg-background text-[0.9375rem] dark:bg-background"
+              disabled={busy}
+              onClick={() => run('google', signInWithGoogle)}
+            >
+              {pending === 'google' ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <GoogleLogo />
+              )}
+              Continue with Google
+            </Button>
+
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <Separator className="flex-1" />
+              or use your email
+              <Separator className="flex-1" />
+            </div>
+
+            <form noValidate onSubmit={requestCode} className="grid gap-3">
+              <div className="grid gap-2">
+                <Label htmlFor="login-email">Email</Label>
+                <div className="relative">
+                  <Mail
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+                  />
+                  <Input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-11 bg-background pl-10 text-[0.9375rem] dark:bg-background"
+                    aria-invalid={fieldError ? true : undefined}
+                    aria-describedby={fieldError ? 'login-email-error' : undefined}
+                  />
+                </div>
+                {fieldError && (
+                  <p id="login-email-error" className="text-sm text-destructive">
+                    {fieldError}
+                  </p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                className="h-11 w-full text-[0.9375rem]"
+                disabled={busy}
+              >
+                {pending === 'send' && <Loader2 className="animate-spin" />}
+                Email me a code
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <form
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault()
+              void verifyCode(otp)
+            }}
+            className="grid gap-5"
+          >
+            <div className="grid justify-items-center gap-2">
+              <InputOTP
+                maxLength={OTP_LENGTH}
+                pattern={REGEXP_ONLY_DIGITS}
+                value={otp}
+                onChange={setOtp}
+                onComplete={(code: string) => void verifyCode(code)}
+                autoFocus
+                autoComplete="one-time-code"
+                aria-label="One-time code"
+                disabled={pending === 'verify'}
+                aria-invalid={fieldError ? true : undefined}
+              >
+                <InputOTPGroup className="gap-2">
+                  {Array.from({ length: OTP_LENGTH }, (_, i) => (
+                    <InputOTPSlot
+                      key={i}
+                      index={i}
+                      aria-invalid={fieldError ? true : undefined}
+                      className="size-12 rounded-lg border bg-background text-lg font-semibold first:rounded-lg last:rounded-lg dark:bg-background"
+                    />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
+              {fieldError && (
+                <p className="text-sm text-destructive">{fieldError}</p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="h-11 w-full text-[0.9375rem]"
+              disabled={busy || otp.length < OTP_LENGTH}
+            >
+              {pending === 'verify' && <Loader2 className="animate-spin" />}
+              Verify and sign in
+            </Button>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
-                className="absolute top-1/2 right-1 size-8 -translate-y-1/2 text-muted-foreground"
-                onClick={() => setShowPassword((shown) => !shown)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                aria-pressed={showPassword}
+                size="sm"
+                className="-ml-2 text-muted-foreground"
+                onClick={changeEmail}
               >
-                {showPassword ? <EyeOff /> : <Eye />}
+                <ArrowLeft />
+                Different email
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="-mr-2 text-muted-foreground"
+                disabled={busy || resendIn > 0}
+                onClick={() => void requestCode()}
+              >
+                {resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend code'}
               </Button>
             </div>
-            {errors.password && (
-              <p id="login-password-error" className="text-sm text-destructive">
-                {errors.password}
-              </p>
-            )}
-          </div>
+          </form>
+        )}
 
-          <div className="flex items-center gap-2">
-            <Checkbox id="login-remember" name="remember" />
-            <Label htmlFor="login-remember" className="font-normal">
-              Keep me signed in
-            </Label>
-          </div>
+        {error && (
+          <Alert role="alert">
+            <CircleAlert />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </div>
 
-          <Button type="submit" size="lg" className="h-10 w-full">
-            Sign in
-          </Button>
-
-          {submitted && (
-            <Alert role="status">
-              <Info />
-              <AlertDescription>
-                Accounts aren’t available yet. Continue as a guest to use
-                Settlr now.
-              </AlertDescription>
-            </Alert>
-          )}
-        </form>
-
-        <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase">
-          <Separator className="flex-1" />
-          or
-          <Separator className="flex-1" />
-        </div>
-
-        <Button asChild variant="outline" size="lg" className="h-10 w-full">
-          <Link to="/groups">
-            Continue as guest
-            <ArrowRight />
-          </Link>
-        </Button>
-      </CardContent>
-
-      <CardFooter className="justify-center text-sm text-muted-foreground">
-        <p>
-          New here?{' '}
-          <Link
-            to="/groups/new"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Start a group
-          </Link>
-          , no account needed.
-        </p>
-      </CardFooter>
+      <div className="border-t px-6 py-4 text-center text-sm text-muted-foreground sm:px-8">
+        Just looking?{' '}
+        <Link
+          to="/groups"
+          className="group inline-flex items-center gap-1 font-medium text-primary no-underline underline-offset-4 hover:underline"
+        >
+          Continue as guest
+          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      </div>
     </Card>
+  )
+}
+
+function GoogleLogo() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-[18px]">
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.87c2.26-2.09 3.55-5.17 3.55-8.87Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3A7.2 7.2 0 0 1 12 19.25a7.14 7.14 0 0 1-6.72-4.93h-4v3.09A12 12 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.32A7.2 7.2 0 0 1 4.9 12c0-.81.14-1.59.38-2.32V6.59h-4A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.41l4-3.09Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.97 11.97 0 0 0 12 0 12 12 0 0 0 1.28 6.59l4 3.09A7.14 7.14 0 0 1 12 4.75Z"
+      />
+    </svg>
   )
 }

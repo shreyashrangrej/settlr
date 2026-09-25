@@ -91,9 +91,14 @@ export const deleteExpenseInput = z.object({ groupId: id, expenseId: id })
 
 // --- Forms ----------------------------------------------------------------
 
-export const loginInput = z.object({
+export const OTP_LENGTH = 6
+
+export const emailOtpRequest = z.object({
   email: z.email('Enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  remember: z.boolean(),
 })
-export type LoginInput = z.infer<typeof loginInput>
+
+export const emailOtpVerify = emailOtpRequest.extend({
+  otp: z
+    .string()
+    .regex(new RegExp(`^\\d{${OTP_LENGTH}}$`), `Enter the ${OTP_LENGTH}-digit code`),
+})

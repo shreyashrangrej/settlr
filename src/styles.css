@@ -611,29 +611,8 @@ fieldset > .button {
   animation-delay: 180ms;
 }
 
-.hero__copy > :nth-child(5) {
-  animation-delay: 240ms;
-}
-
-.hero__pulse {
-  position: relative;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.hero__pulse::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: inherit;
-  animation: hero-pulse 2.4s ease-out infinite;
-}
-
 .hero__title {
-  margin: 1.5rem 0 1.25rem;
+  margin: 0 0 1.25rem;
   font-size: clamp(2.9rem, 6.2vw, 5rem);
   font-weight: 700;
   line-height: 1.02;
@@ -702,17 +681,6 @@ fieldset > .button {
   from {
     opacity: 0;
     transform: translateY(14px);
-  }
-}
-
-@keyframes hero-pulse {
-  from {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(2.8);
   }
 }
 
