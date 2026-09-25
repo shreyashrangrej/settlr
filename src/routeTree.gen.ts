@@ -10,33 +10,124 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
+import { Route as GroupsNewRouteImport } from './routes/groups/new'
+import { Route as GroupsGroupIdIndexRouteImport } from './routes/groups/$groupId/index'
+import { Route as GroupsGroupIdInsightsRouteImport } from './routes/groups/$groupId/insights'
+import { Route as GroupsGroupIdExpensesNewRouteImport } from './routes/groups/$groupId/expenses/new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
+  id: '/groups/$groupId',
+  path: '/groups/$groupId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsNewRoute = GroupsNewRouteImport.update({
+  id: '/groups/new',
+  path: '/groups/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsGroupIdIndexRoute = GroupsGroupIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GroupsGroupIdRoute,
+} as any)
+const GroupsGroupIdInsightsRoute = GroupsGroupIdInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => GroupsGroupIdRoute,
+} as any)
+const GroupsGroupIdExpensesNewRoute =
+  GroupsGroupIdExpensesNewRouteImport.update({
+    id: '/expenses/new',
+    path: '/expenses/new',
+    getParentRoute: () => GroupsGroupIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/groups/$groupId': typeof GroupsGroupIdRouteWithChildren
+  '/groups/new': typeof GroupsNewRoute
+  '/groups/$groupId/insights': typeof GroupsGroupIdInsightsRoute
+  '/groups/$groupId/': typeof GroupsGroupIdIndexRoute
+  '/groups/$groupId/expenses/new': typeof GroupsGroupIdExpensesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/groups/new': typeof GroupsNewRoute
+  '/groups/$groupId/insights': typeof GroupsGroupIdInsightsRoute
+  '/groups/$groupId': typeof GroupsGroupIdIndexRoute
+  '/groups/$groupId/expenses/new': typeof GroupsGroupIdExpensesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/groups/$groupId': typeof GroupsGroupIdRouteWithChildren
+  '/groups/new': typeof GroupsNewRoute
+  '/groups/$groupId/insights': typeof GroupsGroupIdInsightsRoute
+  '/groups/$groupId/': typeof GroupsGroupIdIndexRoute
+  '/groups/$groupId/expenses/new': typeof GroupsGroupIdExpensesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/settings'
+    | '/api/health'
+    | '/groups/$groupId'
+    | '/groups/new'
+    | '/groups/$groupId/insights'
+    | '/groups/$groupId/'
+    | '/groups/$groupId/expenses/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/settings'
+    | '/api/health'
+    | '/groups/new'
+    | '/groups/$groupId/insights'
+    | '/groups/$groupId'
+    | '/groups/$groupId/expenses/new'
+  id:
+    | '__root__'
+    | '/'
+    | '/settings'
+    | '/api/health'
+    | '/groups/$groupId'
+    | '/groups/new'
+    | '/groups/$groupId/insights'
+    | '/groups/$groupId/'
+    | '/groups/$groupId/expenses/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SettingsRoute: typeof SettingsRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  GroupsGroupIdRoute: typeof GroupsGroupIdRouteWithChildren
+  GroupsNewRoute: typeof GroupsNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,21 +139,91 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups/$groupId': {
+      id: '/groups/$groupId'
+      path: '/groups/$groupId'
+      fullPath: '/groups/$groupId'
+      preLoaderRoute: typeof GroupsGroupIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups/new': {
+      id: '/groups/new'
+      path: '/groups/new'
+      fullPath: '/groups/new'
+      preLoaderRoute: typeof GroupsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups/$groupId/': {
+      id: '/groups/$groupId/'
+      path: '/'
+      fullPath: '/groups/$groupId/'
+      preLoaderRoute: typeof GroupsGroupIdIndexRouteImport
+      parentRoute: typeof GroupsGroupIdRoute
+    }
+    '/groups/$groupId/insights': {
+      id: '/groups/$groupId/insights'
+      path: '/insights'
+      fullPath: '/groups/$groupId/insights'
+      preLoaderRoute: typeof GroupsGroupIdInsightsRouteImport
+      parentRoute: typeof GroupsGroupIdRoute
+    }
+    '/groups/$groupId/expenses/new': {
+      id: '/groups/$groupId/expenses/new'
+      path: '/expenses/new'
+      fullPath: '/groups/$groupId/expenses/new'
+      preLoaderRoute: typeof GroupsGroupIdExpensesNewRouteImport
+      parentRoute: typeof GroupsGroupIdRoute
+    }
   }
 }
 
+interface GroupsGroupIdRouteChildren {
+  GroupsGroupIdInsightsRoute: typeof GroupsGroupIdInsightsRoute
+  GroupsGroupIdIndexRoute: typeof GroupsGroupIdIndexRoute
+  GroupsGroupIdExpensesNewRoute: typeof GroupsGroupIdExpensesNewRoute
+}
+
+const GroupsGroupIdRouteChildren: GroupsGroupIdRouteChildren = {
+  GroupsGroupIdInsightsRoute: GroupsGroupIdInsightsRoute,
+  GroupsGroupIdIndexRoute: GroupsGroupIdIndexRoute,
+  GroupsGroupIdExpensesNewRoute: GroupsGroupIdExpensesNewRoute,
+}
+
+const GroupsGroupIdRouteWithChildren = GroupsGroupIdRoute._addFileChildren(
+  GroupsGroupIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SettingsRoute: SettingsRoute,
+  ApiHealthRoute: ApiHealthRoute,
+  GroupsGroupIdRoute: GroupsGroupIdRouteWithChildren,
+  GroupsNewRoute: GroupsNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
