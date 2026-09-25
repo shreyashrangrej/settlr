@@ -105,7 +105,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           initialToken={token}
         >
           <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
-            <div className="container flex h-16 items-center justify-between gap-2">
+            <div className="app-shell flex h-16 items-center justify-between gap-2">
               <Link
                 to={user ? '/dashboard' : '/'}
                 className="text-lg font-bold tracking-tight text-primary no-underline"
@@ -139,7 +139,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
           </header>
-          <main className="container">
+          <main className="app-shell">
             {needsName ? <NameForm email={user.email} /> : children}
           </main>
           <Toaster position="bottom-right" />

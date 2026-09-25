@@ -144,13 +144,14 @@
   }
 }
 
-/* Full width, with a gutter that grows with the viewport. */
-.container {
+/* Full width, with a gutter that grows with the viewport. Not named
+   `container`: Tailwind's utility of that name caps max-width per breakpoint. */
+.app-shell {
   width: 100%;
   padding-inline: clamp(1rem, 3vw, 2.5rem);
 }
 
-main.container {
+main.app-shell {
   padding-block: 2rem 4rem;
 }
 
