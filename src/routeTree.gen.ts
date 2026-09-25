@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppPersonalRouteImport } from './routes/_app/personal'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AppFriendsIndexRouteImport } from './routes/_app/friends/index'
@@ -43,6 +44,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPersonalRoute = AppPersonalRouteImport.update({
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/notifications': typeof AppNotificationsRoute
   '/personal': typeof AppPersonalRoute
   '/api/health': typeof ApiHealthRoute
   '/friends/$friendId': typeof AppFriendsFriendIdRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/notifications': typeof AppNotificationsRoute
   '/personal': typeof AppPersonalRoute
   '/api/health': typeof ApiHealthRoute
   '/friends/$friendId': typeof AppFriendsFriendIdRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/settings': typeof SettingsRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/notifications': typeof AppNotificationsRoute
   '/_app/personal': typeof AppPersonalRoute
   '/api/health': typeof ApiHealthRoute
   '/_app/friends/$friendId': typeof AppFriendsFriendIdRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/dashboard'
+    | '/notifications'
     | '/personal'
     | '/api/health'
     | '/friends/$friendId'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/dashboard'
+    | '/notifications'
     | '/personal'
     | '/api/health'
     | '/friends/$friendId'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/settings'
     | '/_app/dashboard'
+    | '/_app/notifications'
     | '/_app/personal'
     | '/api/health'
     | '/_app/friends/$friendId'
@@ -250,6 +262,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/notifications': {
+      id: '/_app/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/personal': {
@@ -358,6 +377,7 @@ const AppGroupsGroupIdRouteWithChildren =
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
   AppPersonalRoute: typeof AppPersonalRoute
   AppFriendsFriendIdRoute: typeof AppFriendsFriendIdRoute
   AppGroupsGroupIdRoute: typeof AppGroupsGroupIdRouteWithChildren
@@ -368,6 +388,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
   AppPersonalRoute: AppPersonalRoute,
   AppFriendsFriendIdRoute: AppFriendsFriendIdRoute,
   AppGroupsGroupIdRoute: AppGroupsGroupIdRouteWithChildren,

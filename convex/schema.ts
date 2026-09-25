@@ -5,7 +5,15 @@ import { category, currency } from './lib/validators'
 
 // Every row belongs to one signed-in user (`userId` is their Convex
 // `tokenIdentifier`). Friends and group members are people the owner tracks
-// by name; they don't need a Settlr account.
+// by name; they don't need a Settlr account. They can be linked to one:
+//
+// - A friend request (by email) that's accepted links two friend rows, one
+//   per person (`linkedUserId`, `counterpartId`). Their one-on-one ledger is
+//   then kept in both: every entry is mirrored into the other row from that
+//   person's side (`mirrorId` pairs them), so each user still only reads
+//   their own rows.
+// - A group member can be linked to a Settlr user (`members[].userId`); the
+//   `groupMembers` table indexes which groups each linked user is in.
 //
 // Totals that pages show on every load (friend balances, group member
 // totals, group insights) are kept on the parent document and updated in the
@@ -19,6 +27,12 @@ export default defineSchema({
     // Currency code -> cents. Positive: the friend owes you.
     balances: v.record(v.string(), v.number()),
     lastActivityAt: v.number(),
+    // Set once a friend request is accepted: the friend's user id and their
+    // row for you.
+    linkedUserId: v.optional(v.string()),
+    counterpartId: v.optional(v.id('friends')),
+    // The friend request sent from this row, if it hasn't been accepted.
+    request: v.optional(v.union(v.literal('pending'), v.literal('declined'))),
   })
     .index('by_userId', ['userId'])
     .index('by_userId_and_lastActivityAt', ['userId', 'lastActivityAt']),
@@ -38,6 +52,8 @@ export default defineSchema({
         // 'equal': each owes half. 'full': the other person owes all of it.
         split: v.union(v.literal('equal'), v.literal('full')),
         date: v.string(),
+        // The same entry in the linked friend's ledger.
+        mirrorId: v.optional(v.id('friendEntries')),
       }),
       v.object({
         kind: v.literal('payment'),
@@ -49,9 +65,49 @@ export default defineSchema({
         paidBy: v.union(v.literal('me'), v.literal('friend')),
         note: v.optional(v.string()),
         date: v.string(),
+        mirrorId: v.optional(v.id('friendEntries')),
       }),
     ),
-  ).index('by_friendId_and_date', ['friendId', 'date']),
+  )
+    .index('by_friendId_and_date', ['friendId', 'date'])
+    .index('by_userId_and_date', ['userId', 'date']),
+
+  // Sent from a friend row that has an email. Matched to the recipient by
+  // email, so it waits for them even if they haven't signed up yet.
+  friendRequests: defineTable({
+    fromUserId: v.string(),
+    fromName: v.string(),
+    fromEmail: v.string(),
+    fromFriendId: v.id('friends'),
+    toEmail: v.string(),
+    status: v.union(v.literal('pending'), v.literal('accepted'), v.literal('declined')),
+  })
+    .index('by_toEmail_and_status', ['toEmail', 'status'])
+    .index('by_fromFriendId', ['fromFriendId']),
+
+  // Things that happened to you: someone split an expense with you, recorded
+  // a payment, or accepted your friend request. Amounts are from your side.
+  notifications: defineTable({
+    userId: v.string(),
+    kind: v.union(
+      v.literal('friend_expense'),
+      v.literal('friend_payment'),
+      v.literal('group_expense'),
+      v.literal('group_added'),
+      v.literal('request_accepted'),
+    ),
+    actorName: v.string(),
+    description: v.optional(v.string()),
+    // Your share of an expense, or the payment amount.
+    amountCents: v.optional(v.number()),
+    currency: v.optional(currency),
+    friendId: v.optional(v.id('friends')),
+    groupId: v.optional(v.id('groups')),
+    groupName: v.optional(v.string()),
+    read: v.boolean(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_userId_and_read', ['userId', 'read']),
 
   groups: defineTable({
     userId: v.string(),
@@ -64,8 +120,11 @@ export default defineSchema({
         name: v.string(),
         paidCents: v.number(),
         owedCents: v.number(),
+        // The Settlr user this member is, if linked.
+        userId: v.optional(v.string()),
       }),
     ),
+    // The owner's member.
     meMemberId: v.string(),
     expenseCount: v.number(),
     totalCents: v.number(),
@@ -74,6 +133,14 @@ export default defineSchema({
     byMonth: v.record(v.string(), v.number()),
     lastExpenseAt: v.optional(v.number()),
   }).index('by_userId', ['userId']),
+
+  // Linked (non-owner) members, so they can find the groups they're in.
+  groupMembers: defineTable({
+    groupId: v.id('groups'),
+    userId: v.string(),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_groupId', ['groupId']),
 
   groupExpenses: defineTable({
     groupId: v.id('groups'),

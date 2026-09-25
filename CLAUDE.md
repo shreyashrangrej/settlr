@@ -94,7 +94,14 @@ force-push `main`.
   `null` for missing or foreign rows; the loader turns that into
   `notFound()`.
 - **Convex functions** get the user from `requireUser(ctx)` (keyed by
-  `tokenIdentifier`) and scope every read and write to it. Check values with
+  `tokenIdentifier`; it also gives the verified `email` that friend
+  requests match on) and scope every read and write to it. Sharing works by
+  links, not shared rows: linked friends each keep a mirrored ledger
+  (`convex/lib/friendship.ts`: write both twins and both balances in one
+  mutation), and linked group members reach a group through `groupMembers`
+  (use `findGroup`/`requireOwnedGroup` in `groups.ts`, never
+  `group.userId === userId` alone). Anything that affects another user
+  should `notify()` them (`convex/lib/notify.ts`). Check values with
   `convex/lib/input.ts` using the same limits as the zod form schemas, and
   throw `ConvexError('plain-language message')` for anything the user can
   fix; the UI shows it via `errorMessage()` in `src/lib/errors.ts`. Totals

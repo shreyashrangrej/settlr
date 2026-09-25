@@ -15,9 +15,12 @@ import type * as friends from "../friends.js";
 import type * as groups from "../groups.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_friendship from "../lib/friendship.js";
 import type * as lib_input from "../lib/input.js";
 import type * as lib_ledger from "../lib/ledger.js";
+import type * as lib_notify from "../lib/notify.js";
 import type * as lib_validators from "../lib/validators.js";
+import type * as notifications from "../notifications.js";
 import type * as personal from "../personal.js";
 
 import type {
@@ -34,9 +37,12 @@ declare const fullApi: ApiFromModules<{
   groups: typeof groups;
   http: typeof http;
   "lib/auth": typeof lib_auth;
+  "lib/friendship": typeof lib_friendship;
   "lib/input": typeof lib_input;
   "lib/ledger": typeof lib_ledger;
+  "lib/notify": typeof lib_notify;
   "lib/validators": typeof lib_validators;
+  notifications: typeof notifications;
   personal: typeof personal;
 }>;
 

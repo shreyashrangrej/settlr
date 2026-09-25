@@ -10,11 +10,13 @@ import {
   UserPlus,
   UsersRound,
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { PageHeader, SplitLayout } from '#/components/page-header'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import {
   BalanceText,
+  FriendStatusBadge,
   PersonAvatar,
   sumBalances,
   useAction,
@@ -118,7 +120,10 @@ function FriendsPage() {
                       <div className="flex min-w-0 items-center gap-3">
                         <PersonAvatar name={friend.name} size="lg" />
                         <div className="grid min-w-0">
-                          <CardTitle className="truncate">{friend.name}</CardTitle>
+                          <CardTitle className="flex items-center gap-2">
+                            <span className="truncate">{friend.name}</span>
+                            <FriendStatusBadge status={friend.status} />
+                          </CardTitle>
                           {friend.email && (
                             <CardDescription className="truncate">
                               {friend.email}
@@ -152,9 +157,7 @@ function AddFriend() {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const { run, pending, error, setError } = useAction(createFriend, {
-    success: 'Friend added',
-  })
+  const { run, pending, error, setError } = useAction(createFriend)
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -165,6 +168,11 @@ function AddFriend() {
     }
     const created = await run(parsed.data)
     if (created) {
+      toast.success(
+        parsed.data.email
+          ? `Friend added. We sent ${parsed.data.email} a friend request.`
+          : 'Friend added',
+      )
       await navigate({
         to: '/friends/$friendId',
         params: { friendId: created.value },
@@ -179,7 +187,10 @@ function AddFriend() {
           <UserPlus className="size-4 text-primary" aria-hidden="true" />
           Add a friend
         </CardTitle>
-        <CardDescription>They don’t need a Settlr account.</CardDescription>
+        <CardDescription>
+          Add their email to send a friend request. Once they accept, you
+          both see the same expenses and get notified of new ones.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form noValidate onSubmit={onSubmit}>

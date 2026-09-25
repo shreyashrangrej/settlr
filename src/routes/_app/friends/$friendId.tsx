@@ -8,7 +8,7 @@ import {
   stripSearchParams,
   useNavigate,
 } from '@tanstack/react-router'
-import { HandCoins, Receipt, Trash2 } from 'lucide-react'
+import { HandCoins, Receipt, Trash2, UserPlus } from 'lucide-react'
 
 import { ConfirmAction } from '#/components/confirm-action'
 import {
@@ -17,7 +17,12 @@ import {
   CurrencySelect,
   SelectField,
 } from '#/components/form-fields'
-import { BalanceText, PersonAvatar, useAction } from '#/components/ledger'
+import {
+  BalanceText,
+  FriendStatusBadge,
+  PersonAvatar,
+  useAction,
+} from '#/components/ledger'
 import { PageHeader, SplitLayout } from '#/components/page-header'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -127,13 +132,26 @@ function FriendPage() {
         back={{ fallback: { to: '/friends' }, label: 'Back to friends' }}
         media={<PersonAvatar name={friend.name} size="lg" />}
         title={friend.name}
-        description={friend.email ?? undefined}
+        description={
+          <span className="flex flex-wrap items-center gap-2">
+            {friend.email}
+            <FriendStatusBadge status={friend.status} />
+            {friend.status === 'linked' && (
+              <span>· {friend.name} sees these entries too</span>
+            )}
+          </span>
+        }
         actions={
-          <BalanceText
-            balances={friend.balances}
-            them={friend.name}
-            className="text-right text-lg"
-          />
+          <>
+            {friend.email && (friend.status === null || friend.status === 'declined') && (
+              <SendRequest friendId={friend.id} email={friend.email} />
+            )}
+            <BalanceText
+              balances={friend.balances}
+              them={friend.name}
+              className="text-right text-lg"
+            />
+          </>
         }
       />
 
@@ -545,6 +563,20 @@ function PaymentForm({ friend }: { friend: Friend }) {
   )
 }
 
+function SendRequest({ friendId, email }: { friendId: Friend['id']; email: string }) {
+  const requestLink = useConvexMutation(api.friends.requestLink)
+  const { run, pending } = useAction(requestLink, {
+    success: `Friend request sent to ${email}`,
+    toastErrors: true,
+  })
+  return (
+    <Button variant="outline" disabled={pending} onClick={() => void run({ friendId })}>
+      {pending ? <Spinner /> : <UserPlus />}
+      Send friend request
+    </Button>
+  )
+}
+
 function RemoveFriend({ friend }: { friend: Friend }) {
   const removeFriend = useConvexMutation(api.friends.remove)
   const navigate = useNavigate()
@@ -556,7 +588,11 @@ function RemoveFriend({ friend }: { friend: Friend }) {
   return (
     <ConfirmAction
       title={`Remove ${friend.name}?`}
-      description="This deletes every expense and payment between you. It can’t be undone."
+      description={
+        friend.status === 'linked'
+          ? `This removes ${friend.name} and your copy of your shared history. They keep theirs. It can’t be undone.`
+          : 'This deletes every expense and payment between you. It can’t be undone.'
+      }
       confirmLabel="Remove"
       onConfirm={async () => {
         if (!(await run({ friendId: friend.id }))) return false

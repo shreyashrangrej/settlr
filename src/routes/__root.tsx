@@ -13,6 +13,7 @@ import { AccountMenu } from '#/components/account-menu'
 import { APP_SECTIONS } from '#/components/app-nav'
 import { NameForm } from '#/components/name-form'
 import { NavigationProgress } from '#/components/navigation-progress'
+import { NotificationBell } from '#/components/notification-bell'
 import { ThemeToggle } from '#/components/theme-toggle'
 import { buttonVariants } from '#/components/ui/button'
 import { Toaster } from '#/components/ui/sonner'
@@ -143,6 +144,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                     Settings
                   </Link>
                 )}
+                {user && !needsName && <NotificationBell />}
                 <ThemeToggle />
                 <AccountMenu />
               </nav>

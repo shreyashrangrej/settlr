@@ -23,7 +23,10 @@ overview of three areas:
 
 - **Friends**: one-on-one expenses with a single person, outside any group.
   Each expense is split equally or owed in full by the other person, and
-  "Settle up" records payments. Balances are kept per currency.
+  "Settle up" records payments. Balances are kept per currency. Add a
+  friend's email to send them a friend request; once they accept, you both
+  see the same ledger (each from your own side) and get notified of new
+  entries.
 - **Groups**: trips, flats and dinners with up to 20 members (you are always
   one of them). Expenses are split equally between chosen members, balances
   are worked out to the cent, and a settle-up plan uses the fewest payments.
@@ -31,11 +34,17 @@ overview of three areas:
   only allowed for people who aren't on any expense, and the currency only
   changes while a group has no expenses).
 - **Personal**: your own spending, month by month, with totals by category
-  and an optional monthly budget per currency (progress, what's left and a
-  daily allowance for the rest of the month).
+  and an optional monthly budget per currency. The budget counts everything
+  you spend: personal expenses plus your share of friend and group expenses
+  (progress, what's left and a daily allowance for the rest of the month).
+- **Notifications**: friend requests to accept or decline, and a note
+  whenever someone adds an expense that involves you, records a payment with
+  you, adds you to a group or accepts your request. The bell shows the count.
 
 Friends and group members are people you track by name; they don't need an
-account. Everything is private to the signed-in user.
+account. A group's owner can link members to friends who have accepted a
+friend request; linked members see the group, can add expenses and are
+notified, but only the owner can edit or delete it.
 
 ## Project layout
 

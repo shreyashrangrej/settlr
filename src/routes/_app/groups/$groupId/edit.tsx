@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { useConvexMutation } from '@convex-dev/react-query'
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import {
   Link,
   createFileRoute,
@@ -9,7 +10,7 @@ import {
 import { Plus, Trash2, X } from 'lucide-react'
 
 import { ConfirmAction } from '#/components/confirm-action'
-import { CurrencySelect } from '#/components/form-fields'
+import { CurrencySelect, SelectField } from '#/components/form-fields'
 import { PersonAvatar, useAction } from '#/components/ledger'
 import { useGroup } from '#/components/use-group'
 import { Badge } from '#/components/ui/badge'
@@ -31,14 +32,24 @@ import {
   FieldLegend,
   FieldSet,
 } from '#/components/ui/field'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '#/components/ui/empty'
 import { Input } from '#/components/ui/input'
 import { Spinner } from '#/components/ui/spinner'
 import { editGroupInput, type Currency } from '#/lib/schemas'
 import type { Group } from '#/lib/types'
 import { api } from '#convex/_generated/api'
+import type { Id } from '#convex/_generated/dataModel'
 
 // SSR: full. The form starts from the group the layout already loaded.
 export const Route = createFileRoute('/_app/groups/$groupId/edit')({
+  // Your connected friends, for linking members to their accounts.
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(convexQuery(api.friends.list, {})),
   head: () => ({ meta: [{ title: 'Edit group · Settlr' }] }),
   component: EditGroupPage,
 })
@@ -46,6 +57,18 @@ export const Route = createFileRoute('/_app/groups/$groupId/edit')({
 function EditGroupPage() {
   const group = useGroup()
   if (!group) return null
+  if (!group.isOwner) {
+    return (
+      <Empty className="border border-dashed">
+        <EmptyHeader>
+          <EmptyTitle>Only the group’s creator can edit it</EmptyTitle>
+          <EmptyDescription>
+            You can still add expenses to {group.name}.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    )
+  }
   return (
     <div className="grid max-w-3xl gap-4">
       <EditGroupForm group={group} />
@@ -59,7 +82,11 @@ type MemberRow = {
   key: string
   id?: string
   name: string
+  // The connected friend this member is, if any.
+  friendId: string | null
 }
+
+const NOT_LINKED = 'none'
 
 const MAX_MEMBERS = 20
 
@@ -73,8 +100,19 @@ function EditGroupForm({ group }: { group: Group }) {
   const [name, setName] = useState(group.name)
   const [currency, setCurrency] = useState<Currency>(group.currency)
   const [members, setMembers] = useState<Array<MemberRow>>(() =>
-    group.members.map((m) => ({ key: m.id, id: m.id, name: m.name })),
+    group.members.map((m) => ({
+      key: m.id,
+      id: m.id,
+      name: m.name,
+      friendId: m.friendId,
+    })),
   )
+  const { data: friends } = useSuspenseQuery(convexQuery(api.friends.list, {}))
+  const connected = friends.filter((f) => f.status === 'linked')
+  const accountOptions = [
+    { value: NOT_LINKED, label: 'Not on Settlr' },
+    ...connected.map((f) => ({ value: f.id as string, label: f.name })),
+  ]
   const newKey = useRef(0)
   const [focusKey, setFocusKey] = useState<string | null>(null)
 
@@ -87,7 +125,7 @@ function EditGroupForm({ group }: { group: Group }) {
 
   function addMember() {
     const key = `new-${newKey.current++}`
-    setMembers((current) => [...current, { key, name: '' }])
+    setMembers((current) => [...current, { key, name: '', friendId: null }])
     setFocusKey(key)
   }
 
@@ -96,13 +134,22 @@ function EditGroupForm({ group }: { group: Group }) {
     const parsed = editGroupInput.safeParse({
       name,
       currency,
-      members: members.map((m) => ({ id: m.id, name: m.name })),
+      members: members.map((m) => ({ id: m.id, name: m.name, friendId: m.friendId })),
     })
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? 'Check the form')
       return
     }
-    if (await run({ groupId: group.id, ...parsed.data })) {
+    if (
+      await run({
+        groupId: group.id,
+        ...parsed.data,
+        members: parsed.data.members.map((m) => ({
+          ...m,
+          friendId: m.friendId as Id<'friends'> | null,
+        })),
+      })
+    ) {
       // The data updates live, but the page <title> comes from the group
       // layout's loader, so re-run that one for a renamed group.
       await router.invalidate({
@@ -162,8 +209,9 @@ function EditGroupForm({ group }: { group: Group }) {
                 </span>
               </FieldLegend>
               <FieldDescription>
-                People who are part of an expense can’t be removed until those
-                expenses are deleted.
+                Link a member to a friend on Settlr and they can see this group,
+                add expenses and get notified. People who are part of an
+                expense can’t be removed until those expenses are deleted.
               </FieldDescription>
               <ul className="grid gap-2">
                 {members.map((member, i) => {
@@ -187,6 +235,29 @@ function EditGroupForm({ group }: { group: Group }) {
                           )
                         }
                       />
+                      {!isMe && (
+                        <SelectField
+                          aria-label={`${member.name || 'Member'}’s Settlr account`}
+                          className="w-40 shrink-0"
+                          value={member.friendId ?? NOT_LINKED}
+                          options={accountOptions}
+                          onChange={(value) =>
+                            setMembers((current) =>
+                              current.map((m) => {
+                                if (m.key !== member.key) return m
+                                const friendId = value === NOT_LINKED ? null : value
+                                // A new, unnamed member takes the friend's name.
+                                const friend = connected.find((f) => f.id === friendId)
+                                return {
+                                  ...m,
+                                  friendId,
+                                  name: m.name || friend?.name || '',
+                                }
+                              }),
+                            )
+                          }
+                        />
+                      )}
                       {isMe ? (
                         <Badge variant="secondary" className="w-24 justify-center">
                           You

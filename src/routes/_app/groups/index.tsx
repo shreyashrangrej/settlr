@@ -88,7 +88,10 @@ function GroupsPage() {
               >
                 <Card className="h-full transition-shadow hover:ring-primary/50">
                   <CardHeader>
-                    <CardTitle className="text-base">{group.name}</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <span className="truncate">{group.name}</span>
+                      {!group.isOwner && <Badge variant="outline">Shared</Badge>}
+                    </CardTitle>
                     <CardDescription>
                       {group.memberCount} members · {plural(group.expenseCount, 'expense')}
                     </CardDescription>

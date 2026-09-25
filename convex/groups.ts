@@ -6,22 +6,38 @@ import {
   internalMutation,
   mutation,
   query,
+  type MutationCtx,
   type QueryCtx,
 } from './_generated/server'
 import { requireUser } from './lib/auth'
 import * as input from './lib/input'
-import { applyGroupExpense, settleUp } from './lib/ledger'
+import { applyGroupExpense, settleUp, shares } from './lib/ledger'
+import { notify } from './lib/notify'
 import { category, currency } from './lib/validators'
 
 const MAX_GROUPS = 200
 const MAX_MEMBERS = 20
 
-// The caller's group, or null if the id is malformed, missing or someone
-// else's. Taking a string (not v.id) lets pages turn bad URLs into a 404.
+type Member = Doc<'groups'>['members'][number]
+
+// The Settlr user a member is: linked members have one, and the owner's
+// member is the owner.
+function memberUserId(group: Doc<'groups'>, member: Member) {
+  return member.userId ?? (member.id === group.meMemberId ? group.userId : undefined)
+}
+
+// Which member the viewer is (the owner, or a linked member).
+function viewerMemberId(group: Doc<'groups'>, userId: string) {
+  return group.members.find((m) => memberUserId(group, m) === userId)?.id ?? null
+}
+
+// A group the caller owns or is a linked member of, or null if the id is
+// malformed, missing or not theirs. Taking a string (not v.id) lets pages
+// turn bad URLs into a 404.
 async function findGroup(ctx: QueryCtx, userId: string, groupId: string) {
   const id = ctx.db.normalizeId('groups', groupId)
   const group = id ? await ctx.db.get('groups', id) : null
-  return group && group.userId === userId ? group : null
+  return group && viewerMemberId(group, userId) !== null ? group : null
 }
 
 async function requireGroup(ctx: QueryCtx, userId: string, groupId: string) {
@@ -30,9 +46,39 @@ async function requireGroup(ctx: QueryCtx, userId: string, groupId: string) {
   return group
 }
 
-function myNet(group: Doc<'groups'>) {
-  const me = group.members.find((m) => m.id === group.meMemberId)
+// Only the owner can edit or delete a group.
+async function requireOwnedGroup(ctx: QueryCtx, userId: string, groupId: string) {
+  const group = await requireGroup(ctx, userId, groupId)
+  if (group.userId !== userId) {
+    throw new ConvexError('Only the person who created this group can change it.')
+  }
+  return group
+}
+
+function myNet(group: Doc<'groups'>, userId: string) {
+  const id = viewerMemberId(group, userId)
+  const me = group.members.find((m) => m.id === id)
   return me ? me.paidCents - me.owedCents : 0
+}
+
+// Keeps the groupMembers index in step with the linked members.
+async function syncMemberships(ctx: MutationCtx, group: Doc<'groups'>) {
+  const wanted = new Set(
+    group.members.map((m) => m.userId).filter((id): id is string => Boolean(id)),
+  )
+  wanted.delete(group.userId)
+  const rows = await ctx.db
+    .query('groupMembers')
+    .withIndex('by_groupId', (q) => q.eq('groupId', group._id))
+    .take(MAX_MEMBERS * 2)
+  for (const row of rows) {
+    if (wanted.has(row.userId)) wanted.delete(row.userId)
+    else await ctx.db.delete('groupMembers', row._id)
+  }
+  for (const userId of wanted) {
+    await ctx.db.insert('groupMembers', { groupId: group._id, userId })
+  }
+  return rows.map((row) => row.userId)
 }
 
 /** The caller's groups, newest first, with where they stand in each. */
@@ -40,11 +86,24 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     const { userId } = await requireUser(ctx)
-    const groups = await ctx.db
+    const owned = await ctx.db
       .query('groups')
       .withIndex('by_userId', (q) => q.eq('userId', userId))
       .order('desc')
       .take(MAX_GROUPS)
+    const memberships = await ctx.db
+      .query('groupMembers')
+      .withIndex('by_userId', (q) => q.eq('userId', userId))
+      .take(MAX_GROUPS)
+    const joined = await Promise.all(
+      memberships.map((m) => ctx.db.get('groups', m.groupId)),
+    )
+    const groups = [
+      ...owned,
+      ...joined.filter(
+        (g): g is Doc<'groups'> => g !== null && viewerMemberId(g, userId) !== null,
+      ),
+    ].sort((a, b) => b._creationTime - a._creationTime)
     return groups.map((group) => ({
       id: group._id,
       name: group.name,
@@ -52,7 +111,8 @@ export const list = query({
       memberCount: group.members.length,
       expenseCount: group.expenseCount,
       totalCents: group.totalCents,
-      myNetCents: myNet(group),
+      myNetCents: myNet(group, userId),
+      isOwner: group.userId === userId,
     }))
   },
 })
@@ -64,14 +124,28 @@ export const get = query({
     const { userId } = await requireUser(ctx)
     const group = await findGroup(ctx, userId, args.groupId)
     if (!group) return null
+    const isOwner = group.userId === userId
+    // For the owner's edit form: which of their friends each member is.
+    const friendByUser = new Map<string, Id<'friends'>>()
+    if (isOwner) {
+      const friends = await ctx.db
+        .query('friends')
+        .withIndex('by_userId', (q) => q.eq('userId', userId))
+        .take(500)
+      for (const f of friends) if (f.linkedUserId) friendByUser.set(f.linkedUserId, f._id)
+    }
     return {
       id: group._id,
       name: group.name,
       currency: group.currency,
-      meMemberId: group.meMemberId,
-      members: group.members.map((m) => ({
+      isOwner,
+      // The viewer's own member, whoever they are.
+      meMemberId: viewerMemberId(group, userId) ?? group.meMemberId,
+      members: group.members.map(({ userId: memberUser, ...m }) => ({
         ...m,
         netCents: m.paidCents - m.owedCents,
+        linked: Boolean(memberUser) || m.id === group.meMemberId,
+        friendId: memberUser ? (friendByUser.get(memberUser) ?? null) : null,
       })),
       settlements: settleUp(group.members),
       expenseCount: group.expenseCount,
@@ -227,11 +301,19 @@ export const update = mutation({
     groupId: v.id('groups'),
     name: v.string(),
     currency,
-    members: v.array(v.object({ id: v.optional(v.string()), name: v.string() })),
+    members: v.array(
+      v.object({
+        id: v.optional(v.string()),
+        name: v.string(),
+        // Link this member to one of your connected friends' accounts; null
+        // or absent leaves them unlinked.
+        friendId: v.optional(v.union(v.id('friends'), v.null())),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
-    const { userId } = await requireUser(ctx)
-    const group = await requireGroup(ctx, userId, args.groupId)
+    const { userId, name: myName } = await requireUser(ctx)
+    const group = await requireOwnedGroup(ctx, userId, args.groupId)
     const name = input.text(args.name, 'Group name', 60)
 
     if (args.currency !== group.currency && group.expenseCount > 0) {
@@ -284,18 +366,45 @@ export const update = mutation({
       }
     }
 
+    // Links can only point at your own connected friends.
+    const myFriends = await ctx.db
+      .query('friends')
+      .withIndex('by_userId', (q) => q.eq('userId', userId))
+      .take(500)
+    const linkedUserOf = new Map(
+      myFriends.flatMap((f) => (f.linkedUserId ? [[f._id, f.linkedUserId] as const] : [])),
+    )
+    const usedUsers = new Set<string>()
+
     // New ids continue after the highest one in use.
     let nextNumber =
       Math.max(0, ...group.members.map((m) => Number(m.id.slice(1)) || 0)) + 1
-    const members = args.members.map((member) => {
-      const memberName =
-        member.id === group.meMemberId
-          ? current.get(member.id)!.name
-          : input.text(member.name, 'Member name', 40)
-      if (member.id !== undefined) {
-        return { ...current.get(member.id)!, name: memberName }
+    const members = args.members.map((member): Member => {
+      const isOwner = member.id === group.meMemberId
+      const memberName = isOwner
+        ? current.get(member.id!)!.name
+        : input.text(member.name, 'Member name', 40)
+      let memberUser: string | undefined
+      if (!isOwner && member.friendId) {
+        memberUser = linkedUserOf.get(member.friendId)
+        if (!memberUser) {
+          throw new ConvexError(
+            `${memberName} can only be linked to a friend who has accepted your friend request.`,
+          )
+        }
+        if (usedUsers.has(memberUser)) {
+          throw new ConvexError('The same friend is linked to two members.')
+        }
+        usedUsers.add(memberUser)
       }
-      return { id: `m${nextNumber++}`, name: memberName, paidCents: 0, owedCents: 0 }
+      const base =
+        member.id !== undefined
+          ? current.get(member.id)!
+          : { id: `m${nextNumber++}`, paidCents: 0, owedCents: 0 }
+      const { userId: _, ...rest } = base as Member
+      return memberUser
+        ? { ...rest, name: memberName, userId: memberUser }
+        : { ...rest, name: memberName }
     })
 
     if (members.length < 2) throw new ConvexError('A group needs at least two members.')
@@ -307,6 +416,19 @@ export const update = mutation({
     }
 
     await ctx.db.patch('groups', group._id, { name, currency: args.currency, members })
+    const updated = (await ctx.db.get('groups', group._id))!
+    const before = new Set(await syncMemberships(ctx, updated))
+    for (const member of members) {
+      if (member.userId && !before.has(member.userId)) {
+        await notify(ctx, {
+          userId: member.userId,
+          kind: 'group_added',
+          actorName: myName,
+          groupId: group._id,
+          groupName: name,
+        })
+      }
+    }
     return null
   },
 })
@@ -316,7 +438,12 @@ export const remove = mutation({
   args: { groupId: v.id('groups') },
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx)
-    const group = await requireGroup(ctx, userId, args.groupId)
+    const group = await requireOwnedGroup(ctx, userId, args.groupId)
+    const memberships = await ctx.db
+      .query('groupMembers')
+      .withIndex('by_groupId', (q) => q.eq('groupId', group._id))
+      .take(MAX_MEMBERS * 2)
+    for (const row of memberships) await ctx.db.delete('groupMembers', row._id)
     await ctx.db.delete('groups', group._id)
     await ctx.scheduler.runAfter(0, internal.groups.deleteExpenses, {
       groupId: group._id,
@@ -351,8 +478,8 @@ export const addExpense = mutation({
     date: v.string(),
   },
   handler: async (ctx, args) => {
-    const { userId } = await requireUser(ctx)
-    const group = await requireGroup(ctx, userId, args.groupId)
+    const me = await requireUser(ctx)
+    const group = await requireGroup(ctx, me.userId, args.groupId)
     const memberIds = new Set(group.members.map((m) => m.id))
     const splitAmong = [...new Set(args.splitAmong)]
     if (!memberIds.has(args.paidBy)) {
@@ -379,6 +506,26 @@ export const addExpense = mutation({
       ...applyGroupExpense(group, expense, 1),
       lastExpenseAt: Date.now(),
     })
+
+    // Tell everyone on Settlr who's part of it (except whoever added it)
+    // what it means for them: paid minus their share.
+    const owed = shares(expense, group.members.map((m) => m.id))
+    for (const member of group.members) {
+      const memberUser = memberUserId(group, member)
+      if (!memberUser || memberUser === me.userId) continue
+      if (member.id !== expense.paidBy && !owed.has(member.id)) continue
+      await notify(ctx, {
+        userId: memberUser,
+        kind: 'group_expense',
+        actorName: me.name,
+        description: expense.description,
+        amountCents:
+          (member.id === expense.paidBy ? expense.amountCents : 0) - (owed.get(member.id) ?? 0),
+        currency: group.currency,
+        groupId: group._id,
+        groupName: group.name,
+      })
+    }
     return null
   },
 })

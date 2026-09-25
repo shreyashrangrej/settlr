@@ -109,6 +109,8 @@ export const editGroupInput = z.object({
       z.object({
         id: z.string().optional(),
         name: z.string().trim().min(1, 'Every member needs a name').max(40),
+        // One of your connected friends, or null for "not on Settlr".
+        friendId: z.string().nullable(),
       }),
     )
     .min(2, 'A group needs at least two members')

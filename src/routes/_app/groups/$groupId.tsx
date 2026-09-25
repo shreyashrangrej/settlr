@@ -80,19 +80,22 @@ function GroupLayout() {
           <span className="flex items-center gap-3">
             {group.name}
             <Badge variant="secondary">{group.currency}</Badge>
+            {!group.isOwner && <Badge variant="outline">Shared with you</Badge>}
           </span>
         }
         description={`${group.members.length} members · ${formatMoney(group.totalCents, group.currency)} spent`}
         actions={
           <>
-            <Link
-              to="/groups/$groupId/edit"
-              params={{ groupId: group.id }}
-              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline')}
-            >
-              <Pencil />
-              Edit group
-            </Link>
+            {group.isOwner && (
+              <Link
+                to="/groups/$groupId/edit"
+                params={{ groupId: group.id }}
+                className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline')}
+              >
+                <Pencil />
+                Edit group
+              </Link>
+            )}
             <Link
               to="/groups/$groupId/expenses/new"
               params={{ groupId: group.id }}

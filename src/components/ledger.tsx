@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { Avatar, AvatarFallback } from '#/components/ui/avatar'
+import { Badge } from '#/components/ui/badge'
 import { errorMessage } from '#/lib/errors'
 import { formatMoney } from '#/lib/format'
 import type { Currency } from '#/lib/schemas'
@@ -136,4 +137,18 @@ export function sumBalances(list: Array<Partial<Record<string, number>>>) {
     }
   }
   return { owed, owe }
+}
+
+/** Whether a friend is connected on Settlr, or has a request out. */
+export function FriendStatusBadge({
+  status,
+}: {
+  status: 'linked' | 'pending' | 'declined' | null
+}) {
+  if (status === 'linked') {
+    return <Badge className="bg-positive/15 text-positive">On Settlr</Badge>
+  }
+  if (status === 'pending') return <Badge variant="secondary">Request sent</Badge>
+  if (status === 'declined') return <Badge variant="outline">Request declined</Badge>
+  return null
 }
