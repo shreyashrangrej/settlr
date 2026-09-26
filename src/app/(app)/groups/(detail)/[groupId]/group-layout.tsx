@@ -3,19 +3,26 @@
 import Link from 'next/link'
 import { ArrowRight, ChartColumn, Pencil, Plus, Receipt } from 'lucide-react'
 
-import { GroupAvatar, PersonAvatar, SignedAmount } from '#/components/ledger'
+import { PersonAvatar, SignedAmount } from '#/components/ledger'
 import { NavLink } from '#/components/nav-link'
 import { PageHeader, SplitLayout } from '#/components/page-header'
-import { Section } from '#/components/section'
 import { useGroup } from '#/components/use-group'
 import { Badge } from '#/components/ui/badge'
 import { buttonVariants } from '#/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from '#/components/ui/empty'
+import { Separator } from '#/components/ui/separator'
 import { tabsListVariants } from '#/components/ui/tabs'
 import { formatMoney, memberName } from '#/lib/format'
 import type { Group } from '#/lib/types'
@@ -47,7 +54,6 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
     <>
       <PageHeader
         back={{ fallback: '/groups', label: 'Back' }}
-        media={<GroupAvatar name={group.name} className="size-10" />}
         title={
           <span className="flex items-center gap-3">
             {group.name}
@@ -105,9 +111,13 @@ function Balances({ group }: { group: Group }) {
     id === group.meMemberId ? 'You' : memberName(group.members, id)
 
   return (
-    <>
-      <Section title="Balances" description="Paid minus share, per member">
-        <ul className="grid gap-3">
+    <Card>
+      <CardHeader>
+        <CardTitle>Balances</CardTitle>
+        <CardDescription>Paid minus share, per member.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <ul className="grid gap-2.5">
           {group.members.map((m) => (
             <li key={m.id} className="flex items-center gap-2.5 text-sm">
               <PersonAvatar name={m.name} size="sm" />
@@ -117,44 +127,38 @@ function Balances({ group }: { group: Group }) {
                   <span className="text-muted-foreground"> (you)</span>
                 )}
               </span>
-              {m.netCents === 0 ? (
-                <span className="text-muted-foreground">Square</span>
-              ) : (
-                <SignedAmount cents={m.netCents} currency={group.currency} />
-              )}
+              <SignedAmount cents={m.netCents} currency={group.currency} />
             </li>
           ))}
         </ul>
-      </Section>
 
-      <Section
-        title="Settle up"
-        description={
-          group.settlements.length > 0 && `The fewest payments to get everyone square`
-        }
-      >
-        {group.settlements.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Everyone is square.</p>
-        ) : (
-          <ul className="grid gap-2">
-            {group.settlements.map((s) => (
-              <li
-                key={`${s.from}-${s.to}`}
-                className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-sm"
-              >
-                <span className="font-medium">{name(s.from)}</span>
-                <ArrowRight className="size-3.5 text-muted-foreground" aria-label="pays" />
-                <span className="font-medium">
-                  {s.to === group.meMemberId ? 'you' : name(s.to)}
-                </span>
-                <span className="ml-auto font-semibold tabular-nums">
-                  {formatMoney(s.amountCents, group.currency)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-    </>
+        <Separator />
+
+        <div className="grid gap-2">
+          <h3 className="m-0 text-sm font-semibold">Settle up</h3>
+          {group.settlements.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Everyone is square.</p>
+          ) : (
+            <ul className="grid gap-2">
+              {group.settlements.map((s) => (
+                <li
+                  key={`${s.from}-${s.to}`}
+                  className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-2 text-sm"
+                >
+                  <span className="font-medium">{name(s.from)}</span>
+                  <ArrowRight className="size-3.5 text-muted-foreground" aria-label="pays" />
+                  <span className="font-medium">
+                    {s.to === group.meMemberId ? 'you' : name(s.to)}
+                  </span>
+                  <span className="ml-auto font-semibold tabular-nums">
+                    {formatMoney(s.amountCents, group.currency)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }

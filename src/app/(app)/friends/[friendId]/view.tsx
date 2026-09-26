@@ -4,10 +4,10 @@ import { useEffect, useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { HandCoins, Plus, Receipt, Trash2, UserPlus } from 'lucide-react'
+import { HandCoins, Receipt, Trash2, UserPlus } from 'lucide-react'
 
 import { ConfirmAction } from '#/components/confirm-action'
-import { EditDialog, FormDialog } from '#/components/edit-dialog'
+import { EditDialog } from '#/components/edit-dialog'
 import {
   AmountInput,
   CategorySelect,
@@ -22,16 +22,16 @@ import {
   useAction,
 } from '#/components/ledger'
 import { useAppRouter } from '#/components/navigation-progress'
-import { PageHeader } from '#/components/page-header'
+import { PageHeader, SplitLayout } from '#/components/page-header'
 import {
   ReceiptField,
   ReceiptLink,
   existingReceipt,
   type ReceiptValue,
 } from '#/components/receipts'
-import { Panel, Section } from '#/components/section'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import {
   Empty,
   EmptyDescription,
@@ -41,6 +41,7 @@ import {
 } from '#/components/ui/empty'
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -55,6 +56,7 @@ import {
   TableRow,
 } from '#/components/ui/table'
 import { Spinner } from '#/components/ui/spinner'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import {
   categoryLabel,
   formatDate,
@@ -118,79 +120,87 @@ export function FriendView({ friendId, limit }: { friendId: string; limit: numbe
         }
         actions={
           <>
-            <BalanceText
-              balances={friend.balances}
-              them={friend.name}
-              className="mr-2 text-right text-lg"
-            />
             {friend.email && (friend.status === null || friend.status === 'declined') && (
               <SendRequest friendId={friend.id} email={friend.email} />
             )}
-            <FormDialog
-              title="Settle up"
-              description={`Record money that changed hands between you and ${friend.name}.`}
-              trigger={
-                <Button variant="outline" size="lg">
-                  <HandCoins />
-                  Settle up
-                </Button>
-              }
-            >
-              {(close) => <PaymentForm friend={friend} onSaved={close} />}
-            </FormDialog>
-            <FormDialog
-              title="Add an expense"
-              description={`Something you and ${friend.name} shared.`}
-              trigger={
-                <Button size="lg">
-                  <Plus />
-                  Add expense
-                </Button>
-              }
-            >
-              {(close) => <ExpenseForm friend={friend} onSaved={close} />}
-            </FormDialog>
-            <RemoveFriend friend={friend} />
+            <BalanceText
+              balances={friend.balances}
+              them={friend.name}
+              className="text-right text-lg"
+            />
           </>
         }
       />
 
-      <Section title="Activity" description="Expenses and payments between you, newest first">
-        <Panel>
-          {ledger.items.length === 0 ? (
-            <Empty className="py-12">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Receipt />
-                </EmptyMedia>
-                <EmptyTitle>Nothing yet</EmptyTitle>
-                <EmptyDescription>
-                  Add an expense you shared with {friend.name}.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            // Fixed layout: the data columns share the width equally.
-            <Table className="table-fixed">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead className="hidden lg:table-cell">Details</TableHead>
-                  <TableHead className="text-right">Effect</TableHead>
-                  <TableHead className="w-20">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ledger.items.map((entry) => (
-                  <EntryRow key={entry.id} entry={entry} friend={friend} />
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </Panel>
+      <SplitLayout
+        aside={
+          <>
+            <Card>
+              <CardContent>
+                <Tabs defaultValue="expense">
+                  <TabsList className="mb-4 w-full">
+                    <TabsTrigger value="expense">
+                      <Receipt />
+                      Add expense
+                    </TabsTrigger>
+                    <TabsTrigger value="payment">
+                      <HandCoins />
+                      Settle up
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="expense">
+                    <ExpenseForm friend={friend} />
+                  </TabsContent>
+                  <TabsContent value="payment">
+                    <PaymentForm friend={friend} />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+            <RemoveFriend friend={friend} />
+          </>
+        }
+      >
+        <Card className="py-2">
+          <CardHeader className="px-4 pt-2">
+            <CardTitle>Activity</CardTitle>
+          </CardHeader>
+          <CardContent className="px-2">
+            {ledger.items.length === 0 ? (
+              <Empty className="py-8">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Receipt />
+                  </EmptyMedia>
+                  <EmptyTitle>Nothing yet</EmptyTitle>
+                  <EmptyDescription>
+                    Add an expense you shared with {friend.name}.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              // Fixed layout: the data columns share the width equally.
+              <Table className="table-fixed">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="hidden lg:table-cell">Details</TableHead>
+                    <TableHead className="text-right">Effect</TableHead>
+                    <TableHead className="w-20">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ledger.items.map((entry) => (
+                    <EntryRow key={entry.id} entry={entry} friend={friend} />
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
         {ledger.hasMore && (
           <Link
             href={searchHref(`/friends/${friendId}`, { limit: limit + LIST_STEP }, listSearchDefaults)}
@@ -200,7 +210,7 @@ export function FriendView({ friendId, limit }: { friendId: string; limit: numbe
             Show more
           </Link>
         )}
-      </Section>
+      </SplitLayout>
     </>
   )
 }
@@ -338,7 +348,7 @@ function useDefaultCurrency(friend: Friend, initial?: Currency) {
   return [currency, setCurrency] as const
 }
 
-/** Adds a shared expense, or with `entry`, edits it. Calls `onSaved` once saved. */
+/** Adds a shared expense, or with `entry`, edits it. */
 function ExpenseForm({
   friend,
   entry,
@@ -388,7 +398,14 @@ function ExpenseForm({
       setError(parsed.error.issues[0]?.message ?? 'Check the form')
       return
     }
-    if (await run(parsed.data, receipt)) onSaved?.()
+    if (!(await run(parsed.data, receipt))) return
+    if (entry) {
+      onSaved?.()
+      return
+    }
+    setDescription('')
+    setAmount('')
+    setReceipt(null)
   }
 
   return (
@@ -529,7 +546,13 @@ function PaymentForm({
       setError(parsed.error.issues[0]?.message ?? 'Check the form')
       return
     }
-    if (await run(parsed.data)) onSaved?.()
+    if (!(await run(parsed.data))) return
+    if (entry) {
+      onSaved?.()
+      return
+    }
+    setAmount('')
+    setNote('')
   }
 
   return (
@@ -546,6 +569,7 @@ function PaymentForm({
               { value: 'friend', label: `${friend.name} paid you` },
             ]}
           />
+          <FieldDescription>Record money that changed hands.</FieldDescription>
         </Field>
         <div className="grid grid-cols-[1fr_6.5rem] gap-3">
           <Field>
@@ -590,7 +614,7 @@ function SendRequest({ friendId, email }: { friendId: Friend['id']; email: strin
     toastErrors: true,
   })
   return (
-    <Button variant="outline" size="lg" disabled={pending} onClick={() => void run({ friendId })}>
+    <Button variant="outline" disabled={pending} onClick={() => void run({ friendId })}>
       {pending ? <Spinner /> : <UserPlus />}
       Send friend request
     </Button>
@@ -622,12 +646,10 @@ function RemoveFriend({ friend }: { friend: Friend }) {
       trigger={
         <Button
           variant="ghost"
-          size="icon-lg"
-          aria-label={`Remove ${friend.name}`}
-          title="Remove friend"
-          className="text-muted-foreground hover:text-destructive"
+          className="justify-self-start text-muted-foreground hover:text-destructive"
         >
           <Trash2 />
+          Remove friend
         </Button>
       }
     />

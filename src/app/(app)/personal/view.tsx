@@ -4,11 +4,10 @@ import { useEffect, useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { PiggyBank, Plus, Receipt, Tag, Trash2, TrendingUp, Wallet } from 'lucide-react'
-import { toast } from 'sonner'
+import { PiggyBank, Receipt, Tag, Trash2, TrendingUp, Wallet } from 'lucide-react'
 
 import { ConfirmAction } from '#/components/confirm-action'
-import { EditDialog, FormDialog } from '#/components/edit-dialog'
+import { EditDialog } from '#/components/edit-dialog'
 import {
   AmountInput,
   CategorySelect,
@@ -24,10 +23,15 @@ import {
   existingReceipt,
   type ReceiptValue,
 } from '#/components/receipts'
-import { Panel, Section } from '#/components/section'
-import { Stat, StatStrip } from '#/components/stats'
+import { StatCard, StatGrid } from '#/components/stat-card'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
 import {
   Empty,
   EmptyDescription,
@@ -80,68 +84,65 @@ export function PersonalView({ month, thisMonth }: { month: string; thisMonth: s
         description="Spending that’s just yours, not split with anyone."
         actions={
           <>
-            <MonthNav to="/personal" month={month} thisMonth={thisMonth} />
             <Link
               href={month === thisMonth ? '/budget' : `/budget?month=${month}`}
               className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline')}
             >
               <PiggyBank />
-              Budget
+              Monthly budget
             </Link>
-            <FormDialog
-              title="Add an expense"
-              description="Spending that’s just yours."
-              trigger={
-                <Button size="lg">
-                  <Plus />
-                  Add expense
-                </Button>
-              }
-            >
-              {(close) => <ExpenseForm month={month} onSaved={close} />}
-            </FormDialog>
+            <MonthNav to="/personal" month={month} thisMonth={thisMonth} />
           </>
         }
       />
 
-      <MonthStats data={data} />
+      <SplitLayout
+        aside={
+          <>
+            <AddExpense month={month} />
+            <ByCategory data={data} />
+          </>
+        }
+      >
+        <MonthStats data={data} />
 
-      <SplitLayout aside={<ByCategory data={data} />}>
-        <Panel>
-          {data.items.length === 0 ? (
-            <Empty className="py-12">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Wallet />
-                </EmptyMedia>
-                <EmptyTitle>No expenses in {formatMonth(month)}</EmptyTitle>
-                <EmptyDescription>
-                  Log what you spend to see where it goes.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            // Fixed layout: the data columns share the width equally.
-            <Table className="table-fixed">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="hidden md:table-cell">Category</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="w-20">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.items.map((expense) => (
-                  <ExpenseRow key={expense.id} expense={expense} />
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </Panel>
+        <Card className="py-2">
+          <CardContent className="px-2">
+            {data.items.length === 0 ? (
+              <Empty className="py-10">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Wallet />
+                  </EmptyMedia>
+                  <EmptyTitle>No expenses in {formatMonth(month)}</EmptyTitle>
+                  <EmptyDescription>
+                    Log what you spend to see where it goes.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              // Fixed layout: the data columns share the width equally.
+              <Table className="table-fixed">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="hidden md:table-cell">Category</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="w-20">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.items.map((expense) => (
+                    <ExpenseRow key={expense.id} expense={expense} />
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
         {data.truncated && (
           <p className="text-sm text-muted-foreground">
             Showing the first {data.items.length} expenses of this month.
@@ -164,39 +165,42 @@ function MonthStats({ data }: { data: PersonalMonth }) {
   )
 
   return (
-    <StatStrip className="mb-8">
-      <Stat
+    <StatGrid>
+      <StatCard
         label={`Spent in ${formatMonth(data.month)}`}
         icon={<Wallet />}
         value={data.totals.map((t) => formatMoney(t.cents, t.currency)).join(' + ')}
       />
-      <Stat
+      <StatCard
         label="Expenses"
         icon={<Receipt />}
         value={data.items.length || ''}
         hint={main && `Avg ${formatMoney(Math.round(main.cents / inMain.length), main.currency)}`}
       />
-      <Stat
+      <StatCard
         label="Top category"
         icon={<Tag />}
         value={top ? categoryLabel(top.category) : ''}
         hint={top && formatMoney(top.cents, top.currency)}
       />
-      <Stat
+      <StatCard
         label="Largest expense"
         icon={<TrendingUp />}
         value={largest ? formatMoney(largest.amountCents, largest.currency) : ''}
         hint={largest?.description}
       />
-    </StatStrip>
+    </StatGrid>
   )
 }
 
 function ByCategory({ data }: { data: PersonalMonth }) {
   const max = Math.max(...data.byCategory.map((r) => r.cents), 1)
   return (
-    <Section title="By category" description={formatMonth(data.month)}>
-      <div className="grid gap-3">
+    <Card>
+      <CardHeader>
+        <CardTitle>By category</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3">
         {data.byCategory.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing to show yet.</p>
         ) : (
@@ -209,8 +213,8 @@ function ByCategory({ data }: { data: PersonalMonth }) {
             </Progress>
           ))
         )}
-      </div>
-    </Section>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -268,10 +272,25 @@ function ExpenseRow({ expense }: { expense: PersonalExpense }) {
   )
 }
 
+function AddExpense({ month }: { month: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Wallet className="size-4 text-primary" aria-hidden="true" />
+          Add an expense
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ExpenseForm month={month} />
+      </CardContent>
+    </Card>
+  )
+}
+
 /**
- * Adds a personal expense, or with `expense`, edits it, then calls
- * `onSaved`. `month` is the month on screen, so a new expense saved to
- * another month can say where it went.
+ * Adds a personal expense, or with `expense`, edits it. `month` is the month
+ * on screen, so a new expense saved to another month can say where it went.
  */
 function ExpenseForm({
   expense,
@@ -285,12 +304,13 @@ function ExpenseForm({
   const id = useId()
   const addExpense = useConvexMutation(api.personal.add)
   const updateExpense = useConvexMutation(api.personal.update)
+  const [savedTo, setSavedTo] = useState<string | null>(null)
   const { run, pending, error, setError } = useAction(
     async (input: PersonalExpenseInput, receipt: ReceiptValue) =>
       expense
         ? updateExpense({ expenseId: expense.id, ...input, receiptId: receipt?.id ?? null })
         : addExpense({ ...input, receiptId: receipt?.id }),
-    { success: expense ? 'Expense updated' : undefined },
+    { success: expense ? 'Expense updated' : 'Expense added' },
   )
   const [description, setDescription] = useState(expense?.description ?? '')
   const [amount, setAmount] = useState(
@@ -325,14 +345,16 @@ function ExpenseForm({
       return
     }
     if (!(await run(parsed.data, receipt))) return
-    if (!expense) {
-      // Say where it went if it's not in the month on screen.
-      const expenseMonth = parsed.data.date.slice(0, 7)
-      toast.success(
-        expenseMonth === month ? 'Expense added' : `Expense added to ${formatMonth(expenseMonth)}`,
-      )
+    if (expense) {
+      onSaved?.()
+      return
     }
-    onSaved?.()
+    setDescription('')
+    setAmount('')
+    setReceipt(null)
+    // Say where it went if it's not in the month on screen.
+    const expenseMonth = parsed.data.date.slice(0, 7)
+    setSavedTo(expenseMonth === month ? null : formatMonth(expenseMonth))
   }
 
   return (
@@ -345,7 +367,6 @@ function ExpenseForm({
             value={description}
             maxLength={80}
             placeholder="Groceries"
-            autoFocus={!expense}
             onChange={(e) => setDescription(e.target.value)}
           />
         </Field>
@@ -374,6 +395,11 @@ function ExpenseForm({
           <ReceiptField id={`${id}-receipt`} value={receipt} onChange={setReceipt} />
         </Field>
         {error && <FieldError>{error}</FieldError>}
+        {savedTo && (
+          <p className="text-sm text-positive" role="status">
+            Saved to {savedTo}.
+          </p>
+        )}
         <Button type="submit" size="lg" disabled={pending}>
           {pending && <Spinner />}
           {expense ? 'Save changes' : 'Add expense'}

@@ -152,7 +152,7 @@
 }
 
 main.app-shell {
-  padding-block: 1.75rem 3rem;
+  padding-block: 1rem 3rem;
 }
 
 /* Home hero */
@@ -168,7 +168,7 @@ main.app-shell {
      read as one piece, so they sit together in a centred column. */
   max-width: 68rem;
   /* Cancels main's block padding so the hero fills the first screen. */
-  margin: -1.75rem auto -3rem;
+  margin: -1rem auto -3rem;
   padding-block: clamp(3rem, 8vh, 6rem);
 }
 

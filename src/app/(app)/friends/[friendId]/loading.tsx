@@ -1,5 +1,5 @@
-import { FriendSkeleton } from '#/components/skeletons'
+import { DetailSkeleton } from '#/components/skeletons'
 
 export default function Loading() {
-  return <FriendSkeleton />
+  return <DetailSkeleton />
 }

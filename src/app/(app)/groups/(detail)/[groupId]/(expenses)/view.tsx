@@ -10,10 +10,10 @@ import { SelectField } from '#/components/form-fields'
 import { useAction } from '#/components/ledger'
 import { useAppRouter } from '#/components/navigation-progress'
 import { ReceiptLink } from '#/components/receipts'
-import { Panel } from '#/components/section'
 import { useGroup } from '#/components/use-group'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
+import { Card, CardContent } from '#/components/ui/card'
 import {
   Empty,
   EmptyDescription,
@@ -82,47 +82,49 @@ export function ExpensesView({ groupId, search }: { groupId: string; search: Exp
     <>
       <Filters group={group} search={search} onChange={setSearch} />
 
-      <Panel>
-        {page.items.length === 0 ? (
-          <Empty className="py-12">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Receipt />
-              </EmptyMedia>
-              <EmptyTitle>
-                {group.expenseCount === 0 ? 'No expenses yet' : 'No matches'}
-              </EmptyTitle>
-              <EmptyDescription>
-                {group.expenseCount === 0
-                  ? 'Add the first expense to start splitting.'
-                  : 'No expenses match these filters.'}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          // Fixed layout: the data columns share the width equally.
-          <Table className="table-fixed">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead className="hidden lg:table-cell">Category</TableHead>
-                <TableHead className="hidden md:table-cell">Date</TableHead>
-                <TableHead className="hidden md:table-cell">Paid by</TableHead>
-                <TableHead className="hidden xl:table-cell">Split</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="w-20">
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {page.items.map((expense) => (
-                <ExpenseRow key={expense.id} group={group} expense={expense} />
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </Panel>
+      <Card className="py-2">
+        <CardContent className="px-2">
+          {page.items.length === 0 ? (
+            <Empty className="py-10">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Receipt />
+                </EmptyMedia>
+                <EmptyTitle>
+                  {group.expenseCount === 0 ? 'No expenses yet' : 'No matches'}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {group.expenseCount === 0
+                    ? 'Add the first expense to start splitting.'
+                    : 'No expenses match these filters.'}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            // Fixed layout: the data columns share the width equally.
+            <Table className="table-fixed">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="hidden lg:table-cell">Category</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
+                  <TableHead className="hidden md:table-cell">Paid by</TableHead>
+                  <TableHead className="hidden xl:table-cell">Split</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-20">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {page.items.map((expense) => (
+                  <ExpenseRow key={expense.id} group={group} expense={expense} />
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       {page.hasMore && (
         <Link

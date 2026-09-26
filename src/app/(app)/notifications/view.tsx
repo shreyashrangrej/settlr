@@ -3,11 +3,17 @@
 import { useEffect, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Bell } from 'lucide-react'
+import { Bell, UserPlus } from 'lucide-react'
 
 import { NotificationRow, RequestRow } from '#/components/notifications'
 import { PageHeader } from '#/components/page-header'
-import { Panel, Section } from '#/components/section'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
 import {
   Empty,
   EmptyDescription,
@@ -17,9 +23,6 @@ import {
 } from '#/components/ui/empty'
 import { ItemGroup } from '#/components/ui/item'
 import { api } from '#convex/_generated/api'
-
-// Item rows as a hairline-split list inside a panel.
-const rows = 'gap-0! divide-y [&>*]:rounded-none [&>*]:px-4'
 
 export function NotificationsView() {
   const { data } = useSuspenseQuery(convexQuery(api.notifications.list, {}))
@@ -36,7 +39,7 @@ export function NotificationsView() {
   }, [unread, markAllRead])
 
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-8">
+    <div className="mx-auto grid w-full max-w-3xl gap-4">
       <PageHeader
         back={{ fallback: '/dashboard', label: 'Back' }}
         title="Notifications"
@@ -44,22 +47,29 @@ export function NotificationsView() {
       />
 
       {data.requests.length > 0 && (
-        <Section
-          title="Friend requests"
-          description="Accept to share a one-on-one ledger: you’ll both see the same expenses and payments."
-        >
-          <Panel>
-            <ItemGroup className={rows}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="size-4 text-primary" aria-hidden="true" />
+              Friend requests
+            </CardTitle>
+            <CardDescription>
+              Accept to share a one-on-one ledger: you’ll both see the same
+              expenses and payments.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-2">
+            <ItemGroup>
               {data.requests.map((request) => (
                 <RequestRow key={request.id} request={request} />
               ))}
             </ItemGroup>
-          </Panel>
-        </Section>
+          </CardContent>
+        </Card>
       )}
 
-      <Section title="Activity">
-        <Panel>
+      <Card className="py-2">
+        <CardContent className="px-2">
           {data.items.length === 0 ? (
             <Empty className="py-12">
               <EmptyHeader>
@@ -73,14 +83,14 @@ export function NotificationsView() {
               </EmptyHeader>
             </Empty>
           ) : (
-            <ItemGroup className={rows}>
+            <ItemGroup>
               {data.items.map((item) => (
                 <NotificationRow key={item.id} item={item} isNew={fresh.has(item.id)} />
               ))}
             </ItemGroup>
           )}
-        </Panel>
-      </Section>
+        </CardContent>
+      </Card>
     </div>
   )
 }

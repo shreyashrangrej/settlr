@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { Split } from 'lucide-react'
 
 import { AccountMenu } from '#/components/account-menu'
 import { APP_SECTIONS } from '#/components/app-nav'
@@ -24,18 +23,12 @@ export function SiteHeader() {
   const needsName = user !== null && user.name === ''
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
       <div className="app-shell flex h-14 items-center justify-between gap-2">
         <Link
           href={user ? '/dashboard' : '/'}
-          className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground no-underline"
+          className="text-lg font-bold tracking-tight text-primary no-underline"
         >
-          <span
-            aria-hidden="true"
-            className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"
-          >
-            <Split className="size-4" />
-          </span>
           Settlr
         </Link>
         <nav className="flex items-center gap-1" aria-label="Main">

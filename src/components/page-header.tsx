@@ -53,7 +53,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3',
+        'mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3',
         className,
       )}
     >
@@ -74,11 +74,7 @@ export function PageHeader({
   )
 }
 
-/**
- * A two-column page body: main content and a sidebar (stacks on mobile).
- * The sidebar holds plain `Section`s, not boxes; on wide screens a hairline
- * sets it apart.
- */
+/** A two-column page body: main content and a sidebar (stacks on mobile). */
 export function SplitLayout({
   children,
   aside,
@@ -87,11 +83,9 @@ export function SplitLayout({
   aside: React.ReactNode
 }) {
   return (
-    <div className="grid items-start gap-x-8 gap-y-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="grid min-w-0 gap-6">{children}</div>
-      <aside className="grid content-start gap-8 lg:sticky lg:top-20 lg:border-l lg:pl-8">
-        {aside}
-      </aside>
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+      <div className="grid min-w-0 gap-4">{children}</div>
+      <aside className="grid gap-4 lg:sticky lg:top-18">{aside}</aside>
     </div>
   )
 }

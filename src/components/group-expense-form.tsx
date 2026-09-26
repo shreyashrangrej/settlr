@@ -8,8 +8,15 @@ import { AmountInput, CategorySelect, DatePicker, SelectField } from '#/componen
 import { useAction } from '#/components/ledger'
 import { useAppRouter } from '#/components/navigation-progress'
 import { ReceiptField, existingReceipt, type ReceiptValue } from '#/components/receipts'
-import { Section } from '#/components/section'
 import { Button, buttonVariants } from '#/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
 import { Checkbox } from '#/components/ui/checkbox'
 import {
   Field,
@@ -90,100 +97,102 @@ export function GroupExpenseForm({
   }
 
   return (
-    <Section
-      className="max-w-3xl"
-      title={expense ? 'Edit expense' : 'Add an expense'}
-      description={
-        expense
-          ? 'Balances update for everyone in the group.'
-          : 'Split equally between the people who shared it.'
-      }
-    >
-      <form noValidate onSubmit={onSubmit} className="mt-2 grid gap-8">
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor="ge-description">Description</FieldLabel>
-            <Input
-              id="ge-description"
-              value={description}
-              maxLength={80}
-              placeholder="Dinner"
-              autoFocus={!expense}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
+    <Card className="max-w-3xl">
+      <CardHeader>
+        <CardTitle>{expense ? 'Edit expense' : 'Add an expense'}</CardTitle>
+        <CardDescription>
+          {expense
+            ? 'Balances update for everyone in the group.'
+            : 'Split equally between the people who shared it.'}
+        </CardDescription>
+      </CardHeader>
+      <form noValidate onSubmit={onSubmit}>
+        <CardContent>
+          <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="ge-amount">Amount</FieldLabel>
-              <AmountInput
-                id="ge-amount"
-                value={amount}
-                onChange={setAmount}
-                currency={group.currency}
+              <FieldLabel htmlFor="ge-description">Description</FieldLabel>
+              <Input
+                id="ge-description"
+                value={description}
+                maxLength={80}
+                placeholder="Dinner"
+                autoFocus={!expense}
+                onChange={(e) => setDescription(e.target.value)}
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="ge-date">Date</FieldLabel>
-              <DatePicker id="ge-date" value={date} onChange={setDate} />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="ge-paid-by">Paid by</FieldLabel>
-              <SelectField
-                id="ge-paid-by"
-                value={paidBy}
-                onChange={setPaidBy}
-                options={group.members.map((m) => ({
-                  value: m.id,
-                  label: m.id === group.meMemberId ? `${m.name} (you)` : m.name,
-                }))}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="ge-category">Category</FieldLabel>
-              <CategorySelect id="ge-category" value={category} onChange={setCategory} />
-            </Field>
-          </div>
-
-          <FieldSet>
-            <FieldLegend variant="label">Split equally between</FieldLegend>
-            <FieldDescription>
-              {share !== null
-                ? `${formatMoney(share, group.currency)} each`
-                : 'Everyone is included by default.'}
-            </FieldDescription>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {group.members.map((m) => (
-                <Field key={m.id} orientation="horizontal">
-                  <Checkbox
-                    id={`split-${m.id}`}
-                    checked={splitAmong.includes(m.id)}
-                    onCheckedChange={(checked) =>
-                      setSplitAmong((current) =>
-                        checked
-                          ? group.members.map((x) => x.id).filter((id) => id === m.id || current.includes(id))
-                          : current.filter((id) => id !== m.id),
-                      )
-                    }
-                  />
-                  <FieldLabel htmlFor={`split-${m.id}`} className="font-normal">
-                    {m.name}
-                    {m.id === group.meMemberId && (
-                      <span className="text-muted-foreground">(you)</span>
-                    )}
-                  </FieldLabel>
-                </Field>
-              ))}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="ge-amount">Amount</FieldLabel>
+                <AmountInput
+                  id="ge-amount"
+                  value={amount}
+                  onChange={setAmount}
+                  currency={group.currency}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ge-date">Date</FieldLabel>
+                <DatePicker id="ge-date" value={date} onChange={setDate} />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ge-paid-by">Paid by</FieldLabel>
+                <SelectField
+                  id="ge-paid-by"
+                  value={paidBy}
+                  onChange={setPaidBy}
+                  options={group.members.map((m) => ({
+                    value: m.id,
+                    label: m.id === group.meMemberId ? `${m.name} (you)` : m.name,
+                  }))}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ge-category">Category</FieldLabel>
+                <CategorySelect id="ge-category" value={category} onChange={setCategory} />
+              </Field>
             </div>
-          </FieldSet>
 
-          <Field>
-            <FieldLabel htmlFor="ge-receipt">Receipt</FieldLabel>
-            <ReceiptField id="ge-receipt" value={receipt} onChange={setReceipt} />
-            <FieldDescription>Everyone in the group can see it.</FieldDescription>
-          </Field>
-          {error && <FieldError>{error}</FieldError>}
-        </FieldGroup>
-        <div className="flex justify-end gap-2 border-t pt-6">
+            <FieldSet>
+              <FieldLegend variant="label">Split equally between</FieldLegend>
+              <FieldDescription>
+                {share !== null
+                  ? `${formatMoney(share, group.currency)} each`
+                  : 'Everyone is included by default.'}
+              </FieldDescription>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {group.members.map((m) => (
+                  <Field key={m.id} orientation="horizontal">
+                    <Checkbox
+                      id={`split-${m.id}`}
+                      checked={splitAmong.includes(m.id)}
+                      onCheckedChange={(checked) =>
+                        setSplitAmong((current) =>
+                          checked
+                            ? group.members.map((x) => x.id).filter((id) => id === m.id || current.includes(id))
+                            : current.filter((id) => id !== m.id),
+                        )
+                      }
+                    />
+                    <FieldLabel htmlFor={`split-${m.id}`} className="font-normal">
+                      {m.name}
+                      {m.id === group.meMemberId && (
+                        <span className="text-muted-foreground">(you)</span>
+                      )}
+                    </FieldLabel>
+                  </Field>
+                ))}
+              </div>
+            </FieldSet>
+
+            <Field>
+              <FieldLabel htmlFor="ge-receipt">Receipt</FieldLabel>
+              <ReceiptField id="ge-receipt" value={receipt} onChange={setReceipt} />
+              <FieldDescription>Everyone in the group can see it.</FieldDescription>
+            </Field>
+            {error && <FieldError>{error}</FieldError>}
+          </FieldGroup>
+        </CardContent>
+        <CardFooter className="mt-6 justify-end gap-2 border-t py-4">
           <Link
             href={`/groups/${group.id}`}
             className={buttonVariants({ variant: 'ghost', size: 'lg' })}
@@ -194,8 +203,8 @@ export function GroupExpenseForm({
             {pending && <Spinner />}
             {expense ? 'Save changes' : 'Add expense'}
           </Button>
-        </div>
+        </CardFooter>
       </form>
-    </Section>
+    </Card>
   )
 }
