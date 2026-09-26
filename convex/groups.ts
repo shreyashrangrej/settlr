@@ -563,7 +563,7 @@ export const addExpense = mutation({
       ...checkExpense(group, args),
       receiptId: await attachReceipt(ctx, me.userId, args.receiptId),
     }
-    await ctx.db.insert('groupExpenses', expense)
+    const expenseId = await ctx.db.insert('groupExpenses', expense)
     await ctx.db.patch('groups', group._id, {
       ...applyGroupExpense(group, expense, 1),
       lastExpenseAt: Date.now(),
@@ -586,7 +586,7 @@ export const addExpense = mutation({
         groupName: group.name,
       })
     }
-    return null
+    return expenseId
   },
 })
 

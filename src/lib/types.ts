@@ -25,4 +25,5 @@ export type GroupExpenseDetail = NonNullable<
 >
 export type PersonalMonth = FunctionReturnType<typeof api.personal.month>
 export type AssistantReply = FunctionReturnType<typeof api.assistant.send>
-export type AddedExpense = AssistantReply['added'][number]
+export type ChatEvent = AssistantReply['events'][number]
+export type AssistantExpense = Extract<ChatEvent, { type: 'added' }>['expense']

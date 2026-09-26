@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useId, useRef, useState } from 'react'
-import { convexQuery, useConvexAction } from '@convex-dev/react-query'
+import { convexQuery, useConvexAction, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { SendHorizontal, Sparkles, User, Users, Wallet } from 'lucide-react'
+import { SendHorizontal, Sparkles, Trash2, User, Users, Wallet } from 'lucide-react'
 
+import { useAction } from '#/components/ledger'
 import { PageHeader, SplitLayout } from '#/components/page-header'
 import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert'
+import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import {
@@ -28,16 +30,19 @@ import {
 import { Spinner } from '#/components/ui/spinner'
 import { Textarea } from '#/components/ui/textarea'
 import { errorMessage } from '#/lib/errors'
-import { categoryLabel, formatDate, formatMoney } from '#/lib/format'
+import { categoryLabel, formatDate, formatMoney, plural } from '#/lib/format'
 import { readPreferences } from '#/lib/preferences'
-import type { AddedExpense } from '#/lib/types'
+import type { AssistantExpense, ChatEvent } from '#/lib/types'
+import type { Id } from '#convex/_generated/dataModel'
 import { api } from '#convex/_generated/api'
 
 const EXAMPLES = [
   'Add tea personal expense 50',
-  'Groceries 1,240 yesterday',
-  'Lunch with Sam 30, I paid, split equally',
+  'How much did I spend on food this month?',
+  'Show my expenses with Sam',
+  'Change the tea to 60',
   'Taxi 600 in the Goa trip, paid by Priya',
+  'Delete yesterday’s taxi',
 ]
 // The same limits as convex/assistant.ts.
 const MAX_MESSAGE = 500
@@ -45,7 +50,14 @@ const MAX_HISTORY = 12
 
 type Message =
   | { id: number; role: 'user'; content: string }
-  | { id: number; role: 'assistant'; content: string; added: Array<AddedExpense> }
+  | {
+      id: number
+      role: 'assistant'
+      content: string
+      events: Array<ChatEvent>
+      // The expenses this reply was about, sent back as history.
+      memo: string
+    }
   | { id: number; role: 'error'; content: string }
 
 // The viewer's own date, not UTC: "today" is wherever they are.
@@ -55,7 +67,7 @@ function localIsoDate() {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
-/** A chat that turns plain language into expenses. */
+/** A chat that adds, finds and changes expenses from plain language. */
 export function AssistantView() {
   const { data: status } = useSuspenseQuery(convexQuery(api.assistant.status, {}))
   const [draft, setDraft] = useState('')
@@ -70,7 +82,7 @@ export function AssistantView() {
     <>
       <PageHeader
         title="Assistant"
-        description="Tell Settlr what you spent, in your own words, and it adds the expense."
+        description="Add, find and change expenses by saying what you want, in your own words."
       />
       <SplitLayout aside={<Tips onExample={fillExample} />}>
         <Chat
@@ -114,9 +126,14 @@ function Chat({
   async function submit() {
     const content = draft.trim()
     if (!content || pending || !configured) return
+    type Turn = { role: 'user' | 'assistant'; content: string; memo?: string }
     const history = [
-      ...messages.flatMap((m) =>
-        m.role === 'error' ? [] : [{ role: m.role, content: m.content }],
+      ...messages.flatMap((m): Array<Turn> =>
+        m.role === 'user'
+          ? [{ role: 'user', content: m.content }]
+          : m.role === 'assistant'
+            ? [{ role: 'assistant', content: m.content, memo: m.memo || undefined }]
+            : [],
       ),
       { role: 'user' as const, content },
     ].slice(-MAX_HISTORY)
@@ -124,14 +141,14 @@ function Chat({
     setDraft('')
     setPending(true)
     try {
-      const { reply, added } = await send({
+      const { reply, events, memo } = await send({
         messages: history,
         today: localIsoDate(),
         currency: readPreferences().defaultCurrency,
       })
       setMessages((list) => [
         ...list,
-        { id: nextId.current++, role: 'assistant', content: reply, added },
+        { id: nextId.current++, role: 'assistant', content: reply, events, memo },
       ])
     } catch (err) {
       setMessages((list) => [
@@ -167,10 +184,10 @@ function Chat({
               <EmptyMedia variant="icon">
                 <Sparkles />
               </EmptyMedia>
-              <EmptyTitle>What did you spend?</EmptyTitle>
+              <EmptyTitle>What can I do for you?</EmptyTitle>
               <EmptyDescription>
-                Say it the way you would to a friend. Personal, friend and group expenses
-                all work.
+                Add an expense, ask what you spent, or change one you already have. Personal,
+                friend and group expenses all work.
               </EmptyDescription>
             </EmptyHeader>
             <div className="flex flex-wrap justify-center gap-2">
@@ -236,8 +253,7 @@ function Chat({
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Conversations aren’t saved. Everything it adds shows up on the usual pages, where you
-          can edit or delete it.
+          Conversations aren’t saved. Everything it adds or changes shows up on the usual pages.
         </p>
       </form>
     </Card>
@@ -260,41 +276,214 @@ function ChatMessage({ message }: { message: Message }) {
     )
   }
   return (
-    <div className="grid max-w-[85%] gap-2">
-      <p className="w-fit rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2 whitespace-pre-wrap">
+    <div className="grid gap-2">
+      <p className="w-fit max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2 whitespace-pre-wrap">
         {message.content}
       </p>
-      {message.added.map((expense, i) => (
-        <AddedItem key={i} expense={expense} />
+      {message.events.map((event, i) => (
+        <EventCard key={i} event={event} />
       ))}
     </div>
   )
 }
 
+function EventCard({ event }: { event: ChatEvent }) {
+  switch (event.type) {
+    case 'added':
+      return (
+        <ExpenseItem
+          expense={event.expense}
+          variant="outline"
+          badge={<Badge variant="secondary">Added</Badge>}
+        />
+      )
+    case 'updated':
+      return (
+        <ExpenseItem
+          expense={event.expense}
+          variant="outline"
+          badge={<Badge variant="secondary">Updated</Badge>}
+          note={changes(event.before, event.expense)}
+        />
+      )
+    case 'delete':
+      return <DeleteOffer expense={event.expense} />
+    case 'found':
+      return <FoundList event={event} />
+  }
+}
+
+// What an edit changed, e.g. "Amount ₹50.00 → ₹60.00".
+function changes(before: AssistantExpense, after: AssistantExpense) {
+  const list: Array<string> = []
+  const diff = (label: string, a: string | null, b: string | null) => {
+    if (a !== b) list.push(`${label} ${a ?? '—'} → ${b ?? '—'}`)
+  }
+  diff('Description', before.description, after.description)
+  diff(
+    'Amount',
+    formatMoney(before.amountCents, before.currency),
+    formatMoney(after.amountCents, after.currency),
+  )
+  diff('Category', categoryLabel(before.category), categoryLabel(after.category))
+  diff('Date', formatDate(before.date), formatDate(after.date))
+  diff('Split', before.detail, after.detail)
+  return list.join(' · ') || 'Nothing changed'
+}
+
 const KIND_ICON = { personal: Wallet, friend: User, group: Users }
 
-/** An expense the assistant added, linking to where it went. */
-function AddedItem({ expense }: { expense: AddedExpense }) {
+function where(expense: AssistantExpense) {
+  return expense.kind === 'personal'
+    ? 'Personal'
+    : expense.kind === 'friend'
+      ? `With ${expense.with}`
+      : `In ${expense.with}`
+}
+
+/** One expense, linking to the page it's on. */
+function ExpenseItem({
+  expense,
+  variant = 'default',
+  badge,
+  note,
+  className,
+}: {
+  expense: AssistantExpense
+  variant?: 'default' | 'outline'
+  badge?: React.ReactNode
+  note?: string
+  className?: string
+}) {
   const Icon = KIND_ICON[expense.kind]
-  const where =
-    expense.kind === 'personal'
-      ? 'Personal'
-      : expense.kind === 'friend'
-        ? `With ${expense.with}`
-        : `In ${expense.with}`
   return (
-    <Item variant="outline" size="sm" className="no-underline" render={<Link href={expense.href} />}>
+    <Item
+      variant={variant}
+      size="sm"
+      className={className}
+      render={<Link href={expense.href} className="no-underline" />}
+    >
       <ItemMedia variant="icon" className="text-primary">
         <Icon />
       </ItemMedia>
       <ItemContent className="min-w-0">
-        <ItemTitle className="truncate">{expense.description}</ItemTitle>
-        <ItemDescription className="truncate">
-          {where} · {categoryLabel(expense.category)} · {formatDate(expense.date)}
+        <ItemTitle className="w-full">
+          <span className="truncate">{expense.description}</span>
+          {badge}
+        </ItemTitle>
+        <ItemDescription className="line-clamp-2">
+          {where(expense)} · {categoryLabel(expense.category)} · {formatDate(expense.date)}
+          {expense.detail && ` · ${expense.detail}`}
+        </ItemDescription>
+        {note && <p className="text-xs text-muted-foreground">{note}</p>}
+      </ItemContent>
+      <ItemActions className="grid justify-items-end gap-0.5 self-start">
+        <span className="font-semibold tabular-nums">
+          {formatMoney(expense.amountCents, expense.currency)}
+        </span>
+        {expense.myShareCents !== expense.amountCents && (
+          <span className="text-xs text-muted-foreground tabular-nums">
+            your share {formatMoney(expense.myShareCents, expense.currency)}
+          </span>
+        )}
+      </ItemActions>
+    </Item>
+  )
+}
+
+/** Search results: totals over every match, then the newest few. */
+function FoundList({ event }: { event: Extract<ChatEvent, { type: 'found' }> }) {
+  if (event.count === 0) return null
+  return (
+    <div className="grid overflow-hidden rounded-lg border">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b bg-muted/50 px-3 py-2">
+        <span className="font-medium">
+          {plural(event.count, 'expense')}
+          {event.capped && '+'}
+        </span>
+        <span className="text-sm text-muted-foreground">
+          {event.totals.map((t, i) => (
+            <span key={t.currency}>
+              {i > 0 && ' + '}
+              <span className="font-semibold text-foreground tabular-nums">
+                {formatMoney(t.cents, t.currency)}
+              </span>
+              {t.myShareCents !== t.cents &&
+                ` (your share ${formatMoney(t.myShareCents, t.currency)})`}
+            </span>
+          ))}
+        </span>
+      </div>
+      <div className="grid divide-y">
+        {event.expenses.map((expense) => (
+          <ExpenseItem key={expense.ref} expense={expense} className="rounded-none" />
+        ))}
+      </div>
+      {event.count > event.expenses.length && (
+        <p className="border-t px-3 py-2 text-xs text-muted-foreground">
+          Showing the newest {event.expenses.length} of {event.count}.
+        </p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * An expense the assistant offered to delete. The card is the confirmation
+ * step (the model can only propose), so its button deletes directly.
+ */
+function DeleteOffer({ expense }: { expense: AssistantExpense }) {
+  const removePersonal = useConvexMutation(api.personal.remove)
+  const removeFriendEntry = useConvexMutation(api.friends.removeEntry)
+  const removeGroupExpense = useConvexMutation(api.groups.removeExpense)
+  const [deleted, setDeleted] = useState(false)
+  const { run, pending } = useAction(
+    async () => {
+      if (expense.kind === 'personal') {
+        await removePersonal({ expenseId: expense.id as Id<'personalExpenses'> })
+      } else if (expense.kind === 'friend') {
+        await removeFriendEntry({ entryId: expense.id as Id<'friendEntries'> })
+      } else {
+        await removeGroupExpense({ expenseId: expense.id as Id<'groupExpenses'> })
+      }
+    },
+    { success: 'Deleted', toastErrors: true },
+  )
+  const Icon = KIND_ICON[expense.kind]
+
+  return (
+    <Item variant="outline" size="sm" className={deleted ? 'opacity-60' : 'border-destructive/40'}>
+      <ItemMedia variant="icon" className={deleted ? 'text-muted-foreground' : 'text-destructive'}>
+        {deleted ? <Icon /> : <Trash2 />}
+      </ItemMedia>
+      <ItemContent className="min-w-0">
+        <ItemTitle className="w-full">
+          <span className={deleted ? 'truncate line-through' : 'truncate'}>
+            {expense.description}
+          </span>
+          <span className="tabular-nums">{formatMoney(expense.amountCents, expense.currency)}</span>
+        </ItemTitle>
+        <ItemDescription className="line-clamp-2">
+          {where(expense)} · {formatDate(expense.date)}
+          {expense.detail && ` · ${expense.detail}`}
         </ItemDescription>
       </ItemContent>
-      <ItemActions className="font-semibold tabular-nums">
-        {formatMoney(expense.amountCents, expense.currency)}
+      <ItemActions>
+        {deleted ? (
+          <Badge variant="outline">Deleted</Badge>
+        ) : (
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={pending}
+            onClick={async () => {
+              if (await run()) setDeleted(true)
+            }}
+          >
+            {pending && <Spinner />}
+            Delete
+          </Button>
+        )}
       </ItemActions>
     </Item>
   )
@@ -326,12 +515,18 @@ function Tips({ onExample }: { onExample: (example: string) => void }) {
         </CardHeader>
         <CardContent>
           <ul className="grid list-disc gap-1.5 pl-4 text-muted-foreground">
-            <li>Add personal expenses, one or several at a time.</li>
             <li>
-              Add an expense with a friend: say who paid, and whether it’s split equally or
-              owed in full.
+              Add personal, friend and group expenses: say who paid and how it’s split, or
+              leave it to the defaults.
             </li>
-            <li>Add a group expense: say who paid and who it’s split between (everyone by default).</li>
+            <li>
+              Find expenses by what, when, who, category or amount, with totals and your share.
+            </li>
+            <li>
+              Change any detail of an expense it found or added, like “make that 60” or “Priya
+              paid for it”.
+            </li>
+            <li>Offer to delete an expense; nothing is deleted until you press Delete.</li>
             <li>
               Amounts are in your default currency (set in Settings) unless you name another;
               group expenses use the group’s currency.

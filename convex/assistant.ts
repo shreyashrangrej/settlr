@@ -1,31 +1,50 @@
 import { ConvexError, v } from 'convex/values'
-import { z } from 'zod'
 
 import { formatMoney } from '../src/lib/format'
-import { CATEGORIES, CURRENCIES, type Category, type Currency } from '../src/lib/schemas'
-import { api, internal } from './_generated/api'
+import type { Currency } from '../src/lib/schemas'
+import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
-import { action, env, internalQuery, query, type ActionCtx } from './_generated/server'
-import { myGroups, viewerMemberId } from './groups'
+import { action, env, internalQuery, query } from './_generated/server'
+import { findGroup, myGroups, viewerMemberId } from './groups'
+import {
+  isToolName,
+  runTool,
+  toolDefinitions,
+  type ChatEvent,
+  type Context,
+  type SearchResult,
+} from './lib/assistantTools'
 import { requireUser } from './lib/auth'
+import {
+  friendView,
+  groupView,
+  parseRef,
+  personalView,
+  type ExpenseView,
+} from './lib/expenseView'
 import * as input from './lib/input'
-import { currency } from './lib/validators'
+import { complete, type ChatMessage } from './lib/openrouter'
+import { category, currency } from './lib/validators'
 
-// The assistant (/assistant): people describe expenses in their own words
-// ("Add tea personal expense 50") and an LLM on OpenRouter turns that into
-// calls to the same mutations the forms use, so every value and ownership
-// check still applies. The chat itself lives in the browser; each message
-// sends the recent history along.
+// The assistant (/assistant): people describe what they want in their own
+// words ("Add tea personal expense 50", "What did I spend on food this
+// month?", "Make yesterday's taxi 450") and an LLM on OpenRouter calls tools
+// (convex/lib/assistantTools.ts) that add, find and edit expenses. Deleting
+// is only offered: the user confirms it in the chat. The chat itself lives
+// in the browser; each message sends the recent history along.
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // Model calls per message: tool calls, their results, then the reply.
-const MAX_ROUNDS = 4
+const MAX_ROUNDS = 5
 const MAX_HISTORY = 12
 const MAX_USER_MESSAGE = 500
 const MAX_ASSISTANT_MESSAGE = 2000
+const MAX_MEMO = 4000
 const MAX_FRIENDS = 200
 const MAX_GROUPS = 50
-const TIMEOUT_MS = 45_000
+// A search reads at most this many rows from each kind of expense, and
+// stops after this many matches.
+const SCAN_LIMIT = 2000
+const MAX_MATCHES = 1000
 
 /** Whether the deployment has an OpenRouter key and model. */
 export const status = query({
@@ -34,18 +53,6 @@ export const status = query({
     configured: Boolean(env.OPENROUTER_API_KEY && env.OPENROUTER_MODEL),
   }),
 })
-
-type Context = {
-  name: string
-  friends: Array<{ id: Id<'friends'>; name: string }>
-  groups: Array<{
-    id: Id<'groups'>
-    name: string
-    currency: Currency
-    meMemberId: string
-    members: Array<{ id: string; name: string }>
-  }>
-}
 
 /** The caller's friends and groups, for the model to pick from. */
 export const context = internalQuery({
@@ -72,313 +79,223 @@ export const context = internalQuery({
   },
 })
 
-/** An expense the assistant added, for the chat to show and link to. */
-export type AddedExpense = {
-  kind: 'personal' | 'friend' | 'group'
-  description: string
-  amountCents: number
-  currency: Currency
-  category: Category
-  date: string
-  // The friend's or group's name.
-  with: string | null
-  href: string
+// Lowercase words, for matching descriptions.
+function words(text: string) {
+  return text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean)
 }
 
-// --- Tools ------------------------------------------------------------------
-// Each tool's arguments are a zod schema: it validates what the model sends
-// and, as JSON Schema, tells the model what to send.
-
-const fields = {
-  description: z
-    .string()
-    .trim()
-    .min(1)
-    .max(80)
-    .describe('Short and capitalised, without the amount, e.g. "Tea" or "Dinner at Luigi’s"'),
-  amount: z
-    .number()
-    .positive()
-    .max(1_000_000)
-    .describe('In the main unit of the currency, e.g. 12.5 for 12.50'),
-  currency: z
-    .enum(CURRENCIES)
-    .optional()
-    .describe('Only if the user names a currency; leave out for their default'),
-  category: z.enum(CATEGORIES),
-  // A plain string keeps the schema short; the mutations check the date.
-  date: z
-    .string()
-    .optional()
-    .describe('YYYY-MM-DD, only if the user gives a date; leave out for today'),
-}
-
-const tools = {
-  add_personal_expense: {
-    description: 'Record spending that is just the user’s, not shared with anyone.',
-    args: z.object(fields),
+/**
+ * The caller's expenses that match every filter given, newest first, with
+ * totals over all matches. Dates are inclusive `YYYY-MM-DD` strings; `text`
+ * matches words in the description by prefix ("tea" finds "Tea break").
+ */
+export const search = internalQuery({
+  args: {
+    kind: v.optional(v.union(v.literal('personal'), v.literal('friend'), v.literal('group'))),
+    friendId: v.optional(v.id('friends')),
+    groupId: v.optional(v.id('groups')),
+    text: v.optional(v.string()),
+    category: v.optional(category),
+    from: v.optional(v.string()),
+    to: v.optional(v.string()),
+    minCents: v.optional(v.number()),
+    maxCents: v.optional(v.number()),
+    limit: v.number(),
   },
-  add_friend_expense: {
-    description: 'Record a one-on-one expense shared with one friend.',
-    args: z.object({
-      friend: z.string().describe('The friend’s name, from the list of friends'),
-      ...fields,
-      paid_by: z
-        .enum(['me', 'friend'])
-        .optional()
-        .describe('Who paid: "me" (the user, the default) or "friend"'),
-      split: z
-        .enum(['equal', 'full'])
-        .optional()
-        .describe(
-          '"equal" (the default): each owes half. "full": the person who didn’t pay owes all of it',
-        ),
-    }),
-  },
-  add_group_expense: {
-    description: 'Record an expense in a group, in the group’s currency.',
-    args: z.object({
-      group: z.string().describe('The group’s name, from the list of groups'),
-      description: fields.description,
-      amount: fields.amount,
-      category: fields.category,
-      date: fields.date,
-      paid_by: z
-        .string()
-        .optional()
-        .describe('The name of the member who paid; leave out if the user paid'),
-      split_among: z
-        .array(z.string())
-        .optional()
-        .describe('Names of the members sharing it equally; leave out for everyone'),
-    }),
-  },
-}
-type ToolName = keyof typeof tools
-
-const toolDefinitions = Object.entries(tools).map(([name, tool]) => {
-  const { $schema: _, ...parameters } = z.toJSONSchema(tool.args)
-  return {
-    type: 'function' as const,
-    function: { name, description: tool.description, parameters },
-  }
-})
-
-// Finds someone or something the model named: an exact (case-insensitive)
-// match, else a single one whose name starts with it or has it as a word.
-// Otherwise says what went wrong, for the model to pass on.
-function findByName<T extends { name: string }>(
-  items: Array<T>,
-  name: string,
-  what: string,
-): T | string {
-  const needle = name.trim().toLowerCase()
-  const exact = items.filter((item) => item.name.toLowerCase() === needle)
-  if (exact.length === 1) return exact[0]
-  const close = items.filter((item) => {
-    const lower = item.name.toLowerCase()
-    return lower.startsWith(needle) || lower.split(/\s+/).includes(needle)
-  })
-  if (close.length === 1) return close[0]
-  if (close.length > 1) {
-    return `“${name}” could be ${close.map((item) => item.name).join(' or ')}. Ask which one.`
-  }
-  return `There’s no ${what} called “${name}”.`
-}
-
-type ToolResult = { ok: true; added: AddedExpense } | { ok: false; error: string }
-
-async function runTool(
-  ctx: ActionCtx,
-  context: Context,
-  defaults: { today: string; currency: Currency },
-  name: ToolName,
-  rawArgs: unknown,
-): Promise<ToolResult> {
-  const fail = (error: string): ToolResult => ({ ok: false, error })
-
-  if (name === 'add_personal_expense') {
-    const parsed = tools[name].args.safeParse(rawArgs)
-    if (!parsed.success) return fail(z.prettifyError(parsed.error))
-    const a = parsed.data
-    const expense = {
-      description: a.description,
-      amountCents: Math.round(a.amount * 100),
-      currency: a.currency ?? defaults.currency,
-      category: a.category,
-      date: a.date ?? defaults.today,
+  handler: async (ctx, args): Promise<SearchResult> => {
+    const { userId } = await requireUser(ctx)
+    const from = args.from ? input.isoDate(args.from) : '0000-01-01'
+    const to = args.to ? input.isoDate(args.to) : '9999-12-31'
+    const needles = args.text ? words(args.text) : []
+    const matches = (e: { description: string; category: string; amountCents: number }) => {
+      if (args.category && e.category !== args.category) return false
+      if (args.minCents !== undefined && e.amountCents < args.minCents) return false
+      if (args.maxCents !== undefined && e.amountCents > args.maxCents) return false
+      if (needles.length === 0) return true
+      const have = words(e.description)
+      return needles.every((n) => have.some((w) => w.startsWith(n)))
     }
-    await ctx.runMutation(api.personal.add, expense)
-    return {
-      ok: true,
-      added: {
-        kind: 'personal',
-        ...expense,
-        with: null,
-        href: `/personal?month=${expense.date.slice(0, 7)}`,
-      },
+    // A friend or group filter implies its kind.
+    const kinds =
+      args.friendId || args.groupId
+        ? [...(args.friendId ? ['friend'] : []), ...(args.groupId ? ['group'] : [])]
+        : args.kind
+          ? [args.kind]
+          : ['personal', 'friend', 'group']
+
+    const found: Array<ExpenseView> = []
+    let capped = false
+    async function scan<T>(rows: AsyncIterable<T>, visit: (row: T) => void) {
+      let read = 0
+      for await (const row of rows) {
+        if (++read > SCAN_LIMIT || found.length >= MAX_MATCHES) {
+          capped = true
+          break
+        }
+        visit(row)
+      }
     }
-  }
 
-  if (name === 'add_friend_expense') {
-    const parsed = tools[name].args.safeParse(rawArgs)
-    if (!parsed.success) return fail(z.prettifyError(parsed.error))
-    const a = parsed.data
-    const friend = findByName(context.friends, a.friend, 'friend')
-    if (typeof friend === 'string') return fail(friend)
-    const expense = {
-      description: a.description,
-      amountCents: Math.round(a.amount * 100),
-      currency: a.currency ?? defaults.currency,
-      category: a.category,
-      date: a.date ?? defaults.today,
+    if (kinds.includes('personal')) {
+      await scan(
+        ctx.db
+          .query('personalExpenses')
+          .withIndex('by_userId_and_date', (q) =>
+            q.eq('userId', userId).gte('date', from).lte('date', to),
+          )
+          .order('desc'),
+        (e) => {
+          if (matches(e)) found.push(personalView(e))
+        },
+      )
     }
-    await ctx.runMutation(api.friends.addExpense, {
-      friendId: friend.id,
-      ...expense,
-      paidBy: a.paid_by ?? 'me',
-      split: a.split ?? 'equal',
-    })
-    return {
-      ok: true,
-      added: { kind: 'friend', ...expense, with: friend.name, href: `/friends/${friend.id}` },
-    }
-  }
 
-  const parsed = tools.add_group_expense.args.safeParse(rawArgs)
-  if (!parsed.success) return fail(z.prettifyError(parsed.error))
-  const a = parsed.data
-  const group = findByName(context.groups, a.group, 'group')
-  if (typeof group === 'string') return fail(group)
-  // "me", "I" or the user's own name mean their member.
-  const member = (who: string) => {
-    const lower = who.trim().toLowerCase()
-    if (['me', 'i', 'myself', 'you', context.name.toLowerCase()].includes(lower)) {
-      return group.members.find((m) => m.id === group.meMemberId)!
-    }
-    return findByName(group.members, who, `member of ${group.name}`)
-  }
-  const payer = a.paid_by ? member(a.paid_by) : member('me')
-  if (typeof payer === 'string') return fail(payer)
-  const sharers = (a.split_among ?? []).map(member)
-  const unknown = sharers.find((m) => typeof m === 'string')
-  if (unknown) return fail(unknown)
-  const splitAmong = sharers.length
-    ? sharers.map((m) => (m as { id: string }).id)
-    : group.members.map((m) => m.id)
-  const expense = {
-    description: a.description,
-    amountCents: Math.round(a.amount * 100),
-    category: a.category,
-    date: a.date ?? defaults.today,
-  }
-  await ctx.runMutation(api.groups.addExpense, {
-    groupId: group.id,
-    ...expense,
-    paidBy: payer.id,
-    splitAmong,
-  })
-  return {
-    ok: true,
-    added: {
-      kind: 'group',
-      ...expense,
-      currency: group.currency,
-      with: group.name,
-      href: `/groups/${group.id}`,
-    },
-  }
-}
-
-// --- The model --------------------------------------------------------------
-
-type ToolCall = {
-  id: string
-  type: 'function'
-  function: { name: string; arguments: string }
-}
-type ChatMessage =
-  | { role: 'system' | 'user'; content: string }
-  | { role: 'assistant'; content: string | null; tool_calls?: Array<ToolCall> }
-  | { role: 'tool'; tool_call_id: string; content: string }
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function unavailable(): never {
-  throw new ConvexError('The assistant is unavailable right now. Try again in a moment.')
-}
-
-// One chat completion: the model's text and any tool calls it made.
-async function complete(apiKey: string, model: string, messages: Array<ChatMessage>) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
-  let response: Response
-  try {
-    response = await fetch(OPENROUTER_URL, {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        'content-type': 'application/json',
-        // Optional attribution for OpenRouter's app rankings.
-        'HTTP-Referer': env.SITE_URL,
-        'X-Title': 'Settlr',
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        tools: toolDefinitions,
-        tool_choice: 'auto',
-        temperature: 0.2,
-        max_tokens: 1000,
-      }),
-      signal: controller.signal,
-    })
-  } catch (err) {
-    console.error('OpenRouter request failed', err)
-    unavailable()
-  } finally {
-    clearTimeout(timer)
-  }
-  if (!response.ok) {
-    console.error(`OpenRouter responded ${response.status}`, await response.text())
-    unavailable()
-  }
-
-  const body: unknown = await response.json()
-  const choice = isRecord(body) && Array.isArray(body.choices) ? body.choices[0] : null
-  const message = isRecord(choice) && isRecord(choice.message) ? choice.message : null
-  if (!message) {
-    console.error('Unexpected OpenRouter response', body)
-    unavailable()
-  }
-  const toolCalls: Array<ToolCall> = []
-  if (Array.isArray(message.tool_calls)) {
-    for (const call of message.tool_calls) {
-      if (
-        isRecord(call) &&
-        typeof call.id === 'string' &&
-        isRecord(call.function) &&
-        typeof call.function.name === 'string'
-      ) {
-        toolCalls.push({
-          id: call.id,
-          type: 'function',
-          function: {
-            name: call.function.name,
-            arguments:
-              typeof call.function.arguments === 'string' ? call.function.arguments : '{}',
-          },
+    if (kinds.includes('friend')) {
+      const friends = new Map(
+        (
+          await ctx.db
+            .query('friends')
+            .withIndex('by_userId', (q) => q.eq('userId', userId))
+            .take(500)
+        ).map((f) => [f._id, f]),
+      )
+      const friendId = args.friendId
+      if (!friendId || friends.has(friendId)) {
+        const rows = friendId
+          ? ctx.db
+              .query('friendEntries')
+              .withIndex('by_friendId_and_date', (q) =>
+                q.eq('friendId', friendId).gte('date', from).lte('date', to),
+              )
+          : ctx.db
+              .query('friendEntries')
+              .withIndex('by_userId_and_date', (q) =>
+                q.eq('userId', userId).gte('date', from).lte('date', to),
+              )
+        await scan(rows.order('desc'), (e) => {
+          const friend = friends.get(e.friendId)
+          if (e.kind === 'expense' && e.userId === userId && friend && matches(e)) {
+            found.push(friendView(e, friend))
+          }
         })
       }
     }
-  }
-  return {
-    content: typeof message.content === 'string' ? message.content.trim() : '',
-    toolCalls,
-  }
-}
+
+    if (kinds.includes('group')) {
+      const groups = args.groupId
+        ? [await findGroup(ctx, userId, args.groupId)].filter((g) => g !== null)
+        : await myGroups(ctx, userId)
+      for (const group of groups) {
+        const me = viewerMemberId(group, userId)
+        if (!me) continue
+        await scan(
+          ctx.db
+            .query('groupExpenses')
+            .withIndex('by_groupId_and_date', (q) =>
+              q.eq('groupId', group._id).gte('date', from).lte('date', to),
+            )
+            .order('desc'),
+          (e) => {
+            if (matches(e)) found.push(groupView(e, group, me))
+          },
+        )
+      }
+    }
+
+    found.sort((a, b) => b.date.localeCompare(a.date))
+    const totals = new Map<Currency, { cents: number; myShareCents: number }>()
+    for (const e of found) {
+      const row = totals.get(e.currency) ?? { cents: 0, myShareCents: 0 }
+      row.cents += e.amountCents
+      row.myShareCents += e.myShareCents
+      totals.set(e.currency, row)
+    }
+    return {
+      expenses: found.slice(0, input.listLimit(Math.min(args.limit, 50))),
+      count: found.length,
+      totals: [...totals]
+        .map(([currency, row]) => ({ currency, ...row }))
+        .sort((a, b) => b.cents - a.cents),
+      capped,
+    }
+  },
+})
+
+/** One of the caller's expenses, with what editing it needs. */
+export type ExpenseDetail =
+  | {
+      kind: 'personal'
+      id: Id<'personalExpenses'>
+      view: ExpenseView
+      receiptId: Id<'receipts'> | null
+    }
+  | {
+      kind: 'friend'
+      id: Id<'friendEntries'>
+      view: ExpenseView
+      receiptId: Id<'receipts'> | null
+      paidBy: 'me' | 'friend'
+      split: 'equal' | 'full'
+    }
+  | {
+      kind: 'group'
+      id: Id<'groupExpenses'>
+      view: ExpenseView
+      receiptId: Id<'receipts'> | null
+      paidBy: string
+      splitAmong: Array<string>
+      meMemberId: string
+      members: Array<{ id: string; name: string }>
+    }
+
+/** An expense by its ref ("personal:<id>"), or null if it isn't the caller's. */
+export const expense = internalQuery({
+  args: { ref: v.string() },
+  handler: async (ctx, args): Promise<ExpenseDetail | null> => {
+    const { userId } = await requireUser(ctx)
+    const ref = parseRef(args.ref)
+    if (!ref) return null
+
+    if (ref.kind === 'personal') {
+      const id = ctx.db.normalizeId('personalExpenses', ref.id)
+      const e = id ? await ctx.db.get('personalExpenses', id) : null
+      if (!e || e.userId !== userId) return null
+      return { kind: 'personal', id: e._id, view: personalView(e), receiptId: e.receiptId ?? null }
+    }
+
+    if (ref.kind === 'friend') {
+      const id = ctx.db.normalizeId('friendEntries', ref.id)
+      const e = id ? await ctx.db.get('friendEntries', id) : null
+      if (!e || e.kind !== 'expense' || e.userId !== userId) return null
+      const friend = await ctx.db.get('friends', e.friendId)
+      if (!friend) return null
+      return {
+        kind: 'friend',
+        id: e._id,
+        view: friendView(e, friend),
+        receiptId: e.receiptId ?? null,
+        paidBy: e.paidBy,
+        split: e.split,
+      }
+    }
+
+    const id = ctx.db.normalizeId('groupExpenses', ref.id)
+    const e = id ? await ctx.db.get('groupExpenses', id) : null
+    const group = e ? await findGroup(ctx, userId, e.groupId) : null
+    const me = group ? viewerMemberId(group, userId) : null
+    if (!e || !group || !me) return null
+    return {
+      kind: 'group',
+      id: e._id,
+      view: groupView(e, group, me),
+      receiptId: e.receiptId ?? null,
+      paidBy: e.paidBy,
+      splitAmong: e.splitAmong,
+      meMemberId: me,
+      members: group.members.map((m) => ({ id: m.id, name: m.name })),
+    }
+  },
+})
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -398,7 +315,7 @@ function systemPrompt(context: Context, today: string, defaultCurrency: Currency
         .join('\n')
     : '(none yet)'
 
-  return `You are the assistant in Settlr, an app for tracking and splitting expenses. You record the expenses the user describes by calling tools.
+  return `You are the assistant in Settlr, an app for tracking and splitting expenses. You add, find and change the user's expenses by calling tools.
 
 Today is ${weekday}, ${today}. The user is ${JSON.stringify(context.name)}. Their default currency is ${defaultCurrency}.
 
@@ -407,35 +324,65 @@ Their friends: ${friends}
 Their groups (currency, then members):
 ${groups}
 
-How to record an expense:
-- Personal (add_personal_expense): spending that's just theirs. Use this when nobody else is involved.
-- With a friend (add_friend_expense): a one-on-one expense with someone from the friends list. paid_by is "me" when the user paid and "friend" when the friend did. split is "equal" when they share it, "full" when the person who didn't pay owes all of it (e.g. "I paid for Sam's lunch" is paid_by "me", split "full").
-- In a group (add_group_expense): when the user names a group, or several people from one group. It's always in the group's currency.
+Kinds of expense:
+- Personal: spending that's just theirs. Use this when nobody else is involved.
+- With a friend: a one-on-one expense with someone from the friends list. paid_by is "me" when the user paid and "friend" when the friend did. split is "equal" when they share it, "full" when the person who didn't pay owes all of it (e.g. "I paid for Sam's lunch" is paid_by "me", split "full").
+- In a group: when the user names a group, or several people from one group. It's always in the group's currency.
 
-Rules:
-- Only act on the latest message. Earlier messages were already handled; never add their expenses again.
+Adding:
 - Never guess an amount. If the amount is missing, or it's unclear who the expense is with, ask one short question instead of calling a tool.
 - Pick the closest category: food (meals, snacks, tea, coffee, restaurants), groceries, transport (taxi, fuel, parking, trains, flights), lodging (hotels, rent), utilities (bills, phone, internet), entertainment (movies, events, subscriptions), other.
-- Work out relative dates ("yesterday", "last Friday") from today.
 - One message can describe several expenses; add each of them.
-- You can only add expenses. For anything else (editing, deleting, balances, settling up), say it can be done on the matching page of the app.
-- After adding, reply in one or two short sentences saying what was added and where. If a tool returned an error, explain it plainly and say what the user can do.
+
+Finding (search_expenses):
+- Use it for any question about their expenses or spending: lists, totals, "how much did I spend on...". Turn periods into date_from/date_to ("this month" is from the 1st to today).
+- "amount" is the whole expense; "your_share" is what it cost the user. When they ask what they spent, use your_share totals.
+- The app shows the matching expenses under your reply, so answer in a sentence or two (how many, the totals) instead of listing them all.
+
+Changing and deleting:
+- You need the expense's ref: take it from earlier in the conversation, or call search_expenses first. If more than one expense fits and it's unclear which one they mean, ask. Never guess.
+- update_expense changes it right away. delete_expense only offers it: tell the user to press Delete under your reply to confirm.
+- You can't move an expense between personal, a friend and a group, change a group expense's currency, record settle-up payments or handle receipts; say those are done in the app.
+
+Always:
+- Only act on the latest message. Earlier messages were already handled; never repeat their changes.
+- Work out relative dates ("yesterday", "last Friday") from today.
+- Reply briefly with what you did or found. If a tool returned an error, explain it plainly and say what the user can do.
 - Plain text only, no markdown.`
 }
 
-function summarize(added: Array<AddedExpense>) {
-  return `Added ${added
+// A line per expense in this reply, sent back with it as history, so a
+// follow-up ("make that 60") can name them by ref.
+function memoOf(events: Array<ChatEvent>) {
+  const seen = new Map<string, ExpenseView>()
+  for (const event of events) {
+    const list = event.type === 'found' ? event.expenses : [event.expense]
+    for (const e of list) seen.set(e.ref, e)
+  }
+  return [...seen.values()]
+    .slice(0, 40)
     .map(
       (e) =>
-        `${e.description} (${formatMoney(e.amountCents, e.currency)}${e.with ? `, ${e.with}` : ''})`,
+        `${e.ref} | ${e.description} | ${formatMoney(e.amountCents, e.currency)} | ${e.date} | ${e.with ?? 'personal'}`,
     )
-    .join(', ')}.`
+    .join('\n')
+    .slice(0, MAX_MEMO)
+}
+
+function summarize(events: Array<ChatEvent>) {
+  const count = (type: ChatEvent['type']) => events.filter((e) => e.type === type).length
+  const parts = [
+    count('added') && `added ${count('added')}`,
+    count('updated') && `updated ${count('updated')}`,
+  ].filter(Boolean)
+  return parts.length ? `Done: ${parts.join(', ')}.` : 'Done.'
 }
 
 /**
- * Handles the latest chat message: the model may add expenses (as the
- * caller) and replies. `today` and `currency` are the viewer's local date
- * and default currency.
+ * Handles the latest chat message: the model may add, find and change
+ * expenses (as the caller) and replies. `today` and `currency` are the
+ * viewer's local date and default currency. `memo` on an assistant message
+ * is what that reply returned.
  */
 export const send = action({
   args: {
@@ -443,12 +390,16 @@ export const send = action({
       v.object({
         role: v.union(v.literal('user'), v.literal('assistant')),
         content: v.string(),
+        memo: v.optional(v.string()),
       }),
     ),
     today: v.string(),
     currency,
   },
-  handler: async (ctx, args): Promise<{ reply: string; added: Array<AddedExpense> }> => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ reply: string; events: Array<ChatEvent>; memo: string }> => {
     const context: Context = await ctx.runQuery(internal.assistant.context, {})
     const apiKey = env.OPENROUTER_API_KEY
     const model = env.OPENROUTER_MODEL
@@ -460,33 +411,49 @@ export const send = action({
     if (history.at(-1)?.role !== 'user') throw new ConvexError('Type a message.')
     const messages: Array<ChatMessage> = [
       { role: 'system', content: systemPrompt(context, today, args.currency) },
-      ...history.map((m) =>
-        m.role === 'user'
-          ? { role: 'user' as const, content: input.text(m.content, 'Message', MAX_USER_MESSAGE) }
-          : { role: 'assistant' as const, content: m.content.slice(0, MAX_ASSISTANT_MESSAGE) },
-      ),
+      ...history.map((m): ChatMessage => {
+        if (m.role === 'user') {
+          return { role: 'user', content: input.text(m.content, 'Message', MAX_USER_MESSAGE) }
+        }
+        const memo = m.memo?.slice(0, MAX_MEMO)
+        return {
+          role: 'assistant',
+          content:
+            m.content.slice(0, MAX_ASSISTANT_MESSAGE) +
+            (memo ? `\n\n[Expenses in this reply, as ref | description | amount | date | with:\n${memo}]` : ''),
+        }
+      }),
     ]
 
-    const added: Array<AddedExpense> = []
+    const events: Array<ChatEvent> = []
+    let reply: string | null = null
     for (let round = 0; round < MAX_ROUNDS; round++) {
-      const { content, toolCalls } = await complete(apiKey, model, messages)
+      const { content, toolCalls } = await complete({
+        apiKey,
+        model,
+        messages,
+        tools: toolDefinitions,
+      })
       if (toolCalls.length === 0) {
-        return { reply: content || (added.length ? summarize(added) : 'Done.'), added }
+        reply = content
+        break
       }
       messages.push({ role: 'assistant', content: content || null, tool_calls: toolCalls })
       for (const call of toolCalls) {
-        let result: ToolResult
-        if (!(call.function.name in tools)) {
+        let result: Record<string, unknown>
+        if (!isToolName(call.function.name)) {
           result = { ok: false, error: `There’s no tool called ${call.function.name}.` }
         } else {
           try {
-            result = await runTool(
+            const outcome = await runTool(
               ctx,
               context,
               { today, currency: args.currency },
-              call.function.name as ToolName,
+              call.function.name,
               JSON.parse(call.function.arguments),
             )
+            result = outcome.result
+            events.push(...outcome.events)
           } catch (err) {
             // Mutations throw ConvexError for anything the user can fix.
             if (!(err instanceof ConvexError) && !(err instanceof SyntaxError)) {
@@ -501,14 +468,19 @@ export const send = action({
             }
           }
         }
-        if (result.ok) added.push(result.added)
         messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) })
       }
     }
-    // Out of rounds: say what did happen.
+
+    // Searches made only to find something to change aren't worth showing.
+    const changed = events.some((e) => e.type === 'updated' || e.type === 'delete')
+    const shown = changed ? events.filter((e) => e.type !== 'found') : events
     return {
-      reply: added.length ? summarize(added) : 'Sorry, I couldn’t work that out. Try rephrasing it.',
-      added,
+      reply:
+        reply ||
+        (events.length ? summarize(events) : 'Sorry, I couldn’t work that out. Try rephrasing it.'),
+      events: shown,
+      memo: memoOf(shown),
     }
   },
 })

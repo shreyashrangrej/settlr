@@ -280,7 +280,7 @@ async function record(
   })
 
   const counterpart = await linkedCounterpart(ctx, friend)
-  if (!counterpart) return
+  if (!counterpart) return entryId
   const { twin } = await mirrorEntry(ctx, entryId, entry, counterpart)
   const theirDelta = friendDelta(twin)
   await ctx.db.patch('friends', counterpart._id, {
@@ -296,6 +296,7 @@ async function record(
     currency: entry.currency,
     friendId: counterpart._id,
   })
+  return entryId
 }
 
 export const addExpense = mutation({
@@ -310,11 +311,11 @@ export const addExpense = mutation({
     date: v.string(),
     receiptId: v.optional(v.id('receipts')),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<Id<'friendEntries'>> => {
     const me = await requireUser(ctx)
     const friend = await requireFriend(ctx, me.userId, args.friendId)
     const receiptId = await attachReceipt(ctx, me.userId, args.receiptId)
-    await record(ctx, me, friend, {
+    return await record(ctx, me, friend, {
       kind: 'expense',
       userId: me.userId,
       friendId: friend._id,
@@ -327,7 +328,6 @@ export const addExpense = mutation({
       date: input.isoDate(args.date),
       receiptId,
     })
-    return null
   },
 })
 

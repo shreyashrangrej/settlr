@@ -42,13 +42,15 @@ overview of these areas:
   payment with you, adds you to a group or accepts your request. The bell
   shows the count and opens a dropdown with the latest ones; "More" opens the
   full list.
-- **Assistant**: a chat that adds expenses from plain language, e.g. "Add
-  tea personal expense 50", "Lunch with Sam 30, split equally" or "Taxi 600
-  in the Goa trip, paid by Priya". An LLM on [OpenRouter](https://openrouter.ai)
-  picks the kind of expense, category, date and people, and calls the same
-  Convex mutations as the forms. It's off until `OPENROUTER_API_KEY` and
-  `OPENROUTER_MODEL` (any model with tool calling) are set on the Convex
-  deployment.
+- **Assistant**: a chat for expenses in plain language. It adds them ("Add
+  tea personal expense 50", "Taxi 600 in the Goa trip, paid by Priya"),
+  finds them with totals and your share ("How much did I spend on food this
+  month?", "Show my expenses with Sam"), and edits them ("Change the tea to
+  60"). It can offer to delete one, but nothing is deleted until you press
+  Delete in the chat. An LLM on [OpenRouter](https://openrouter.ai) calls
+  tools that go through the same Convex mutations as the forms. It's off
+  until `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` (any model with tool
+  calling) are set on the Convex deployment.
 
 Every expense can be edited after it's added (a linked friend's copy and
 group balances follow), and can carry a **receipt**: an image (JPEG, PNG,
@@ -68,7 +70,7 @@ convex/                    backend: schema, queries and mutations
   schema.ts                tables and indexes
   friends.ts groups.ts personal.ts budgets.ts notifications.ts
   receipts.ts              receipt uploads (Convex file storage) and viewing
-  assistant.ts             the chat assistant: OpenRouter call and its tools
+  assistant.ts             the chat assistant (tools in lib/assistantTools.ts)
   lib/                     auth helper, input checks, balance math, receipts
   auth.ts http.ts          Better Auth running inside Convex
 src/

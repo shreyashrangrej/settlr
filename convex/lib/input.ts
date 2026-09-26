@@ -27,9 +27,12 @@ export function amount(cents: number) {
 }
 
 export function isoDate(date: string) {
+  // An impossible date (month 13) is an Invalid Date, whose toISOString throws.
+  const parsed = new Date(`${date}T00:00:00Z`)
   if (
     !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
-    new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date
+    Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== date
   ) {
     throw new ConvexError('Enter a valid date.')
   }

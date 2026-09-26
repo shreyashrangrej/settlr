@@ -92,7 +92,7 @@ export const add = mutation({
   args: { ...fields, receiptId: v.optional(v.id('receipts')) },
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx)
-    await ctx.db.insert('personalExpenses', {
+    return await ctx.db.insert('personalExpenses', {
       userId,
       description: input.text(args.description, 'Description', 80),
       amountCents: input.amount(args.amountCents),
@@ -101,7 +101,6 @@ export const add = mutation({
       date: input.isoDate(args.date),
       receiptId: await attachReceipt(ctx, userId, args.receiptId),
     })
-    return null
   },
 })
 

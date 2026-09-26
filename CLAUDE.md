@@ -36,8 +36,10 @@ force-push `main`.
   receipts, budgets, notifications), `friends.ts`, `groups.ts`,
   `personal.ts`, `budgets.ts`, `notifications.ts`, `receipts.ts` (queries
   and mutations), `assistant.ts` (the `/assistant` chat: an action that
-  calls OpenRouter with tool calling and runs the tools through the public
-  mutations above, as the caller), and `lib/` (`requireUser`, value checks in `input.ts`,
+  calls OpenRouter with tool calling, plus the internal queries its search
+  and edit tools read through; the tools, in `lib/assistantTools.ts`, write
+  through the public mutations above as the caller, and deleting is only
+  offered, the user confirms it in the chat), and `lib/` (`requireUser`, value checks in `input.ts`,
   balance math in `ledger.ts`, receipt attach/delete in `receipts.ts`, enum
   validators). `auth.ts` is the Better Auth instance
   (email OTP + Google), `http.ts` mounts its routes, `convex.config.ts`
