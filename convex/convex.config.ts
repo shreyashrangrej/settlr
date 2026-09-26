@@ -18,6 +18,10 @@ const app = defineApp({
     // instead of being emailed (fine for local development only).
     RESEND_API_KEY: v.optional(v.string()),
     AUTH_EMAIL_FROM: v.optional(v.string()),
+    // The assistant (/assistant) sends chat messages to this OpenRouter
+    // model, which must support tool calling. It's off until both are set.
+    OPENROUTER_API_KEY: v.optional(v.string()),
+    OPENROUTER_MODEL: v.optional(v.string()),
   },
 })
 

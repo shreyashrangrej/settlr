@@ -219,6 +219,18 @@ export function BudgetSkeleton() {
   )
 }
 
+/** The assistant: the chat and its tips. */
+export function AssistantSkeleton() {
+  return (
+    <Status>
+      <HeaderSkeleton />
+      <Split aside={<SideCardSkeleton lines={4} />}>
+        <Skeleton className="h-[min(65vh,40rem)] w-full rounded-xl" />
+      </Split>
+    </Status>
+  )
+}
+
 /** The receipt viewer: a centered header and the file. */
 export function ReceiptSkeleton() {
   return (

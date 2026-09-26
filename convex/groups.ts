@@ -28,7 +28,7 @@ function memberUserId(group: Doc<'groups'>, member: Member) {
 }
 
 // Which member the viewer is (the owner, or a linked member).
-function viewerMemberId(group: Doc<'groups'>, userId: string) {
+export function viewerMemberId(group: Doc<'groups'>, userId: string) {
   return group.members.find((m) => memberUserId(group, m) === userId)?.id ?? null
 }
 
@@ -82,29 +82,34 @@ async function syncMemberships(ctx: MutationCtx, group: Doc<'groups'>) {
   return rows.map((row) => row.userId)
 }
 
+// The groups a user owns or is a linked member of, newest first.
+export async function myGroups(ctx: QueryCtx, userId: string) {
+  const owned = await ctx.db
+    .query('groups')
+    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .order('desc')
+    .take(MAX_GROUPS)
+  const memberships = await ctx.db
+    .query('groupMembers')
+    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .take(MAX_GROUPS)
+  const joined = await Promise.all(
+    memberships.map((m) => ctx.db.get('groups', m.groupId)),
+  )
+  return [
+    ...owned,
+    ...joined.filter(
+      (g): g is Doc<'groups'> => g !== null && viewerMemberId(g, userId) !== null,
+    ),
+  ].sort((a, b) => b._creationTime - a._creationTime)
+}
+
 /** The caller's groups, newest first, with where they stand in each. */
 export const list = query({
   args: {},
   handler: async (ctx) => {
     const { userId } = await requireUser(ctx)
-    const owned = await ctx.db
-      .query('groups')
-      .withIndex('by_userId', (q) => q.eq('userId', userId))
-      .order('desc')
-      .take(MAX_GROUPS)
-    const memberships = await ctx.db
-      .query('groupMembers')
-      .withIndex('by_userId', (q) => q.eq('userId', userId))
-      .take(MAX_GROUPS)
-    const joined = await Promise.all(
-      memberships.map((m) => ctx.db.get('groups', m.groupId)),
-    )
-    const groups = [
-      ...owned,
-      ...joined.filter(
-        (g): g is Doc<'groups'> => g !== null && viewerMemberId(g, userId) !== null,
-      ),
-    ].sort((a, b) => b._creationTime - a._creationTime)
+    const groups = await myGroups(ctx, userId)
     return groups.map((group) => ({
       id: group._id,
       name: group.name,

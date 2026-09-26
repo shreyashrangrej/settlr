@@ -35,7 +35,9 @@ force-push `main`.
   (friends, friendEntries, groups, groupExpenses, personalExpenses,
   receipts, budgets, notifications), `friends.ts`, `groups.ts`,
   `personal.ts`, `budgets.ts`, `notifications.ts`, `receipts.ts` (queries
-  and mutations), and `lib/` (`requireUser`, value checks in `input.ts`,
+  and mutations), `assistant.ts` (the `/assistant` chat: an action that
+  calls OpenRouter with tool calling and runs the tools through the public
+  mutations above, as the caller), and `lib/` (`requireUser`, value checks in `input.ts`,
   balance math in `ledger.ts`, receipt attach/delete in `receipts.ts`, enum
   validators). `auth.ts` is the Better Auth instance
   (email OTP + Google), `http.ts` mounts its routes, `convex.config.ts`
@@ -172,7 +174,10 @@ force-push `main`.
   `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (Google sign-in is off until
   both are set) and `RESEND_API_KEY`/`AUTH_EMAIL_FROM`. Without a Resend
   key, sign-in codes are only logged: read them with
-  `pnpm exec convex logs`. Set values with the `NAME=value` form.
+  `pnpm exec convex logs`. The assistant needs `OPENROUTER_API_KEY` and
+  `OPENROUTER_MODEL` (an OpenRouter model slug that supports tool calling);
+  without them `/assistant` says it isn't set up. Set values with the
+  `NAME=value` form.
 - `better-auth` is pinned to the exact version `@convex-dev/better-auth` is
   built against (1.6.15). Newer 1.6.x releases break the
   `ConvexBetterAuthProvider` types. Upgrade the two together.

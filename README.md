@@ -42,6 +42,13 @@ overview of these areas:
   payment with you, adds you to a group or accepts your request. The bell
   shows the count and opens a dropdown with the latest ones; "More" opens the
   full list.
+- **Assistant**: a chat that adds expenses from plain language, e.g. "Add
+  tea personal expense 50", "Lunch with Sam 30, split equally" or "Taxi 600
+  in the Goa trip, paid by Priya". An LLM on [OpenRouter](https://openrouter.ai)
+  picks the kind of expense, category, date and people, and calls the same
+  Convex mutations as the forms. It's off until `OPENROUTER_API_KEY` and
+  `OPENROUTER_MODEL` (any model with tool calling) are set on the Convex
+  deployment.
 
 Every expense can be edited after it's added (a linked friend's copy and
 group balances follow), and can carry a **receipt**: an image (JPEG, PNG,
@@ -61,6 +68,7 @@ convex/                    backend: schema, queries and mutations
   schema.ts                tables and indexes
   friends.ts groups.ts personal.ts budgets.ts notifications.ts
   receipts.ts              receipt uploads (Convex file storage) and viewing
+  assistant.ts             the chat assistant: OpenRouter call and its tools
   lib/                     auth helper, input checks, balance math, receipts
   auth.ts http.ts          Better Auth running inside Convex
 src/
@@ -69,7 +77,8 @@ src/
     page.tsx               landing hero and sign-in
     (app)/                 signed-in area; its layout redirects signed-out
                            visitors. dashboard, friends, groups, personal,
-                           budget, notifications, receipts/[source]/[expenseId]
+                           budget, notifications, assistant,
+                           receipts/[source]/[expenseId]
     settings/              browser preferences
     api/auth/[...all]/     Better Auth proxy to Convex
     api/health/            liveness probe
@@ -126,6 +135,7 @@ preferences in `src/lib/preferences.ts` throw if called on the server.
 | `/groups/[groupId]` (+ expenses)       | server               | Shareable, filterable URLs render fully on the server. Adding and editing an expense are pages under it.            |
 | `/receipts/[source]/[expenseId]`       | server               | The receipt's URL and its expense are prefetched; images show inline and PDFs in the browser's viewer.               |
 | `/groups/[groupId]/insights`, `/notifications` | data on the server, UI in the browser | The UI uses the viewer's locale, time zone and clock, so it renders in `<ClientOnly>` (the server sends the skeleton). |
+| `/assistant`                           | server               | Only whether the assistant is set up is prefetched; the conversation lives in the browser and isn't saved.          |
 | `/settings`                            | browser              | Preferences live in localStorage.                                                                                    |
 | `/api/health`                          | route handler        | JSON liveness probe for load balancers and platform health checks.                                                  |
 
