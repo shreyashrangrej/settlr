@@ -3,45 +3,21 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import {
-  ArrowDownLeft,
-  ArrowRight,
-  ArrowUpRight,
-  Plus,
-  Users,
-  UsersRound,
-  Wallet,
-} from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, Plus, Users, Wallet } from 'lucide-react'
 
-import { budgetStatus } from '#/components/budget'
+import { BudgetProgress, spentIn } from '#/components/budget'
+import {
+  BalanceText,
+  GroupAvatar,
+  PersonAvatar,
+  SignedAmount,
+  sumBalances,
+} from '#/components/ledger'
+import { PageHeader, SplitLayout } from '#/components/page-header'
 import { useSession } from '#/components/providers'
-import { PageHeader } from '#/components/page-header'
-import { StatCard, StatGrid } from '#/components/stat-card'
-import { BalanceText, PersonAvatar, SignedAmount, sumBalances } from '#/components/ledger'
+import { Panel, PanelList, PanelRow, Section, SectionLink } from '#/components/section'
+import { Stat, StatStrip } from '#/components/stats'
 import { buttonVariants } from '#/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '#/components/ui/empty'
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from '#/components/ui/item'
 import {
   categoryLabel,
   formatBalances,
@@ -55,8 +31,11 @@ import { api } from '#convex/_generated/api'
 
 const PREVIEW = 5
 
-/** The signed-in home: one live summary of friends, groups and spending. */
-export function DashboardView({ month }: { month: string }) {
+/**
+ * The signed-in home: one live summary of friends, groups and spending.
+ * `month` and `today` come from the server, so both renders agree.
+ */
+export function DashboardView({ month, today }: { month: string; today: string }) {
   const { user } = useSession()
   const { data: friends } = useSuspenseQuery(convexQuery(api.friends.list, {}))
   const { data: groups } = useSuspenseQuery(convexQuery(api.groups.list, {}))
@@ -73,9 +52,6 @@ export function DashboardView({ month }: { month: string }) {
   const budget = budgets.find(
     (b) => b.currency === (mainSpend?.currency ?? budgets[0]?.currency),
   )
-  const budgetState = budget
-    ? budgetStatus(mainSpend?.total ?? 0, budget.amountCents)
-    : null
 
   // Where you stand overall: friends' balances plus your net in each group.
   const { owed, owe } = sumBalances([
@@ -109,164 +85,160 @@ export function DashboardView({ month }: { month: string }) {
         }
       />
 
-      <StatGrid className="mb-6">
-        <StatCard
+      <StatStrip className="mb-8">
+        <Stat
           label="You are owed"
           icon={<ArrowDownLeft />}
           tone="positive"
           value={formatBalances(owed)}
         />
-        <StatCard
+        <Stat
           label="You owe"
           icon={<ArrowUpRight />}
           tone="negative"
           value={formatBalances(owe)}
         />
-        <StatCard
-          label={`Spent · ${formatMonth(month)}`}
+        <Stat
+          label={`Spent in ${formatMonth(month)}`}
           icon={<Wallet />}
           value={spending.map((t) => formatMoney(t.total, t.currency)).join(' + ')}
-          tone={budgetState?.tone === 'over' ? 'negative' : undefined}
-          hint={
-            budget
-              ? `of ${formatMoney(budget.amountCents, budget.currency)} budget · ${budgetState?.label}`
-              : 'Personal, friends and groups'
-          }
+          hint="Personal, plus your share with friends and in groups"
         />
-        <StatCard
+        <Stat
           label="Friends and groups"
           icon={<Users />}
           value={friends.length + groups.length || ''}
           hint={`${plural(friends.length, 'friend')} · ${plural(groups.length, 'group')}`}
         />
-      </StatGrid>
+      </StatStrip>
 
-      <div className="grid items-start gap-4 lg:grid-cols-3">
+      <SplitLayout
+        aside={
+          <>
+            <Section
+              title={formatMonth(month)}
+              description="Your budget and latest spending"
+              actions={<SectionLink href="/budget">Budget</SectionLink>}
+            >
+              {budget ? (
+                <BudgetProgress
+                  budget={budget}
+                  spent={spentIn(spending, budget.currency)}
+                  month={month}
+                  today={today}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No budget yet.{' '}
+                  <Link href="/budget" className="font-medium text-primary">
+                    Set one
+                  </Link>{' '}
+                  to see how the month is going.
+                </p>
+              )}
+            </Section>
+
+            <Section
+              title="Recent personal spending"
+              actions={<SectionLink href="/personal">All</SectionLink>}
+            >
+              {personal.items.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nothing logged in {formatMonth(month)} yet.
+                </p>
+              ) : (
+                <ul className="-my-2 divide-y">
+                  {personal.items.slice(0, PREVIEW).map((expense) => (
+                    <li key={expense.id} className="flex items-center gap-3 py-2.5">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">
+                          {expense.description}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {formatDate(expense.date)} · {categoryLabel(expense.category)}
+                        </span>
+                      </span>
+                      <span className="text-sm font-semibold tabular-nums">
+                        {formatMoney(expense.amountCents, expense.currency)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          </>
+        }
+      >
         <Section
           title="Friends"
           description="One-on-one balances"
-          icon={<UsersRound />}
-          to="/friends"
-          empty={friends.length === 0 && 'Add a friend to split one-on-one.'}
+          actions={<SectionLink href="/friends">All friends</SectionLink>}
         >
-          {friends.slice(0, PREVIEW).map((friend) => (
-            <Item key={friend.id} size="sm" render={<Link href={`/friends/${friend.id}`} />}>
-              <ItemMedia>
-                <PersonAvatar name={friend.name} size="sm" />
-              </ItemMedia>
-              <ItemContent>
-                <ItemTitle>{friend.name}</ItemTitle>
-              </ItemContent>
-              <ItemActions className="text-right text-xs">
-                <BalanceText balances={friend.balances} />
-              </ItemActions>
-            </Item>
-          ))}
+          <Panel>
+            {friends.length === 0 ? (
+              <EmptyRow>
+                Add a friend to split one-on-one. <Link href="/friends">Go to friends</Link>
+              </EmptyRow>
+            ) : (
+              <PanelList>
+                {friends.slice(0, PREVIEW).map((friend) => (
+                  <PanelRow key={friend.id} href={`/friends/${friend.id}`}>
+                    <PersonAvatar name={friend.name} />
+                    <span className="min-w-0 flex-1 truncate font-medium">{friend.name}</span>
+                    <BalanceText balances={friend.balances} className="text-right text-sm" />
+                  </PanelRow>
+                ))}
+              </PanelList>
+            )}
+          </Panel>
         </Section>
 
         <Section
           title="Groups"
           description="Trips, flats and dinners"
-          icon={<Users />}
-          to="/groups"
-          empty={groups.length === 0 && 'Start a group for a trip or a flat.'}
+          actions={<SectionLink href="/groups">All groups</SectionLink>}
         >
-          {groups.slice(0, PREVIEW).map((group) => (
-            <Item key={group.id} size="sm" render={<Link href={`/groups/${group.id}`} />}>
-              <ItemContent>
-                <ItemTitle>{group.name}</ItemTitle>
-                <ItemDescription>
-                  {group.memberCount} members ·{' '}
-                  {formatMoney(group.totalCents, group.currency)} total
-                </ItemDescription>
-              </ItemContent>
-              <ItemActions className="text-xs">
-                {group.myNetCents === 0 ? (
-                  <span className="text-muted-foreground">Square</span>
-                ) : (
-                  <SignedAmount cents={group.myNetCents} currency={group.currency} />
-                )}
-              </ItemActions>
-            </Item>
-          ))}
+          <Panel>
+            {groups.length === 0 ? (
+              <EmptyRow>
+                Start a group for a trip or a flat. <Link href="/groups/new">New group</Link>
+              </EmptyRow>
+            ) : (
+              <PanelList>
+                {groups.slice(0, PREVIEW).map((group) => (
+                  <PanelRow key={group.id} href={`/groups/${group.id}`}>
+                    <GroupAvatar name={group.name} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{group.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {group.memberCount} members ·{' '}
+                        {formatMoney(group.totalCents, group.currency)} spent
+                      </span>
+                    </span>
+                    {group.myNetCents === 0 ? (
+                      <span className="text-sm text-muted-foreground">Square</span>
+                    ) : (
+                      <SignedAmount
+                        cents={group.myNetCents}
+                        currency={group.currency}
+                        className="text-sm"
+                      />
+                    )}
+                  </PanelRow>
+                ))}
+              </PanelList>
+            )}
+          </Panel>
         </Section>
-
-        <Section
-          title="Personal"
-          description={formatMonth(month)}
-          icon={<Wallet />}
-          to="/personal"
-          empty={
-            personal.items.length === 0 &&
-            `No personal expenses in ${formatMonth(month)} yet.`
-          }
-        >
-          {personal.items.slice(0, PREVIEW).map((expense) => (
-            <Item key={expense.id} size="sm">
-              <ItemContent>
-                <ItemTitle>{expense.description}</ItemTitle>
-                <ItemDescription>
-                  {formatDate(expense.date)} · {categoryLabel(expense.category)}
-                </ItemDescription>
-              </ItemContent>
-              <ItemActions className="font-semibold tabular-nums">
-                {formatMoney(expense.amountCents, expense.currency)}
-              </ItemActions>
-            </Item>
-          ))}
-        </Section>
-      </div>
+      </SplitLayout>
     </>
   )
 }
 
-function Section({
-  title,
-  description,
-  icon,
-  to,
-  empty,
-  children,
-}: {
-  title: string
-  description: string
-  icon: React.ReactNode
-  to: '/friends' | '/groups' | '/personal'
-  empty: string | false
-  children: React.ReactNode
-}) {
+function EmptyRow({ children }: { children: React.ReactNode }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <span className="grid size-7 place-items-center rounded-lg bg-primary/15 text-primary [&_svg]:size-4">
-            {icon}
-          </span>
-          {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-        <CardAction>
-          <Link
-            href={to}
-            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'no-underline')}
-          >
-            View all
-            <ArrowRight />
-          </Link>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="px-2">
-        {empty ? (
-          <Empty className="py-6">
-            <EmptyHeader>
-              <EmptyTitle className="text-sm font-medium">Nothing here yet</EmptyTitle>
-              <EmptyDescription>{empty}</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <ItemGroup>{children}</ItemGroup>
-        )}
-      </CardContent>
-    </Card>
+    <p className="px-4 py-6 text-center text-sm text-muted-foreground [&_a]:font-medium [&_a]:text-primary">
+      {children}
+    </p>
   )
 }

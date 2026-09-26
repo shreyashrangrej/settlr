@@ -3,20 +3,13 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { Plus, Users } from 'lucide-react'
+import { ChevronRight, Plus, Users } from 'lucide-react'
 
-import { SignedAmount } from '#/components/ledger'
+import { GroupAvatar, SignedAmount } from '#/components/ledger'
 import { PageHeader } from '#/components/page-header'
+import { Panel, PanelList, PanelRow } from '#/components/section'
+import { Badge } from '#/components/ui/badge'
 import { buttonVariants } from '#/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card'
 import {
   Empty,
   EmptyContent,
@@ -25,7 +18,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '#/components/ui/empty'
-import { Badge } from '#/components/ui/badge'
 import { formatMoney, plural } from '#/lib/format'
 import { cn } from '#/lib/utils'
 import { api } from '#convex/_generated/api'
@@ -53,69 +45,67 @@ export function GroupsView() {
         actions={<NewGroupLink />}
       />
 
-      {groups.length === 0 ? (
-        <Empty className="border border-dashed">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Users />
-            </EmptyMedia>
-            <EmptyTitle>No groups yet</EmptyTitle>
-            <EmptyDescription>
-              Create a group for a trip, a flat or a regular dinner.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <NewGroupLink />
-          </EmptyContent>
-        </Empty>
-      ) : (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] gap-4">
-          {groups.map((group) => (
-            <li key={group.id}>
-              <Link
-                href={`/groups/${group.id}`}
-                className="block rounded-xl no-underline outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                <Card className="h-full transition-shadow hover:ring-primary/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <span className="truncate">{group.name}</span>
-                      {!group.isOwner && <Badge variant="outline">Shared</Badge>}
-                    </CardTitle>
-                    <CardDescription>
-                      {group.memberCount} members · {plural(group.expenseCount, 'expense')}
-                    </CardDescription>
-                    <CardAction>
-                      <Badge variant="secondary">{group.currency}</Badge>
-                    </CardAction>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-bold tabular-nums">
-                      {formatMoney(group.totalCents, group.currency)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Total spent</p>
-                  </CardContent>
-                  <CardFooter className="justify-between border-t py-3 text-sm">
-                    {group.myNetCents === 0 ? (
-                      <span className="text-muted-foreground">You’re square</span>
-                    ) : (
-                      <>
-                        <span className="text-muted-foreground">
-                          {group.myNetCents > 0 ? 'You’re owed' : 'You owe'}
-                        </span>
-                        <SignedAmount
-                          cents={group.myNetCents}
-                          currency={group.currency}
-                        />
-                      </>
-                    )}
-                  </CardFooter>
-                </Card>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <Panel>
+        {groups.length === 0 ? (
+          <Empty className="py-12">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Users />
+              </EmptyMedia>
+              <EmptyTitle>No groups yet</EmptyTitle>
+              <EmptyDescription>
+                Create a group for a trip, a flat or a regular dinner.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <NewGroupLink />
+            </EmptyContent>
+          </Empty>
+        ) : (
+          <PanelList>
+            {groups.map((group) => (
+              <PanelRow key={group.id} href={`/groups/${group.id}`} className="gap-4">
+                <GroupAvatar name={group.name} className="size-10" />
+                <span className="min-w-0 flex-1">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate font-medium">{group.name}</span>
+                    {!group.isOwner && <Badge variant="outline">Shared</Badge>}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {group.memberCount} members · {plural(group.expenseCount, 'expense')}
+                    <span className="sm:hidden">
+                      {' '}· {formatMoney(group.totalCents, group.currency)}
+                    </span>
+                  </span>
+                </span>
+                <span className="hidden w-36 text-right sm:block">
+                  <span className="block text-sm font-semibold tabular-nums">
+                    {formatMoney(group.totalCents, group.currency)}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">Total spent</span>
+                </span>
+                <span className="w-32 text-right">
+                  {group.myNetCents === 0 ? (
+                    <span className="text-sm text-muted-foreground">You’re square</span>
+                  ) : (
+                    <>
+                      <SignedAmount
+                        cents={group.myNetCents}
+                        currency={group.currency}
+                        className="block text-sm"
+                      />
+                      <span className="block text-xs text-muted-foreground">
+                        {group.myNetCents > 0 ? 'You’re owed' : 'You owe'}
+                      </span>
+                    </>
+                  )}
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </PanelRow>
+            ))}
+          </PanelList>
+        )}
+      </Panel>
     </>
   )
 }

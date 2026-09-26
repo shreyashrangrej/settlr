@@ -5,11 +5,11 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { PiggyBank, User, Users, UsersRound, Wallet } from 'lucide-react'
 
-import { BudgetCard, type Spending } from '#/components/budget'
+import { BudgetSection, type Spending } from '#/components/budget'
 import { MonthNav } from '#/components/month-nav'
 import { PageHeader, SplitLayout } from '#/components/page-header'
-import { StatCard, StatGrid } from '#/components/stat-card'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
+import { Panel, Section } from '#/components/section'
+import { Stat, StatStrip } from '#/components/stats'
 import {
   Empty,
   EmptyDescription,
@@ -65,9 +65,21 @@ export function BudgetView({
         actions={<MonthNav to="/budget" month={month} thisMonth={thisMonth} />}
       />
 
+      <StatStrip className="mb-8">
+        <Stat label={`Spent in ${formatMonth(month)}`} icon={<Wallet />} value={sum((s) => s.total)} />
+        {SOURCES.map((source) => (
+          <Stat
+            key={source.key}
+            label={source.label}
+            icon={source.icon}
+            value={sum((s) => s[source.key])}
+          />
+        ))}
+      </StatStrip>
+
       <SplitLayout
         aside={
-          <BudgetCard
+          <BudgetSection
             month={month}
             today={today}
             budgets={budgets}
@@ -76,28 +88,13 @@ export function BudgetView({
           />
         }
       >
-        <StatGrid>
-          <StatCard label={`Spent in ${formatMonth(month)}`} icon={<Wallet />} value={sum((s) => s.total)} />
-          {SOURCES.map((source) => (
-            <StatCard
-              key={source.key}
-              label={source.label}
-              icon={source.icon}
-              value={sum((s) => s[source.key])}
-            />
-          ))}
-        </StatGrid>
-
-        <Card className="py-2">
-          <CardHeader className="px-4 pt-2">
-            <CardTitle>Where it went</CardTitle>
-            <CardDescription>
-              Your share of each expense; settle-up payments don’t count.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-2">
+        <Section
+          title="Where it went"
+          description="Your share of each expense; settle-up payments don’t count."
+        >
+          <Panel>
             {spending.length === 0 ? (
-              <Empty className="py-10">
+              <Empty className="py-12">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
                     <PiggyBank />
@@ -146,8 +143,8 @@ export function BudgetView({
                 </TableBody>
               </Table>
             )}
-          </CardContent>
-        </Card>
+          </Panel>
+        </Section>
       </SplitLayout>
     </>
   )

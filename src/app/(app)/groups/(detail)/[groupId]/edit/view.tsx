@@ -13,14 +13,7 @@ import { useAppRouter } from '#/components/navigation-progress'
 import { useGroup } from '#/components/use-group'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card'
+import { Section } from '#/components/section'
 import {
   Field,
   FieldDescription,
@@ -49,7 +42,7 @@ export function EditGroupView() {
   if (!group) return null
   if (!group.isOwner) {
     return (
-      <Empty className="border border-dashed">
+      <Empty className="rounded-xl border border-dashed">
         <EmptyHeader>
           <EmptyTitle>Only the group’s creator can edit it</EmptyTitle>
           <EmptyDescription>
@@ -60,7 +53,7 @@ export function EditGroupView() {
     )
   }
   return (
-    <div className="grid max-w-3xl gap-4">
+    <div className="grid max-w-3xl gap-10">
       <EditGroupForm group={group} />
       <DangerZone group={group} />
     </div>
@@ -147,152 +140,147 @@ function EditGroupForm({ group }: { group: Group }) {
   }
 
   return (
-    <Card>
-      <form noValidate onSubmit={onSubmit}>
-        <CardHeader>
-          <CardTitle>Edit group</CardTitle>
-          <CardDescription>
-            Rename the group, and add, rename or remove members.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="mt-4">
-          <FieldGroup>
-            <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
-              <Field>
-                <FieldLabel htmlFor="edit-group-name">Name</FieldLabel>
-                <Input
-                  id="edit-group-name"
-                  value={name}
-                  maxLength={60}
-                  onChange={(e) => setName(e.target.value)}
+    <Section
+      title="Edit group"
+      description="Rename the group, and add, rename or remove members."
+    >
+      <form noValidate onSubmit={onSubmit} className="mt-2 grid gap-8">
+        <FieldGroup>
+          <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
+            <Field>
+              <FieldLabel htmlFor="edit-group-name">Name</FieldLabel>
+              <Input
+                id="edit-group-name"
+                value={name}
+                maxLength={60}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </Field>
+            <Field data-disabled={hasExpenses || undefined}>
+              <FieldLabel htmlFor="edit-group-currency">Currency</FieldLabel>
+              {hasExpenses ? (
+                // Amounts are stored in the group's currency, so it's fixed
+                // once there are expenses.
+                <Input id="edit-group-currency" value={currency} disabled />
+              ) : (
+                <CurrencySelect
+                  id="edit-group-currency"
+                  value={currency}
+                  onChange={setCurrency}
                 />
-              </Field>
-              <Field data-disabled={hasExpenses || undefined}>
-                <FieldLabel htmlFor="edit-group-currency">Currency</FieldLabel>
-                {hasExpenses ? (
-                  // Amounts are stored in the group's currency, so it's fixed
-                  // once there are expenses.
-                  <Input id="edit-group-currency" value={currency} disabled />
-                ) : (
-                  <CurrencySelect
-                    id="edit-group-currency"
-                    value={currency}
-                    onChange={setCurrency}
-                  />
-                )}
-              </Field>
-            </div>
-            {hasExpenses && (
-              <FieldDescription className="-mt-4">
-                The currency can’t change once a group has expenses.
-              </FieldDescription>
-            )}
+              )}
+            </Field>
+          </div>
+          {hasExpenses && (
+            <FieldDescription className="-mt-4">
+              The currency can’t change once a group has expenses.
+            </FieldDescription>
+          )}
 
-            <FieldSet>
-              <FieldLegend variant="label">
-                Members{' '}
-                <span className="font-normal text-muted-foreground">
-                  ({members.length} of {MAX_MEMBERS})
-                </span>
-              </FieldLegend>
-              <FieldDescription>
-                Link a member to a friend on Settlr and they can see this group,
-                add expenses and get notified. People who are part of an
-                expense can’t be removed until those expenses are deleted.
-              </FieldDescription>
-              <ul className="grid gap-2">
-                {members.map((member, i) => {
-                  const isMe = member.id === group.meMemberId
-                  const locked = member.id !== undefined && onExpenses.has(member.id)
-                  return (
-                    <li key={member.key} className="flex items-center gap-2">
-                      <PersonAvatar name={member.name || '?'} size="sm" />
-                      <Input
-                        aria-label={`Member ${i + 1}`}
-                        value={member.name}
-                        maxLength={40}
-                        placeholder="Name"
-                        disabled={isMe}
-                        autoFocus={member.key === focusKey}
-                        onChange={(e) =>
+          <FieldSet>
+            <FieldLegend variant="label">
+              Members{' '}
+              <span className="font-normal text-muted-foreground">
+                ({members.length} of {MAX_MEMBERS})
+              </span>
+            </FieldLegend>
+            <FieldDescription>
+              Link a member to a friend on Settlr and they can see this group,
+              add expenses and get notified. People who are part of an
+              expense can’t be removed until those expenses are deleted.
+            </FieldDescription>
+            <ul className="grid gap-2">
+              {members.map((member, i) => {
+                const isMe = member.id === group.meMemberId
+                const locked = member.id !== undefined && onExpenses.has(member.id)
+                return (
+                  <li key={member.key} className="flex items-center gap-2">
+                    <PersonAvatar name={member.name || '?'} size="sm" />
+                    <Input
+                      aria-label={`Member ${i + 1}`}
+                      value={member.name}
+                      maxLength={40}
+                      placeholder="Name"
+                      disabled={isMe}
+                      autoFocus={member.key === focusKey}
+                      onChange={(e) =>
+                        setMembers((current) =>
+                          current.map((m) =>
+                            m.key === member.key ? { ...m, name: e.target.value } : m,
+                          ),
+                        )
+                      }
+                    />
+                    {!isMe && (
+                      <SelectField
+                        aria-label={`${member.name || 'Member'}’s Settlr account`}
+                        className="w-40 shrink-0"
+                        value={member.friendId ?? NOT_LINKED}
+                        options={accountOptions}
+                        onChange={(value) =>
                           setMembers((current) =>
-                            current.map((m) =>
-                              m.key === member.key ? { ...m, name: e.target.value } : m,
-                            ),
+                            current.map((m) => {
+                              if (m.key !== member.key) return m
+                              const friendId = value === NOT_LINKED ? null : value
+                              // A new, unnamed member takes the friend's name.
+                              const friend = connected.find((f) => f.id === friendId)
+                              return {
+                                ...m,
+                                friendId,
+                                name: m.name || friend?.name || '',
+                              }
+                            }),
                           )
                         }
                       />
-                      {!isMe && (
-                        <SelectField
-                          aria-label={`${member.name || 'Member'}’s Settlr account`}
-                          className="w-40 shrink-0"
-                          value={member.friendId ?? NOT_LINKED}
-                          options={accountOptions}
-                          onChange={(value) =>
-                            setMembers((current) =>
-                              current.map((m) => {
-                                if (m.key !== member.key) return m
-                                const friendId = value === NOT_LINKED ? null : value
-                                // A new, unnamed member takes the friend's name.
-                                const friend = connected.find((f) => f.id === friendId)
-                                return {
-                                  ...m,
-                                  friendId,
-                                  name: m.name || friend?.name || '',
-                                }
-                              }),
-                            )
-                          }
-                        />
-                      )}
-                      {isMe ? (
-                        <Badge variant="secondary" className="w-24 justify-center">
-                          You
-                        </Badge>
-                      ) : locked ? (
-                        <Badge
-                          variant="outline"
-                          className="w-24 justify-center text-muted-foreground"
-                          title="Delete their expenses to remove them"
-                        >
-                          On expenses
-                        </Badge>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="w-24 text-muted-foreground hover:text-destructive"
-                          aria-label={`Remove ${member.name || 'member'}`}
-                          onClick={() =>
-                            setMembers((current) =>
-                              current.filter((m) => m.key !== member.key),
-                            )
-                          }
-                        >
-                          <X />
-                          Remove
-                        </Button>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-              {members.length < MAX_MEMBERS && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="justify-self-start"
-                  onClick={addMember}
-                >
-                  <Plus />
-                  Add member
-                </Button>
-              )}
-            </FieldSet>
-            {error && <FieldError>{error}</FieldError>}
-          </FieldGroup>
-        </CardContent>
-        <CardFooter className="mt-6 justify-end gap-2 border-t py-4">
+                    )}
+                    {isMe ? (
+                      <Badge variant="secondary" className="w-24 justify-center">
+                        You
+                      </Badge>
+                    ) : locked ? (
+                      <Badge
+                        variant="outline"
+                        className="w-24 justify-center text-muted-foreground"
+                        title="Delete their expenses to remove them"
+                      >
+                        On expenses
+                      </Badge>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-24 text-muted-foreground hover:text-destructive"
+                        aria-label={`Remove ${member.name || 'member'}`}
+                        onClick={() =>
+                          setMembers((current) =>
+                            current.filter((m) => m.key !== member.key),
+                          )
+                        }
+                      >
+                        <X />
+                        Remove
+                      </Button>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+            {members.length < MAX_MEMBERS && (
+              <Button
+                type="button"
+                variant="outline"
+                className="justify-self-start"
+                onClick={addMember}
+              >
+                <Plus />
+                Add member
+              </Button>
+            )}
+          </FieldSet>
+          {error && <FieldError>{error}</FieldError>}
+        </FieldGroup>
+        <div className="flex justify-end gap-2 border-t pt-6">
           <Link
             href={`/groups/${group.id}`}
             className={buttonVariants({ variant: 'ghost', size: 'lg' })}
@@ -303,9 +291,9 @@ function EditGroupForm({ group }: { group: Group }) {
             {pending && <Spinner />}
             Save changes
           </Button>
-        </CardFooter>
+        </div>
       </form>
-    </Card>
+    </Section>
   )
 }
 
@@ -318,15 +306,11 @@ function DangerZone({ group }: { group: Group }) {
   })
 
   return (
-    <Card className="ring-destructive/30">
-      <CardHeader>
-        <CardTitle>Danger zone</CardTitle>
-        <CardDescription>
-          Deleting the group removes it and all {group.expenseCount} of its
-          expenses for good.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Section
+      className="border-t pt-8"
+      title="Delete group"
+      description={`Deleting the group removes it and all ${group.expenseCount} of its expenses for good.`}
+      actions={
         <ConfirmAction
           title={`Delete “${group.name}”?`}
           description="This deletes the group and all of its expenses. It can’t be undone."
@@ -342,7 +326,7 @@ function DangerZone({ group }: { group: Group }) {
             </Button>
           }
         />
-      </CardContent>
-    </Card>
+      }
+    />
   )
 }

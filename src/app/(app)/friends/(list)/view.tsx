@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import Link from 'next/link'
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -14,8 +13,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { PageHeader, SplitLayout } from '#/components/page-header'
-import { StatCard, StatGrid } from '#/components/stat-card'
+import { FormDialog } from '#/components/edit-dialog'
 import {
   BalanceText,
   FriendStatusBadge,
@@ -24,33 +22,41 @@ import {
   useAction,
 } from '#/components/ledger'
 import { useAppRouter } from '#/components/navigation-progress'
+import { PageHeader } from '#/components/page-header'
+import { Panel, PanelList, PanelRow } from '#/components/section'
+import { Stat, StatStrip } from '#/components/stats'
 import { Button } from '#/components/ui/button'
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card'
-import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from '#/components/ui/empty'
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '#/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Spinner } from '#/components/ui/spinner'
 import { formatBalances } from '#/lib/format'
 import { addFriendInput } from '#/lib/schemas'
 import { api } from '#convex/_generated/api'
+
+function AddFriendButton() {
+  return (
+    <FormDialog
+      title="Add a friend"
+      description="Add their email to send a friend request. Once they accept, you both see the same expenses and get notified of new ones."
+      trigger={
+        <Button size="lg">
+          <UserPlus />
+          Add friend
+        </Button>
+      }
+    >
+      {(close) => <AddFriendForm onAdded={close} />}
+    </FormDialog>
+  )
+}
 
 export function FriendsView() {
   const { data: friends } = useSuspenseQuery(convexQuery(api.friends.list, {}))
@@ -62,86 +68,78 @@ export function FriendsView() {
       <PageHeader
         title="Friends"
         description="One-on-one expenses and settle-ups, outside any group."
+        actions={<AddFriendButton />}
       />
 
-      <SplitLayout aside={<AddFriend />}>
-        <StatGrid>
-          <StatCard
+      <div className="grid gap-6">
+        <StatStrip>
+          <Stat
             label="Friends owe you"
             icon={<ArrowDownLeft />}
             tone="positive"
             value={formatBalances(owed)}
           />
-          <StatCard
+          <Stat
             label="You owe friends"
             icon={<ArrowUpRight />}
             tone="negative"
             value={formatBalances(owe)}
           />
-          <StatCard label="Friends" icon={<UsersRound />} value={friends.length || ''} />
-          <StatCard
+          <Stat label="Friends" icon={<UsersRound />} value={friends.length || ''} />
+          <Stat
             label="Settled up"
             icon={<CircleCheck />}
             value={friends.length ? `${settled} of ${friends.length}` : ''}
           />
-        </StatGrid>
+        </StatStrip>
 
-        {friends.length === 0 ? (
-          <Empty className="border border-dashed">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <UsersRound />
-              </EmptyMedia>
-              <EmptyTitle>No friends yet</EmptyTitle>
-              <EmptyDescription>
-                Add someone to start tracking what you owe each other.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-4">
-            {friends.map((friend) => (
-              <li key={friend.id}>
-                <Link
-                  href={`/friends/${friend.id}`}
-                  className="block h-full rounded-xl no-underline outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  <Card size="sm" className="h-full transition-shadow hover:ring-primary/50">
-                    <CardHeader>
-                      <div className="flex min-w-0 items-center gap-3">
-                        <PersonAvatar name={friend.name} size="lg" />
-                        <div className="flex min-w-0 flex-col gap-0.5">
-                          <CardTitle className="truncate">{friend.name}</CardTitle>
-                          {friend.email && (
-                            <CardDescription className="truncate" title={friend.email}>
-                              {friend.email}
-                            </CardDescription>
-                          )}
-                        </div>
-                      </div>
-                      <CardAction>
-                        <ChevronRight className="size-4 text-muted-foreground" />
-                      </CardAction>
-                    </CardHeader>
-                    <CardContent className="mt-auto flex flex-wrap items-end justify-between gap-2 text-sm">
-                      <BalanceText
-                        balances={friend.balances}
-                        className="justify-items-start"
-                      />
-                      <FriendStatusBadge status={friend.status} />
-                    </CardContent>
-                  </Card>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </SplitLayout>
+        <Panel>
+          {friends.length === 0 ? (
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <UsersRound />
+                </EmptyMedia>
+                <EmptyTitle>No friends yet</EmptyTitle>
+                <EmptyDescription>
+                  Add someone to start tracking what you owe each other.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <AddFriendButton />
+              </EmptyContent>
+            </Empty>
+          ) : (
+            <PanelList>
+              {friends.map((friend) => (
+                <PanelRow key={friend.id} href={`/friends/${friend.id}`}>
+                  <PersonAvatar name={friend.name} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate font-medium">{friend.name}</span>
+                      <span className="hidden sm:inline-flex">
+                        <FriendStatusBadge status={friend.status} />
+                      </span>
+                    </span>
+                    {friend.email && (
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {friend.email}
+                      </span>
+                    )}
+                  </span>
+                  <BalanceText balances={friend.balances} className="text-right text-sm" />
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </PanelRow>
+              ))}
+            </PanelList>
+          )}
+        </Panel>
+      </div>
     </>
   )
 }
 
-function AddFriend() {
+function AddFriendForm({ onAdded }: { onAdded: () => void }) {
   const createFriend = useConvexMutation(api.friends.create)
   const router = useAppRouter()
   const [name, setName] = useState('')
@@ -162,57 +160,46 @@ function AddFriend() {
           ? `Friend added. We sent ${parsed.data.email} a friend request.`
           : 'Friend added',
       )
+      onAdded()
       router.push(`/friends/${created.value}`)
     }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UserPlus className="size-4 text-primary" aria-hidden="true" />
-          Add a friend
-        </CardTitle>
-        <CardDescription>
-          Add their email to send a friend request. Once they accept, you
-          both see the same expenses and get notified of new ones.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form noValidate onSubmit={onSubmit}>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="friend-name">Name</FieldLabel>
-              <Input
-                id="friend-name"
-                value={name}
-                maxLength={60}
-                placeholder="Priya Shah"
-                onChange={(e) => setName(e.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="friend-email">
-                Email
-                <span className="font-normal text-muted-foreground">(optional)</span>
-              </FieldLabel>
-              <Input
-                id="friend-email"
-                type="email"
-                value={email}
-                maxLength={254}
-                placeholder="priya@example.com"
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Field>
-            {error && <FieldError>{error}</FieldError>}
-            <Button type="submit" size="lg" disabled={pending}>
-              {pending && <Spinner />}
-              Add friend
-            </Button>
-          </FieldGroup>
-        </form>
-      </CardContent>
-    </Card>
+    <form noValidate onSubmit={onSubmit}>
+      <FieldGroup className="gap-4">
+        <Field>
+          <FieldLabel htmlFor="friend-name">Name</FieldLabel>
+          <Input
+            id="friend-name"
+            value={name}
+            maxLength={60}
+            placeholder="Priya Shah"
+            autoFocus
+            onChange={(e) => setName(e.target.value)}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="friend-email">
+            Email
+            <span className="font-normal text-muted-foreground">(optional)</span>
+          </FieldLabel>
+          <Input
+            id="friend-email"
+            type="email"
+            value={email}
+            maxLength={254}
+            placeholder="priya@example.com"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <FieldDescription>They don’t need an account yet.</FieldDescription>
+        </Field>
+        {error && <FieldError>{error}</FieldError>}
+        <Button type="submit" size="lg" disabled={pending}>
+          {pending && <Spinner />}
+          Add friend
+        </Button>
+      </FieldGroup>
+    </form>
   )
 }

@@ -6,15 +6,8 @@ import { Pencil, PiggyBank, Plus } from 'lucide-react'
 
 import { AmountInput, CurrencySelect } from '#/components/form-fields'
 import { useAction } from '#/components/ledger'
+import { Section } from '#/components/section'
 import { Button } from '#/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card'
 import {
   Dialog,
   DialogClose,
@@ -52,6 +45,19 @@ export function budgetStatus(spentCents: number, budgetCents: number) {
   return { ratio, tone: 'ok', label: 'On track' } as const
 }
 
+/** A month's spending in `currency`, or zeros. */
+export function spentIn(spending: Array<Spending>, currency: Currency): Spending {
+  return (
+    spending.find((s) => s.currency === currency) ?? {
+      currency,
+      personal: 0,
+      friends: 0,
+      groups: 0,
+      total: 0,
+    }
+  )
+}
+
 const barTone = {
   ok: 'bg-primary',
   warn: 'bg-amber-500',
@@ -70,7 +76,7 @@ const badgeTone = {
  * and (for the current month) a daily allowance. `today` is a `YYYY-MM-DD`
  * date from the page (read on the server), so SSR and the client agree.
  */
-export function BudgetCard({
+export function BudgetSection({
   month,
   today,
   budgets,
@@ -84,80 +90,62 @@ export function BudgetCard({
   /** Where "Set budget" starts; falls back to the Settings default. */
   defaultCurrency?: Currency
 }) {
-  const spentIn = (currency: Currency): Spending =>
-    spending.find((s) => s.currency === currency) ?? {
-      currency,
-      personal: 0,
-      friends: 0,
-      groups: 0,
-      total: 0,
-    }
-
-  if (budgets.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <PiggyBank className="size-4 text-primary" aria-hidden="true" />
-            Monthly budget
-          </CardTitle>
-          <CardDescription>
-            Set a limit for what you spend each month, including your share
-            with friends and groups, and see how the month is going.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <BudgetDialog
-            initialCurrency={defaultCurrency}
-            budgets={budgets}
-            trigger={
-              <Button variant="outline" className="w-full">
-                <Plus />
-                Set monthly budget
-              </Button>
-            }
-          />
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <PiggyBank className="size-4 text-primary" aria-hidden="true" />
-          Monthly budget
-        </CardTitle>
-        <CardAction>
+    <Section
+      title="Monthly budget"
+      description={
+        budgets.length === 0 &&
+        'A limit for what you spend each month, including your share with friends and in groups.'
+      }
+      actions={
+        budgets.length > 0 && (
           <BudgetDialog
             initialCurrency={defaultCurrency}
             budgets={budgets}
             trigger={
-              <Button variant="ghost" size="icon-sm" aria-label="Add a budget">
+              <Button variant="ghost" size="sm">
                 <Plus />
+                Add currency
               </Button>
             }
           />
-        </CardAction>
-      </CardHeader>
-      <CardContent className="grid gap-5">
-        {budgets.map((budget) => (
-          <BudgetProgress
-            key={budget.currency}
-            budget={budget}
-            spent={spentIn(budget.currency)}
-            month={month}
-            today={today}
-            budgets={budgets}
-          />
-        ))}
-      </CardContent>
-    </Card>
+        )
+      }
+    >
+      {budgets.length === 0 ? (
+        <BudgetDialog
+          initialCurrency={defaultCurrency}
+          budgets={budgets}
+          trigger={
+            <Button variant="outline" className="justify-self-start">
+              <PiggyBank />
+              Set monthly budget
+            </Button>
+          }
+        />
+      ) : (
+        <div className="grid gap-6">
+          {budgets.map((budget) => (
+            <BudgetProgress
+              key={budget.currency}
+              budget={budget}
+              spent={spentIn(spending, budget.currency)}
+              month={month}
+              today={today}
+              budgets={budgets}
+            />
+          ))}
+        </div>
+      )}
+    </Section>
   )
 }
 
-function BudgetProgress({
+/**
+ * How one budget is going this month. With `budgets` (all of them, for the
+ * dialog) it has an Edit button.
+ */
+export function BudgetProgress({
   budget,
   spent,
   month,
@@ -168,7 +156,7 @@ function BudgetProgress({
   spent: Spending
   month: string
   today: string
-  budgets: Array<Budget>
+  budgets?: Array<Budget>
 }) {
   const spentCents = spent.total
   const status = budgetStatus(spentCents, budget.amountCents)
@@ -197,21 +185,23 @@ function BudgetProgress({
         <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', badgeTone[status.tone])}>
           {status.label}
         </span>
-        <BudgetDialog
-          initialCurrency={budget.currency}
-          budgets={budgets}
-          trigger={
-            <Button
-              variant="ghost"
-              size="xs"
-              className="text-muted-foreground"
-              aria-label={`Edit ${budget.currency} budget`}
-            >
-              <Pencil />
-              Edit
-            </Button>
-          }
-        />
+        {budgets && (
+          <BudgetDialog
+            initialCurrency={budget.currency}
+            budgets={budgets}
+            trigger={
+              <Button
+                variant="ghost"
+                size="xs"
+                className="text-muted-foreground"
+                aria-label={`Edit ${budget.currency} budget`}
+              >
+                <Pencil />
+                Edit
+              </Button>
+            }
+          />
+        )}
       </div>
       <p className="text-sm">
         <span className="text-xl font-bold tabular-nums">{money(spentCents)}</span>{' '}
@@ -351,4 +341,3 @@ export function BudgetDialog({
     </Dialog>
   )
 }
-

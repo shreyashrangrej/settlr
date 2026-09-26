@@ -127,6 +127,27 @@ export function PersonAvatar({
   )
 }
 
+/** A group's initials in a rounded square, next to people's round avatars. */
+export function GroupAvatar({ name, className }: { name: string; className?: string }) {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join('')
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'grid size-9 shrink-0 place-items-center rounded-lg bg-primary/12 text-sm font-semibold text-primary uppercase',
+        className,
+      )}
+    >
+      {initials || '#'}
+    </span>
+  )
+}
+
 /** Totals per currency, e.g. the sum of what all friends owe you. */
 export function sumBalances(list: Array<Partial<Record<string, number>>>) {
   const owed: Record<string, number> = {}

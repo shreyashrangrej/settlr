@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { Prefetched } from '#/components/prefetched'
-import { currentMonth } from '#/lib/format'
+import { currentMonth, todayIsoDate } from '#/lib/format'
 import { prefetchQuery } from '#/server/convex.server'
 import { api } from '#convex/_generated/api'
 import { DashboardView } from './view'
@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   ])
   return (
     <Prefetched queries={queries.map((q) => q.entry)}>
-      <DashboardView month={month} />
+      <DashboardView month={month} today={todayIsoDate()} />
     </Prefetched>
   )
 }

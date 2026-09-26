@@ -7,7 +7,6 @@ import { ExternalLink, FileText } from 'lucide-react'
 import { PageHeader } from '#/components/page-header'
 import { Badge } from '#/components/ui/badge'
 import { buttonVariants } from '#/components/ui/button'
-import { Card, CardContent } from '#/components/ui/card'
 import {
   Empty,
   EmptyDescription,
@@ -83,29 +82,27 @@ export function ReceiptView({ source, expenseId }: { source: string; expenseId: 
           </a>
         }
       />
-      <Card className="py-3">
-        <CardContent className="grid gap-3 px-3">
-          {receipt.isPdf ? (
-            <iframe
+      <div className="grid gap-3">
+        {receipt.isPdf ? (
+          <iframe
+            src={receipt.url}
+            title={`Receipt for ${expense.description}`}
+            className="h-[75vh] w-full rounded-lg border bg-muted"
+          />
+        ) : (
+          <div className="grid place-items-center rounded-lg bg-muted p-2">
+            <img
               src={receipt.url}
-              title={`Receipt for ${expense.description}`}
-              className="h-[75vh] w-full rounded-lg border bg-muted"
+              alt={`Receipt for ${expense.description}`}
+              className="max-h-[75vh] w-auto max-w-full rounded-md object-contain"
             />
-          ) : (
-            <div className="grid place-items-center rounded-lg bg-muted p-2">
-              <img
-                src={receipt.url}
-                alt={`Receipt for ${expense.description}`}
-                className="max-h-[75vh] w-auto max-w-full rounded-md object-contain"
-              />
-            </div>
-          )}
-          <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-            <FileText className="size-3.5" aria-hidden="true" />
-            <span className="truncate">{receipt.fileName}</span>· {formatSize(receipt.size)}
-          </p>
-        </CardContent>
-      </Card>
+          </div>
+        )}
+        <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <FileText className="size-3.5" aria-hidden="true" />
+          <span className="truncate">{receipt.fileName}</span>· {formatSize(receipt.size)}
+        </p>
+      </div>
     </div>
   )
 }

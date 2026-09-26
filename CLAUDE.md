@@ -75,7 +75,8 @@ force-push `main`.
   `SignedAmount`, `BalanceText`, `PersonAvatar`), `form-fields.tsx`
   (`SelectField`, `CurrencySelect`, `CategorySelect`, `AmountInput`,
   `DatePicker`), `receipts.tsx` (`ReceiptField` upload control,
-  `ReceiptLink`), `edit-dialog.tsx` (edit a row in a dialog),
+  `ReceiptLink`), `edit-dialog.tsx` (`FormDialog`, and `EditDialog` for a
+  row), `section.tsx` (`Section`, `Panel`, `PanelList`), `stats.tsx`,
   `group-expense-form.tsx` (add/edit a group expense), `notifications.tsx`
   (rows shared by the bell dropdown and the page), `month-nav.tsx`,
   `confirm-action.tsx` (destructive actions behind an alert dialog),
@@ -147,14 +148,19 @@ force-push `main`.
   `buttonVariants(...)` on a `<Link>`. Confirm destructive actions with
   `ConfirmAction`, not `window.confirm`, and report success with
   `useAction(fn, { success: '...' })` (a sonner toast).
-- **Layout**: pages span the full width, so use the width for more content,
-  not wider components. Summary figures go in a `StatGrid` of `StatCard`s
-  (`src/components/stat-card.tsx`), lists of records are tables whose extra
-  columns appear on wider screens (`hidden md:table-cell`, with the details
-  folded into the first cell below that), collections of things (friends,
-  groups) are card grids with `repeat(auto-fill,minmax(…,1fr))`, and forms
-  get a max width. `SplitLayout` gives a page a main area and a 24rem
-  sidebar.
+- **Layout**: few boxes. A page is a header, then a few areas: the only
+  surface is the `Panel` (`src/components/section.tsx`), which holds a
+  table or a `PanelList` of rows; everything else (sidebars, forms,
+  breakdowns) sits on the page background in titled `Section`s. Don't wrap
+  things in `Card`s (the sign-in and name forms are the exception). Summary
+  figures go in one `StatStrip` of exactly four `Stat`s
+  (`src/components/stats.tsx`). Records are tables whose extra columns
+  appear on wider screens (`hidden md:table-cell`, with the details folded
+  into the first cell below that); collections (friends, groups) are
+  `PanelList` rows. A page's add/record actions are buttons in its header
+  that open a `FormDialog` (`edit-dialog.tsx`), not forms in a sidebar;
+  full-page forms get a max width and a `border-t` footer. `SplitLayout`
+  gives a page a main area and a 22rem sidebar split off by a hairline.
 - **Loading**: give each page a `loading.tsx` rendering its page-shaped
   skeleton from `src/components/skeletons.tsx`. The top bar
   (`navigation-progress.tsx`) starts on link clicks and `useAppRouter()`

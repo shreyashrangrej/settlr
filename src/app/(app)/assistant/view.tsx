@@ -8,10 +8,10 @@ import { SendHorizontal, Sparkles, Trash2, User, Users, Wallet } from 'lucide-re
 
 import { useAction } from '#/components/ledger'
 import { PageHeader, SplitLayout } from '#/components/page-header'
+import { Panel, Section } from '#/components/section'
 import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import {
   Empty,
   EmptyDescription,
@@ -162,7 +162,7 @@ function Chat({
   }
 
   return (
-    <Card className="gap-0 py-0">
+    <Panel>
       <div
         ref={scrollRef}
         className="grid h-[min(65vh,40rem)] content-start gap-3 overflow-y-auto p-4"
@@ -256,7 +256,7 @@ function Chat({
           Conversations aren’t saved. Everything it adds or changes shows up on the usual pages.
         </p>
       </form>
-    </Card>
+    </Panel>
   )
 }
 
@@ -492,48 +492,40 @@ function DeleteOffer({ expense }: { expense: AssistantExpense }) {
 function Tips({ onExample }: { onExample: (example: string) => void }) {
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Try saying</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2">
+      <Section title="Try saying">
+        <div className="grid gap-2">
           {EXAMPLES.map((example) => (
             <Button
               key={example}
               variant="outline"
-              className="h-auto justify-start py-2 text-left whitespace-normal"
+              className="h-auto justify-start py-2 text-left font-normal whitespace-normal"
               onClick={() => onExample(example)}
             >
               {example}
             </Button>
           ))}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>What it can do</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid list-disc gap-1.5 pl-4 text-muted-foreground">
-            <li>
-              Add personal, friend and group expenses: say who paid and how it’s split, or
-              leave it to the defaults.
-            </li>
-            <li>
-              Find expenses by what, when, who, category or amount, with totals and your share.
-            </li>
-            <li>
-              Change any detail of an expense it found or added, like “make that 60” or “Priya
-              paid for it”.
-            </li>
-            <li>Offer to delete an expense; nothing is deleted until you press Delete.</li>
-            <li>
-              Amounts are in your default currency (set in Settings) unless you name another;
-              group expenses use the group’s currency.
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
+        </div>
+      </Section>
+      <Section title="What it can do">
+        <ul className="grid list-disc gap-1.5 pl-4 text-sm text-muted-foreground">
+          <li>
+            Add personal, friend and group expenses: say who paid and how it’s split, or
+            leave it to the defaults.
+          </li>
+          <li>
+            Find expenses by what, when, who, category or amount, with totals and your share.
+          </li>
+          <li>
+            Change any detail of an expense it found or added, like “make that 60” or “Priya
+            paid for it”.
+          </li>
+          <li>Offer to delete an expense; nothing is deleted until you press Delete.</li>
+          <li>
+            Amounts are in your default currency (set in Settings) unless you name another;
+            group expenses use the group’s currency.
+          </li>
+        </ul>
+      </Section>
     </>
   )
 }
