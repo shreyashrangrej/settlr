@@ -104,7 +104,7 @@ function SideCardSkeleton({ lines = 4, className }: { lines?: number; className?
 
 function Split({ children, aside }: { children: React.ReactNode; aside: React.ReactNode }) {
   return (
-    <div className="grid items-start gap-4.5 xl:grid-cols-[minmax(0,1fr)_24rem]">
+    <div className="grid items-start gap-4.5 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="grid min-w-0 gap-4.5">{children}</div>
       <div className="grid gap-4.5">{aside}</div>
     </div>

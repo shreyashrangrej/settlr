@@ -143,7 +143,8 @@ function Sidebar() {
       </div>
 
       <div className="mt-auto grid gap-3">
-        <div className="grid gap-2.5 rounded-2xl border bg-card p-4">
+        {/* Dropped on short screens, where the lists above need the room. */}
+        <div className="grid gap-2.5 rounded-2xl border bg-card p-4 [@media(max-height:56rem)]:hidden">
           <span className="flex items-center gap-2 font-semibold">
             <Sparkles className="size-4 text-primary" aria-hidden="true" />
             Add it by typing

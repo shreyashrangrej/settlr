@@ -109,7 +109,7 @@ export function ExpensesView({ groupId, search }: { groupId: string; search: Exp
                   <TableHead className="hidden lg:table-cell">Category</TableHead>
                   <TableHead className="hidden md:table-cell">Date</TableHead>
                   <TableHead className="hidden md:table-cell">Paid by</TableHead>
-                  <TableHead className="hidden xl:table-cell">Split</TableHead>
+                  <TableHead className="hidden 2xl:table-cell">Split</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead className="w-20">
                     <span className="sr-only">Actions</span>
@@ -161,14 +161,14 @@ function Filters({
   return (
     <form
       role="search"
-      className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(12rem,2fr)_repeat(3,minmax(9rem,1fr))]"
+      className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-[minmax(12rem,2fr)_repeat(3,minmax(9rem,1fr))]"
       onSubmit={(event) => {
         event.preventDefault()
         const q = new FormData(event.currentTarget).get('q')
         onChange({ q: typeof q === 'string' ? q.trim() : '' })
       }}
     >
-      <InputGroup className="sm:col-span-2 xl:col-span-1">
+      <InputGroup className="sm:col-span-2 2xl:col-span-1">
         <InputGroupAddon>
           <Search />
         </InputGroupAddon>
@@ -242,7 +242,7 @@ function ExpenseRow({ group, expense }: { group: Group; expense: GroupExpense })
         {formatDate(expense.date)}
       </TableCell>
       <TableCell className="hidden truncate md:table-cell">{payer}</TableCell>
-      <TableCell className="hidden text-muted-foreground xl:table-cell">{split}</TableCell>
+      <TableCell className="hidden text-muted-foreground 2xl:table-cell">{split}</TableCell>
       <TableCell className="text-right font-mono font-medium tabular-nums">
         {formatMoney(expense.amountCents, group.currency)}
       </TableCell>

@@ -78,7 +78,11 @@ export function PageHeader({
   )
 }
 
-/** A two-column page body: main content and a sidebar (stacks on mobile). */
+/**
+ * A two-column page body: main content and a sidebar. They only sit side by
+ * side from 1400px, where the column beside the app sidebar has room for
+ * both; below that the sidebar stacks under the content.
+ */
 export function SplitLayout({
   children,
   aside,
@@ -87,9 +91,11 @@ export function SplitLayout({
   aside: React.ReactNode
 }) {
   return (
-    <div className="grid items-start gap-4.5 xl:grid-cols-[minmax(0,1fr)_24rem]">
-      <div className="grid min-w-0 gap-4.5">{children}</div>
-      <aside className="grid gap-4.5 xl:sticky xl:top-6">{aside}</aside>
+    <div className="grid items-start gap-4.5 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4.5">{children}</div>
+      <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4.5 min-[1400px]:sticky min-[1400px]:top-6">
+        {aside}
+      </aside>
     </div>
   )
 }

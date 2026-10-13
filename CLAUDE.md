@@ -178,8 +178,10 @@ force-push `main`.
   columns appear on wider screens (`hidden md:table-cell`, with the details
   folded into the first cell below that), collections of things (friends,
   groups) are card grids with `repeat(auto-fill,minmax(…,1fr))`, and forms
-  get a max width. `SplitLayout` gives a page a main area and a 24rem
-  sidebar.
+  get a max width. `SplitLayout` gives a page a main area and a 22rem
+  sidebar from 1400px (below that the column beside the app sidebar is too
+  narrow, so it stacks). Viewport breakpoints see the whole window, not the
+  content column, which is 232px narrower on `lg` and up.
 - **Loading**: give each page a `loading.tsx` rendering its page-shaped
   skeleton from `src/components/skeletons.tsx`. The top bar
   (`navigation-progress.tsx`) starts on link clicks and `useAppRouter()`
