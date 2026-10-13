@@ -181,8 +181,8 @@ export function NotificationRow({
       <ItemMedia
         variant="icon"
         className={cn(
-          'grid size-9 place-items-center rounded-lg bg-muted text-muted-foreground',
-          isNew && 'bg-primary/15 text-primary',
+          'grid size-9 place-items-center rounded-[10px] bg-tile text-muted-foreground',
+          isNew && 'bg-primary/12 text-primary',
         )}
       >
         {icon}

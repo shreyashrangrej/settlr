@@ -82,8 +82,8 @@ export function ExpensesView({ groupId, search }: { groupId: string; search: Exp
     <>
       <Filters group={group} search={search} onChange={setSearch} />
 
-      <Card className="py-2">
-        <CardContent className="px-2">
+      <Card>
+        <CardContent>
           {page.items.length === 0 ? (
             <Empty className="py-10">
               <EmptyHeader>
@@ -243,7 +243,7 @@ function ExpenseRow({ group, expense }: { group: Group; expense: GroupExpense })
       </TableCell>
       <TableCell className="hidden truncate md:table-cell">{payer}</TableCell>
       <TableCell className="hidden text-muted-foreground xl:table-cell">{split}</TableCell>
-      <TableCell className="text-right font-semibold tabular-nums">
+      <TableCell className="text-right font-mono font-medium tabular-nums">
         {formatMoney(expense.amountCents, group.currency)}
       </TableCell>
       <TableCell>

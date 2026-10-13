@@ -51,12 +51,12 @@ export function NameForm({ email }: { email: string }) {
         <header className="grid gap-4">
           <span
             aria-hidden="true"
-            className="grid size-11 place-items-center rounded-xl border bg-background text-primary"
+            className="grid size-11 place-items-center rounded-xl border border-highlight-border bg-highlight text-primary"
           >
             <UserRound className="size-5" />
           </span>
           <div className="grid gap-1.5">
-            <h1 className="m-0 text-2xl font-bold tracking-tight">
+            <h1 className="m-0 text-2xl font-semibold tracking-[-0.03em]">
               What’s your name?
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -87,7 +87,7 @@ export function NameForm({ email }: { email: string }) {
               maxLength={NAME_MAX_LENGTH}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-11 bg-background text-[0.9375rem] dark:bg-background"
+              className="h-11 text-[0.9375rem]"
               aria-invalid={fieldError ? true : undefined}
               aria-describedby={fieldError ? 'profile-name-error' : undefined}
             />

@@ -60,7 +60,7 @@ export function SettingsView() {
               </FieldDescription>
             </Field>
           </CardContent>
-          <CardFooter className="mt-6 justify-end border-t py-4">
+          <CardFooter className="mt-6 justify-end">
             <Button type="submit" size="lg">
               Save
             </Button>

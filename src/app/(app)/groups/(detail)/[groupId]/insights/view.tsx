@@ -173,7 +173,7 @@ function BarCard({
         {rows.map((row) => (
           <Progress key={row.key} value={(row.value / max) * 100}>
             <ProgressLabel className="text-sm">{row.label}</ProgressLabel>
-            <ProgressValue className="ml-auto text-sm font-semibold tabular-nums">
+            <ProgressValue className="ml-auto text-sm font-mono font-medium tabular-nums">
               {() => format(row.value)}
             </ProgressValue>
           </Progress>

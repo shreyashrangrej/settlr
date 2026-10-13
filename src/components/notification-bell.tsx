@@ -57,19 +57,21 @@ export function NotificationBell() {
       <PopoverTrigger
         render={
           <Button
-            variant="ghost"
-            size="icon"
+            variant="outline"
+            size="icon-lg"
             aria-label={label}
             title={label}
-            className="relative data-popup-open:bg-muted"
+            className="relative border-border bg-card data-popup-open:bg-tile"
           />
         }
       >
-        <Bell />
+        <Bell className="size-[18px]" />
         {count > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[0.625rem] leading-none font-bold text-white tabular-nums">
-            {count > 99 ? '99+' : count}
-          </span>
+          // The count is in the button's label; the dot just flags it.
+          <span
+            aria-hidden="true"
+            className="absolute top-2.5 right-[11px] size-[7px] rounded-full bg-destructive"
+          />
         )}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-96 max-w-[calc(100vw-1.5rem)] gap-0 p-0">

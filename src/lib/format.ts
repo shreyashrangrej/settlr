@@ -5,13 +5,17 @@ import type { Currency } from './schemas'
 
 const moneyFormatters = new Map<string, Intl.NumberFormat>()
 
+/** Rupees group digits the Indian way (₹1,00,000); negatives use a real minus. */
 export function formatMoney(cents: number, currency: Currency) {
   let formatter = moneyFormatters.get(currency)
   if (!formatter) {
-    formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency })
+    formatter = new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-US', {
+      style: 'currency',
+      currency,
+    })
     moneyFormatters.set(currency, formatter)
   }
-  return formatter.format(cents / 100)
+  return formatter.format(cents / 100).replace('-', '−')
 }
 
 /** Every non-zero currency in a balance, e.g. "$12.00 + €4.50". */
@@ -37,6 +41,20 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 /** Formats a `YYYY-MM-DD` date string. */
 export function formatDate(isoDate: string) {
   return dateFormatter.format(new Date(`${isoDate}T00:00:00Z`))
+}
+
+const longDateFormatter = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'UTC',
+})
+
+/** A `YYYY-MM-DD` date as "Tuesday, 13 October". */
+export function formatLongDate(isoDate: string) {
+  const parts = longDateFormatter.formatToParts(new Date(`${isoDate}T00:00:00Z`))
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
+  return `${part('weekday')}, ${part('day')} ${part('month')}`
 }
 
 const monthFormatter = new Intl.DateTimeFormat('en-US', {

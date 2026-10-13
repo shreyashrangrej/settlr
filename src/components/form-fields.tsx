@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
 
+import { CATEGORY_STYLE } from '#/components/category'
 import { Button } from '#/components/ui/button'
 import { Calendar } from '#/components/ui/calendar'
 import {
@@ -91,6 +92,41 @@ export function CategorySelect(props: {
   return <SelectField {...props} options={categoryOptions} />
 }
 
+/** The categories as pill toggles; the selected one takes the accent. */
+export function CategoryChips({
+  value,
+  onChange,
+}: {
+  value: Category
+  onChange: (category: Category) => void
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {CATEGORIES.map((category) => {
+        const Icon = CATEGORY_STYLE[category].icon
+        const selected = category === value
+        return (
+          <button
+            key={category}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onChange(category)}
+            className={cn(
+              'flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[0.8125rem] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-[15px]',
+              selected
+                ? 'border-primary bg-primary/12 font-semibold text-primary'
+                : 'border-input hover:bg-tile',
+            )}
+          >
+            <Icon />
+            {categoryLabel(category)}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 /** A money input with the currency code shown inside it. */
 export function AmountInput({
   id,
@@ -115,7 +151,7 @@ export function AmountInput({
         value={value}
         aria-invalid={invalid || undefined}
         onChange={(e) => onChange(e.target.value)}
-        className="tabular-nums"
+        className="font-mono tabular-nums"
       />
       <InputGroupAddon align="inline-end">
         <InputGroupText>{currency}</InputGroupText>
@@ -163,7 +199,10 @@ export function DatePicker({
             id={id}
             type="button"
             variant="outline"
-            className={cn('w-full justify-start px-2.5 font-normal', className)}
+            className={cn(
+              'h-11 w-full justify-start rounded-xl border-border bg-field px-3 text-sm font-normal hover:bg-field',
+              className,
+            )}
           />
         }
       >

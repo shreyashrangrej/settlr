@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
 
+import { AppShell } from '#/components/app-shell'
 import { NameForm } from '#/components/name-form'
 import { NavigationProgress } from '#/components/navigation-progress'
 import { Providers } from '#/components/providers'
-import { SiteHeader } from '#/components/site-header'
 import { Toaster } from '#/components/ui/sonner'
 import { themeInitScript } from '#/lib/theme'
 import { getAuthSession } from '#/server/auth.server'
@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getAuthSession()
   const { user } = session
   // New email-code accounts have no name yet. Ask for it before showing any
-  // page; the header stays so they can still sign out.
+  // page; the top bar stays so they can still sign out.
   const needsName = user !== null && user.name === ''
 
   return (
@@ -40,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
         />
       </head>
       <body>
@@ -49,10 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <NavigationProgress />
         </Suspense>
         <Providers session={session}>
-          <SiteHeader />
-          <main className="app-shell">
-            {needsName ? <NameForm email={user.email} /> : children}
-          </main>
+          <AppShell>{needsName ? <NameForm email={user.email} /> : children}</AppShell>
           <Toaster position="bottom-right" />
         </Providers>
       </body>

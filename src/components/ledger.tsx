@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { hashIndex } from '#/components/category'
 import { Avatar, AvatarFallback } from '#/components/ui/avatar'
 import { Badge } from '#/components/ui/badge'
 import { errorMessage } from '#/lib/errors'
@@ -46,7 +47,10 @@ export function useAction<Args extends Array<unknown>, Result>(
   return { run, pending, error, setError }
 }
 
-/** An amount coloured by direction: positive is owed to you. */
+/**
+ * An amount coloured by direction: blue is owed to you, orange is what you
+ * owe. The sign is always shown too, so it never relies on colour alone.
+ */
 export function SignedAmount({
   cents,
   currency,
@@ -59,13 +63,13 @@ export function SignedAmount({
   return (
     <span
       className={cn(
-        'font-semibold whitespace-nowrap tabular-nums',
+        'font-mono font-medium whitespace-nowrap tabular-nums',
         cents > 0 ? 'text-positive' : cents < 0 ? 'text-destructive' : 'text-muted-foreground',
         className,
       )}
     >
-      {cents > 0 ? '+' : ''}
-      {formatMoney(cents, currency)}
+      {cents > 0 ? '+' : cents < 0 ? '−' : ''}
+      {formatMoney(Math.abs(cents), currency)}
     </span>
   )
 }
@@ -89,12 +93,14 @@ export function BalanceText({
   return (
     <span className={cn('grid justify-items-end gap-0.5', className)}>
       {entries.map(([currency, cents]) => (
-        <span
-          key={currency}
-          className={cents > 0 ? 'text-positive' : 'text-destructive'}
-        >
+        <span key={currency} className="text-muted-foreground">
           {cents > 0 ? `${them} owe${them === 'They' ? '' : 's'} you ` : 'You owe '}
-          <span className="font-semibold tabular-nums">
+          <span
+            className={cn(
+              'font-mono font-medium tabular-nums',
+              cents > 0 ? 'text-positive' : 'text-destructive',
+            )}
+          >
             {formatMoney(Math.abs(cents), currency as Currency)}
           </span>
         </span>
@@ -103,13 +109,19 @@ export function BalanceText({
   )
 }
 
+// Avatar fills, picked from the name so a person keeps their colour.
+const AVATAR_FILLS = ['#2B3A55', '#4D4326', '#23463A', '#55332A', '#37305A']
+
 export function PersonAvatar({
   name,
   size = 'default',
+  me = false,
   className,
 }: {
   name: string
   size?: 'default' | 'sm' | 'lg'
+  /** The signed-in user, who gets the brand gradient. */
+  me?: boolean
   className?: string
 }) {
   const initials = name
@@ -120,7 +132,14 @@ export function PersonAvatar({
     .join('')
   return (
     <Avatar size={size} className={className}>
-      <AvatarFallback className="bg-primary/15 font-semibold text-primary uppercase">
+      <AvatarFallback
+        className={cn('uppercase', me ? 'font-bold text-on-fill' : 'text-[#F2F2EE]')}
+        style={{
+          background: me
+            ? 'linear-gradient(135deg, #B18CFF, #7CB8FF)'
+            : AVATAR_FILLS[hashIndex(name, AVATAR_FILLS.length)],
+        }}
+      >
         {initials || '?'}
       </AvatarFallback>
     </Avatar>
@@ -147,9 +166,7 @@ export function FriendStatusBadge({
 }: {
   status: 'linked' | 'pending' | 'declined' | null
 }) {
-  if (status === 'linked') {
-    return <Badge className="bg-positive/15 text-positive">On Settlr</Badge>
-  }
+  if (status === 'linked') return <Badge>On Settlr</Badge>
   if (status === 'pending') return <Badge variant="secondary">Request sent</Badge>
   if (status === 'declined') return <Badge variant="outline">Request declined</Badge>
   return null

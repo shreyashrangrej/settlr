@@ -58,7 +58,7 @@ export function NotificationsView() {
               expenses and payments.
             </CardDescription>
           </CardHeader>
-          <CardContent className="px-2">
+          <CardContent>
             <ItemGroup>
               {data.requests.map((request) => (
                 <RequestRow key={request.id} request={request} />
@@ -68,8 +68,8 @@ export function NotificationsView() {
         </Card>
       )}
 
-      <Card className="py-2">
-        <CardContent className="px-2">
+      <Card>
+        <CardContent>
           {data.items.length === 0 ? (
             <Empty className="py-12">
               <EmptyHeader>

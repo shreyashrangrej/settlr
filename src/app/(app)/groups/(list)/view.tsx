@@ -5,18 +5,9 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { Plus, Users } from 'lucide-react'
 
-import { SignedAmount } from '#/components/ledger'
+import { GroupTile } from '#/components/group-tile'
 import { PageHeader } from '#/components/page-header'
 import { buttonVariants } from '#/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card'
 import {
   Empty,
   EmptyContent,
@@ -25,8 +16,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '#/components/ui/empty'
-import { Badge } from '#/components/ui/badge'
-import { formatMoney, plural } from '#/lib/format'
 import { cn } from '#/lib/utils'
 import { api } from '#convex/_generated/api'
 
@@ -36,7 +25,7 @@ function NewGroupLink({ className }: { className?: string }) {
       href="/groups/new"
       className={cn(buttonVariants({ size: 'lg' }), 'no-underline', className)}
     >
-      <Plus />
+      <Plus strokeWidth={2.4} />
       New group
     </Link>
   )
@@ -69,49 +58,13 @@ export function GroupsView() {
           </EmptyContent>
         </Empty>
       ) : (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] gap-4">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4.5">
           {groups.map((group) => (
             <li key={group.id}>
-              <Link
-                href={`/groups/${group.id}`}
-                className="block rounded-xl no-underline outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                <Card className="h-full transition-shadow hover:ring-primary/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <span className="truncate">{group.name}</span>
-                      {!group.isOwner && <Badge variant="outline">Shared</Badge>}
-                    </CardTitle>
-                    <CardDescription>
-                      {group.memberCount} members · {plural(group.expenseCount, 'expense')}
-                    </CardDescription>
-                    <CardAction>
-                      <Badge variant="secondary">{group.currency}</Badge>
-                    </CardAction>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-bold tabular-nums">
-                      {formatMoney(group.totalCents, group.currency)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Total spent</p>
-                  </CardContent>
-                  <CardFooter className="justify-between border-t py-3 text-sm">
-                    {group.myNetCents === 0 ? (
-                      <span className="text-muted-foreground">You’re square</span>
-                    ) : (
-                      <>
-                        <span className="text-muted-foreground">
-                          {group.myNetCents > 0 ? 'You’re owed' : 'You owe'}
-                        </span>
-                        <SignedAmount
-                          cents={group.myNetCents}
-                          currency={group.currency}
-                        />
-                      </>
-                    )}
-                  </CardFooter>
-                </Card>
-              </Link>
+              <GroupTile
+                group={group}
+                className="h-full rounded-3xl border-border bg-card p-5"
+              />
             </li>
           ))}
         </ul>

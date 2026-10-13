@@ -91,7 +91,7 @@ export function NewGroupView() {
                 <FieldLegend variant="label">Members</FieldLegend>
                 <FieldDescription>Up to 20 people, including you.</FieldDescription>
                 <div className="grid gap-2">
-                  <div className="flex h-9 items-center gap-2.5 rounded-lg border bg-muted/40 px-2.5 text-sm">
+                  <div className="flex h-11 items-center gap-2.5 rounded-xl border bg-tile px-3 text-sm">
                     <PersonAvatar name={user?.name || 'You'} size="sm" />
                     <span className="truncate">{user?.name || 'You'}</span>
                     <Badge variant="secondary" className="ml-auto">You</Badge>
@@ -142,7 +142,7 @@ export function NewGroupView() {
               {error && <FieldError>{error}</FieldError>}
             </FieldGroup>
           </CardContent>
-          <CardFooter className="mt-6 justify-end gap-2 border-t py-4">
+          <CardFooter className="mt-6 justify-end gap-2.5">
             <Link href="/groups" className={buttonVariants({ variant: 'ghost', size: 'lg' })}>
               Cancel
             </Link>

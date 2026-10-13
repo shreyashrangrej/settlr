@@ -24,7 +24,7 @@ export function BackButton({
     <Button
       variant="outline"
       size="icon-lg"
-      className="shrink-0 rounded-full"
+      className="shrink-0 border-border bg-card text-muted-foreground"
       aria-label={label}
       title={label}
       onClick={() => (canGoBack() ? router.back() : router.push(fallback))}
@@ -37,6 +37,7 @@ export function BackButton({
 /** Title row at the top of a page, with optional back button and actions. */
 export function PageHeader({
   title,
+  eyebrow,
   description,
   back,
   media,
@@ -44,6 +45,8 @@ export function PageHeader({
   className,
 }: {
   title: React.ReactNode
+  /** A short line above the title, e.g. today's date. */
+  eyebrow?: React.ReactNode
   description?: React.ReactNode
   back?: { fallback: string; label: string }
   media?: React.ReactNode
@@ -53,23 +56,24 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3',
+        'mb-4.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 pb-1.5',
         className,
       )}
     >
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3.5">
         {back && <BackButton {...back} />}
         {media}
-        <div className="grid min-w-0 gap-0.5">
-          <h1 className="m-0 truncate text-2xl font-bold tracking-tight">
+        <div className="grid min-w-0 gap-1">
+          {eyebrow && <p className="text-[0.8125rem] text-muted-foreground">{eyebrow}</p>}
+          <h1 className="m-0 truncate text-[1.875rem] leading-[1.1] font-semibold tracking-[-0.04em]">
             {title}
           </h1>
           {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="text-[0.8125rem] text-muted-foreground">{description}</p>
           )}
         </div>
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2.5">{actions}</div>}
     </div>
   )
 }
@@ -83,9 +87,9 @@ export function SplitLayout({
   aside: React.ReactNode
 }) {
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-      <div className="grid min-w-0 gap-4">{children}</div>
-      <aside className="grid gap-4 lg:sticky lg:top-18">{aside}</aside>
+    <div className="grid items-start gap-4.5 xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <div className="grid min-w-0 gap-4.5">{children}</div>
+      <aside className="grid gap-4.5 xl:sticky xl:top-6">{aside}</aside>
     </div>
   )
 }

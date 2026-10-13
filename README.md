@@ -75,7 +75,7 @@ convex/                    backend: schema, queries and mutations
   auth.ts http.ts          Better Auth running inside Convex
 src/
   app/                     Next.js App Router
-    layout.tsx             root document: session, header, providers
+    layout.tsx             root document: session, providers, app shell
     page.tsx               landing hero and sign-in
     (app)/                 signed-in area; its layout redirects signed-out
                            visitors. dashboard, friends, groups, personal,

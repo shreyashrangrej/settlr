@@ -106,8 +106,8 @@ export function PersonalView({ month, thisMonth }: { month: string; thisMonth: s
       >
         <MonthStats data={data} />
 
-        <Card className="py-2">
-          <CardContent className="px-2">
+        <Card>
+          <CardContent>
             {data.items.length === 0 ? (
               <Empty className="py-10">
                 <EmptyHeader>
@@ -207,7 +207,7 @@ function ByCategory({ data }: { data: PersonalMonth }) {
           data.byCategory.map((row) => (
             <Progress key={`${row.currency}:${row.category}`} value={(row.cents / max) * 100}>
               <ProgressLabel className="text-sm">{categoryLabel(row.category)}</ProgressLabel>
-              <ProgressValue className="ml-auto text-sm font-semibold tabular-nums">
+              <ProgressValue className="ml-auto text-sm font-mono font-medium tabular-nums">
                 {() => formatMoney(row.cents, row.currency)}
               </ProgressValue>
             </Progress>
@@ -243,7 +243,7 @@ function ExpenseRow({ expense }: { expense: PersonalExpense }) {
       <TableCell className="hidden text-muted-foreground md:table-cell">
         {formatDate(expense.date)}
       </TableCell>
-      <TableCell className="text-right font-semibold tabular-nums">
+      <TableCell className="text-right font-mono font-medium tabular-nums">
         {formatMoney(expense.amountCents, expense.currency)}
       </TableCell>
       <TableCell>

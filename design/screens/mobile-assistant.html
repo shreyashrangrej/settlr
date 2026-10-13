@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settlr — AI assistant (mobile)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#F2F2EE}a:hover{color:#B18CFF}
+button,input{font:inherit;color:inherit}
+input::placeholder{color:#8A8D96}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0C0D10; color: #F2F2EE; font-family: 'Geist', 'Helvetica Neue', sans-serif; font-size: 14px">
+
+  <div style="box-sizing: border-box; padding: 56px 16px 0; display: flex; flex-direction: column; gap: 14px">
+
+    <header style="display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px">
+      <a href="mobile-home.html" aria-label="Back" style="width: 44px; height: 44px; border-radius: 50%; background: #16171C; border: 1px solid #24262D; box-sizing: border-box; display: flex; align-items: center; justify-content: center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      </a>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 1px">
+        <h1 style="margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 6px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B18CFF" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path></svg>
+          Assistant
+        </h1>
+        <span style="font-size: 11px; color: #A0A2AB">Asks before every change</span>
+      </div>
+      <button type="button" aria-label="Chat history" style="width: 44px; height: 44px; border-radius: 50%; background: #16171C; border: 1px solid #24262D; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg>
+      </button>
+    </header>
+
+    <div role="log" aria-label="Conversation" style="display: flex; flex-direction: column; gap: 12px">
+
+      <div style="align-self: center; display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 99px; background: #16171C; border: 1px solid #24262D; font-size: 12px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B18CFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>
+        <span style="color: #D6D7DC">Added Pizza night · ₹1,860 · Flat 4B</span>
+        <a href="#" style="color: #A0A2AB">Undo</a>
+      </div>
+
+      <div style="align-self: flex-end; max-width: 82%; padding: 10px 14px; border-radius: 18px 18px 4px 18px; background: #1D1F25; line-height: 1.45">Make it ₹2,100. Meera only had a drink, put her at ₹300.</div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; max-width: 92%">
+        <p style="margin: 0; color: #D6D7DC; line-height: 1.45">Updated. You and Ananya split the rest.</p>
+        <div style="border-radius: 16px; background: #16171C; border: 1px solid #24262D; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="color: #A0A2AB">Total</span><span style="font-family: 'Geist Mono', ui-monospace, monospace"><s style="color: #8A8D96">₹1,860</s> → ₹2,100</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="color: #A0A2AB">Meera</span><span style="font-family: 'Geist Mono', ui-monospace, monospace"><s style="color: #8A8D96">₹620</s> → ₹300</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="color: #A0A2AB">You, Ananya</span><span style="font-family: 'Geist Mono', ui-monospace, monospace"><s style="color: #8A8D96">₹620</s> → ₹900 each</span></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #22242A; font-size: 12px">
+            <span style="display: flex; align-items: center; gap: 5px; color: #B18CFF; font-weight: 600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>Applied</span>
+            <a href="#" style="color: #A0A2AB">Undo</a>
+          </div>
+        </div>
+      </div>
+
+      <div style="align-self: flex-end; max-width: 82%; padding: 10px 14px; border-radius: 18px 18px 4px 18px; background: #1D1F25; line-height: 1.45">Delete the duplicate groceries from 10 Oct</div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; max-width: 92%">
+        <p style="margin: 0; color: #D6D7DC; line-height: 1.45">Found two identical entries, 4 minutes apart. Delete the later one?</p>
+        <div style="border-radius: 16px; background: #16171C; border: 1px solid #5A3626; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600; text-decoration: line-through; color: #D6D7DC">Groceries</span><span style="font-size: 12px; color: #A0A2AB">Flat 4B · Ananya · 10 Oct, 9:42 PM</span></span>
+            <span style="font-family: 'Geist Mono', ui-monospace, monospace; text-decoration: line-through; color: #D6D7DC">₹2,460</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+            <button type="button" style="min-height: 44px; border: 0; border-radius: 12px; background: #FF9B6A; color: #0C0D10; font-weight: 600; cursor: pointer">Delete</button>
+            <button type="button" style="min-height: 44px; border: 1px solid #33353D; border-radius: 12px; background: transparent; font-weight: 600; cursor: pointer">Keep both</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 16px 28px; background: linear-gradient(to bottom, rgba(12,13,16,0), #0C0D10 24%); display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; gap: 8px; margin-right: -16px">
+      <button type="button" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid #2A2C33; border-radius: 99px; background: #0C0D10; font-size: 13px; color: #D6D7DC; cursor: pointer">Who owes me most?</button>
+      <button type="button" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid #2A2C33; border-radius: 99px; background: #0C0D10; font-size: 13px; color: #D6D7DC; cursor: pointer">Scan a receipt</button>
+      <button type="button" style="flex: none; min-height: 36px; padding: 0 12px; border: 1px solid #2A2C33; border-radius: 99px; background: #0C0D10; font-size: 13px; color: #D6D7DC; cursor: pointer">Split last Uber</button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 8px; border-radius: 26px; background: #16171C; border: 1px solid #2A2C33">
+      <button type="button" aria-label="Attach receipt" style="width: 40px; height: 40px; border: 0; border-radius: 50%; background: #1D1F25; color: #A0A2AB; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+      <label style="flex: 1; min-width: 0; display: flex">
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Message the assistant</span>
+        <input type="text" placeholder="Add, edit or delete an expense" style="flex: 1; min-width: 0; height: 40px; border: 0; outline: 0; background: transparent; font-size: 15px">
+      </label>
+      <button type="button" aria-label="Speak" style="width: 44px; height: 44px; border: 0; border-radius: 50%; background: #B18CFF; color: #0C0D10; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

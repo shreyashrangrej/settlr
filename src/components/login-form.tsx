@@ -132,7 +132,7 @@ export function LoginForm({ className }: { className?: string }) {
         <header className="grid gap-4">
           <span
             aria-hidden="true"
-            className="grid size-11 place-items-center rounded-xl border bg-background text-primary"
+            className="grid size-11 place-items-center rounded-xl border border-highlight-border bg-highlight text-primary"
           >
             {step === 'email' ? (
               <ReceiptText className="size-5" />
@@ -142,7 +142,7 @@ export function LoginForm({ className }: { className?: string }) {
           </span>
           {step === 'email' ? (
             <div className="grid gap-1.5">
-              <h2 className="m-0 text-2xl font-bold tracking-tight">
+              <h2 className="m-0 text-2xl font-semibold tracking-[-0.03em]">
                 Sign in to Settlr
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -151,7 +151,7 @@ export function LoginForm({ className }: { className?: string }) {
             </div>
           ) : (
             <div className="grid gap-1.5">
-              <h2 className="m-0 text-2xl font-bold tracking-tight">
+              <h2 className="m-0 text-2xl font-semibold tracking-[-0.03em]">
                 Check your inbox
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -170,7 +170,7 @@ export function LoginForm({ className }: { className?: string }) {
             <Button
               type="button"
               variant="outline"
-              className="h-11 w-full gap-3 bg-background text-[0.9375rem] dark:bg-background"
+              className="h-11 w-full gap-3 text-[0.9375rem]"
               disabled={busy}
               onClick={() => run('google', signInWithGoogle)}
             >
@@ -205,7 +205,7 @@ export function LoginForm({ className }: { className?: string }) {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-11 bg-background pl-10 text-[0.9375rem] dark:bg-background"
+                    className="pl-10 text-[0.9375rem]"
                     aria-invalid={fieldError ? true : undefined}
                     aria-describedby={fieldError ? 'login-email-error' : undefined}
                   />
@@ -254,7 +254,7 @@ export function LoginForm({ className }: { className?: string }) {
                       key={i}
                       index={i}
                       aria-invalid={fieldError ? true : undefined}
-                      className="size-12 rounded-lg border bg-background text-lg font-semibold first:rounded-lg last:rounded-lg dark:bg-background"
+                      className="size-12 rounded-xl border bg-field font-mono text-lg font-medium first:rounded-xl last:rounded-xl"
                     />
                   ))}
                 </InputOTPGroup>

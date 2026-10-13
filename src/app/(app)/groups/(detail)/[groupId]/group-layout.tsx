@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { ArrowRight, ChartColumn, Pencil, Plus, Receipt } from 'lucide-react'
 
 import { PersonAvatar, SignedAmount } from '#/components/ledger'
@@ -28,13 +29,16 @@ import { formatMoney, memberName } from '#/lib/format'
 import type { Group } from '#/lib/types'
 import { cn } from '#/lib/utils'
 
-// Page links styled like shadcn's TabsList/TabsTrigger.
+// Page links styled like the segmented control (TabsList/TabsTrigger).
 const tabLink =
-  'inline-flex h-full items-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted-foreground no-underline transition-colors hover:text-foreground data-[status=active]:bg-background data-[status=active]:text-foreground data-[status=active]:shadow-sm dark:data-[status=active]:bg-input/30 [&_svg]:size-4'
+  'inline-flex h-full items-center gap-1.5 rounded-[9px] px-3.5 text-[0.8125rem] text-muted-foreground no-underline transition-colors hover:text-foreground data-[status=active]:bg-segment data-[status=active]:font-semibold data-[status=active]:text-foreground [&_svg]:size-3.5'
 
 /** A group's header, section tabs and balances around its pages. */
 export function GroupLayoutView({ children }: { children: React.ReactNode }) {
   const group = useGroup()
+  // The add/edit expense form has its own split panel (and shows what the
+  // expense does to your balance), so it gets the full width.
+  const isForm = usePathname().includes('/expenses/')
 
   // Deleted while open (here or in another tab).
   if (!group) {
@@ -84,24 +88,23 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
         }
       />
 
-      <SplitLayout
-        aside={<Balances group={group} />}
-      >
-        <nav
-          aria-label="Group sections"
-          className={cn(tabsListVariants(), 'h-9 bg-muted')}
-        >
-          <NavLink href={`/groups/${group.id}`} exact className={tabLink}>
-            <Receipt />
-            Expenses
-          </NavLink>
-          <NavLink href={`/groups/${group.id}/insights`} className={tabLink}>
-            <ChartColumn />
-            Insights
-          </NavLink>
-        </nav>
-        {children}
-      </SplitLayout>
+      {isForm ? (
+        children
+      ) : (
+        <SplitLayout aside={<Balances group={group} />}>
+          <nav aria-label="Group sections" className={cn(tabsListVariants(), 'h-10.5')}>
+            <NavLink href={`/groups/${group.id}`} exact className={tabLink}>
+              <Receipt />
+              Expenses
+            </NavLink>
+            <NavLink href={`/groups/${group.id}/insights`} className={tabLink}>
+              <ChartColumn />
+              Insights
+            </NavLink>
+          </nav>
+          {children}
+        </SplitLayout>
+      )}
     </>
   )
 }
@@ -120,7 +123,7 @@ function Balances({ group }: { group: Group }) {
         <ul className="grid gap-2.5">
           {group.members.map((m) => (
             <li key={m.id} className="flex items-center gap-2.5 text-sm">
-              <PersonAvatar name={m.name} size="sm" />
+              <PersonAvatar name={m.name} me={m.id === group.meMemberId} size="sm" />
               <span className="min-w-0 flex-1 truncate">
                 {m.name}
                 {m.id === group.meMemberId && (
@@ -143,14 +146,14 @@ function Balances({ group }: { group: Group }) {
               {group.settlements.map((s) => (
                 <li
                   key={`${s.from}-${s.to}`}
-                  className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-2 text-sm"
+                  className="flex items-center gap-2 rounded-[14px] bg-field px-3 py-2.5 text-sm"
                 >
                   <span className="font-medium">{name(s.from)}</span>
                   <ArrowRight className="size-3.5 text-muted-foreground" aria-label="pays" />
                   <span className="font-medium">
                     {s.to === group.meMemberId ? 'you' : name(s.to)}
                   </span>
-                  <span className="ml-auto font-semibold tabular-nums">
+                  <span className="ml-auto font-mono font-medium tabular-nums">
                     {formatMoney(s.amountCents, group.currency)}
                   </span>
                 </li>

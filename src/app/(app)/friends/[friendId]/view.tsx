@@ -161,11 +161,11 @@ export function FriendView({ friendId, limit }: { friendId: string; limit: numbe
           </>
         }
       >
-        <Card className="py-2">
-          <CardHeader className="px-4 pt-2">
+        <Card>
+          <CardHeader>
             <CardTitle>Activity</CardTitle>
           </CardHeader>
-          <CardContent className="px-2">
+          <CardContent>
             {ledger.items.length === 0 ? (
               <Empty className="py-8">
                 <EmptyHeader>
@@ -278,13 +278,13 @@ function EntryRow({ entry, friend }: { entry: FriendEntry; friend: Friend }) {
       <TableCell className="text-right">
         {entry.kind === 'payment' ? (
           // The description already says who paid whom.
-          <span className="font-semibold tabular-nums">
+          <span className="font-mono font-medium tabular-nums">
             {formatMoney(entry.amountCents, entry.currency)}
           </span>
         ) : (
           <span
             className={cn(
-              'block truncate font-semibold tabular-nums',
+              'block truncate font-mono font-medium tabular-nums',
               entry.effectCents > 0 ? 'text-positive' : 'text-destructive',
             )}
           >

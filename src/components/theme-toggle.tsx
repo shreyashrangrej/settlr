@@ -1,27 +1,15 @@
 'use client'
 
-import { useEffect } from 'react'
 import { Moon, Sun } from 'lucide-react'
 
 import { Button } from '#/components/ui/button'
-import { applyTheme, readStoredTheme } from '#/lib/theme'
+import { applyTheme } from '#/lib/theme'
+import { cn } from '#/lib/utils'
 
-export function ThemeToggle() {
-  // Until the viewer picks a theme, keep following the OS setting live.
-  useEffect(() => {
-    const query = window.matchMedia('(prefers-color-scheme: dark)')
-    const onChange = () => {
-      if (!readStoredTheme()) {
-        applyTheme(query.matches ? 'dark' : 'light', { persist: false })
-      }
-    }
-    query.addEventListener('change', onChange)
-    return () => query.removeEventListener('change', onChange)
-  }, [])
-
+export function ThemeToggle({ className }: { className?: string }) {
   function toggle() {
     const isDark = document.documentElement.classList.contains('dark')
-    applyTheme(isDark ? 'light' : 'dark', { persist: true })
+    applyTheme(isDark ? 'light' : 'dark')
   }
 
   // Both icons are rendered and swapped with the `dark:` variant, so the
@@ -33,6 +21,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label="Toggle dark mode"
       title="Toggle dark mode"
+      className={cn('text-muted-foreground', className)}
     >
       <Sun className="dark:hidden" />
       <Moon className="hidden dark:block" />

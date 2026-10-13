@@ -104,9 +104,9 @@ export function FriendsView() {
               <li key={friend.id}>
                 <Link
                   href={`/friends/${friend.id}`}
-                  className="block h-full rounded-xl no-underline outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="block h-full rounded-3xl no-underline outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
-                  <Card size="sm" className="h-full transition-shadow hover:ring-primary/50">
+                  <Card size="sm" className="h-full transition-shadow hover:border-primary/50">
                     <CardHeader>
                       <div className="flex min-w-0 items-center gap-3">
                         <PersonAvatar name={friend.name} size="lg" />

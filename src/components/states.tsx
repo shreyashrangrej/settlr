@@ -40,7 +40,7 @@ export function ErrorState({ error, reset }: { error: Error; reset: () => void }
   return (
     <Empty className="py-20" role="alert">
       <EmptyHeader>
-        <EmptyMedia variant="icon" className="bg-destructive/15 text-destructive">
+        <EmptyMedia variant="icon" className="bg-destructive/14 text-destructive">
           <CircleAlert />
         </EmptyMedia>
         <EmptyTitle>Something went wrong</EmptyTitle>

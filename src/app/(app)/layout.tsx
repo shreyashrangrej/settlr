@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 
-import { AppTabs } from '#/components/app-nav'
 import { getAuthSession } from '#/server/auth.server'
 
 // The signed-in area (/dashboard, /friends, /groups, /personal, /budget,
@@ -9,10 +8,5 @@ import { getAuthSession } from '#/server/auth.server'
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { user } = await getAuthSession()
   if (!user) redirect('/')
-  return (
-    <>
-      <AppTabs className="mb-4 md:hidden" />
-      {children}
-    </>
-  )
+  return children
 }

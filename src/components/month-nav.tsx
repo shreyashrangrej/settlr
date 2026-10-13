@@ -28,7 +28,7 @@ export function MonthNav({
     </Link>
   )
   return (
-    <nav className="flex items-center gap-1 rounded-lg border p-1" aria-label="Month">
+    <nav className="flex items-center gap-1 rounded-xl border bg-card p-[3px]" aria-label="Month">
       {link(shiftMonth(month, -1), 'Previous month', <ChevronLeft />)}
       <span className="min-w-36 text-center text-sm font-semibold">{formatMonth(month)}</span>
       {link(shiftMonth(month, 1), 'Next month', <ChevronRight />)}

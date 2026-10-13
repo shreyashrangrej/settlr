@@ -1,8 +1,9 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* Dark mode is class-based so the header toggle can override the OS setting.
-   An inline script in __root.tsx sets `.dark` on <html> before first paint. */
+/* Dark mode is class-based so the theme toggle can override the default.
+   An inline script in src/app/layout.tsx sets `.dark` on <html> before first
+   paint. */
 @custom-variant dark (&:is(.dark *));
 
 /* shadcn's Base UI components style orientation with `data-horizontal:` and
@@ -13,20 +14,41 @@
 @custom-variant data-vertical (&[data-orientation="vertical"]);
 
 :root {
+  /* The light theme is derived from the dark one, which is the design's
+     reference (and the default, see src/lib/theme.ts). */
   color-scheme: light;
-  --bg: #f7f7f5;
+  --bg: #f6f6f3;
+  --bg-sidebar: #efefeb;
   --surface: #ffffff;
-  --text: #1c1c1a;
-  --muted: #6b6b66;
-  --border: #e3e3de;
-  --accent: #2f6f5e;
+  --surface-2: #f0f0ec;
+  --field: #fafaf8;
+  --border: #e2e2dc;
+  --border-strong: #d0d0c9;
+  --divider: #e8e8e3;
+  --text: #15161a;
+  --text-2: #3c3e46;
+  --muted: #5f626b;
+  --faint: #7c7f88;
+  --dim: #9a9ca4;
+  --accent: #6a3fdb;
   --accent-contrast: #ffffff;
-  --positive: #2f7d4f;
-  --negative: #b4432f;
-  --skeleton: #ecece7;
-  --radius: 10px;
-  --font: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --shadow-color: 150 40% 15%;
+  --accent-surface: #f1ebff;
+  --accent-border: #cdbcf6;
+  /* Money: `owed` is owed to you, `owe` is what you owe. */
+  --owed: #1f6fd1;
+  --owe: #c2531b;
+  --owe-contrast: #ffffff;
+  --danger-border: #ecc3ab;
+  /* Text on the group and category colour fills. */
+  --on-fill: #0c0d10;
+  --contrast: #15161a;
+  --contrast-text: #f6f6f3;
+  --segment: #ffffff;
+  --skeleton: #e9e9e4;
+  --radius: 12px;
+  --font: 'Geist', 'Helvetica Neue', system-ui, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, monospace;
+  --shadow-color: 250 30% 20%;
 
   /* shadcn's variable names, for component styles that read them directly
      (e.g. the toaster). They follow the tokens above in both themes. */
@@ -36,22 +58,37 @@
   --card-foreground: var(--text);
   --popover: var(--surface);
   --popover-foreground: var(--text);
-  --secondary: var(--skeleton);
+  --secondary: var(--surface-2);
   --secondary-foreground: var(--text);
 }
 
 .dark {
   color-scheme: dark;
-  --bg: #151514;
-  --surface: #1e1e1c;
-  --text: #ecece8;
-  --muted: #9b9b95;
-  --border: #33332f;
-  --accent: #6cc3a8;
-  --accent-contrast: #0f1a17;
-  --positive: #6fcf97;
-  --negative: #f08a74;
-  --skeleton: #2a2a27;
+  --bg: #0c0d10;
+  --bg-sidebar: #111216;
+  --surface: #16171c;
+  --surface-2: #1d1f25;
+  --field: #0f1014;
+  --border: #24262d;
+  --border-strong: #33353d;
+  --divider: #22242a;
+  --text: #f2f2ee;
+  --text-2: #d6d7dc;
+  --muted: #a0a2ab;
+  --faint: #8a8d96;
+  --dim: #6e717b;
+  --accent: #b18cff;
+  --accent-contrast: #0c0d10;
+  --accent-surface: #1b1726;
+  --accent-border: #3d2f63;
+  --owed: #7cb8ff;
+  --owe: #ff9b6a;
+  --owe-contrast: #0c0d10;
+  --danger-border: #5a3626;
+  --contrast: #f2f2ee;
+  --contrast-text: #0c0d10;
+  --segment: #2a2c33;
+  --skeleton: #1d1f25;
   --shadow-color: 0 0% 0%;
 }
 
@@ -61,29 +98,50 @@
    `--accent`, which shadcn calls `primary`. */
 @theme inline {
   --font-sans: var(--font);
+  --font-mono: var(--mono);
   --color-background: var(--bg);
   --color-foreground: var(--text);
+  --color-sidebar: var(--bg-sidebar);
   --color-card: var(--surface);
   --color-card-foreground: var(--text);
   --color-popover: var(--surface);
   --color-popover-foreground: var(--text);
   --color-primary: var(--accent);
   --color-primary-foreground: var(--accent-contrast);
-  --color-secondary: var(--skeleton);
+  --color-secondary: var(--surface-2);
   --color-secondary-foreground: var(--text);
-  --color-muted: var(--skeleton);
+  --color-muted: var(--surface-2);
   --color-muted-foreground: var(--muted);
-  --color-accent: var(--skeleton);
+  --color-accent: var(--surface-2);
   --color-accent-foreground: var(--text);
-  --color-destructive: var(--negative);
-  --color-positive: var(--positive);
+  --color-destructive: var(--owe);
+  --color-destructive-foreground: var(--owe-contrast);
+  --color-positive: var(--owed);
   --color-border: var(--border);
-  --color-input: var(--border);
+  --color-input: var(--border-strong);
   --color-ring: var(--accent);
+  /* Beyond shadcn's names: the design's extra surfaces and text steps. */
+  --color-tile: var(--surface-2);
+  --color-field: var(--field);
+  --color-divider: var(--divider);
+  --color-soft: var(--text-2);
+  --color-faint: var(--faint);
+  --color-dim: var(--dim);
+  --color-highlight: var(--accent-surface);
+  --color-highlight-border: var(--accent-border);
+  --color-danger-border: var(--danger-border);
+  --color-on-fill: var(--on-fill);
+  --color-contrast: var(--contrast);
+  --color-contrast-foreground: var(--contrast-text);
+  --color-segment: var(--segment);
+  --color-skeleton: var(--skeleton);
+  /* Buttons and inputs 10-14px, inner tiles 18px, cards 22px. */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 2px);
+  --radius-2xl: calc(var(--radius) + 6px);
+  --radius-3xl: calc(var(--radius) + 10px);
 }
 
 /* Element defaults live in the base layer so Tailwind utilities on shadcn
@@ -99,6 +157,7 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--font);
+    font-size: 0.875rem;
     line-height: 1.5;
     overflow-x: clip;
   }
@@ -112,15 +171,17 @@
   h3 {
     line-height: 1.2;
     margin: 0 0 0.5rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   h1 {
-    font-size: 1.75rem;
+    font-size: 1.875rem;
+    letter-spacing: -0.04em;
   }
 
   h2 {
-    font-size: 1.125rem;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
   }
 
   h3 {
@@ -144,8 +205,9 @@
   }
 }
 
-/* Full width, with a gutter that grows with the viewport. Not named
-   `container`: Tailwind's utility of that name caps max-width per breakpoint. */
+/* The signed-out pages: full width, with a gutter that grows with the
+   viewport. Not named `container`: Tailwind's utility of that name caps
+   max-width per breakpoint. */
 .app-shell {
   width: 100%;
   padding-inline: clamp(1rem, 3vw, 2.5rem);
@@ -163,9 +225,9 @@ main.app-shell {
   grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
   align-items: center;
   gap: clamp(2.5rem, 5vw, 4.5rem);
-  min-height: calc(100svh - 3.5rem);
-  /* The app pages use the full width, but the hero's copy and sign-in card
-     read as one piece, so they sit together in a centred column. */
+  min-height: calc(100svh - 4rem);
+  /* The hero's copy and sign-in card read as one piece, so they sit together
+     in a centred column. */
   max-width: 68rem;
   /* Cancels main's block padding so the hero fills the first screen. */
   margin: -1rem auto -3rem;
@@ -191,9 +253,9 @@ main.app-shell {
 .hero__title {
   margin: 0 0 1.25rem;
   font-size: clamp(2.9rem, 6.2vw, 5rem);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
 }
 
 .hero__accent {
@@ -236,7 +298,7 @@ main.app-shell {
   width: 1.1rem;
   height: 1.1rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--accent);
   font-size: 0.65rem;
   font-weight: 700;
@@ -249,8 +311,8 @@ main.app-shell {
   max-width: 26rem;
   justify-self: end;
   box-shadow:
-    0 40px 80px -30px hsl(var(--shadow-color) / 0.3),
-    0 16px 32px -16px hsl(var(--shadow-color) / 0.16);
+    0 40px 120px -30px hsl(var(--shadow-color) / 0.6),
+    0 16px 32px -16px hsl(var(--shadow-color) / 0.3);
   animation: hero-rise 1s 0.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 

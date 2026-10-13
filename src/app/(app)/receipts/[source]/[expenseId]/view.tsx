@@ -83,16 +83,16 @@ export function ReceiptView({ source, expenseId }: { source: string; expenseId: 
           </a>
         }
       />
-      <Card className="py-3">
-        <CardContent className="grid gap-3 px-3">
+      <Card>
+        <CardContent className="grid gap-3">
           {receipt.isPdf ? (
             <iframe
               src={receipt.url}
               title={`Receipt for ${expense.description}`}
-              className="h-[75vh] w-full rounded-lg border bg-muted"
+              className="h-[75vh] w-full rounded-2xl border bg-field"
             />
           ) : (
-            <div className="grid place-items-center rounded-lg bg-muted p-2">
+            <div className="grid place-items-center rounded-2xl bg-field p-2">
               <img
                 src={receipt.url}
                 alt={`Receipt for ${expense.description}`}

@@ -88,14 +88,14 @@ export function BudgetView({
           ))}
         </StatGrid>
 
-        <Card className="py-2">
-          <CardHeader className="px-4 pt-2">
+        <Card>
+          <CardHeader>
             <CardTitle>Where it went</CardTitle>
             <CardDescription>
               Your share of each expense; settle-up payments don’t count.
             </CardDescription>
           </CardHeader>
-          <CardContent className="px-2">
+          <CardContent>
             {spending.length === 0 ? (
               <Empty className="py-10">
                 <EmptyHeader>
@@ -137,7 +137,7 @@ export function BudgetView({
                         <TableCell className="hidden text-muted-foreground tabular-nums md:table-cell">
                           {Math.round((row[source.key] / row.total) * 100)}%
                         </TableCell>
-                        <TableCell className="text-right font-semibold tabular-nums">
+                        <TableCell className="text-right font-mono font-medium tabular-nums">
                           {formatMoney(row[source.key], row.currency)}
                         </TableCell>
                       </TableRow>

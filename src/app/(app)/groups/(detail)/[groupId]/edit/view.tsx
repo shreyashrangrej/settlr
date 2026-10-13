@@ -292,7 +292,7 @@ function EditGroupForm({ group }: { group: Group }) {
             {error && <FieldError>{error}</FieldError>}
           </FieldGroup>
         </CardContent>
-        <CardFooter className="mt-6 justify-end gap-2 border-t py-4">
+        <CardFooter className="mt-6 justify-end gap-2.5">
           <Link
             href={`/groups/${group.id}`}
             className={buttonVariants({ variant: 'ghost', size: 'lg' })}
@@ -318,7 +318,7 @@ function DangerZone({ group }: { group: Group }) {
   })
 
   return (
-    <Card className="ring-destructive/30">
+    <Card className="border-danger-border">
       <CardHeader>
         <CardTitle>Danger zone</CardTitle>
         <CardDescription>

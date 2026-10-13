@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { useConvexMutation } from '@convex-dev/react-query'
 import Link from 'next/link'
-import { FileText, Paperclip, X } from 'lucide-react'
+import { FileText, Paperclip, ReceiptText, X } from 'lucide-react'
 
 import { Button, buttonVariants } from '#/components/ui/button'
 import { FieldError } from '#/components/ui/field'
@@ -108,7 +108,7 @@ export function ReceiptField({
         }}
       />
       {value ? (
-        <div className="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm">
+        <div className="flex min-h-11 items-center gap-2 rounded-xl border bg-field px-3 py-1.5 text-sm">
           <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">{value.name ?? 'Receipt attached'}</span>
           <Button
@@ -136,16 +136,22 @@ export function ReceiptField({
           </Button>
         </div>
       ) : (
-        <Button
+        <button
           type="button"
-          variant="outline"
-          className="justify-start font-normal text-muted-foreground"
+          className="flex min-h-16 items-center gap-3.5 rounded-2xl border-[1.5px] border-dashed border-input px-4 py-2.5 text-left outline-none hover:bg-tile/50 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
           disabled={pending}
           onClick={() => inputRef.current?.click()}
         >
-          {pending ? <Spinner /> : <Paperclip />}
-          {pending ? 'Uploading…' : 'Attach a receipt (image or PDF)'}
-        </Button>
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-tile text-primary [&_svg]:size-5">
+            {pending ? <Spinner /> : <ReceiptText />}
+          </span>
+          <span className="grid gap-0.5">
+            <span className="font-semibold">
+              {pending ? 'Uploading…' : 'Attach a receipt'}
+            </span>
+            <span className="text-xs text-muted-foreground">A photo or PDF, up to 10 MB.</span>
+          </span>
+        </button>
       )}
       {error && <FieldError>{error}</FieldError>}
     </div>

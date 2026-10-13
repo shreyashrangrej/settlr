@@ -1,15 +1,16 @@
 import type { Metadata } from 'next'
 
 import { Prefetched } from '#/components/prefetched'
-import { currentMonth } from '#/lib/format'
+import { currentMonth, todayIsoDate } from '#/lib/format'
 import { prefetchQuery } from '#/server/convex.server'
 import { api } from '#convex/_generated/api'
 import { DashboardView } from './view'
 
-export const metadata: Metadata = { title: 'Overview · Settlr' }
+export const metadata: Metadata = { title: 'Dashboard · Settlr' }
 
 // SSR: full. The signed-in home: one live summary of friends, groups and
-// personal spending. Every query is prefetched in parallel on the server.
+// spending. Every query is prefetched in parallel on the server, and the
+// month and date are read here so the server and client render the same day.
 export default async function DashboardPage() {
   const month = currentMonth()
   const queries = await Promise.all([
@@ -21,7 +22,7 @@ export default async function DashboardPage() {
   ])
   return (
     <Prefetched queries={queries.map((q) => q.entry)}>
-      <DashboardView month={month} />
+      <DashboardView month={month} today={todayIsoDate()} />
     </Prefetched>
   )
 }
