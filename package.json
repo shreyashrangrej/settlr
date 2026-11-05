@@ -47,6 +47,9 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "lightningcss"
-    ]
+    ],
+    "overrides": {
+      "@tanstack/react-start": "-"
+    }
   }
 }
