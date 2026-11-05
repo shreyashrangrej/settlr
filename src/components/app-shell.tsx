@@ -14,7 +14,6 @@ import { NavLink } from '#/components/nav-link'
 import { NotificationBell } from '#/components/notification-bell'
 import { useSession } from '#/components/providers'
 import { SiteHeader } from '#/components/site-header'
-import { ThemeToggle } from '#/components/theme-toggle'
 import { buttonVariants } from '#/components/ui/button'
 import { Skeleton } from '#/components/ui/skeleton'
 import { formatMoney, formatWholeMoney } from '#/lib/format'
@@ -157,7 +156,9 @@ function Sidebar() {
         )}
       </div>
 
-      <div className="mt-auto grid gap-3">
+      {/* minmax(0,1fr): the column stays the sidebar's width instead of
+          growing to fit the account name. */}
+      <div className="mt-auto grid grid-cols-[minmax(0,1fr)] gap-3">
         {/* Dropped on short screens, where the lists above need the room. */}
         <div className="grid gap-2.5 rounded-2xl border bg-card p-4 [@media(max-height:56rem)]:hidden">
           <span className="flex items-center gap-2 font-semibold">
@@ -174,10 +175,8 @@ function Sidebar() {
             Ask the assistant
           </Link>
         </div>
-        <div className="flex items-center gap-1">
-          <AccountMenu variant="row" />
-          <ThemeToggle />
-        </div>
+        {/* The theme switch is in the account menu. */}
+        <AccountMenu variant="row" />
       </div>
     </aside>
   )

@@ -21,11 +21,11 @@ import {
 import { signOut } from '#/lib/auth-client'
 import { applyTheme } from '#/lib/theme'
 
-// The signed-in user's menu, with their details, shortcuts and sign-out.
-// `row` is the sidebar's footer (avatar and name); `avatar` is the round
-// button in the top bar, whose menu also has the sections the mobile bar has
-// no room for and the theme switch. Renders nothing when signed out. The
-// user comes from the root layout, so the server and first client render
+// The signed-in user's menu, with their details, shortcuts, the theme
+// switch and sign-out. `row` is the sidebar's footer (avatar and name);
+// `avatar` is the round button in the top bar, whose menu also has the
+// sections the mobile bar has no room for. Renders nothing when signed out.
+// The user comes from the root layout, so the server and first client render
 // agree.
 export function AccountMenu({ variant = 'avatar' }: { variant?: 'avatar' | 'row' }) {
   const { user } = useSession()
@@ -56,13 +56,13 @@ export function AccountMenu({ variant = 'avatar' }: { variant?: 'avatar' | 'row'
             <button
               type="button"
               aria-label="Account menu"
-              className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-2 text-left outline-none hover:bg-tile focus-visible:ring-3 focus-visible:ring-ring/50 data-popup-open:bg-tile"
+              className="flex min-w-0 flex-1 items-center gap-2 rounded-xl p-2 text-left outline-none hover:bg-tile focus-visible:ring-3 focus-visible:ring-ring/50 data-popup-open:bg-tile"
             />
           }
         >
-          <PersonAvatar name={label} me className="size-9" />
+          <PersonAvatar name={label} me className="size-8" />
           {/* The email is in the menu; the row only has room for the name. */}
-          <span className="min-w-0 flex-1 truncate font-semibold">
+          <span className="min-w-0 flex-1 truncate font-semibold" title={user.name || undefined}>
             {user.name || 'Your account'}
           </span>
           <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
@@ -108,23 +108,22 @@ export function AccountMenu({ variant = 'avatar' }: { variant?: 'avatar' | 'row'
             <Settings />
             Settings
           </DropdownMenuItem>
-          {/* The top bar has no theme button. Both labels render and the
-              `dark:` variant picks one, so server and client agree. */}
-          {variant === 'avatar' && (
-            <DropdownMenuItem
-              closeOnClick={false}
-              onClick={() =>
-                applyTheme(
-                  document.documentElement.classList.contains('dark') ? 'light' : 'dark',
-                )
-              }
-            >
-              <Moon className="dark:hidden" />
-              <Sun className="hidden dark:block" />
-              <span className="dark:hidden">Dark mode</span>
-              <span className="hidden dark:inline">Light mode</span>
-            </DropdownMenuItem>
-          )}
+          {/* The theme switch lives here in both variants. Both labels
+              render and the `dark:` variant picks one, so server and client
+              agree. */}
+          <DropdownMenuItem
+            closeOnClick={false}
+            onClick={() =>
+              applyTheme(
+                document.documentElement.classList.contains('dark') ? 'light' : 'dark',
+              )
+            }
+          >
+            <Moon className="dark:hidden" />
+            <Sun className="hidden dark:block" />
+            <span className="dark:hidden">Dark mode</span>
+            <span className="hidden dark:inline">Light mode</span>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
