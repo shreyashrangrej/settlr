@@ -37,9 +37,12 @@ force-push `main`.
   `personal.ts`, `budgets.ts`, `notifications.ts`, `receipts.ts` (queries
   and mutations), `assistant.ts` (the `/assistant` chat: an action that
   calls OpenRouter with tool calling, plus the internal queries its search
-  and edit tools read through; the tools, in `lib/assistantTools.ts`, write
-  through the public mutations above as the caller, and deleting is only
-  offered, the user confirms it in the chat), `mcp.ts` (the same tools
+  and edit tools read through; the tools, in `lib/assistantTools.ts`, add, find
+  and edit expenses and create groups and friends; they write through the
+  public mutations above as the caller (creating reloads the friends and
+  groups the tools match names against, so one reply can create a group
+  and add to it), and deleting is only offered, the user confirms it in
+  the chat), `mcp.ts` (the same tools
   over MCP for Claude/ChatGPT: `handle` answers one JSON-RPC request as the
   caller, deleting is a real tool marked destructive; plus the connected
   apps for Settings), and `lib/` (`requireUser`, value checks in `input.ts`,

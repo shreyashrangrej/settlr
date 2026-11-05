@@ -31,6 +31,7 @@ const INSTRUCTIONS = `Settlr tracks and splits expenses. These tools act as the 
 - Call list_friends_and_groups first: it gives their friends, their groups (with members and currency), their default currency and today's date.
 - Kinds of expense: personal (just theirs; use when nobody else is involved), with a friend (one-on-one with someone from the friends list), or in a group (always in the group's currency).
 - With a friend, paid_by is "me" when the user paid and "friend" when the friend did; split is "equal" when they share it and "full" when the person who didn't pay owes all of it ("I paid for Sam's lunch" is paid_by "me", split "full").
+- create_group makes a new group; its members are just names (the user is added automatically), so they don't need to be friends or have accounts. add_friend adds someone for one-on-one expenses. You can create a group and add expenses to it in one go.
 - Never guess an amount, or who an expense is with: ask. Amounts are in the currency's main unit (12.5 means 12.50).
 - Dates are YYYY-MM-DD. Pass the user's local date when you know it; otherwise today in UTC is used.
 - In search results, "amount" is the whole expense and "your_share" is what it cost the user; use your_share for "how much did I spend".
@@ -75,6 +76,16 @@ const mcpTools: Array<{
     name: 'add_group_expense',
     ...tools.add_group_expense,
     annotations: { title: 'Add a group expense', destructiveHint: false },
+  },
+  {
+    name: 'create_group',
+    ...tools.create_group,
+    annotations: { title: 'Create a group', destructiveHint: false },
+  },
+  {
+    name: 'add_friend',
+    ...tools.add_friend,
+    annotations: { title: 'Add a friend', destructiveHint: false },
   },
   {
     name: 'search_expenses',

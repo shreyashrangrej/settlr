@@ -12,6 +12,8 @@ import {
   Search,
   Sparkles,
   Trash2,
+  UserPlus,
+  Users,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -376,6 +378,8 @@ function EventCard({
       return <DeleteOffer expense={event.expense} decision={decision} onDecide={onDecide} />
     case 'found':
       return <FoundList event={event} />
+    case 'created':
+      return <CreatedCard event={event} />
   }
 }
 
@@ -427,6 +431,33 @@ function AddedCard({ expense }: { expense: AssistantExpense }) {
           Added
         </span>
         <Link href={expense.href} className={quietLink}>
+          Open
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+/** A group or friend the assistant created. */
+function CreatedCard({ event }: { event: Extract<ChatEvent, { type: 'created' }> }) {
+  const Icon = event.kind === 'group' ? Users : UserPlus
+  return (
+    <div className={eventCard}>
+      <div className="flex items-center gap-3 px-4 py-3.5">
+        <span className="grid size-9.5 shrink-0 place-items-center rounded-[11px] bg-primary/14 text-primary [&_svg]:size-4.5">
+          <Icon />
+        </span>
+        <span className="grid min-w-0 flex-1 gap-0.5">
+          <span className="truncate font-semibold">{event.name}</span>
+          <span className="truncate text-xs text-muted-foreground">{event.detail}</span>
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-divider bg-field/60 px-4 py-2.5">
+        <span className={applied}>
+          <Check className="size-3.5" strokeWidth={2.6} />
+          {event.kind === 'group' ? 'Group created' : 'Friend added'}
+        </span>
+        <Link href={event.href} className={quietLink}>
           Open
         </Link>
       </div>
@@ -629,6 +660,36 @@ function DeleteOffer({
   )
 }
 
+/** A step in the changes panel for a new group or friend. */
+function CreatedStep({
+  event,
+  last,
+}: {
+  event: Extract<ChatEvent, { type: 'created' }>
+  last: boolean
+}) {
+  const Icon = event.kind === 'group' ? Users : UserPlus
+  return (
+    <li className="flex gap-3">
+      <span className="flex flex-col items-center">
+        <span className="grid size-5.5 place-items-center rounded-full bg-primary text-primary-foreground [&_svg]:size-3">
+          <Icon strokeWidth={2.6} />
+        </span>
+        {!last && <span className="min-h-4.5 w-0.5 flex-1 bg-segment" />}
+      </span>
+      <span className={cn('grid min-w-0 flex-1 gap-0.5', !last && 'pb-3.5')}>
+        <span className="truncate font-semibold">
+          {event.kind === 'group' ? 'Created' : 'Added friend'} {event.name}
+        </span>
+        <span className="truncate text-xs text-muted-foreground">{event.detail}</span>
+      </span>
+      <Link href={event.href} className="text-xs text-muted-foreground no-underline hover:text-primary">
+        Open
+      </Link>
+    </li>
+  )
+}
+
 /** Everything the assistant changed (or is waiting to) in this chat. */
 function Changes({ messages, decisions }: { messages: Array<Message>; decisions: Decisions }) {
   const items = messages.flatMap((message) =>
@@ -645,8 +706,11 @@ function Changes({ messages, decisions }: { messages: Array<Message>; decisions:
       {items.length === 0 ? null : (
         <ol className="grid">
           {items.map(({ key, event }, i) => {
-            const { expense } = event
             const last = i === items.length - 1
+            if (event.type === 'created') {
+              return <CreatedStep key={key} event={event} last={last} />
+            }
+            const { expense } = event
             const decision = event.type === 'delete' ? decisions[expense.ref] : undefined
             const waiting = event.type === 'delete' && decision === undefined
             return (

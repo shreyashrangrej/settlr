@@ -315,7 +315,7 @@ function systemPrompt(context: Context, today: string, defaultCurrency: Currency
         .join('\n')
     : '(none yet)'
 
-  return `You are the assistant in Settlr, an app for tracking and splitting expenses. You add, find and change the user's expenses by calling tools.
+  return `You are the assistant in Settlr, an app for tracking and splitting expenses. You add, find and change the user's expenses, and create groups and friends, by calling tools.
 
 Today is ${weekday}, ${today}. The user is ${JSON.stringify(context.name)}. Their default currency is ${defaultCurrency}.
 
@@ -333,6 +333,10 @@ Adding:
 - Never guess an amount. If the amount is missing, or it's unclear who the expense is with, ask one short question instead of calling a tool.
 - Pick the closest category: food (meals, snacks, tea, coffee, restaurants), groceries, transport (taxi, fuel, parking, trains, flights), lodging (hotels, rent), utilities (bills, phone, internet), entertainment (movies, events, subscriptions), other.
 - One message can describe several expenses; add each of them.
+
+Creating groups and friends:
+- create_group when the user asks for a new group. Its members are just names (the user is added automatically); they don't need to be friends or have accounts. If they also describe an expense for it, add it with add_group_expense in the same reply.
+- add_friend when they ask to add a friend. If they want an expense with someone who isn't a friend or in one of their groups, ask whether to add them as a friend first.
 
 Finding (search_expenses):
 - Use it for any question about their expenses or spending: lists, totals, "how much did I spend on...". Turn periods into date_from/date_to ("this month" is from the 1st to today).
@@ -356,6 +360,7 @@ Always:
 function memoOf(events: Array<ChatEvent>) {
   const seen = new Map<string, ExpenseView>()
   for (const event of events) {
+    if (event.type === 'created') continue
     const list = event.type === 'found' ? event.expenses : [event.expense]
     for (const e of list) seen.set(e.ref, e)
   }
@@ -372,6 +377,7 @@ function memoOf(events: Array<ChatEvent>) {
 function summarize(events: Array<ChatEvent>) {
   const count = (type: ChatEvent['type']) => events.filter((e) => e.type === type).length
   const parts = [
+    count('created') && `created ${count('created')}`,
     count('added') && `added ${count('added')}`,
     count('updated') && `updated ${count('updated')}`,
   ].filter(Boolean)

@@ -46,6 +46,8 @@ export type ChatEvent =
   | { type: 'found'; expenses: Array<ExpenseView>; count: number; totals: Totals; capped: boolean }
   // Proposed by the model; the user confirms it in the chat.
   | { type: 'delete'; expense: ExpenseView }
+  // A new group or friend. `detail` is a line about it, `href` its page.
+  | { type: 'created'; kind: 'group' | 'friend'; name: string; detail: string; href: string }
 
 const fields = {
   description: z
@@ -109,6 +111,30 @@ export const tools = {
         .array(z.string())
         .optional()
         .describe('Names of the members sharing it equally; leave out for everyone'),
+    }),
+  },
+  create_group: {
+    description:
+      'Create a group for splitting expenses among several people. The user is added as a member automatically. Members are just names: they don’t need to be friends or have Settlr accounts.',
+    args: z.object({
+      name: z.string().trim().min(1).max(60).describe('e.g. "Pune stay" or "Flat 4B"'),
+      members: z
+        .array(z.string().trim().min(1).max(40))
+        .min(1)
+        .max(19)
+        .describe('Names of the other members, not including the user'),
+      currency: z
+        .enum(CURRENCIES)
+        .optional()
+        .describe('Only if the user names a currency; leave out for their default'),
+    }),
+  },
+  add_friend: {
+    description:
+      'Add a friend, to share one-on-one expenses with. With an email, Settlr also sends them a friend request so you both see the same balance.',
+    args: z.object({
+      name: z.string().trim().min(1).max(60).describe('Their name, e.g. "Priya"'),
+      email: z.string().optional().describe('Only if the user gives their email'),
     }),
   },
   search_expenses: {
@@ -251,6 +277,14 @@ export type ToolOutcome = { result: Record<string, unknown>; events: Array<ChatE
 
 export const fail = (error: string): ToolOutcome => ({ result: { ok: false, error }, events: [] })
 
+// Reloads the friends and groups in place, so later tool calls in the same
+// reply find what was just created.
+async function refreshContext(ctx: ActionCtx, context: Context) {
+  const fresh: Context = await ctx.runQuery(internal.assistant.context, {})
+  context.friends = fresh.friends
+  context.groups = fresh.groups
+}
+
 async function viewOf(ctx: ActionCtx, ref: string): Promise<ExpenseView> {
   const expense = await ctx.runQuery(internal.assistant.expense, { ref })
   if (!expense) throw new ConvexError('That expense doesn’t exist.')
@@ -330,6 +364,62 @@ export async function runTool(
         splitAmong,
       })
       return await added(ctx, `group:${id}`)
+    }
+
+    case 'create_group': {
+      const parsed = tools[name].args.safeParse(rawArgs)
+      if (!parsed.success) return fail(z.prettifyError(parsed.error))
+      const a = parsed.data
+      const taken = context.groups.find((g) => g.name.toLowerCase() === a.name.toLowerCase())
+      if (taken) return fail(`There’s already a group called ${taken.name}. Use it, or pick another name.`)
+      // The user is added for them.
+      const members = a.members.filter((m) => !isMe(m, context))
+      const currency = a.currency ?? defaults.currency
+      const id = await ctx.runMutation(api.groups.create, { name: a.name, currency, members })
+      await refreshContext(ctx, context)
+      const group = context.groups.find((g) => g.id === id)
+      const names = group ? group.members.map((m) => m.name) : [context.name, ...members]
+      return {
+        result: { ok: true, created_group: { name: group?.name ?? a.name, currency, members: names } },
+        events: [
+          {
+            type: 'created',
+            kind: 'group',
+            name: group?.name ?? a.name,
+            detail: `${currency} · ${names.join(', ')}`,
+            href: `/groups/${id}`,
+          },
+        ],
+      }
+    }
+
+    case 'add_friend': {
+      const parsed = tools[name].args.safeParse(rawArgs)
+      if (!parsed.success) return fail(z.prettifyError(parsed.error))
+      const a = parsed.data
+      const id = await ctx.runMutation(api.friends.create, {
+        name: a.name,
+        email: a.email?.trim() || undefined,
+      })
+      await refreshContext(ctx, context)
+      const friend = context.friends.find((f) => f.id === id)
+      const requested = Boolean(a.email?.trim())
+      return {
+        result: {
+          ok: true,
+          added_friend: friend?.name ?? a.name,
+          note: requested ? 'A friend request was sent to their email.' : undefined,
+        },
+        events: [
+          {
+            type: 'created',
+            kind: 'friend',
+            name: friend?.name ?? a.name,
+            detail: requested ? 'Friend request sent' : 'Friend',
+            href: `/friends/${id}`,
+          },
+        ],
+      }
     }
 
     case 'search_expenses': {

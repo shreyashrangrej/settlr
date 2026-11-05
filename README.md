@@ -48,7 +48,8 @@ overview of these areas:
   tea personal expense 50", "Taxi 600 in the Goa trip, paid by Priya"),
   finds them with totals and your share ("How much did I spend on food this
   month?", "Show my expenses with Sam"), and edits them ("Change the tea to
-  60"). It can offer to delete one, but nothing is deleted until you press
+  60"). It also creates groups and adds friends ("New group Pune stay with
+  Vaishnavi, hotel 2000 split equally"). It can offer to delete one, but nothing is deleted until you press
   Delete in the chat. An LLM on [OpenRouter](https://openrouter.ai) calls
   tools that go through the same Convex mutations as the forms. It's off
   until `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` (any model with tool
@@ -57,7 +58,8 @@ overview of these areas:
   that speak the [Model Context Protocol](https://modelcontextprotocol.io).
   Add `https://<your site>/api/mcp` as a custom connector (Settings shows
   the URL); the agent sends you to Settlr to sign in and approve it, then
-  adds, finds, changes and deletes expenses as you, with its own model (no
+  adds, finds, changes and deletes expenses, and creates groups and
+  friends, as you, with its own model (no
   OpenRouter key needed). Connected apps are listed in Settings, where you
   can disconnect them.
 
