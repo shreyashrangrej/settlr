@@ -53,6 +53,13 @@ overview of these areas:
   tools that go through the same Convex mutations as the forms. It's off
   until `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` (any model with tool
   calling) are set on the Convex deployment.
+- **MCP server**: the assistant's tools for Claude, ChatGPT and other agents
+  that speak the [Model Context Protocol](https://modelcontextprotocol.io).
+  Add `https://<your site>/api/mcp` as a custom connector (Settings shows
+  the URL); the agent sends you to Settlr to sign in and approve it, then
+  adds, finds, changes and deletes expenses as you, with its own model (no
+  OpenRouter key needed). Connected apps are listed in Settings, where you
+  can disconnect them.
 
 Every expense can be edited after it's added (a linked friend's copy and
 group balances follow), and can carry a **receipt**: an image (JPEG, PNG,
@@ -73,6 +80,7 @@ convex/                    backend: schema, queries and mutations
   friends.ts groups.ts personal.ts budgets.ts notifications.ts
   receipts.ts              receipt uploads (Convex file storage) and viewing
   assistant.ts             the chat assistant (tools in lib/assistantTools.ts)
+  mcp.ts                   the same tools over MCP, and connected apps
   lib/                     auth helper, input checks, balance math, receipts
   auth.ts http.ts          Better Auth running inside Convex
 src/
@@ -83,8 +91,11 @@ src/
                            visitors. dashboard, friends, groups, personal,
                            budget, notifications, assistant,
                            receipts/[source]/[expenseId]
-    settings/              browser preferences
+    settings/              browser preferences, MCP connector URL and apps
+    connect/               sign in and approve an MCP client (OAuth)
     api/auth/[...all]/     Better Auth proxy to Convex
+    api/mcp/               the MCP server (Streamable HTTP)
+    .well-known/           OAuth metadata for MCP clients
     api/health/            liveness probe
   server/                  server-only code (auth session, Convex prefetch)
   lib/                     isomorphic code: zod schemas, types, formatting,
@@ -141,7 +152,9 @@ preferences in `src/lib/preferences.ts` throw if called on the server.
 | `/groups/[groupId]/insights`, `/notifications` | data on the server, UI in the browser | The UI uses the viewer's locale, time zone and clock, so it renders in `<ClientOnly>` (the server sends the skeleton). |
 | `/assistant`                           | server               | Only whether the assistant is set up is prefetched; the conversation lives in the browser and isn't saved.          |
 | `/settings`                            | browser              | Preferences live in localStorage.                                                                                    |
+| `/connect`                             | server               | OAuth step for MCP clients: sign in, then approve the app. Opened directly, it redirects to `/settings`.             |
 | `/api/health`                          | route handler        | JSON liveness probe for load balancers and platform health checks.                                                  |
+| `/api/mcp`, `/.well-known/oauth-*`     | route handler        | The MCP server and the OAuth discovery documents MCP clients read before connecting.                                |
 
 ## Deployment
 

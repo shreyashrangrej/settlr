@@ -87,6 +87,14 @@ export const monthSearchSchema = z.object({
     .catch(''),
 })
 
+// --- Connecting an MCP client (/connect) -----------------------------------
+// The OAuth parameters the page reads; it passes the whole query on as is.
+
+export const connectSearchSchema = z.object({
+  client_id: z.string().max(200).default('').catch(''),
+  consent_code: z.string().max(200).default('').catch(''),
+})
+
 // --- Receipts -------------------------------------------------------------
 // The same limits as convex/lib/receipts.ts, which re-checks every upload.
 

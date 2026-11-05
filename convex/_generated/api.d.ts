@@ -25,6 +25,7 @@ import type * as lib_notify from "../lib/notify.js";
 import type * as lib_openrouter from "../lib/openrouter.js";
 import type * as lib_receipts from "../lib/receipts.js";
 import type * as lib_validators from "../lib/validators.js";
+import type * as mcp from "../mcp.js";
 import type * as notifications from "../notifications.js";
 import type * as personal from "../personal.js";
 import type * as receipts from "../receipts.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   "lib/openrouter": typeof lib_openrouter;
   "lib/receipts": typeof lib_receipts;
   "lib/validators": typeof lib_validators;
+  mcp: typeof mcp;
   notifications: typeof notifications;
   personal: typeof personal;
   receipts: typeof receipts;

@@ -42,7 +42,12 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Something went wrong. Try again.'
 }
 
-export function LoginForm({ className }: { className?: string }) {
+/**
+ * Sign-in with Google or an email code. Afterwards it goes to the
+ * dashboard, or to `next` (a same-site path) with a full page load, for
+ * flows that continue outside the app router (connecting an MCP client).
+ */
+export function LoginForm({ className, next }: { className?: string; next?: string }) {
   const isAuthenticated = useSession().user !== null
   const { data: session } = authClient.useSession()
   const router = useRouter()
@@ -101,6 +106,10 @@ export function LoginForm({ className }: { className?: string }) {
       verifyEmailOtp(parsed.data.email, parsed.data.otp),
     )
     if (signedIn) {
+      if (next) {
+        window.location.assign(next)
+        return
+      }
       // Render the server components again as the signed-in user.
       router.push('/dashboard')
       router.refresh()
@@ -172,7 +181,7 @@ export function LoginForm({ className }: { className?: string }) {
               variant="outline"
               className="h-11 w-full gap-3 text-[0.9375rem]"
               disabled={busy}
-              onClick={() => run('google', signInWithGoogle)}
+              onClick={() => run('google', () => signInWithGoogle(next))}
             >
               {pending === 'google' ? (
                 <Spinner />

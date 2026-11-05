@@ -71,7 +71,7 @@ const fields = {
     .describe('YYYY-MM-DD, only if the user gives a date; leave out for today'),
 }
 
-const tools = {
+export const tools = {
   add_personal_expense: {
     description: 'Record spending that is just the user’s, not shared with anyone.',
     args: z.object(fields),
@@ -233,7 +233,7 @@ const toCents = (amount: number) => Math.round(amount * 100)
 
 // An expense as the model sees it: amounts formatted, so it never has to do
 // the maths.
-function forModel(e: ExpenseView) {
+export function forModel(e: ExpenseView) {
   return {
     ref: e.ref,
     kind: e.kind,
@@ -247,9 +247,9 @@ function forModel(e: ExpenseView) {
   }
 }
 
-type ToolOutcome = { result: Record<string, unknown>; events: Array<ChatEvent> }
+export type ToolOutcome = { result: Record<string, unknown>; events: Array<ChatEvent> }
 
-const fail = (error: string): ToolOutcome => ({ result: { ok: false, error }, events: [] })
+export const fail = (error: string): ToolOutcome => ({ result: { ok: false, error }, events: [] })
 
 async function viewOf(ctx: ActionCtx, ref: string): Promise<ExpenseView> {
   const expense = await ctx.runQuery(internal.assistant.expense, { ref })
@@ -461,4 +461,24 @@ export async function runTool(
       }
     }
   }
+}
+
+/**
+ * Deletes an expense for real, for clients that confirm destructive tools
+ * with the user themselves (MCP). The chat only offers it (`delete_expense`
+ * in `runTool`).
+ */
+export async function deleteExpense(ctx: ActionCtx, rawArgs: unknown): Promise<ToolOutcome> {
+  const parsed = tools.delete_expense.args.safeParse(rawArgs)
+  if (!parsed.success) return fail(z.prettifyError(parsed.error))
+  const current = await ctx.runQuery(internal.assistant.expense, { ref: parsed.data.ref })
+  if (!current) return fail('There’s no expense with that ref. Search for it first.')
+  if (current.kind === 'personal') {
+    await ctx.runMutation(api.personal.remove, { expenseId: current.id })
+  } else if (current.kind === 'friend') {
+    await ctx.runMutation(api.friends.removeEntry, { entryId: current.id })
+  } else {
+    await ctx.runMutation(api.groups.removeExpense, { expenseId: current.id })
+  }
+  return { result: { ok: true, deleted: forModel(current.view) }, events: [] }
 }
