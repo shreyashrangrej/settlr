@@ -56,6 +56,21 @@ export function FriendsView() {
 - Dynamic titles use `generateMetadata`, which can call `prefetchQuery` too
   (it's cached per request).
 
+## Rendering per route
+
+| Route | Rendering | Why |
+| --- | --- | --- |
+| `/` (landing hero) | server | Marketing page and sign-in form. Signed-in visitors are redirected to `/dashboard` |
+| `/dashboard`, `/friends`, `/personal`, `/budget` | server | Queries are prefetched with the visitor's token, so the first HTML is complete |
+| `/groups/[groupId]` (and its expense pages) | server | Shareable, filterable URLs render fully on the server |
+| `/receipts/[source]/[expenseId]` | server | The receipt's URL and its expense are prefetched; images show inline, PDFs in the browser's viewer |
+| `/groups/[groupId]/insights`, `/notifications` | data on the server, UI in the browser | The UI uses the viewer's locale, time zone and clock, so it renders in `<ClientOnly>` |
+| `/assistant` | server | Only whether the assistant is set up is prefetched; the conversation lives in the browser |
+| `/settings` | browser | Preferences live in localStorage |
+| `/connect` | server | OAuth step for MCP clients: sign in, then approve the app |
+| `/api/health` | route handler | JSON liveness probe |
+| `/api/mcp`, `/.well-known/oauth-*` | route handler | The MCP server and the OAuth discovery documents |
+
 ## Search params
 
 Parsed on the server with `parseSearch(schema, await searchParams)`. The

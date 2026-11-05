@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { LoginForm } from '#/components/login-form'
+import { DOCS_URL } from '#/lib/site'
 import { getAuthSession } from '#/server/auth.server'
 
 export const metadata: Metadata = { title: 'Settlr · Split costs. Stay friends.' }
@@ -27,6 +28,12 @@ export default async function HomePage() {
           <li>Six currencies</li>
           <li>Friends, groups and personal</li>
         </ul>
+        <p className="mt-6 text-sm text-muted-foreground [animation-delay:240ms]">
+          New here?{' '}
+          <a href={DOCS_URL} className="font-medium text-primary underline-offset-4 hover:underline">
+            Read the guide →
+          </a>
+        </p>
       </div>
 
       <LoginForm className="hero__login" />

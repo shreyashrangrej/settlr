@@ -6,7 +6,9 @@ a Turborepo monorepo (pnpm workspaces): `apps/web` (the app, package
 `web`), `apps/docs` (the Fumadocs documentation site, package `docs`),
 `packages/backend` (`@settlr/backend`, the `convex/` folder) and
 `packages/shared` (`@settlr/shared`, code both sides use). See `README.md`
-for the feature overview and the per-route rendering table.
+for the feature overview, and the docs (`apps/docs/content/docs`, live at
+https://settlr-docs.vercel.app) for the details, including the per-route
+rendering table in `development/web-app.mdx`.
 
 ## Commands
 
@@ -290,8 +292,11 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `packages/backend` with `CONVEX_DEPLOY_KEY`, a deploy key for the dev
   Convex deployment, so `convex/` is pushed to it before `next build` runs
   in `apps/web`; a push to `main` updates both. That overwrites whatever
-  `pnpm dev:convex` pushed from a local checkout. The docs deploy as a
-  separate Vercel project with Root Directory `apps/docs`.
+  `pnpm dev:convex` pushed from a local checkout. The docs deploy as the
+  separate Vercel project `settlr-docs` (Root Directory `apps/docs`,
+  https://settlr-docs.vercel.app), also on every push to `main`. The web
+  app links to them through `DOCS_URL` in `src/lib/site.ts`
+  (`NEXT_PUBLIC_DOCS_URL` overrides it).
   `transpilePackages` in `apps/web/next.config.ts` compiles
   `@convex-dev/better-auth` and `@settlr/shared`.
 - `ui.shadcn.com` may be blocked in sandboxed environments. The registry

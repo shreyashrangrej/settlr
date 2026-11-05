@@ -46,10 +46,14 @@ site's URL (see [Environment variables](/docs/development/environment)).
 
 ## Docs
 
-This site is `apps/docs`, a separate Next.js app. Deploy it as a second
-Vercel project from the same repository with **Root Directory** `apps/docs`;
-it needs no environment variables. Like the web app, its `vercel.json` only
-deploys `main`.
+This site is `apps/docs`, a separate Next.js app, deployed as the second
+Vercel project `settlr-docs` from the same repository with **Root
+Directory** `apps/docs`. It needs no environment variables, and like the web
+app its `vercel.json` only deploys `main`.
+
+The web app links to the docs through `DOCS_URL` in
+`apps/web/src/lib/site.ts`. Set `NEXT_PUBLIC_DOCS_URL` on the web build if
+your docs live somewhere else.
 
 Build it locally with:
 

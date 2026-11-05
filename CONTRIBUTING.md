@@ -1,87 +1,38 @@
-# Contributing to Settlr
+# Contributing
 
-Thanks for your interest in improving Settlr! Bug reports, ideas and pull
-requests are all welcome. By taking part you agree to follow the
-[code of conduct](CODE_OF_CONDUCT.md).
+Thanks for helping improve Settlr! Bug reports, ideas and pull requests are
+all welcome. By taking part you agree to the [code of conduct](CODE_OF_CONDUCT.md).
 
-## Reporting bugs and suggesting features
+## Issues
 
-- Search the [existing issues](https://github.com/shreyashrangrej/settlr/issues)
-  first; someone may have reported it already.
-- For a bug, say what you did, what you expected and what happened instead.
-  Include the browser, and a screenshot if it's visual.
-- For a feature, describe the problem you want solved before the solution.
-- Found a security problem? Please don't open a public issue. Report it
-  privately through GitHub's
-  [security advisories](https://github.com/shreyashrangrej/settlr/security/advisories/new).
+- **Bugs**: [search first](https://github.com/shreyashrangrej/settlr/issues), then say what you did, what you expected and what happened (browser and a screenshot help).
+- **Features**: describe the problem before the solution.
+- **Security**: report privately through a [security advisory](https://github.com/shreyashrangrej/settlr/security/advisories/new), never in a public issue.
 
-## Setting up
-
-You need Node.js 22+, [pnpm](https://pnpm.io) (the only supported package
-manager) and a free [Convex](https://convex.dev) account.
-
-It's a Turborepo monorepo: the app is `apps/web`, the docs `apps/docs`, the
-Convex backend `packages/backend` and the code they share `packages/shared`.
+## Setup
 
 ```bash
 pnpm install
-pnpm dev:convex   # creates your dev deployment (packages/backend/.env.local)
+pnpm dev:convex   # creates your Convex dev deployment
 pnpm dev          # http://localhost:3000, in a second terminal
-pnpm dev:docs     # the docs on http://localhost:3001, if you're changing them
 ```
 
-Create `apps/web/.env.local` with `NEXT_PUBLIC_CONVEX_URL` (the
-`.convex.cloud` URL) and `NEXT_PUBLIC_CONVEX_SITE_URL` (the same deployment's
-`.convex.site` URL). Then set the Convex deployment's environment variables,
-from `packages/backend`:
+Add the deployment's URLs to `apps/web/.env.local`, then set `SITE_URL` and
+`BETTER_AUTH_SECRET` on Convex. The [setup guide](https://settlr-docs.vercel.app/docs/development)
+has the details; [CLAUDE.md](CLAUDE.md) has every convention and gotcha.
 
-```bash
-pnpm exec convex env set SITE_URL=http://localhost:3000
-pnpm exec convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-```
+## Ground rules
 
-Without a Resend API key, sign-in codes aren't emailed; read them with
-`pnpm exec convex logs`. Google sign-in stays off until `GOOGLE_CLIENT_ID`
-and `GOOGLE_CLIENT_SECRET` are set. The
-[development docs](apps/docs/content/docs/development) and
-[CLAUDE.md](CLAUDE.md) have more on the environment and its gotchas.
-
-## Making a change
-
-1. Fork the repository and create a branch from `main`.
-2. Keep the change focused: one fix or feature per pull request.
-3. Follow the conventions in [CLAUDE.md](CLAUDE.md). The important ones:
-   - All data goes through Convex. Every query and mutation gets the user
-     from `requireUser(ctx)` and scopes reads and writes to them; check
-     values with `packages/backend/convex/lib/input.ts` using the same
-     limits as the zod schemas in `packages/shared/src/schemas.ts`.
-   - Money is integer minor units (`amountCents`), never floats.
-   - Server-only code lives in `apps/web/src/server/` (it imports `server-only`) and
-     is used only by server components and route handlers.
-   - Use the shadcn/ui components (built on Base UI) and Tailwind utilities
-     rather than new hand-written CSS.
-   - Commit `packages/backend/convex/_generated/` when it changes.
-   - The backend must not import from `apps/web`: put code both need in
-     `packages/shared`.
-4. Check your work before pushing:
-
-   ```bash
-   pnpm typecheck
-   pnpm build
-   ```
-
-   There is no test suite yet, so also try the change in the browser,
-   including dark mode and a narrow (phone-width) window.
+- **Data goes through Convex.** Every function gets the user from `requireUser(ctx)` and scopes reads and writes to them.
+- **Validate on both sides.** Use the same limits in `packages/shared/src/schemas.ts` and `packages/backend/convex/lib/input.ts`.
+- **Money is integer cents** (`amountCents`), never floats.
+- **Keep boundaries.** Server-only code lives in `apps/web/src/server/`; the backend never imports from `apps/web` (shared code goes in `packages/shared`).
+- **Use the design system**: shadcn/ui (Base UI) and Tailwind utilities, not new CSS.
+- **Commit generated code** in `packages/backend/convex/_generated/`.
 
 ## Pull requests
 
-- Describe what changed and why, and link the issue it closes.
-- Add screenshots for visual changes.
-- Update `README.md` and the matching page in `apps/docs/content/docs` when
-  you change what the app does, and `CLAUDE.md` when you change a
-  convention or the project layout.
-- Write commit messages in the imperative mood ("Add receipt viewer", not
-  "Added receipt viewer").
-
-A maintainer will review your pull request as soon as they can. Thanks for
-contributing!
+1. Branch from `main` and keep each PR to one fix or feature.
+2. Run `pnpm typecheck && pnpm build` (there's no test suite yet), and try the change in dark mode and at phone width.
+3. Update the matching page in [`apps/docs`](apps/docs/content/docs) when behaviour changes, and `CLAUDE.md` when a convention or the layout does.
+4. Describe what changed and why, link the issue, and add screenshots for visual changes. Write commit messages in the imperative ("Add receipt viewer").

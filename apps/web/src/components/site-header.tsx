@@ -8,11 +8,12 @@ import { NavLink } from '#/components/nav-link'
 import { useSession } from '#/components/providers'
 import { ThemeToggle } from '#/components/theme-toggle'
 import { buttonVariants } from '#/components/ui/button'
+import { DOCS_URL } from '#/lib/site'
 import { cn } from '#/lib/utils'
 
 /**
  * The top bar of the signed-out pages (and of the "what's your name" step):
- * logo, settings, theme and, once signed in, the account menu. The signed-in
+ * logo, docs, settings, theme and, once signed in, the account menu. The signed-in
  * app has the sidebar instead (see app-shell.tsx).
  */
 export function SiteHeader() {
@@ -25,6 +26,12 @@ export function SiteHeader() {
           <Logo />
         </Link>
         <nav className="flex items-center gap-1" aria-label="Main">
+          <a
+            href={DOCS_URL}
+            className={cn(buttonVariants({ variant: 'ghost' }), 'text-muted-foreground no-underline')}
+          >
+            Docs
+          </a>
           {!user && (
             <NavLink
               href="/settings"
