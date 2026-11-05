@@ -17,13 +17,17 @@ this works even where the built-in assistant isn't set up.
 
     Open **Settings → AI assistants** and copy the **Connector URL**: your
     Settlr site followed by `/api/mcp`.
+
+    ![Settings, with the connector URL under AI assistants](/screenshots/settings.png)
   </Step>
   <Step>
     ### Add it to your AI app
 
-    Add a custom connector in the app (in Claude, under *Settings →
-    Connectors*) and paste the URL. No client ID or secret is needed: the app
-    registers itself.
+    - **Claude**: *Settings → Connectors → Add custom connector*.
+    - **ChatGPT**: turn on developer mode under *Settings → Apps → Advanced
+      settings*, then create an app with the URL.
+
+    No client ID or secret is needed: the app registers itself.
   </Step>
   <Step>
     ### Sign in and approve

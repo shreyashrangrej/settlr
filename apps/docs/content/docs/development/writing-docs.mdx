@@ -50,6 +50,22 @@ Besides Markdown, pages can use these components without importing them
 Link between pages with absolute URLs (`/docs/guide/groups`) or relative file
 paths (`./groups.mdx`).
 
+## Screenshots
+
+Screenshots live in `apps/docs/public/screenshots` and are embedded with
+`![Alt text](/screenshots/name.png)`; readers can click one to see it full
+size. Keep them consistent with the existing ones:
+
+- the **dark** theme at **1440×900**, with the sidebar expanded;
+- a demo account with realistic sample data, never a real person's account
+  or email;
+- alt text that says what the screenshot shows.
+
+The current set was taken on the dev deployment with the demo account
+`delivered+alex@resend.dev` (Resend's test inbox: read its sign-in codes with
+`pnpm exec convex data --component betterAuth verification`). Retake a
+screenshot when the page it shows changes.
+
 ## For AI tools
 
 Every page is also served as Markdown: append `.md` to its URL, or request

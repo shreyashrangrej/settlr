@@ -8,13 +8,13 @@
 
 Track shared expenses with friends, flatmates and trips, then settle up with the fewest payments.
 
-[**Open the app**](https://settlr-woad.vercel.app) · [**Read the docs**](https://settlr-docs.vercel.app) · [Contributing](CONTRIBUTING.md)
+[**Open the app**](https://settlr-woad.vercel.app) · [**Read the docs**](https://settlr-docs.vercel.app/docs) · [Contributing](CONTRIBUTING.md)
 
 ![Next.js](https://img.shields.io/badge/Next.js_16-000?logo=nextdotjs&logoColor=fff)
 ![React](https://img.shields.io/badge/React_19-087ea4?logo=react&logoColor=fff)
 ![Convex](https://img.shields.io/badge/Convex-ee342f?logo=convex&logoColor=fff)
 ![Turborepo](https://img.shields.io/badge/Turborepo-ef4444?logo=turborepo&logoColor=fff)
-![License: MIT](https://img.shields.io/badge/license-MIT-b18cff)
+![License: MIT](https://img.shields.io/badge/license-MIT-555)
 
 </div>
 

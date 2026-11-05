@@ -5,6 +5,10 @@ const withMDX = createMDX();
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  // There's no landing page: the site opens straight on the docs.
+  async redirects() {
+    return [{ source: '/', destination: '/docs', permanent: false }];
+  },
 };
 
 export default withMDX(config);

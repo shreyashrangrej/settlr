@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import 'fumadocs-ui/css/purple.css';
+@import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
 html {
@@ -9,4 +9,10 @@ html {
 html > body[data-scroll-locked] {
   margin-right: 0px !important;
   --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* Use the full window: the sidebar sits at the left edge instead of inside a
+   centred 97rem column, and the page stays centred between it and the TOC. */
+#nd-docs-layout {
+  --fd-layout-width: 100%;
 }
