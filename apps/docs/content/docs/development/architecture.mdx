@@ -1,0 +1,112 @@
+---
+title: Architecture
+description: How the monorepo is laid out, and how the web app, the Convex backend and the shared package fit together.
+icon: Boxes
+---
+
+## The monorepo
+
+Settlr is a [Turborepo](https://turborepo.com) monorepo with pnpm
+workspaces:
+
+<Files>
+  <Folder name="apps" defaultOpen>
+    <Folder name="web">
+      <File name="the Next.js 16 app (package web)" />
+    </Folder>
+    <Folder name="docs">
+      <File name="this site, built with Fumadocs (package docs)" />
+    </Folder>
+  </Folder>
+  <Folder name="packages" defaultOpen>
+    <Folder name="backend">
+      <File name="convex/: the Convex backend (@settlr/backend)" />
+    </Folder>
+    <Folder name="shared">
+      <File name="src/: zod schemas and formatting (@settlr/shared)" />
+    </Folder>
+  </Folder>
+  <Folder name="design">
+    <File name="the design handoff: DESIGN.md and screen mockups" />
+  </Folder>
+  <File name="turbo.json" />
+  <File name="pnpm-workspace.yaml" />
+</Files>
+
+| Workspace | Package | Depends on |
+| --- | --- | --- |
+| `apps/web` | `web` | `@settlr/backend`, `@settlr/shared` |
+| `apps/docs` | `docs` | nothing in the repo |
+| `packages/backend` | `@settlr/backend` | `@settlr/shared` |
+| `packages/shared` | `@settlr/shared` | `zod` |
+
+- **`@settlr/backend`** holds `convex/`, where all app data lives. The web
+  app imports its generated API as
+  `@settlr/backend/convex/_generated/api` (and `.../dataModel` for types).
+  `convex/_generated/` is written by `convex dev` and committed.
+- **`@settlr/shared`** is TypeScript source used on both sides: `schemas`
+  (the currencies, categories and zod schemas for forms and search params,
+  with the same limits the backend checks) and `format` (money and date
+  formatting). The web app compiles it through `transpilePackages`; Convex
+  bundles it with the functions.
+
+## Request flow
+
+```text
+Browser ──(WebSocket: live queries, mutations)──────────────▶ Convex
+   │                                                          ▲
+   └─▶ Next.js (apps/web) ──(prefetch as the user, JWT)───────┘
+            │
+            └─ /api/auth/*  ──proxy──▶ Better Auth inside Convex (HTTP routes)
+            └─ /api/mcp     ──token exchange, then api.mcp.handle──▶ Convex
+```
+
+1. A **server page** (`page.tsx`) gets the user's Convex JWT from the Better
+   Auth session and prefetches its queries with `prefetchQuery`.
+2. It renders a **client view** (`view.tsx`) inside `<Prefetched>`, which
+   seeds those results into the browser's TanStack Query cache, so the first
+   HTML is complete.
+3. In the browser, each `useSuspenseQuery(convexQuery(...))` becomes a live
+   Convex subscription. Mutations (`useConvexMutation`) update every open
+   page and tab without refetching or `router.refresh()`.
+
+## Backend modules
+
+| File | What it holds |
+| --- | --- |
+| `schema.ts` | Tables and indexes (see [Data model](/docs/development/data-model)) |
+| `friends.ts` | Friends, one-on-one expenses and payments, friend requests |
+| `groups.ts` | Groups, members, group expenses and payments |
+| `personal.ts` | Personal expenses by month |
+| `budgets.ts` | Budgets and the month's spending across everything |
+| `notifications.ts` | Notifications, accepting and declining friend requests |
+| `receipts.ts` | Receipt uploads and viewing |
+| `assistant.ts` | The chat assistant (an action calling OpenRouter) |
+| `mcp.ts` | The same tools over MCP, and the connected apps |
+| `auth.ts`, `auth.config.ts`, `http.ts` | Better Auth running inside Convex |
+| `convex.config.ts` | The Better Auth component and the typed environment variables |
+| `lib/` | `requireUser`, value checks (`input.ts`), balance math (`ledger.ts`), receipts, the assistant's tools |
+
+## Principles
+
+**The user comes from the token.** Every query and mutation calls
+`requireUser(ctx)`, which reads the identity from the Convex JWT, and scopes
+every read and write to that user. Functions never take a user id as an
+argument. Queries that take an id from the URL accept a string, normalise it
+and return `null` for missing or foreign rows; the page turns that into a
+404.
+
+**Validation on both sides.** Forms validate with the zod schemas in
+`@settlr/shared/schemas`. Convex functions check argument types with
+validators and values with `convex/lib/input.ts`, using the same limits,
+because clients can call public functions directly. Type checks in
+`convex/lib/validators.ts` fail the build if the Convex enums and the shared
+lists drift apart.
+
+**Money is integers.** Every amount is stored as integer minor units
+(`amountCents`), never floats. All supported currencies have two decimals.
+
+**Precomputed totals.** Balances and insight totals are stored on the friend
+or group document and updated in the same mutation as each expense or
+payment, so pages read one document instead of summing a ledger (see
+[Balances](/docs/development/balances)).

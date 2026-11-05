@@ -1,0 +1,63 @@
+---
+title: Deployment
+description: Deploy the web app and Convex backend to Vercel, and the docs as a second project.
+icon: CloudUpload
+---
+
+## Web app and backend
+
+The web app is a standard Next.js app, deployable to Vercel or anywhere
+Node.js runs (`pnpm build && pnpm start`). The backend is deployed with
+`convex deploy` from `packages/backend`.
+
+### On Vercel
+
+The Vercel project for the web app uses:
+
+| Setting | Value |
+| --- | --- |
+| Root Directory | `apps/web` |
+| Framework | Next.js |
+| Build Command | from `apps/web/vercel.json` |
+| Environment | `CONVEX_DEPLOY_KEY`, `NEXT_PUBLIC_CONVEX_SITE_URL` |
+
+Vercel installs the whole pnpm workspace from the repository root, then runs
+the build command in `apps/web/vercel.json`:
+
+```bash
+cd ../../packages/backend && pnpm exec convex deploy \
+  --cmd "cd ../../apps/web && pnpm build" \
+  --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL
+```
+
+`convex deploy` pushes `convex/` to the deployment that `CONVEX_DEPLOY_KEY`
+belongs to, then runs the web build with `NEXT_PUBLIC_CONVEX_URL` set to that
+deployment. A push therefore updates both the site and the backend.
+
+`vercel.json` also turns off deployments for every branch except `main`.
+
+<Callout type="warn">
+  A build from `main` overwrites whatever `pnpm dev:convex` pushed to the same
+  Convex deployment from a local checkout.
+</Callout>
+
+After the first deploy, set the Convex deployment's `SITE_URL` to the
+site's URL (see [Environment variables](/docs/development/environment)).
+
+## Docs
+
+This site is `apps/docs`, a separate Next.js app. Deploy it as a second
+Vercel project from the same repository with **Root Directory** `apps/docs`;
+it needs no environment variables. Like the web app, its `vercel.json` only
+deploys `main`.
+
+Build it locally with:
+
+```bash
+pnpm --filter docs build
+```
+
+## Health check
+
+`GET /api/health` on the web app returns a JSON liveness response, for load
+balancers and platform health checks.

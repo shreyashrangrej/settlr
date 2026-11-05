@@ -1,0 +1,91 @@
+---
+title: Authentication
+description: Better Auth running inside Convex, the web app's proxy, sessions, and OAuth for MCP clients.
+icon: KeyRound
+---
+
+Sign-in is [Better Auth](https://better-auth.com), running **inside Convex**
+through the `@convex-dev/better-auth` component. Its tables live in the
+`betterAuth` component, and its HTTP routes are mounted by `convex/http.ts`.
+
+## Sign-in methods
+
+Configured in `packages/backend/convex/auth.ts`:
+
+- **Email one-time codes** (the `emailOTP` plugin): 6 digits, valid for 5
+  minutes. `convex/email.ts` sends them with Resend's HTTP API when
+  `RESEND_API_KEY` is set, and otherwise logs them.
+- **Google**, enabled only when both `GOOGLE_CLIENT_ID` and
+  `GOOGLE_CLIENT_SECRET` are set. Account linking is on, so Google and an
+  email code for the same verified address are one account.
+
+The `convex` plugin issues the **Convex JWTs** that `convex/auth.config.ts`
+lets Convex verify, which is what makes `ctx.auth.getUserIdentity()` work.
+
+## The web side
+
+| File | Role |
+| --- | --- |
+| `apps/web/src/app/api/auth/[...all]/route.ts` | Forwards `/api/auth/*` to Convex, so auth cookies are first-party |
+| `apps/web/src/server/auth.server.ts` | Next.js adapter: `handler`, `getToken`, `fetchAuthQuery`, and the per-request `getAuthSession()` |
+| `apps/web/src/lib/auth-client.ts` | The browser client and the sign-in actions |
+
+The root layout reads the session on the server and hands it to
+`<Providers>`, so client components read the user with `useSession()`.
+Layouts don't re-render on client navigation, so:
+
+- signing in pushes to `/dashboard` and then calls `router.refresh()`;
+- signing out does a full page load to `/`, so nothing of the account stays
+  in memory;
+- anything else that changes who's signed in or their profile calls
+  `router.refresh()`.
+
+The `(app)` route group's layout redirects signed-out visitors to `/`.
+
+## Allowed origins
+
+Better Auth's base URL is the deployment's `SITE_URL`. Other origins that may
+sign in go in `TRUSTED_ORIGINS` (comma-separated). On a dev deployment whose
+`SITE_URL` is a hosted site, adding `http://localhost:3000` there lets you
+sign in locally with email codes; Google always returns to `SITE_URL`.
+
+## OAuth for MCP clients
+
+AI apps connect through Better Auth's `mcp` plugin plus Settlr's own
+`mcpBridge` plugin:
+
+<Steps>
+  <Step>
+    The client reads the metadata at `/.well-known/oauth-protected-resource`
+    and `/.well-known/oauth-authorization-server` (served by the web app,
+    proxied from Better Auth) and registers itself dynamically.
+  </Step>
+  <Step>
+    It sends the user to `/mcp/authorize`. `mcpBridge` redirects signed-out
+    users to `/connect` to sign in, and **always** forces a consent step
+    (`prompt=consent`): anyone can register a client, so every authorization
+    is approved by the user on `/connect`. It also keeps only known scopes
+    and adds `offline_access`, so the client gets a refresh token.
+  </Step>
+  <Step>
+    The client trades the code at `/mcp/token` (PKCE is required).
+    `mcpBridge` rejects codes that haven't been approved yet, and after a
+    refresh it deletes the old token pair, so refresh tokens are single-use.
+    Refresh tokens last 30 days.
+  </Step>
+  <Step>
+    For each MCP request, the web app's `/api/mcp` route swaps the bearer
+    access token for a Convex JWT at `/api/auth/mcp/convex-token`, then calls
+    Convex as that user.
+  </Step>
+</Steps>
+
+<Callout type="warn" title="Upgrading better-auth">
+  The token exchange calls the Convex plugin's `getToken` endpoint with a
+  stand-in session, which leans on Better Auth internals: recheck it when
+  upgrading. `better-auth` is pinned to the exact version
+  `@convex-dev/better-auth` is built against (1.6.15); upgrade the two
+  together.
+</Callout>
+
+The OAuth issuer is `SITE_URL`, so test MCP clients against that origin.

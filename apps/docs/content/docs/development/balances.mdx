@@ -1,0 +1,79 @@
+---
+title: Balances
+description: How Settlr splits amounts, keeps running totals and plans the fewest settle-up payments.
+icon: Scale
+---
+
+All of the balance math is in `packages/backend/convex/lib/ledger.ts`, and
+all of it is integer cents.
+
+## Friends
+
+`friendDelta(entry)` is how much an entry changes what the friend owes you
+(positive: they owe you more):
+
+- An **equal** expense: the non-payer owes `floor(amount / 2)`, so the payer
+  absorbs an odd cent.
+- A **full** expense or a **payment**: the whole amount.
+- The sign is `+` when you paid (`paidBy: 'me'`) and `−` when they did.
+
+The result is added to `friends.balances[currency]` in the same mutation that
+writes the entry; a currency whose balance reaches zero is removed from the
+record. Editing an entry applies the old entry's delta negatively and the
+new one's positively.
+
+`myFriendShare(entry)` is what an expense cost you, which the
+[budget](/docs/guide/budget) and the assistant's "your share" use.
+
+## Groups
+
+`shares(expense, memberOrder)` splits an expense equally between
+`splitAmong`. The base share is `floor(amount / n)`; the leftover cents go
+one each to the first participants in group-member order, so shares always
+sum to the total.
+
+`applyGroupExpense(group, expense, sign)` returns the group's new totals
+after adding (`sign = 1`) or removing (`sign = -1`) an expense:
+
+- the payer's `paidCents` and each participant's `owedCents`,
+- `expenseCount` and `totalCents`,
+- `byCategory` and `byMonth`.
+
+Editing an expense removes the old version and adds the new one. Callers
+patch the result onto the group in the same mutation, so the totals can
+never disagree with the expenses.
+
+### Payments
+
+`applyGroupPayment(group, payment, sign)` changes `settledCents`: up for the
+member who paid, down for the one who received. A member's position is:
+
+```ts
+memberNet = paidCents - owedCents + (settledCents ?? 0)
+// > 0: the others owe them; < 0: they owe
+```
+
+### Settle-up plan
+
+`settleUp(members)` is greedy: it repeatedly matches the biggest debtor with
+the biggest creditor and records a transfer of the smaller of the two
+amounts. Each transfer clears at least one person, so a group of *n* members
+needs at most *n − 1* payments.
+
+```ts
+// Ann paid 90 for three people; Ben and Cat owe 30 each.
+settleUp([
+  { id: 'ann', paidCents: 9000, owedCents: 3000 },
+  { id: 'ben', paidCents: 0, owedCents: 3000 },
+  { id: 'cat', paidCents: 0, owedCents: 3000 },
+])
+// → [{ from: 'ben', to: 'ann', amountCents: 3000 },
+//    { from: 'cat', to: 'ann', amountCents: 3000 }]
+```
+
+## Monthly spending
+
+`budgets.monthSpending` totals a month per currency from three sources:
+personal expenses, `myFriendShare` of friend expenses, and your `shares`
+entry of the expenses in every group you're in (as owner or linked member).
+Payments are left out because they aren't spending.

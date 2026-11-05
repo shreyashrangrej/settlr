@@ -1,0 +1,108 @@
+---
+title: Web app
+description: Conventions in apps/web, the Next.js 16 App Router app.
+icon: AppWindow
+---
+
+`apps/web` is a Next.js 16 app (App Router, React 19, Turbopack). Imports
+use the `#/` alias for `apps/web/src`.
+
+## Layout
+
+| Path | Contents |
+| --- | --- |
+| `src/app/` | Routes. `layout.tsx` is the root document; `(app)/` is the signed-in area |
+| `src/server/` | Server-only code; every file imports `server-only` |
+| `src/lib/` | Isomorphic helpers: `types`, `search`, `preferences`, `theme`, `utils` |
+| `src/components/` | App components |
+| `src/components/ui/` | shadcn/ui components built on Base UI |
+| `src/styles.css` | Design tokens from `design/DESIGN.md` |
+
+Route groups such as `(list)`, `(detail)` and `(expenses)` only exist to give
+sibling pages their own `loading.tsx`.
+
+## Pages
+
+Each page is a **server** `page.tsx` that prefetches data and renders a
+**client** `view.tsx` beside it, with a `loading.tsx` skeleton from
+`src/components/skeletons.tsx`:
+
+```tsx title="page.tsx"
+export default async function Page() {
+  const friends = await prefetchQuery(api.friends.list, {})
+  return (
+    <Prefetched queries={[friends.entry]}>
+      <FriendsView />
+    </Prefetched>
+  )
+}
+```
+
+```tsx title="view.tsx"
+'use client'
+
+export function FriendsView() {
+  const { data } = useSuspenseQuery(convexQuery(api.friends.list, {}))
+  // ...
+}
+```
+
+- Pass query args in the **same key order** on both sides: Convex hashes
+  query keys with `JSON.stringify`.
+- Don't call `router.refresh()` after mutations; queries are live.
+- A server component can render client components but can't call functions
+  exported from a `'use client'` module (such as `buttonVariants()`), so
+  keep server components to data loading and composition.
+- Dynamic titles use `generateMetadata`, which can call `prefetchQuery` too
+  (it's cached per request).
+
+## Search params
+
+Parsed on the server with `parseSearch(schema, await searchParams)`. The
+schemas in `@settlr/shared/schemas` give every field `.default(x).catch(x)`,
+so a bad URL falls back instead of throwing. Build URLs with
+`searchHref(pathname, values, defaults)`, which leaves defaults out.
+
+## Hydration safety
+
+Server-rendered output is formatted with the fixed `en-US` locale and UTC
+(`@settlr/shared/format`). Anything that depends on the viewer's locale,
+time zone, clock or browser storage renders inside `<ClientOnly>` or in a
+`useEffect`. Values like "this month" are computed in the server page and
+passed down.
+
+## Navigation and loading
+
+Use `next/link` with string hrefs, `<NavLink>` for links that show the
+current page, and `useAppRouter()` instead of `useRouter()` so the top
+progress bar shows. Nested pages pass `back={{ fallback, label }}` to
+`PageHeader`.
+
+## UI
+
+- Components are [shadcn/ui](https://ui.shadcn.com) on
+  [Base UI](https://base-ui.com) (style `base-nova`), not Radix. Base UI
+  uses a `render` prop instead of `asChild`:
+  `<DropdownMenuTrigger render={<Button />}>`.
+- Style with Tailwind utilities and the design tokens, not hex values or new
+  CSS.
+- Dark is the reference theme and the default: the `.dark` class on
+  `<html>`, set before paint. Theme-dependent markup must render the same on
+  the server, for example both icons with one hidden by `dark:hidden`.
+- Violet (`primary`) is the brand. Money is blue (`positive`, owed to you) or
+  orange (`destructive`, you owe), always with a word or a sign, in Geist
+  Mono (`font-mono tabular-nums`).
+- Confirm destructive actions with `ConfirmAction`, and report success with
+  `useAction(fn, { success: '...' })`, which shows a toast.
+
+## Adding shadcn components
+
+```bash
+cd apps/web
+pnpm dlx shadcn@latest add <name>
+```
+
+Afterwards, change `import { cn } from "cn"` to `#/lib/utils` and run
+`pnpm remove cn`, and remove `next-themes` if it was added (the toaster
+follows the `.dark` class). Don't re-run `shadcn init`: it would overwrite
+the theme in `styles.css`.

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The Settlr mark (see apps/web/src/components/brand.tsx) on the brand violet,
+       the accent token in apps/web/src/styles.css. -->
+  <rect width="32" height="32" rx="10" fill="#B18CFF"/>
+  <path d="M10 22 22 10" stroke="#0C0D10" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="11.5" cy="11.5" r="2.6" fill="#0C0D10"/>
+  <circle cx="20.5" cy="20.5" r="2.6" fill="#0C0D10"/>
+</svg>

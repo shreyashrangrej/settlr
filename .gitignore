@@ -12,3 +12,4 @@ todos.json
 .vercel
 .netlify
 .env*
+.turbo

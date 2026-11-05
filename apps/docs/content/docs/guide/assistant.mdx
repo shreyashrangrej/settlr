@@ -1,0 +1,60 @@
+---
+title: Assistant
+description: Add, find and change expenses by chatting in plain language.
+icon: Sparkles
+---
+
+The **Assistant** page is a chat for your expenses. Write what you'd tell a
+friend, and it makes the changes through the same checks as the forms.
+
+## What it can do
+
+<Tabs items={['Add', 'Find', 'Change', 'Create']}>
+  <Tab value="Add">
+    - "Add tea personal expense 50"
+    - "Lunch with Sam 24, I paid, split equally"
+    - "Taxi 600 in the Goa trip, paid by Priya"
+  </Tab>
+  <Tab value="Find">
+    - "How much did I spend on food this month?"
+    - "Show my expenses with Sam"
+
+    Results list the matching expenses with totals and your share.
+  </Tab>
+  <Tab value="Change">
+    - "Change the tea to 60"
+    - "Make yesterday's taxi a transport expense"
+  </Tab>
+  <Tab value="Create">
+    - "New group Pune stay with Vaishnavi, hotel 2000 split equally"
+    - "Add Alex as a friend"
+
+    It can create a group and add expenses to it in one reply.
+  </Tab>
+</Tabs>
+
+Under each reply, Settlr shows what actually happened: the expenses added,
+changed or found, and links to new groups and friends.
+
+## Deleting
+
+The assistant never deletes anything on its own. When you ask it to, it
+shows the expense with a **Delete** button, and nothing is deleted until you
+press it.
+
+## Good to know
+
+- It knows your friends' and groups' names, so say "with Sam" or "in the Goa
+  trip".
+- It doesn't guess amounts or who an expense is with: if something is
+  missing, it asks.
+- Dates default to today, and the currency to your default currency.
+- The conversation lives in your browser and isn't saved.
+- Settle-up payments, receipts, and moving an expense between personal, a
+  friend and a group are done in the app itself.
+
+<Callout type="info">
+  The assistant runs on a language model through OpenRouter. If the page says
+  it isn't set up, the deployment is missing `OPENROUTER_API_KEY` and
+  `OPENROUTER_MODEL` (see [Environment variables](/docs/development/environment)).
+</Callout>

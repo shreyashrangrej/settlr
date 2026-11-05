@@ -4,7 +4,7 @@
     {
       "name": "settlr-prod",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["exec", "next", "start", "--port", "3100"],
+      "runtimeArgs": ["--filter", "web", "exec", "next", "start", "--port", "3100"],
       "port": 3100
     }
   ]

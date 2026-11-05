@@ -1,0 +1,21 @@
+{
+  "name": "@settlr/backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "convex dev",
+    "deploy": "convex deploy",
+    "typecheck": "tsc --noEmit -p convex"
+  },
+  "dependencies": {
+    "@convex-dev/better-auth": "0.12.5",
+    "@settlr/shared": "workspace:*",
+    "better-auth": "1.6.15",
+    "convex": "^1.46.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^6.0.2"
+  }
+}

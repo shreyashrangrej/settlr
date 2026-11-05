@@ -1,0 +1,63 @@
+---
+title: Writing docs
+description: How this documentation site is built and how to add pages to it.
+icon: PenLine
+---
+
+These docs are `apps/docs`, a Next.js app built with
+[Fumadocs](https://fumadocs.dev). Run it with:
+
+```bash
+pnpm dev:docs   # http://localhost:3001
+```
+
+## Pages
+
+Pages are MDX files in `apps/docs/content/docs`. The URL follows the path:
+`guide/friends.mdx` is `/docs/guide/friends`, and a folder's `index.mdx` is
+the folder's URL.
+
+Each page starts with frontmatter:
+
+```mdx
+---
+title: Friends
+description: One line shown under the title and in search results.
+icon: User
+---
+```
+
+`icon` is the name of a [Lucide](https://lucide.dev/icons) icon.
+
+## Navigation
+
+The sidebar's order comes from `meta.json` files. The root one splits the
+docs into the *Using Settlr* and *Development* sections; each folder's
+`meta.json` lists its pages in order. Add a new page's file name (without
+`.mdx`) to the folder's `meta.json`.
+
+## Components
+
+Besides Markdown, pages can use these components without importing them
+(registered in `apps/docs/components/mdx.tsx`):
+
+- `Callout` (with `type="info"`, `"warn"` or `"error"`)
+- `Cards` and `Card`
+- `Steps` and `Step`
+- `Tabs` and `Tab`
+- `Files`, `Folder` and `File`
+
+Link between pages with absolute URLs (`/docs/guide/groups`) or relative file
+paths (`./groups.mdx`).
+
+## For AI tools
+
+Every page is also served as Markdown: append `.md` to its URL, or request
+it with `Accept: text/markdown`. `/llms.txt` lists the pages and
+`/llms-full.txt` has all of them in one file.
+
+## Style
+
+Write for someone using the feature: say what it does and how, in short
+sentences, with the button and page names as they appear in the app. When the
+app changes, update the matching page in the same pull request.

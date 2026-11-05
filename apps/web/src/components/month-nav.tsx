@@ -1,0 +1,37 @@
+import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+
+import { buttonVariants } from '#/components/ui/button'
+import { formatMonth, shiftMonth } from '@settlr/shared/format'
+
+/**
+ * Previous/next month links for a page with a `?month=YYYY-MM` param (none
+ * means this month, which the page resolved on the server as `thisMonth`).
+ */
+export function MonthNav({
+  to,
+  month,
+  thisMonth,
+}: {
+  to: '/personal' | '/budget'
+  month: string
+  thisMonth: string
+}) {
+  const link = (target: string, label: string, icon: React.ReactNode) => (
+    <Link
+      href={target === thisMonth ? to : `${to}?month=${target}`}
+      aria-label={label}
+      title={label}
+      className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}
+    >
+      {icon}
+    </Link>
+  )
+  return (
+    <nav className="flex items-center gap-1 rounded-xl border bg-card p-[3px]" aria-label="Month">
+      {link(shiftMonth(month, -1), 'Previous month', <ChevronLeft />)}
+      <span className="min-w-36 text-center text-sm font-semibold">{formatMonth(month)}</span>
+      {link(shiftMonth(month, 1), 'Next month', <ChevronRight />)}
+    </nav>
+  )
+}

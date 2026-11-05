@@ -1,0 +1,84 @@
+---
+title: Assistant and MCP
+description: How the chat assistant calls tools through OpenRouter, and how the same tools are served over MCP.
+icon: Bot
+---
+
+The chat assistant and the MCP server share one set of tools, defined in
+`packages/backend/convex/lib/assistantTools.ts`.
+
+## The tools
+
+Each tool's arguments are a zod schema. It validates what the model sends
+and, converted to JSON Schema, tells the model what to send.
+
+| Tool | Writes through |
+| --- | --- |
+| `add_personal_expense` | `api.personal.add` |
+| `add_friend_expense` | `api.friends.addExpense` |
+| `add_group_expense` | `api.groups.addExpense` |
+| `create_group` | `api.groups.create` |
+| `add_friend` | `api.friends.create` |
+| `search_expenses` | reads through `internal.assistant.search` |
+| `update_expense` | `api.personal.update`, `api.friends.updateExpense` or `api.groups.updateExpense` |
+| `delete_expense` | `api.personal.remove`, `api.friends.removeEntry` or `api.groups.removeExpense` |
+
+Writes go through the **same public mutations as the forms, as the caller**,
+and reads through internal queries in `convex/assistant.ts` that are scoped
+to the caller, so a model can do nothing the user couldn't do in the app.
+Creating a group or friend reloads the names the tools match against, so one
+reply can create a group and then add to it.
+
+Amounts arrive in the currency's main unit (`12.5`) and are converted to
+cents. Expenses are referred to by a `ref` returned from `search_expenses`.
+
+## The chat assistant
+
+`api.assistant.send` is an action that takes the recent conversation, the
+viewer's local date and default currency:
+
+1. It loads the caller's friends and groups (`internal.assistant.context`)
+   and builds a system prompt with their names, today's date and the
+   default currency.
+2. It calls the model on [OpenRouter](https://openrouter.ai)
+   (`convex/lib/openrouter.ts`, 45-second timeout) with the tools.
+3. It runs the tool calls the model makes and sends back the results, for up
+   to 5 rounds, then returns the reply plus **events** the chat renders:
+   expenses added, updated and found, groups and friends created, and
+   deletions to confirm.
+
+The history is trimmed to the last 12 messages, and each message's length is
+capped. `delete_expense` isn't run by the model in the chat: it becomes a
+`delete` event, and the expense is only deleted when the user presses
+**Delete**. `api.assistant.status` tells the page whether
+`OPENROUTER_API_KEY` and `OPENROUTER_MODEL` are set.
+
+## The MCP server
+
+`apps/web/src/app/api/mcp/route.ts` is a **stateless Streamable HTTP**
+endpoint with JSON responses:
+
+1. It swaps the request's OAuth bearer token for a Convex JWT (see
+   [Authentication](/docs/development/auth#oauth-for-mcp-clients)). Without
+   a valid token it answers `401` with a `WWW-Authenticate` header pointing
+   at the protected-resource metadata, which starts the OAuth flow.
+2. It passes each JSON-RPC request to the `api.mcp.handle` action as the
+   user. Notifications get no reply, and batches are answered per message.
+
+`convex/mcp.ts` implements `initialize`, `ping`, `tools/list` and
+`tools/call`. Params and replies cross the Convex boundary as JSON strings,
+because JSON Schema keys like `$ref` aren't valid Convex value keys.
+
+Differences from the chat:
+
+- The client's own model does the talking, so there's no OpenRouter call.
+- `list_friends_and_groups` is an extra tool, and the server's
+  `instructions` tell the client to call it first.
+- `delete_expense` is a real tool, annotated `destructiveHint` so clients
+  ask the user before running it.
+- The default currency is that of the user's latest personal expense, else
+  USD; "today" is the UTC date unless the client passes one.
+
+`api.mcp.connections` and `api.mcp.disconnect` back the connected-apps list
+in Settings, and `api.mcp.client` gives the consent page the app's name and
+redirect hosts.

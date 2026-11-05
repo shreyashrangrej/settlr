@@ -1,0 +1,343 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { REGEXP_ONLY_DIGITS } from 'input-otp'
+import {
+  ArrowLeft,
+  CircleAlert,
+  Mail,
+  MailCheck,
+  ReceiptText,
+} from 'lucide-react'
+
+import { useSession } from '#/components/providers'
+import { Alert, AlertDescription } from '#/components/ui/alert'
+import { Button } from '#/components/ui/button'
+import { Card } from '#/components/ui/card'
+import { Input } from '#/components/ui/input'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '#/components/ui/input-otp'
+import { Label } from '#/components/ui/label'
+import { Separator } from '#/components/ui/separator'
+import { Spinner } from '#/components/ui/spinner'
+import {
+  authClient,
+  sendEmailOtp,
+  signInWithGoogle,
+  verifyEmailOtp,
+} from '#/lib/auth-client'
+import { OTP_LENGTH, emailOtpRequest, emailOtpVerify } from '@settlr/shared/schemas'
+import { cn } from '#/lib/utils'
+
+const RESEND_COOLDOWN_S = 30
+
+type Step = 'email' | 'code'
+type Pending = 'google' | 'send' | 'verify' | null
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Something went wrong. Try again.'
+}
+
+/**
+ * Sign-in with Google or an email code. Afterwards it goes to the
+ * dashboard, or to `next` (a same-site path) with a full page load, for
+ * flows that continue outside the app router (connecting an MCP client).
+ */
+export function LoginForm({ className, next }: { className?: string; next?: string }) {
+  const isAuthenticated = useSession().user !== null
+  const { data: session } = authClient.useSession()
+  const router = useRouter()
+  const [step, setStep] = useState<Step>('email')
+  const [email, setEmail] = useState('')
+  const [otp, setOtp] = useState('')
+  const [pending, setPending] = useState<Pending>(null)
+  const [fieldError, setFieldError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [resendIn, setResendIn] = useState(0)
+
+  useEffect(() => {
+    if (resendIn <= 0) return
+    const timer = setTimeout(() => setResendIn((s) => s - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [resendIn])
+
+  async function run(kind: Exclude<Pending, null>, action: () => Promise<void>) {
+    setPending(kind)
+    setError(null)
+    try {
+      await action()
+      return true
+    } catch (err) {
+      setError(errorMessage(err))
+      return false
+    } finally {
+      setPending(null)
+    }
+  }
+
+  async function requestCode(event?: React.FormEvent) {
+    event?.preventDefault()
+    const parsed = emailOtpRequest.safeParse({ email: email.trim() })
+    if (!parsed.success) {
+      setFieldError(parsed.error.issues[0]?.message ?? 'Enter a valid email')
+      return
+    }
+    setFieldError(null)
+    const sent = await run('send', () => sendEmailOtp(parsed.data.email))
+    if (sent) {
+      setOtp('')
+      setStep('code')
+      setResendIn(RESEND_COOLDOWN_S)
+    }
+  }
+
+  async function verifyCode(code: string) {
+    const parsed = emailOtpVerify.safeParse({ email: email.trim(), otp: code })
+    if (!parsed.success) {
+      setFieldError(parsed.error.issues[0]?.message ?? 'Enter the code')
+      return
+    }
+    setFieldError(null)
+    const signedIn = await run('verify', () =>
+      verifyEmailOtp(parsed.data.email, parsed.data.otp),
+    )
+    if (signedIn) {
+      if (next) {
+        window.location.assign(next)
+        return
+      }
+      // Render the server components again as the signed-in user.
+      router.push('/dashboard')
+      router.refresh()
+    }
+  }
+
+  function changeEmail() {
+    setStep('email')
+    setOtp('')
+    setError(null)
+    setFieldError(null)
+  }
+
+  const busy = pending !== null
+
+  // Signed in: the home route is redirecting to the dashboard.
+  if (isAuthenticated || session) {
+    return (
+      <Card className={cn('items-center gap-3 px-6 py-10', className)}>
+        <Spinner className="size-5 text-primary" />
+        <p className="text-sm text-muted-foreground">Signing you in…</p>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className={cn('gap-0 overflow-hidden py-0', className)}>
+      <div className="grid gap-6 px-6 pt-8 pb-6 sm:px-8">
+        <header className="grid gap-4">
+          <span
+            aria-hidden="true"
+            className="grid size-11 place-items-center rounded-xl border border-highlight-border bg-highlight text-primary"
+          >
+            {step === 'email' ? (
+              <ReceiptText className="size-5" />
+            ) : (
+              <MailCheck className="size-5" />
+            )}
+          </span>
+          {step === 'email' ? (
+            <div className="grid gap-1.5">
+              <h2 className="m-0 text-2xl font-semibold tracking-[-0.03em]">
+                Sign in to Settlr
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                No password needed. Use Google, or get a one-time code by email.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-1.5">
+              <h2 className="m-0 text-2xl font-semibold tracking-[-0.03em]">
+                Check your inbox
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                We sent a {OTP_LENGTH}-digit code to{' '}
+                <span className="font-medium break-all text-foreground">
+                  {email.trim()}
+                </span>
+                . It expires in 5 minutes.
+              </p>
+            </div>
+          )}
+        </header>
+
+        {step === 'email' ? (
+          <div className="grid gap-5">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full gap-3 text-[0.9375rem]"
+              disabled={busy}
+              onClick={() => run('google', () => signInWithGoogle(next))}
+            >
+              {pending === 'google' ? (
+                <Spinner />
+              ) : (
+                <GoogleLogo />
+              )}
+              Continue with Google
+            </Button>
+
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <Separator className="flex-1" />
+              or use your email
+              <Separator className="flex-1" />
+            </div>
+
+            <form noValidate onSubmit={requestCode} className="grid gap-3">
+              <div className="grid gap-2">
+                <Label htmlFor="login-email">Email</Label>
+                <div className="relative">
+                  <Mail
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+                  />
+                  <Input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 text-[0.9375rem]"
+                    aria-invalid={fieldError ? true : undefined}
+                    aria-describedby={fieldError ? 'login-email-error' : undefined}
+                  />
+                </div>
+                {fieldError && (
+                  <p id="login-email-error" className="text-sm text-destructive">
+                    {fieldError}
+                  </p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                className="h-11 w-full text-[0.9375rem]"
+                disabled={busy}
+              >
+                {pending === 'send' && <Spinner />}
+                Email me a code
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <form
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault()
+              void verifyCode(otp)
+            }}
+            className="grid gap-5"
+          >
+            <div className="grid justify-items-center gap-2">
+              <InputOTP
+                maxLength={OTP_LENGTH}
+                pattern={REGEXP_ONLY_DIGITS}
+                value={otp}
+                onChange={setOtp}
+                onComplete={(code: string) => void verifyCode(code)}
+                autoFocus
+                autoComplete="one-time-code"
+                aria-label="One-time code"
+                disabled={pending === 'verify'}
+                aria-invalid={fieldError ? true : undefined}
+              >
+                <InputOTPGroup className="gap-2">
+                  {Array.from({ length: OTP_LENGTH }, (_, i) => (
+                    <InputOTPSlot
+                      key={i}
+                      index={i}
+                      aria-invalid={fieldError ? true : undefined}
+                      className="size-12 rounded-xl border bg-field font-mono text-lg font-medium first:rounded-xl last:rounded-xl"
+                    />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
+              {fieldError && (
+                <p className="text-sm text-destructive">{fieldError}</p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="h-11 w-full text-[0.9375rem]"
+              disabled={busy || otp.length < OTP_LENGTH}
+            >
+              {pending === 'verify' && <Spinner />}
+              Verify and sign in
+            </Button>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="-ml-2 text-muted-foreground"
+                onClick={changeEmail}
+              >
+                <ArrowLeft />
+                Different email
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="-mr-2 text-muted-foreground"
+                disabled={busy || resendIn > 0}
+                onClick={() => void requestCode()}
+              >
+                {resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend code'}
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {error && (
+          <Alert role="alert">
+            <CircleAlert />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+
+    </Card>
+  )
+}
+
+function GoogleLogo() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-[18px]">
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.87c2.26-2.09 3.55-5.17 3.55-8.87Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3A7.2 7.2 0 0 1 12 19.25a7.14 7.14 0 0 1-6.72-4.93h-4v3.09A12 12 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.32A7.2 7.2 0 0 1 4.9 12c0-.81.14-1.59.38-2.32V6.59h-4A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.41l4-3.09Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.97 11.97 0 0 0 12 0 12 12 0 0 0 1.28 6.59l4 3.09A7.14 7.14 0 0 1 12 4.75Z"
+      />
+    </svg>
+  )
+}

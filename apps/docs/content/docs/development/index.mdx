@@ -1,0 +1,119 @@
+---
+title: Development setup
+description: Install the monorepo, connect a Convex deployment and run Settlr locally.
+icon: Terminal
+---
+
+## Requirements
+
+- **Node.js 22** or newer
+- **[pnpm](https://pnpm.io)** 10, the only supported package manager (the
+  version is pinned in the root `package.json`)
+- A free **[Convex](https://convex.dev)** account
+
+## Set up
+
+<Steps>
+  <Step>
+    ### Install
+
+    ```bash
+    pnpm install
+    ```
+
+    This installs every workspace: `apps/web`, `apps/docs`,
+    `packages/backend` and `packages/shared`.
+  </Step>
+  <Step>
+    ### Create a Convex dev deployment
+
+    ```bash
+    pnpm dev:convex
+    ```
+
+    The first run asks you to sign in to Convex and creates a dev
+    deployment. It writes `CONVEX_DEPLOYMENT` to
+    `packages/backend/.env.local`, then keeps pushing `convex/` to the
+    deployment on every change. Leave it running.
+  </Step>
+  <Step>
+    ### Point the web app at it
+
+    Create `apps/web/.env.local` with the deployment's two URLs (both are on
+    the Convex dashboard, under *Settings → URL & deploy key*):
+
+    ```bash title="apps/web/.env.local"
+    NEXT_PUBLIC_CONVEX_URL=https://<deployment>.convex.cloud
+    NEXT_PUBLIC_CONVEX_SITE_URL=https://<deployment>.convex.site
+    ```
+  </Step>
+  <Step>
+    ### Configure sign-in
+
+    Set the deployment's required environment variables (run these in
+    `packages/backend`):
+
+    ```bash
+    pnpm exec convex env set SITE_URL=http://localhost:3000
+    pnpm exec convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+    ```
+
+    See [Environment variables](/docs/development/environment) for the
+    optional ones (Google sign-in, email, the assistant).
+  </Step>
+  <Step>
+    ### Run the web app
+
+    ```bash
+    pnpm dev
+    ```
+
+    Open [http://localhost:3000](http://localhost:3000).
+  </Step>
+</Steps>
+
+<Callout title="Signing in without an inbox">
+  Without a Resend API key, sign-in codes aren't emailed. Read them in the
+  deployment's logs with `pnpm exec convex logs` (in `packages/backend`).
+</Callout>
+
+## Commands
+
+Run these from the repository root. Turborepo runs each one in the
+workspaces that define it.
+
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | The web app on [localhost:3000](http://localhost:3000) |
+| `pnpm dev:docs` | These docs on [localhost:3001](http://localhost:3001) |
+| `pnpm dev:convex` | `convex dev`: pushes `packages/backend/convex` to your dev deployment on every change |
+| `pnpm typecheck` | Type-checks every workspace |
+| `pnpm build` | Builds the web app and the docs |
+| `pnpm start` | Serves the web app's production build |
+
+To run a script in one workspace, filter it:
+`pnpm --filter web build`, `pnpm --filter docs dev`.
+
+## Before you push
+
+There's no test suite or linter yet. Run:
+
+```bash
+pnpm typecheck && pnpm build
+```
+
+The build also enforces the server/client boundaries: a `server-only`
+import reaching a client bundle, or a server component calling a function
+from a `'use client'` module, fails it. Then try the change in the browser,
+in dark mode and at phone width.
+
+## Calling Convex functions as a test user
+
+Run the Convex CLI with `node` (on Windows, `cmd.exe` mangles the JSON
+when it goes through `pnpm exec`), from `packages/backend`:
+
+```bash
+node node_modules/convex/bin/main.js run \
+  --identity '{"tokenIdentifier":"test|u1","name":"Test"}' \
+  friends:list '{}'
+```

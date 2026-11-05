@@ -1,0 +1,48 @@
+---
+title: Environment variables
+description: The Convex deployment's variables and the web app's .env.local.
+icon: Settings
+---
+
+## Convex deployment
+
+Declared and typed in `packages/backend/convex/convex.config.ts`; a deploy
+fails when a required one is missing. Set them from `packages/backend` with
+the `NAME=value` form, and list them with `pnpm exec convex env list`:
+
+```bash
+pnpm exec convex env set SITE_URL=https://settlr.example.com
+```
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `SITE_URL` | Yes | Public origin of the web app. Better Auth's base URL and the OAuth issuer |
+| `BETTER_AUTH_SECRET` | Yes | Signs sessions and tokens (`openssl rand -base64 32`) |
+| `TRUSTED_ORIGINS` | No | Other origins allowed to sign in, comma-separated |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | No | Google sign-in, on when both are set |
+| `RESEND_API_KEY` | No | Emails sign-in codes; without it they're only logged |
+| `AUTH_EMAIL_FROM` | No | Sender for sign-in emails (default `Settlr <onboarding@resend.dev>`) |
+| `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | No | The chat assistant, off until both are set. The model must support tool calling |
+
+<Callout title="Testing sign-in locally">
+  Request a code for `delivered@resend.dev` (Resend's test address), then
+  read it with `pnpm exec convex data --component betterAuth verification`.
+</Callout>
+
+## Web app
+
+`apps/web/.env.local`:
+
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_CONVEX_URL` | The deployment's `.convex.cloud` URL |
+| `NEXT_PUBLIC_CONVEX_SITE_URL` | The deployment's `.convex.site` URL, where Better Auth's routes live |
+
+`NEXT_PUBLIC_*` values are inlined at build time, so rebuild after changing
+them.
+
+## Backend package
+
+`packages/backend/.env.local` holds `CONVEX_DEPLOYMENT`, which `convex dev`
+writes the first time it runs. It's what the Convex CLI in that folder
+talks to.

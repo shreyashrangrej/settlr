@@ -1,0 +1,15 @@
+{
+  "title": "Development",
+  "pages": [
+    "index",
+    "architecture",
+    "data-model",
+    "balances",
+    "auth",
+    "assistant-and-mcp",
+    "web-app",
+    "environment",
+    "deployment",
+    "writing-docs"
+  ]
+}

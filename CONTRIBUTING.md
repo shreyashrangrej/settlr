@@ -20,16 +20,20 @@ requests are all welcome. By taking part you agree to follow the
 You need Node.js 22+, [pnpm](https://pnpm.io) (the only supported package
 manager) and a free [Convex](https://convex.dev) account.
 
+It's a Turborepo monorepo: the app is `apps/web`, the docs `apps/docs`, the
+Convex backend `packages/backend` and the code they share `packages/shared`.
+
 ```bash
 pnpm install
-pnpm dev:convex   # creates your dev deployment and writes .env.local
+pnpm dev:convex   # creates your dev deployment (packages/backend/.env.local)
 pnpm dev          # http://localhost:3000, in a second terminal
+pnpm dev:docs     # the docs on http://localhost:3001, if you're changing them
 ```
 
-`.env.local` needs `NEXT_PUBLIC_CONVEX_URL` (the `.convex.cloud` URL) and
-`NEXT_PUBLIC_CONVEX_SITE_URL` (the same deployment's `.convex.site` URL); add
-whichever `convex dev` didn't write. Then set the Convex deployment's
-environment variables:
+Create `apps/web/.env.local` with `NEXT_PUBLIC_CONVEX_URL` (the
+`.convex.cloud` URL) and `NEXT_PUBLIC_CONVEX_SITE_URL` (the same deployment's
+`.convex.site` URL). Then set the Convex deployment's environment variables,
+from `packages/backend`:
 
 ```bash
 pnpm exec convex env set SITE_URL=http://localhost:3000
@@ -38,8 +42,9 @@ pnpm exec convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
 
 Without a Resend API key, sign-in codes aren't emailed; read them with
 `pnpm exec convex logs`. Google sign-in stays off until `GOOGLE_CLIENT_ID`
-and `GOOGLE_CLIENT_SECRET` are set. [CLAUDE.md](CLAUDE.md) has more on the
-environment and its gotchas.
+and `GOOGLE_CLIENT_SECRET` are set. The
+[development docs](apps/docs/content/docs/development) and
+[CLAUDE.md](CLAUDE.md) have more on the environment and its gotchas.
 
 ## Making a change
 
@@ -48,14 +53,16 @@ environment and its gotchas.
 3. Follow the conventions in [CLAUDE.md](CLAUDE.md). The important ones:
    - All data goes through Convex. Every query and mutation gets the user
      from `requireUser(ctx)` and scopes reads and writes to them; check
-     values with `convex/lib/input.ts` using the same limits as the zod
-     schemas in `src/lib/schemas.ts`.
+     values with `packages/backend/convex/lib/input.ts` using the same
+     limits as the zod schemas in `packages/shared/src/schemas.ts`.
    - Money is integer minor units (`amountCents`), never floats.
-   - Server-only code lives in `src/server/` (it imports `server-only`) and
+   - Server-only code lives in `apps/web/src/server/` (it imports `server-only`) and
      is used only by server components and route handlers.
    - Use the shadcn/ui components (built on Base UI) and Tailwind utilities
      rather than new hand-written CSS.
-   - Commit `convex/_generated/` when it changes.
+   - Commit `packages/backend/convex/_generated/` when it changes.
+   - The backend must not import from `apps/web`: put code both need in
+     `packages/shared`.
 4. Check your work before pushing:
 
    ```bash
@@ -70,8 +77,9 @@ environment and its gotchas.
 
 - Describe what changed and why, and link the issue it closes.
 - Add screenshots for visual changes.
-- Update `README.md` when you change what the app does, and `CLAUDE.md`
-  when you change a convention or the project layout.
+- Update `README.md` and the matching page in `apps/docs/content/docs` when
+  you change what the app does, and `CLAUDE.md` when you change a
+  convention or the project layout.
 - Write commit messages in the imperative mood ("Add receipt viewer", not
   "Added receipt viewer").
 

@@ -1,0 +1,135 @@
+---
+title: Data model
+description: The Convex tables behind Settlr, their indexes, and how linked friends and groups are stored.
+icon: Database
+---
+
+The schema is in `packages/backend/convex/schema.ts`. Every row belongs to
+one signed-in user, whose `userId` is their Convex `tokenIdentifier`.
+Friends and group members are people the owner tracks by name; they don't
+need a Settlr account, but can be linked to one.
+
+Better Auth keeps its own tables (users, sessions, OAuth clients and
+tokens) in the `betterAuth` Convex component, separate from these.
+
+## Tables
+
+### `friends`
+
+A person you share one-on-one expenses with.
+
+| Field | Notes |
+| --- | --- |
+| `userId`, `name`, `email?` | The owner, and the friend's name and optional email |
+| `balances` | Currency code → cents. Positive: the friend owes you |
+| `lastActivityAt` | For sorting the list |
+| `linkedUserId?`, `counterpartId?` | Set once a friend request is accepted: the friend's user id and their row for you |
+| `request?` | `pending` or `declined` while a request from this row is unanswered |
+
+Indexes: `by_userId`, `by_userId_and_lastActivityAt`.
+
+### `friendEntries`
+
+The one-on-one ledger: a union of two kinds.
+
+- **`expense`**: `description`, `amountCents`, `currency`, `category`,
+  `paidBy` (`me` or `friend`), `split` (`equal` or `full`), `date`, optional
+  `receiptId`.
+- **`payment`**: `amountCents`, `currency`, `paidBy`, optional `note`,
+  `date`.
+
+Both carry `userId`, `friendId` and an optional `mirrorId`. Indexes:
+`by_friendId_and_date`, `by_userId_and_date`.
+
+### `friendRequests`
+
+Sent from a friend row with an email, and matched to the recipient **by
+email**, so it waits for someone who hasn't signed up yet. Status is
+`pending`, `accepted` or `declined`. Indexes: `by_toEmail_and_status`,
+`by_fromFriendId`.
+
+### `groups`
+
+| Field | Notes |
+| --- | --- |
+| `userId`, `name`, `currency` | The owner, and the group's one currency |
+| `members` | Up to 20, each `{ id, name, paidCents, owedCents, settledCents?, userId? }` |
+| `meMemberId` | The owner's member |
+| `expenseCount`, `totalCents` | Running totals |
+| `byCategory`, `byMonth` | Category → cents and `YYYY-MM` → cents, for insights |
+| `lastExpenseAt?` | For sorting |
+
+Index: `by_userId`.
+
+### `groupMembers`
+
+One row per **linked, non-owner** member (`groupId`, `userId`), so a user
+can find the groups they're in. Indexes: `by_userId`, `by_groupId`.
+
+### `groupExpenses`
+
+`groupId`, `description`, `amountCents`, `paidBy` (a member id),
+`splitAmong` (member ids), `category`, `date`, optional `receiptId`.
+Indexes: `by_groupId_and_date`, `by_groupId_and_amountCents`, and the
+`search_description` search index (filterable by `groupId`, `category` and
+`paidBy`) that backs the group page's search.
+
+### `groupPayments`
+
+A settle-up payment between two members: `groupId`, `from`, `to` (member
+ids), `amountCents`, `date`. It changes the members' `settledCents`, not
+the group's spending totals. Index: `by_groupId_and_date`.
+
+### `personalExpenses`
+
+`userId`, `description`, `amountCents`, `currency`, `category`, `date`,
+optional `receiptId`. Index: `by_userId_and_date`.
+
+### `budgets`
+
+One per user and currency: `userId`, `currency`, `amountCents`. Index:
+`by_userId_and_currency`.
+
+### `receipts`
+
+A file in Convex storage: `userId`, `storageId`, `fileName`, `contentType`,
+`size`, `attached`. It starts unattached; saving an expense attaches it, and
+it's deleted with that expense. A scheduled function deletes receipts still
+unattached a day after upload. Index: `by_storageId`.
+
+### `notifications`
+
+`userId`, `kind`, `actorName`, `read`, plus optional `description`,
+`amountCents`, `currency`, `friendId`, `groupId` and `groupName`. Kinds:
+`friend_expense`, `friend_payment`, `friend_entry_updated`,
+`group_expense`, `group_expense_updated`, `group_payment`, `group_added`
+and `request_accepted`. Amounts are from the recipient's side. Indexes:
+`by_userId`, `by_userId_and_read`.
+
+## Linked friends
+
+When a friend request is accepted, the two `friends` rows are linked
+(`linkedUserId`, `counterpartId`) and each side's history is copied into the
+other. From then on every entry is **mirrored**: it's written once in each
+ledger, from that person's side (`paidBy: 'me'` in one is
+`paidBy: 'friend'` in the other), and `mirrorId` pairs the twins. Each user
+still only reads their own rows. The twins share one receipt.
+
+Deleting a friend deletes your rows; the other person keeps theirs as an
+unlinked friend.
+
+## Linked group members
+
+A group belongs to its owner. Linking a member to a friend's account sets
+`members[].userId` and adds a `groupMembers` row, which is how that user's
+queries find the group. Linked members can read the group and add expenses
+and payments; only the owner can change or delete the group.
+
+## Conventions
+
+- Dates are `YYYY-MM-DD` strings, months `YYYY-MM`.
+- Money is integer cents (`amountCents`), checked by `input.amount`: a
+  positive integer up to 100,000,000.
+- Lists that grow with "Show more" take a `limit`, clamped to 1–500.
+- Queries use indexes (`withIndex`) rather than filters, and cap how much
+  they read (`take`).
