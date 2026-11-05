@@ -9,7 +9,6 @@ import {
   Check,
   Pencil,
   Plus,
-  ReceiptText,
   Search,
   Sparkles,
   Trash2,
@@ -29,16 +28,28 @@ import { cn } from '#/lib/utils'
 import type { Id } from '#convex/_generated/dataModel'
 import { api } from '#convex/_generated/api'
 
-// The first CHIPS are chips above the message box; the rest are listed in
-// the side panel, so no prompt shows twice.
-const CHIPS = 3
-const EXAMPLES: ReadonlyArray<{ text: string; icon: LucideIcon }> = [
-  { text: 'Add tea personal expense 50', icon: ReceiptText },
-  { text: 'How much did I spend on food this month?', icon: Search },
-  { text: 'Show my expenses with Sam', icon: Search },
-  { text: 'Change the tea to 60', icon: Pencil },
-  { text: 'Taxi 600 in the Goa trip, paid by Priya', icon: ReceiptText },
-  { text: 'Delete yesterday’s taxi', icon: Trash2 },
+// The empty chat's suggestions: one per thing the assistant does. A click
+// puts the example in the message box to send or change.
+const STARTERS: ReadonlyArray<{
+  label: string
+  example: string
+  icon: LucideIcon
+  tone: string
+}> = [
+  { label: 'Add an expense', example: 'Coffee 120', icon: Plus, tone: 'bg-primary/14 text-primary' },
+  {
+    label: 'Ask about spending',
+    example: 'How much did I spend on food this month?',
+    icon: Search,
+    tone: 'bg-positive/14 text-positive',
+  },
+  { label: 'Edit an expense', example: 'Change the coffee to 150', icon: Pencil, tone: 'bg-tile text-soft' },
+  {
+    label: 'Delete an expense',
+    example: 'Delete the coffee',
+    icon: Trash2,
+    tone: 'bg-destructive/14 text-destructive',
+  },
 ]
 // The same limits as convex/assistant.ts.
 const MAX_MESSAGE = 500
@@ -135,19 +146,37 @@ export function AssistantView() {
   const decide = (ref: string, decision: 'deleted' | 'kept') =>
     setDecisions((current) => ({ ...current, [ref]: decision }))
 
+  function newChat() {
+    setMessages([])
+    setDecisions({})
+    setDraft('')
+    inputRef.current?.focus()
+  }
+
+  // The changes panel only appears once there's something in it.
+  const hasChanges = messages.some(
+    (m) => m.role === 'assistant' && m.events.some((event) => event.type !== 'found'),
+  )
+
   return (
-    <div className="grid items-start gap-x-8 gap-y-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    <div
+      className={cn(
+        'grid items-start gap-x-8 gap-y-6',
+        hasChanges && 'xl:grid-cols-[minmax(0,1fr)_20rem]',
+      )}
+    >
       <div className="flex min-h-[calc(100svh-13rem)] min-w-0 flex-col lg:min-h-[calc(100svh-4.5rem)]">
-        <header className="flex items-center gap-3 border-b border-divider pb-4">
-          <AssistantMark className="size-10 rounded-xl [&_svg]:size-5" />
-          <div className="grid min-w-0 gap-0.5">
-            <h1 className="m-0 text-[1.0625rem] font-semibold tracking-[-0.02em]">
-              Settlr Assistant
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Adds, edits and finds expenses. Asks before every delete.
-            </p>
-          </div>
+        <header className="flex min-h-10 items-center justify-between gap-3">
+          <h1 className="m-0 flex items-center gap-2.5 text-[1.0625rem] font-semibold tracking-[-0.02em]">
+            <AssistantMark />
+            Assistant
+          </h1>
+          {messages.length > 0 && (
+            <Button variant="outline" onClick={newChat} disabled={pending}>
+              <Plus />
+              New chat
+            </Button>
+          )}
         </header>
 
         <div role="log" aria-label="Conversation" className="flex-1 py-7">
@@ -163,15 +192,38 @@ export function AssistantView() {
               </Alert>
             )}
             {messages.length === 0 && (
-              <div className="grid justify-items-center gap-3 py-12 text-center">
-                <AssistantMark className="size-14 rounded-2xl [&_svg]:size-7" />
-                <h2 className="m-0 text-2xl font-semibold tracking-[-0.03em]">
-                  What can I do for you?
+              <div className="grid gap-6 py-10">
+                <h2 className="m-0 text-center text-2xl font-semibold tracking-[-0.03em]">
+                  What should I do?
                 </h2>
-                <p className="max-w-md text-muted-foreground">
-                  Add an expense, ask what you spent, or change one you already have.
-                  Personal, friend and group expenses all work.
-                </p>
+                <ul className="grid gap-2.5 sm:grid-cols-2">
+                  {STARTERS.map((starter) => (
+                    <li key={starter.label}>
+                      <button
+                        type="button"
+                        disabled={!configured}
+                        onClick={() => fillExample(starter.example)}
+                        className="flex w-full items-center gap-3 rounded-2xl border bg-card p-3.5 text-left outline-none enabled:hover:border-primary/50 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            'grid size-9 shrink-0 place-items-center rounded-[10px] [&_svg]:size-4',
+                            starter.tone,
+                          )}
+                        >
+                          <starter.icon />
+                        </span>
+                        <span className="grid min-w-0">
+                          <span className="font-semibold">{starter.label}</span>
+                          <span className="truncate text-[0.8125rem] text-muted-foreground">
+                            “{starter.example}”
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
             {messages.map((message) => (
@@ -200,90 +252,46 @@ export function AssistantView() {
             void submit()
           }}
         >
-          <div className="mx-auto flex max-w-190 flex-col gap-2.5">
-            <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] sm:flex-wrap">
-              {EXAMPLES.slice(0, CHIPS).map((example) => (
-                <button
-                  key={example.text}
-                  type="button"
-                  onClick={() => fillExample(example.text)}
-                  className="min-h-9 shrink-0 rounded-full border border-input px-3 text-[0.8125rem] text-soft outline-none hover:bg-tile focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  {example.text}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-end gap-2 rounded-[20px] border border-input bg-card py-2 pr-2 pl-4 focus-within:border-primary">
-              <label htmlFor={`${id}-message`} className="sr-only">
-                Message the assistant
-              </label>
-              <textarea
-                id={`${id}-message`}
-                ref={inputRef}
-                value={draft}
-                rows={2}
-                maxLength={MAX_MESSAGE}
-                disabled={!configured}
-                placeholder="Add, edit or find an expense… e.g. “Rohan paid 900 for petrol, split 3 ways”"
-                className="field-sizing-content max-h-40 min-h-12 flex-1 resize-none border-0 bg-transparent py-1.5 leading-normal outline-none placeholder:text-faint disabled:opacity-50"
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  // Enter sends, Shift+Enter adds a line.
-                  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                    e.preventDefault()
-                    void submit()
-                  }
-                }}
-              />
-              <Button
-                type="submit"
-                size="icon-lg"
-                aria-label="Send"
-                disabled={!configured || pending || !draft.trim()}
-              >
-                <ArrowUp className="size-4.5" strokeWidth={2.4} />
-              </Button>
-            </div>
-            <p className="text-center text-xs text-faint">
-              Conversations aren’t saved. Everything it adds or changes shows up on the usual
-              pages.
-            </p>
+          <div className="mx-auto flex max-w-190 items-end gap-2 rounded-[20px] border border-input bg-card py-2 pr-2 pl-4 focus-within:border-primary">
+            <label htmlFor={`${id}-message`} className="sr-only">
+              Message the assistant
+            </label>
+            <textarea
+              id={`${id}-message`}
+              ref={inputRef}
+              value={draft}
+              rows={1}
+              maxLength={MAX_MESSAGE}
+              disabled={!configured}
+              placeholder="e.g. Dinner 1200, split with Rohan"
+              className="field-sizing-content max-h-40 min-h-10 flex-1 resize-none border-0 bg-transparent py-2 leading-normal outline-none placeholder:text-faint disabled:opacity-50"
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                // Enter sends, Shift+Enter adds a line.
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault()
+                  void submit()
+                }
+              }}
+            />
+            <Button
+              type="submit"
+              size="icon-lg"
+              aria-label="Send"
+              disabled={!configured || pending || !draft.trim()}
+            >
+              <ArrowUp className="size-4.5" strokeWidth={2.4} />
+            </Button>
           </div>
         </form>
         <div ref={endRef} />
       </div>
 
-      <aside className="flex flex-col gap-5 rounded-3xl border bg-sidebar p-5 xl:sticky xl:top-6">
-        <Changes messages={messages} decisions={decisions} />
-        <div className="grid gap-2.5">
-          <span className="font-semibold">You can also ask</span>
-          <ul className="grid gap-1">
-            {EXAMPLES.slice(CHIPS).map((example) => (
-              <li key={example.text}>
-                <button
-                  type="button"
-                  onClick={() => fillExample(example.text)}
-                  className="-mx-2 flex w-[calc(100%+1rem)] items-start gap-2.5 rounded-lg px-2 py-1.5 text-left text-[0.8125rem] text-soft outline-none hover:bg-tile focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  <example.icon className="mt-px size-4 shrink-0 text-primary" aria-hidden="true" />
-                  “{example.text}”
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="grid gap-2 rounded-2xl border bg-card p-4">
-          <span className="font-semibold">Good to know</span>
-          <ul className="grid list-disc gap-1.5 pl-4 text-[0.8125rem] leading-[1.45] text-muted-foreground">
-            <li>Say who paid and how it’s split, or leave it to the defaults.</li>
-            <li>Nothing is deleted until you press Delete on its card.</li>
-            <li>
-              Amounts are in your default currency (set in Settings) unless you name another;
-              group expenses use the group’s currency.
-            </li>
-          </ul>
-        </div>
-      </aside>
+      {hasChanges && (
+        <aside className="rounded-3xl border bg-sidebar p-5 xl:sticky xl:top-6">
+          <Changes messages={messages} decisions={decisions} />
+        </aside>
+      )}
     </div>
   )
 }
@@ -633,14 +641,8 @@ function Changes({ messages, decisions }: { messages: Array<Message>; decisions:
 
   return (
     <div className="grid gap-3">
-      <h2 className="m-0 text-[0.9375rem] font-semibold tracking-[-0.02em]">
-        Changes in this chat
-      </h2>
-      {items.length === 0 ? (
-        <p className="text-[0.8125rem] leading-[1.45] text-muted-foreground">
-          Nothing yet. Whatever the assistant adds, edits or offers to delete is listed here.
-        </p>
-      ) : (
+      <h2 className="m-0 text-[0.9375rem] font-semibold tracking-[-0.02em]">Changes</h2>
+      {items.length === 0 ? null : (
         <ol className="grid">
           {items.map(({ key, event }, i) => {
             const { expense } = event

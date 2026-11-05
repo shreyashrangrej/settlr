@@ -22,12 +22,17 @@ import { signOut } from '#/lib/auth-client'
 import { applyTheme } from '#/lib/theme'
 
 // The signed-in user's menu, with their details, shortcuts, the theme
-// switch and sign-out. `row` is the sidebar's footer (avatar and name);
-// `avatar` is the round button in the top bar, whose menu also has the
-// sections the mobile bar has no room for. Renders nothing when signed out.
+// switch and sign-out. `row` is the sidebar's footer (avatar and name),
+// `compact` the collapsed sidebar's (just the avatar); `avatar` is the round
+// button in the top bar, whose menu also has the sections the mobile bar has
+// no room for. Renders nothing when signed out.
 // The user comes from the root layout, so the server and first client render
 // agree.
-export function AccountMenu({ variant = 'avatar' }: { variant?: 'avatar' | 'row' }) {
+export function AccountMenu({
+  variant = 'avatar',
+}: {
+  variant?: 'avatar' | 'row' | 'compact'
+}) {
   const { user } = useSession()
   const router = useAppRouter()
   const [pending, setPending] = useState(false)
@@ -50,7 +55,20 @@ export function AccountMenu({ variant = 'avatar' }: { variant?: 'avatar' | 'row'
 
   return (
     <DropdownMenu>
-      {variant === 'row' ? (
+      {variant === 'compact' ? (
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              aria-label="Account menu"
+              title={label}
+              className="grid place-items-center rounded-xl p-1.5 outline-none hover:bg-tile focus-visible:ring-3 focus-visible:ring-ring/50 data-popup-open:bg-tile"
+            />
+          }
+        >
+          <PersonAvatar name={label} me className="size-8" />
+        </DropdownMenuTrigger>
+      ) : variant === 'row' ? (
         <DropdownMenuTrigger
           render={
             <button
@@ -81,7 +99,7 @@ export function AccountMenu({ variant = 'avatar' }: { variant?: 'avatar' | 'row'
           <PersonAvatar name={label} me size="lg" />
         </DropdownMenuTrigger>
       )}
-      <DropdownMenuContent align={variant === 'row' ? 'start' : 'end'} className="w-60">
+      <DropdownMenuContent align={variant === 'avatar' ? 'end' : 'start'} className="w-60">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex items-center gap-2.5 py-2 text-foreground">
             <PersonAvatar name={label} me />

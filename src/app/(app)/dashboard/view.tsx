@@ -688,15 +688,15 @@ function Balances({
             <li
               key={b.key}
               // The name's link covers the whole row (its ::after); the
-              // Settle button sits above it. The row reaches past the
-              // card's padding for its hover fill; ::before is the divider.
-              className="relative -mx-2.5 flex items-center gap-3.5 rounded-xl px-2.5 py-3 before:absolute before:inset-x-2.5 before:top-0 before:h-px before:bg-divider has-[a:hover]:bg-tile/50"
+              // Settle button sits above it. Hovering the row highlights the
+              // name and chevron rather than filling the row.
+              className="group/row relative flex items-center gap-3.5 border-t border-divider py-3"
             >
               <BalanceAvatar balance={b} size="lg" />
               <div className="grid min-w-0 flex-1 gap-0.5">
                 <Link
                   href={b.href}
-                  className="truncate text-[0.9375rem] font-semibold no-underline outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+                  className="truncate text-[0.9375rem] font-semibold no-underline outline-none group-hover/row:text-primary after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
                 >
                   {b.name}
                 </Link>
@@ -728,7 +728,7 @@ function Balances({
               ) : (
                 <ChevronRight
                   aria-hidden="true"
-                  className="hidden size-4 shrink-0 text-muted-foreground sm:block sm:w-21"
+                  className="hidden size-4 shrink-0 text-muted-foreground transition-transform group-hover/row:translate-x-0.5 group-hover/row:text-foreground sm:block sm:w-21"
                 />
               )}
             </li>

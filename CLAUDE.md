@@ -84,9 +84,12 @@ force-push `main`.
   `group-expense-form.tsx` (add/edit a group expense), `notifications.tsx`
   (rows shared by the bell dropdown and the page), `month-nav.tsx`,
   `confirm-action.tsx` (destructive actions behind an alert dialog),
-  `account-menu.tsx` (account dropdown with sign-out), `app-shell.tsx` (the
-  frame: sidebar on wide screens, top bar and floating tab bar on narrow
-  ones; `site-header.tsx` is the signed-out top bar), `app-nav.tsx` (the
+  `account-menu.tsx` (account dropdown with the theme switch and sign-out),
+  `app-shell.tsx` (the frame: sidebar on wide screens, collapsible to an
+  icon rail with Ctrl/⌘+B and remembered in the `settlr_sidebar` cookie
+  that the root layout reads, so it renders at the right width; top bar
+  and floating tab bar on narrow ones; `site-header.tsx` is the signed-out
+  top bar), `app-nav.tsx` (the
   list of sections), `add-menu.tsx` ("Add expense" menu), `brand.tsx`
   (logo), `category.tsx` (category icons and colours, `groupColor`),
   `group-tile.tsx`, `stat-card.tsx`. Framework glue:
@@ -170,8 +173,8 @@ force-push `main`.
   `buttonVariants(...)` on a `<Link>`. Confirm destructive actions with
   `ConfirmAction`, not `window.confirm`, and report success with
   `useAction(fn, { success: '...' })` (a sonner toast).
-- **Layout**: pages sit in a centred column of up to 1220px beside the
-  sidebar, with 18px between cards. Rows of cards are `flex flex-wrap` with
+- **Layout**: pages take the full width beside the sidebar, with 18px
+  between cards. Rows of cards are `flex flex-wrap` with
   `flex-[grow_1_basis]` so they stack on narrow screens. The dashboard is
   two independent columns from `xl` (so no card stretches to match a
   neighbour); below that the column wrappers are `contents` and
@@ -179,12 +182,17 @@ force-push `main`.
   Summary figures go in a `StatGrid` of `StatCard`s
   (`src/components/stat-card.tsx`), lists of records are tables whose extra
   columns appear on wider screens (`hidden md:table-cell`, with the details
-  folded into the first cell below that), collections of things (friends,
+  folded into the first cell below that). Tables are `table-fixed`: the
+  short columns get fixed widths (`w-28` date, `w-32` amount, `w-20`
+  actions) and the first column takes the rest, with an icon tile (e.g.
+  `CategoryIcon`) and a muted second line (see the group, personal and
+  budget tables). Rows have no hover fill. Collections of things (friends,
   groups) are card grids with `repeat(auto-fill,minmax(…,1fr))`, and forms
   get a max width. `SplitLayout` gives a page a main area and a 22rem
   sidebar from 1400px (below that the column beside the app sidebar is too
   narrow, so it stacks). Viewport breakpoints see the whole window, not the
-  content column, which is 232px narrower on `lg` and up.
+  content column, which is 232px narrower on `lg` and up (72px with the
+  sidebar collapsed).
 - **Loading**: give each page a `loading.tsx` rendering its page-shaped
   skeleton from `src/components/skeletons.tsx`. The top bar
   (`navigation-progress.tsx`) starts on link clicks and `useAppRouter()`

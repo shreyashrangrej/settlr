@@ -6,6 +6,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { PiggyBank, Receipt, Tag, Trash2, TrendingUp, Wallet } from 'lucide-react'
 
+import { CategoryIcon } from '#/components/category'
 import { ConfirmAction } from '#/components/confirm-action'
 import { EditDialog } from '#/components/edit-dialog'
 import {
@@ -24,7 +25,6 @@ import {
   type ReceiptValue,
 } from '#/components/receipts'
 import { StatCard, StatGrid } from '#/components/stat-card'
-import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
 import {
   Card,
@@ -121,14 +121,15 @@ export function PersonalView({ month, thisMonth }: { month: string; thisMonth: s
                 </EmptyHeader>
               </Empty>
             ) : (
-              // Fixed layout: the data columns share the width equally.
+              // Laid out like a group's expenses: fixed widths for the short
+              // columns, the rest for the description, with the category as
+              // its icon and the line under it.
               <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Description</TableHead>
-                    <TableHead className="hidden md:table-cell">Category</TableHead>
-                    <TableHead className="hidden md:table-cell">Date</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="hidden w-28 md:table-cell">Date</TableHead>
+                    <TableHead className="w-32 text-right">Amount</TableHead>
                     <TableHead className="w-20">
                       <span className="sr-only">Actions</span>
                     </TableHead>
@@ -227,18 +228,21 @@ function ExpenseRow({ expense }: { expense: PersonalExpense }) {
   return (
     <TableRow>
       <TableCell className="font-medium">
-        <span className="flex items-center gap-1">
-          <span className="truncate" title={expense.description}>
-            {expense.description}
+        <span className="flex items-center gap-3">
+          <CategoryIcon category={expense.category} />
+          <span className="grid min-w-0">
+            <span className="flex items-center gap-1">
+              <span className="truncate" title={expense.description}>
+                {expense.description}
+              </span>
+              {expense.receiptId && <ReceiptLink source="personal" expenseId={expense.id} />}
+            </span>
+            <span className="truncate text-xs font-normal text-muted-foreground">
+              {categoryLabel(expense.category)}
+              <span className="md:hidden"> · {formatDate(expense.date)}</span>
+            </span>
           </span>
-          {expense.receiptId && <ReceiptLink source="personal" expenseId={expense.id} />}
         </span>
-        <span className="block truncate text-xs font-normal text-muted-foreground md:hidden">
-          {formatDate(expense.date)} · {categoryLabel(expense.category)}
-        </span>
-      </TableCell>
-      <TableCell className="hidden md:table-cell">
-        <Badge variant="secondary">{categoryLabel(expense.category)}</Badge>
       </TableCell>
       <TableCell className="hidden text-muted-foreground md:table-cell">
         {formatDate(expense.date)}

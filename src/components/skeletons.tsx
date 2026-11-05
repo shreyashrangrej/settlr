@@ -230,23 +230,22 @@ export function BudgetSkeleton() {
   )
 }
 
-/** The assistant: its header, the conversation and the changes panel. */
+/** The assistant: its title, the starter actions and the message box. */
 export function AssistantSkeleton() {
   return (
     <Status>
-      <div className="grid items-start gap-x-8 gap-y-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="flex min-h-[calc(100svh-13rem)] flex-col lg:min-h-[calc(100svh-4.5rem)]">
-          <div className="flex items-center gap-3 border-b border-divider pb-4">
-            <Skeleton className="size-10 rounded-xl" />
-            <div className="grid gap-2">
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="h-3.5 w-64 max-w-[50vw]" />
-            </div>
-          </div>
-          <div className="flex-1" />
-          <Skeleton className="mx-auto mb-4.5 h-18 w-full max-w-190 rounded-[20px]" />
+      <div className="flex min-h-[calc(100svh-13rem)] flex-col lg:min-h-[calc(100svh-4.5rem)]">
+        <div className="flex min-h-10 items-center gap-2.5">
+          <Skeleton className="size-8 rounded-[10px]" />
+          <Skeleton className="h-5 w-24" />
         </div>
-        <SideCardSkeleton lines={4} />
+        <div className="mx-auto grid w-full max-w-190 gap-2.5 py-17 sm:grid-cols-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-17 rounded-2xl" />
+          ))}
+        </div>
+        <div className="flex-1" />
+        <Skeleton className="mx-auto mb-4.5 h-15 w-full max-w-190 rounded-[20px]" />
       </div>
     </Status>
   )

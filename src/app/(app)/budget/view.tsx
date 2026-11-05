@@ -109,39 +109,63 @@ export function BudgetView({
                 </EmptyHeader>
               </Empty>
             ) : (
+              // Laid out like a group's expenses: an icon tile and the name,
+              // with the currency and share as the line under it.
               <Table className="table-fixed">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Source</TableHead>
-                    <TableHead className="hidden md:table-cell">Currency</TableHead>
-                    <TableHead className="hidden md:table-cell">Share of spending</TableHead>
-                    <TableHead className="text-right">Spent</TableHead>
+                    <TableHead className="hidden w-48 md:table-cell">Share of spending</TableHead>
+                    <TableHead className="w-32 text-right">Spent</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {spending.flatMap((row) =>
-                    SOURCES.filter((source) => row[source.key] > 0).map((source) => (
-                      <TableRow key={`${row.currency}:${source.key}`}>
-                        <TableCell>
-                          <Link
-                            href={source.to}
-                            className="flex items-center gap-2 font-medium text-foreground no-underline hover:underline [&_svg]:size-4 [&_svg]:text-muted-foreground"
-                          >
-                            {source.icon}
-                            <span className="truncate">{source.label}</span>
-                          </Link>
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground md:table-cell">
-                          {row.currency}
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground tabular-nums md:table-cell">
-                          {Math.round((row[source.key] / row.total) * 100)}%
-                        </TableCell>
-                        <TableCell className="text-right font-mono font-medium tabular-nums">
-                          {formatMoney(row[source.key], row.currency)}
-                        </TableCell>
-                      </TableRow>
-                    )),
+                    SOURCES.filter((source) => row[source.key] > 0).map((source) => {
+                      const share = Math.round((row[source.key] / row.total) * 100)
+                      return (
+                        <TableRow key={`${row.currency}:${source.key}`}>
+                          <TableCell className="font-medium">
+                            <span className="flex items-center gap-3">
+                              <span
+                                aria-hidden="true"
+                                className="grid size-8.5 shrink-0 place-items-center rounded-[10px] bg-tile text-primary [&_svg]:size-4"
+                              >
+                                {source.icon}
+                              </span>
+                              <span className="grid min-w-0">
+                                <Link
+                                  href={source.to}
+                                  className="truncate text-foreground no-underline hover:text-primary"
+                                >
+                                  {source.label}
+                                </Link>
+                                <span className="truncate text-xs font-normal text-muted-foreground">
+                                  {row.currency}
+                                  <span className="md:hidden"> · {share}% of spending</span>
+                                </span>
+                              </span>
+                            </span>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <span className="flex items-center gap-2.5">
+                              <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-segment">
+                                <span
+                                  className="block h-full rounded-full bg-primary"
+                                  style={{ width: `${share}%` }}
+                                />
+                              </span>
+                              <span className="w-9 text-right text-xs text-muted-foreground tabular-nums">
+                                {share}%
+                              </span>
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-mono font-medium tabular-nums">
+                            {formatMoney(row[source.key], row.currency)}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    }),
                   )}
                 </TableBody>
               </Table>

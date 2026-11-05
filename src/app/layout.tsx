@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { cookies } from 'next/headers'
 import { Suspense } from 'react'
 
 import { AppShell } from '#/components/app-shell'
@@ -6,6 +7,7 @@ import { NameForm } from '#/components/name-form'
 import { NavigationProgress } from '#/components/navigation-progress'
 import { Providers } from '#/components/providers'
 import { Toaster } from '#/components/ui/sonner'
+import { SIDEBAR_COOKIE } from '#/lib/sidebar'
 import { themeInitScript } from '#/lib/theme'
 import { getAuthSession } from '#/server/auth.server'
 
@@ -29,6 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // New email-code accounts have no name yet. Ask for it before showing any
   // page; the top bar stays so they can still sign out.
   const needsName = user !== null && user.name === ''
+  const sidebarCollapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === 'collapsed'
 
   return (
     // The theme script adds `.dark` to <html> before hydration, so its class
@@ -49,7 +52,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <NavigationProgress />
         </Suspense>
         <Providers session={session}>
-          <AppShell>{needsName ? <NameForm email={user.email} /> : children}</AppShell>
+          <AppShell sidebarCollapsed={sidebarCollapsed}>
+            {needsName ? <NameForm email={user.email} /> : children}
+          </AppShell>
           <Toaster position="bottom-right" />
         </Providers>
       </body>
