@@ -164,6 +164,11 @@ with `pnpm build && pnpm start`.
 Deploy the backend with `pnpm exec convex deploy`, and set
 `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL` for the web build.
 
+The dev environment is on Vercel: every push to `main` deploys the site, and
+its build (see `vercel.json`) first pushes `convex/` to the dev Convex
+deployment with a deploy key (`CONVEX_DEPLOY_KEY` in the Vercel project).
+Set the Convex deployment's `SITE_URL` to the site's URL.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and the

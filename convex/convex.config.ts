@@ -9,6 +9,10 @@ const app = defineApp({
   env: {
     // Public origin of the web app, e.g. http://localhost:3000.
     SITE_URL: v.string(),
+    // Other origins allowed to sign in, comma-separated, e.g.
+    // http://localhost:3000 on a dev deployment whose SITE_URL is a
+    // hosted site (email codes work there; Google returns to SITE_URL).
+    TRUSTED_ORIGINS: v.optional(v.string()),
     // Signs Better Auth sessions and tokens (`openssl rand -base64 32`).
     BETTER_AUTH_SECRET: v.string(),
     // Google sign-in is enabled only when both are set.

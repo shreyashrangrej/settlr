@@ -221,8 +221,10 @@ force-push `main`.
 ## Gotchas
 
 - Convex deployment env vars (`pnpm exec convex env list`): `SITE_URL`
-  (the app origin; Better Auth rejects other origins, so test auth on
-  http://localhost:3000), `BETTER_AUTH_SECRET`, and optional
+  (the app origin: on the dev deployment, the Vercel site),
+  `TRUSTED_ORIGINS` (other origins allowed to sign in, comma-separated; the
+  dev deployment has http://localhost:3000, where email codes work but
+  Google sign-in returns to `SITE_URL`), `BETTER_AUTH_SECRET`, and optional
   `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (Google sign-in is off until
   both are set) and `RESEND_API_KEY`/`AUTH_EMAIL_FROM`. Without a Resend
   key, sign-in codes are only logged: read them with
@@ -249,8 +251,13 @@ force-push `main`.
 - Pages with a `loading.tsx` stream: the status is sent before the page
   finishes, so a `notFound()` there still responds 200 (with the not-found
   UI and a `noindex` tag).
-- Deployment: any Next.js host (Vercel, or `pnpm build && pnpm start` on
-  Node). `transpilePackages` in `next.config.ts` compiles
+- Deployment: the Vercel project `settlr` is the dev environment. It's
+  connected to GitHub and deploys every push to `main` (other branches are
+  off in `vercel.json`). Its build (`buildCommand` in `vercel.json`) runs
+  `convex deploy` with `CONVEX_DEPLOY_KEY`, a deploy key for the dev Convex
+  deployment, so `convex/` is pushed to it before `next build`; a push to
+  `main` updates both. That overwrites whatever `pnpm dev:convex` pushed
+  from a local checkout. `transpilePackages` in `next.config.ts` compiles
   `@convex-dev/better-auth`.
 - `ui.shadcn.com` may be blocked in sandboxed environments. The registry
   sources are on GitHub (`apps/v4/registry/bases/base/ui/*.tsx`, with the

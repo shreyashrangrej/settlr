@@ -38,6 +38,7 @@ type Env = {
   readonly OPENROUTER_MODEL: string | undefined;
   readonly RESEND_API_KEY: string | undefined;
   readonly SITE_URL: string;
+  readonly TRUSTED_ORIGINS: string | undefined;
 };
 
 /**

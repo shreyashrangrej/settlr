@@ -183,6 +183,10 @@ const mcpBridge = {
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth({
     baseURL: env.SITE_URL,
+    trustedOrigins: (env.TRUSTED_ORIGINS ?? '')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
     secret: env.BETTER_AUTH_SECRET,
     database: authComponent.adapter(ctx),
     socialProviders: google ? { google } : {},
