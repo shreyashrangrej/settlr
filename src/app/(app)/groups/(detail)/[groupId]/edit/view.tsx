@@ -105,11 +105,17 @@ function EditGroupForm({ group }: { group: Group }) {
   const newKey = useRef(0)
   const [focusKey, setFocusKey] = useState<string | null>(null)
 
-  const hasExpenses = group.expenseCount > 0
-  // Members with a paid amount or a share are on expenses. (The server also
-  // catches the rare 0¢ share.)
+  // Expenses or payments fix the currency. (A payment shows up as a
+  // non-zero `settledCents`; the server also catches ones that cancel out.)
+  const hasExpenses =
+    group.expenseCount > 0 || group.members.some((m) => (m.settledCents ?? 0) !== 0)
+  // Members with a paid amount, a share or a settle-up payment are on the
+  // ledger. (The server also catches the rare 0¢ share and payments that
+  // cancel out.)
   const onExpenses = new Set(
-    group.members.filter((m) => m.paidCents !== 0 || m.owedCents !== 0).map((m) => m.id),
+    group.members
+      .filter((m) => m.paidCents !== 0 || m.owedCents !== 0 || (m.settledCents ?? 0) !== 0)
+      .map((m) => m.id),
   )
 
   function addMember() {
@@ -184,7 +190,7 @@ function EditGroupForm({ group }: { group: Group }) {
             </div>
             {hasExpenses && (
               <FieldDescription className="-mt-4">
-                The currency can’t change once a group has expenses.
+                The currency can’t change once a group has expenses or payments.
               </FieldDescription>
             )}
 

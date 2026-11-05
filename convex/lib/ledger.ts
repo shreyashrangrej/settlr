@@ -105,16 +105,48 @@ export function applyGroupExpense(
   }
 }
 
+type MemberTotals = { paidCents: number; owedCents: number; settledCents?: number }
+
+/**
+ * Where a member stands in their group: what they paid minus their share of
+ * the expenses, plus the settle-up payments they made less those they got.
+ * Positive: the others owe them.
+ */
+export function memberNet(member: MemberTotals) {
+  return member.paidCents - member.owedCents + (member.settledCents ?? 0)
+}
+
+/**
+ * The group's members after recording (`sign` 1) or deleting (`sign` -1) a
+ * settle-up payment: the payer's balance goes up, the recipient's down.
+ */
+export function applyGroupPayment(
+  group: Group,
+  payment: Pick<Doc<'groupPayments'>, 'from' | 'to' | 'amountCents'>,
+  sign: 1 | -1,
+) {
+  const change = (memberId: string) =>
+    memberId === payment.from
+      ? sign * payment.amountCents
+      : memberId === payment.to
+        ? -sign * payment.amountCents
+        : 0
+  return {
+    members: group.members.map((m) => {
+      const delta = change(m.id)
+      return delta === 0 ? m : { ...m, settledCents: (m.settledCents ?? 0) + delta }
+    }),
+  }
+}
+
 export type Settlement = { from: string; to: string; amountCents: number }
 
 /**
  * Greedy settle-up: repeatedly match the biggest debtor with the biggest
  * creditor. Produces at most n - 1 transfers.
  */
-export function settleUp(
-  members: Array<{ id: string; paidCents: number; owedCents: number }>,
-) {
-  const net = members.map((m) => ({ id: m.id, cents: m.paidCents - m.owedCents }))
+export function settleUp(members: Array<MemberTotals & { id: string }>) {
+  const net = members.map((m) => ({ id: m.id, cents: memberNet(m) }))
   const creditors = net.filter((b) => b.cents > 0)
   const debtors = net
     .filter((b) => b.cents < 0)

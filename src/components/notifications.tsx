@@ -145,6 +145,13 @@ function describe(item: Notification) {
         effect,
         link: groupLink,
       }
+    case 'group_payment':
+      return {
+        icon: <HandCoins />,
+        title: `${item.description ?? 'A payment'} ${money(item.amountCents ?? 0)} in ${item.groupName ?? 'a group'}`,
+        effect: { text: `Recorded by ${item.actorName}`, tone: null },
+        link: groupLink,
+      }
     case 'group_added':
       return {
         icon: <Users />,

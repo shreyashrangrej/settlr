@@ -57,11 +57,11 @@ export function NotificationBell() {
       <PopoverTrigger
         render={
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon-lg"
             aria-label={label}
             title={label}
-            className="relative border-border bg-card data-popup-open:bg-tile"
+            className="relative text-muted-foreground data-popup-open:bg-tile"
           />
         }
       >

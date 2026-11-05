@@ -11,7 +11,13 @@ import {
 } from './_generated/server'
 import { requireUser } from './lib/auth'
 import * as input from './lib/input'
-import { applyGroupExpense, settleUp, shares } from './lib/ledger'
+import {
+  applyGroupExpense,
+  applyGroupPayment,
+  memberNet,
+  settleUp,
+  shares,
+} from './lib/ledger'
 import { notify } from './lib/notify'
 import { attachReceipt, deleteReceipt } from './lib/receipts'
 import { category, currency } from './lib/validators'
@@ -59,7 +65,7 @@ async function requireOwnedGroup(ctx: QueryCtx, userId: string, groupId: string)
 function myNet(group: Doc<'groups'>, userId: string) {
   const id = viewerMemberId(group, userId)
   const me = group.members.find((m) => m.id === id)
-  return me ? me.paidCents - me.owedCents : 0
+  return me ? memberNet(me) : 0
 }
 
 // Keeps the groupMembers index in step with the linked members.
@@ -149,7 +155,7 @@ export const get = query({
       meMemberId: viewerMemberId(group, userId) ?? group.meMemberId,
       members: group.members.map(({ userId: memberUser, ...m }) => ({
         ...m,
-        netCents: m.paidCents - m.owedCents,
+        netCents: memberNet(m),
         linked: Boolean(memberUser) || m.id === group.meMemberId,
         friendId: memberUser ? (friendByUser.get(memberUser) ?? null) : null,
       })),
@@ -269,6 +275,31 @@ export const expense = query({
   },
 })
 
+// How many recent payments `payments` returns.
+const RECENT_PAYMENTS = 10
+
+/** A group's latest settle-up payments, newest first. */
+export const payments = query({
+  args: { groupId: v.string() },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const group = await findGroup(ctx, userId, args.groupId)
+    if (!group) return []
+    const rows = await ctx.db
+      .query('groupPayments')
+      .withIndex('by_groupId_and_date', (q) => q.eq('groupId', group._id))
+      .order('desc')
+      .take(RECENT_PAYMENTS)
+    return rows.map((p) => ({
+      id: p._id,
+      from: p.from,
+      to: p.to,
+      amountCents: p.amountCents,
+      date: p.date,
+    }))
+  },
+})
+
 /** Creates a group with the caller as its first member. */
 export const create = mutation({
   args: { name: v.string(), currency, members: v.array(v.string()) },
@@ -345,10 +376,16 @@ export const update = mutation({
     const group = await requireOwnedGroup(ctx, userId, args.groupId)
     const name = input.text(args.name, 'Group name', 60)
 
-    if (args.currency !== group.currency && group.expenseCount > 0) {
-      throw new ConvexError(
-        'The currency can only change while the group has no expenses.',
-      )
+    if (args.currency !== group.currency) {
+      const payment = await ctx.db
+        .query('groupPayments')
+        .withIndex('by_groupId_and_date', (q) => q.eq('groupId', group._id))
+        .first()
+      if (group.expenseCount > 0 || payment !== null) {
+        throw new ConvexError(
+          'The currency can only change while the group has no expenses or payments.',
+        )
+      }
     }
 
     const current = new Map(group.members.map((m) => [m.id, m]))
@@ -373,6 +410,20 @@ export const update = mutation({
       throw new ConvexError(
         `${onExpenses[0].name} is part of expenses in this group. Delete those expenses before removing them.`,
       )
+    }
+    if (removed.length > 0) {
+      const removedIds = new Set(removed.map((m) => m.id))
+      for await (const payment of ctx.db
+        .query('groupPayments')
+        .withIndex('by_groupId_and_date', (q) => q.eq('groupId', group._id))) {
+        const hit = [payment.from, payment.to].find((id) => removedIds.has(id))
+        if (hit) {
+          const who = removed.find((m) => m.id === hit)?.name ?? 'A member'
+          throw new ConvexError(
+            `${who} is part of a settle-up payment. Delete that payment before removing them.`,
+          )
+        }
+      }
     }
     if (removed.length > 0 && group.expenseCount > 0) {
       // Zero totals can still hide a 0¢ share of a tiny expense; check.
@@ -462,7 +513,7 @@ export const update = mutation({
   },
 })
 
-/** Deletes a group and all of its expenses. */
+/** Deletes a group and all of its expenses and payments. */
 export const remove = mutation({
   args: { groupId: v.id('groups') },
   handler: async (ctx, args) => {
@@ -493,6 +544,16 @@ export const deleteExpenses = internalMutation({
       if (row.receiptId) await deleteReceipt(ctx, row.receiptId)
     }
     if (batch.length === 200) {
+      await ctx.scheduler.runAfter(0, internal.groups.deleteExpenses, args)
+      return null
+    }
+    // Expenses are gone; now the payments, in batches too.
+    const payments = await ctx.db
+      .query('groupPayments')
+      .withIndex('by_groupId_and_date', (q) => q.eq('groupId', args.groupId))
+      .take(200)
+    for (const row of payments) await ctx.db.delete('groupPayments', row._id)
+    if (payments.length === 200) {
       await ctx.scheduler.runAfter(0, internal.groups.deleteExpenses, args)
     }
     return null
@@ -643,6 +704,77 @@ export const removeExpense = mutation({
     await ctx.db.delete('groupExpenses', expense._id)
     await ctx.db.patch('groups', group._id, applyGroupExpense(group, expense, -1))
     if (expense.receiptId) await deleteReceipt(ctx, expense.receiptId)
+    return null
+  },
+})
+
+/**
+ * Records a settle-up payment from one member to another. Any member can,
+ * like adding an expense.
+ */
+export const addPayment = mutation({
+  args: {
+    groupId: v.id('groups'),
+    from: v.string(),
+    to: v.string(),
+    amountCents: v.number(),
+    date: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const group = await requireGroup(ctx, me.userId, args.groupId)
+    const memberIds = new Set(group.members.map((m) => m.id))
+    if (!memberIds.has(args.from) || !memberIds.has(args.to)) {
+      throw new ConvexError('Payments can only be between group members.')
+    }
+    if (args.from === args.to) {
+      throw new ConvexError('Pick two different people.')
+    }
+    const payment = {
+      groupId: group._id,
+      from: args.from,
+      to: args.to,
+      amountCents: input.amount(args.amountCents),
+      date: input.isoDate(args.date),
+    }
+    const paymentId = await ctx.db.insert('groupPayments', payment)
+    await ctx.db.patch('groups', group._id, applyGroupPayment(group, payment, 1))
+
+    // Tell the payer and the recipient (if they're on Settlr and didn't
+    // record it themselves).
+    const nameOf = (id: string) => group.members.find((m) => m.id === id)?.name ?? 'Someone'
+    for (const member of group.members) {
+      if (member.id !== payment.from && member.id !== payment.to) continue
+      const memberUser = memberUserId(group, member)
+      if (!memberUser || memberUser === me.userId) continue
+      await notify(ctx, {
+        userId: memberUser,
+        kind: 'group_payment',
+        actorName: me.name,
+        description:
+          member.id === payment.to
+            ? `${nameOf(payment.from)} paid you`
+            : `You paid ${nameOf(payment.to)}`,
+        amountCents: payment.amountCents,
+        currency: group.currency,
+        groupId: group._id,
+        groupName: group.name,
+      })
+    }
+    return paymentId
+  },
+})
+
+/** Deletes a settle-up payment, putting the balances back. */
+export const removePayment = mutation({
+  args: { paymentId: v.id('groupPayments') },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const payment = await ctx.db.get('groupPayments', args.paymentId)
+    const group = payment ? await findGroup(ctx, userId, payment.groupId) : null
+    if (!payment || !group) throw new ConvexError('That payment doesn’t exist.')
+    await ctx.db.delete('groupPayments', payment._id)
+    await ctx.db.patch('groups', group._id, applyGroupPayment(group, payment, -1))
     return null
   },
 })

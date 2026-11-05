@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Users } from 'lucide-react'
 
 import { groupColor } from '#/components/category'
-import { formatMoney, plural } from '#/lib/format'
+import { formatMoney, formatWholeMoney, plural } from '#/lib/format'
 import type { GroupSummary } from '#/lib/types'
 import { cn } from '#/lib/utils'
 
@@ -35,10 +35,10 @@ export function GroupTile({ group, className }: { group: GroupSummary; className
           {!group.isOwner && ' · shared with you'}
         </span>
       </div>
-      <div className="flex justify-between gap-2 text-xs text-muted-foreground">
-        <span>{formatMoney(group.totalCents, group.currency)} spent</span>
-        <span>{plural(group.expenseCount, 'expense')}</span>
-      </div>
+      <span className="truncate text-xs text-muted-foreground">
+        {formatWholeMoney(group.totalCents, group.currency)} spent ·{' '}
+        {plural(group.expenseCount, 'expense')}
+      </span>
       <span className="mt-auto text-[0.8125rem] text-muted-foreground">
         {group.myNetCents === 0 ? (
           'You’re square'

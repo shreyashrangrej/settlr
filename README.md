@@ -29,9 +29,11 @@ overview of these areas:
 - **Groups**: trips, flats and dinners with up to 20 members (you are always
   one of them). Expenses are split equally between chosen members, balances
   are worked out to the cent, and a settle-up plan uses the fewest payments.
-  Groups can be renamed and members added, renamed or removed (removing is
-  only allowed for people who aren't on any expense, and the currency only
-  changes while a group has no expenses).
+  Any member can record a payment (from the plan, or any other amount
+  between two members), and delete it again. Groups can be renamed and
+  members added, renamed or removed (removing is only allowed for people who
+  aren't on any expense or payment, and the currency only changes while a
+  group has no expenses).
 - **Personal**: your own spending, month by month, with totals by category.
 - **Budget**: an optional monthly budget per currency, on its own page
   because it counts everything you spend: personal expenses plus your share

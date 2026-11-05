@@ -5,13 +5,13 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { Pencil, Receipt, Search, Trash2 } from 'lucide-react'
 
+import { CategoryIcon } from '#/components/category'
 import { ConfirmAction } from '#/components/confirm-action'
 import { SelectField } from '#/components/form-fields'
 import { useAction } from '#/components/ledger'
 import { useAppRouter } from '#/components/navigation-progress'
 import { ReceiptLink } from '#/components/receipts'
 import { useGroup } from '#/components/use-group'
-import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import {
@@ -101,16 +101,18 @@ export function ExpensesView({ groupId, search }: { groupId: string; search: Exp
               </EmptyHeader>
             </Empty>
           ) : (
-            // Fixed layout: the data columns share the width equally.
+            // Fixed layout: the short columns get fixed widths and the
+            // description takes the rest, so long names truncate instead of
+            // pushing the amounts around. The category is its icon and the
+            // line under the description.
             <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
                   <TableHead>Description</TableHead>
-                  <TableHead className="hidden lg:table-cell">Category</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead className="hidden md:table-cell">Paid by</TableHead>
-                  <TableHead className="hidden 2xl:table-cell">Split</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="hidden w-28 md:table-cell">Date</TableHead>
+                  <TableHead className="hidden w-32 md:table-cell">Paid by</TableHead>
+                  <TableHead className="hidden w-28 2xl:table-cell">Split</TableHead>
+                  <TableHead className="w-32 text-right">Amount</TableHead>
                   <TableHead className="w-20">
                     <span className="sr-only">Actions</span>
                   </TableHead>
@@ -161,14 +163,14 @@ function Filters({
   return (
     <form
       role="search"
-      className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-[minmax(12rem,2fr)_repeat(3,minmax(9rem,1fr))]"
+      className="grid gap-2 sm:grid-cols-3 xl:grid-cols-[minmax(12rem,2fr)_repeat(3,minmax(8rem,1fr))]"
       onSubmit={(event) => {
         event.preventDefault()
         const q = new FormData(event.currentTarget).get('q')
         onChange({ q: typeof q === 'string' ? q.trim() : '' })
       }}
     >
-      <InputGroup className="sm:col-span-2 2xl:col-span-1">
+      <InputGroup className="sm:col-span-3 xl:col-span-1">
         <InputGroupAddon>
           <Search />
         </InputGroupAddon>
@@ -225,18 +227,24 @@ function ExpenseRow({ group, expense }: { group: Group; expense: GroupExpense })
   return (
     <TableRow>
       <TableCell className="font-medium">
-        <span className="flex items-center gap-1">
-          <span className="truncate" title={expense.description}>
-            {expense.description}
+        <span className="flex items-center gap-3">
+          <CategoryIcon category={expense.category} />
+          <span className="grid min-w-0">
+            <span className="flex items-center gap-1">
+              <span className="truncate" title={expense.description}>
+                {expense.description}
+              </span>
+              {expense.receiptId && <ReceiptLink source="group" expenseId={expense.id} />}
+            </span>
+            <span className="truncate text-xs font-normal text-muted-foreground">
+              {categoryLabel(expense.category)}
+              <span className="md:hidden">
+                {' '}
+                · {formatDate(expense.date)} · {payer} paid · {split}
+              </span>
+            </span>
           </span>
-          {expense.receiptId && <ReceiptLink source="group" expenseId={expense.id} />}
         </span>
-        <span className="block truncate text-xs font-normal text-muted-foreground md:hidden">
-          {formatDate(expense.date)} · {payer} paid · {split}
-        </span>
-      </TableCell>
-      <TableCell className="hidden lg:table-cell">
-        <Badge variant="secondary">{categoryLabel(expense.category)}</Badge>
       </TableCell>
       <TableCell className="hidden text-muted-foreground md:table-cell">
         {formatDate(expense.date)}

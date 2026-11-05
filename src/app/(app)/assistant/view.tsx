@@ -29,6 +29,9 @@ import { cn } from '#/lib/utils'
 import type { Id } from '#convex/_generated/dataModel'
 import { api } from '#convex/_generated/api'
 
+// The first CHIPS are chips above the message box; the rest are listed in
+// the side panel, so no prompt shows twice.
+const CHIPS = 3
 const EXAMPLES: ReadonlyArray<{ text: string; icon: LucideIcon }> = [
   { text: 'Add tea personal expense 50', icon: ReceiptText },
   { text: 'How much did I spend on food this month?', icon: Search },
@@ -199,7 +202,7 @@ export function AssistantView() {
         >
           <div className="mx-auto flex max-w-190 flex-col gap-2.5">
             <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] sm:flex-wrap">
-              {EXAMPLES.slice(0, 3).map((example) => (
+              {EXAMPLES.slice(0, CHIPS).map((example) => (
                 <button
                   key={example.text}
                   type="button"
@@ -253,9 +256,9 @@ export function AssistantView() {
       <aside className="flex flex-col gap-5 rounded-3xl border bg-sidebar p-5 xl:sticky xl:top-6">
         <Changes messages={messages} decisions={decisions} />
         <div className="grid gap-2.5">
-          <span className="font-semibold">Try asking</span>
+          <span className="font-semibold">You can also ask</span>
           <ul className="grid gap-1">
-            {EXAMPLES.map((example) => (
+            {EXAMPLES.slice(CHIPS).map((example) => (
               <li key={example.text}>
                 <button
                   type="button"

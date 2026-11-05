@@ -80,8 +80,19 @@ import type { Friend, FriendEntry } from '#/lib/types'
 import { cn } from '#/lib/utils'
 import { api } from '#convex/_generated/api'
 
-/** A friend and your one-on-one ledger. `limit` is the "show more" size. */
-export function FriendView({ friendId, limit }: { friendId: string; limit: number }) {
+/**
+ * A friend and your one-on-one ledger. `limit` is the "show more" size;
+ * `tab` is the form the side panel starts on.
+ */
+export function FriendView({
+  friendId,
+  limit,
+  tab,
+}: {
+  friendId: string
+  limit: number
+  tab: 'expense' | 'payment'
+}) {
   const { data: friend } = useSuspenseQuery(
     convexQuery(api.friends.get, { friendId }),
   )
@@ -137,7 +148,7 @@ export function FriendView({ friendId, limit }: { friendId: string; limit: numbe
           <>
             <Card>
               <CardContent>
-                <Tabs defaultValue="expense">
+                <Tabs defaultValue={tab}>
                   <TabsList className="mb-4 w-full">
                     <TabsTrigger value="expense">
                       <Receipt />

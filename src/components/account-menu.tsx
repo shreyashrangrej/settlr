@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronsUpDown, LogOut, Settings } from 'lucide-react'
+import { ChevronsUpDown, LogOut, Moon, Settings, Sun } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { APP_SECTIONS } from '#/components/app-nav'
@@ -19,12 +19,14 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import { signOut } from '#/lib/auth-client'
+import { applyTheme } from '#/lib/theme'
 
 // The signed-in user's menu, with their details, shortcuts and sign-out.
-// `row` is the sidebar's footer (avatar, name and email); `avatar` is the
-// round button in the top bar, whose menu also lists the sections the mobile
-// bar has no room for. Renders nothing when signed out. The user comes from
-// the root layout, so the server and first client render agree.
+// `row` is the sidebar's footer (avatar and name); `avatar` is the round
+// button in the top bar, whose menu also has the sections the mobile bar has
+// no room for and the theme switch. Renders nothing when signed out. The
+// user comes from the root layout, so the server and first client render
+// agree.
 export function AccountMenu({ variant = 'avatar' }: { variant?: 'avatar' | 'row' }) {
   const { user } = useSession()
   const router = useAppRouter()
@@ -59,9 +61,9 @@ export function AccountMenu({ variant = 'avatar' }: { variant?: 'avatar' | 'row'
           }
         >
           <PersonAvatar name={label} me className="size-9" />
-          <span className="grid min-w-0 flex-1">
-            <span className="truncate font-semibold">{user.name || 'Your account'}</span>
-            <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+          {/* The email is in the menu; the row only has room for the name. */}
+          <span className="min-w-0 flex-1 truncate font-semibold">
+            {user.name || 'Your account'}
           </span>
           <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
         </DropdownMenuTrigger>
@@ -106,6 +108,23 @@ export function AccountMenu({ variant = 'avatar' }: { variant?: 'avatar' | 'row'
             <Settings />
             Settings
           </DropdownMenuItem>
+          {/* The top bar has no theme button. Both labels render and the
+              `dark:` variant picks one, so server and client agree. */}
+          {variant === 'avatar' && (
+            <DropdownMenuItem
+              closeOnClick={false}
+              onClick={() =>
+                applyTheme(
+                  document.documentElement.classList.contains('dark') ? 'light' : 'dark',
+                )
+              }
+            >
+              <Moon className="dark:hidden" />
+              <Sun className="hidden dark:block" />
+              <span className="dark:hidden">Dark mode</span>
+              <span className="hidden dark:inline">Light mode</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem

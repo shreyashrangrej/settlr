@@ -32,8 +32,8 @@ force-push `main`.
 ## Layout
 
 - `convex/`: the Convex backend, where all app data lives. `schema.ts`
-  (friends, friendEntries, groups, groupExpenses, personalExpenses,
-  receipts, budgets, notifications), `friends.ts`, `groups.ts`,
+  (friends, friendEntries, groups, groupExpenses, groupPayments,
+  personalExpenses, receipts, budgets, notifications), `friends.ts`, `groups.ts`,
   `personal.ts`, `budgets.ts`, `notifications.ts`, `receipts.ts` (queries
   and mutations), `assistant.ts` (the `/assistant` chat: an action that
   calls OpenRouter with tool calling, plus the internal queries its search
@@ -172,7 +172,10 @@ force-push `main`.
   `useAction(fn, { success: '...' })` (a sonner toast).
 - **Layout**: pages sit in a centred column of up to 1220px beside the
   sidebar, with 18px between cards. Rows of cards are `flex flex-wrap` with
-  `flex-[grow_1_basis]` so they stack on narrow screens (see the dashboard).
+  `flex-[grow_1_basis]` so they stack on narrow screens. The dashboard is
+  two independent columns from `xl` (so no card stretches to match a
+  neighbour); below that the column wrappers are `contents` and
+  `max-xl:order-*` sets the single-column order.
   Summary figures go in a `StatGrid` of `StatCard`s
   (`src/components/stat-card.tsx`), lists of records are tables whose extra
   columns appear on wider screens (`hidden md:table-cell`, with the details

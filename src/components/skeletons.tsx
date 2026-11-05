@@ -124,33 +124,28 @@ export function PageSkeleton() {
   )
 }
 
-/** The dashboard's rows: hero and figures, balances, groups, recent spending. */
+/** The dashboard: net balance and balances beside the quick-split form. */
 export function DashboardSkeleton() {
   return (
     <Status>
       <HeaderSkeleton actions={1} />
-      <div className="grid gap-4.5">
-        <div className="flex flex-wrap items-stretch gap-4.5">
-          <Panel className="flex-[2_1_380px] gap-4.5 p-6">
+      {/* The dashboard's two columns (one on narrow screens). */}
+      <div className="grid items-start gap-4.5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="grid gap-4.5">
+          <Panel className="gap-4.5 p-6">
             <Skeleton className="h-5 w-28" />
             <Skeleton className="h-14 w-64 max-w-full" />
-            <Skeleton className="mt-auto h-2.5 w-full rounded-full" />
+            <Skeleton className="h-2.5 w-full rounded-full" />
             <div className="grid grid-cols-2 gap-2.5">
-              <Skeleton className="h-16 rounded-[14px]" />
-              <Skeleton className="h-16 rounded-[14px]" />
+              <Skeleton className="h-24 rounded-[14px]" />
+              <Skeleton className="h-24 rounded-[14px]" />
             </div>
           </Panel>
-          <div className="flex flex-[1_1_220px] flex-col gap-4.5">
-            <SideCardSkeleton lines={1} className="flex-1 p-5" />
-            <SideCardSkeleton lines={1} className="flex-1 p-5" />
-          </div>
-          <SideCardSkeleton lines={4} className="flex-[1_1_280px] p-5" />
+          <TableSkeleton rows={4} />
         </div>
-        <div className="flex flex-wrap items-stretch gap-4.5">
-          <div className="flex-[3_1_480px]">
-            <TableSkeleton rows={4} />
-          </div>
-          <SideCardSkeleton lines={3} className="flex-[2_1_320px] p-5" />
+        <div className="grid gap-4.5">
+          <SideCardSkeleton lines={4} className="p-5" />
+          <SideCardSkeleton lines={2} className="p-5" />
         </div>
       </div>
     </Status>

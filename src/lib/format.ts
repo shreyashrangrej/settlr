@@ -18,6 +18,23 @@ export function formatMoney(cents: number, currency: Currency) {
   return formatter.format(cents / 100).replace('-', '−')
 }
 
+const wholeFormatters = new Map<string, Intl.NumberFormat>()
+
+/** An amount rounded to whole units, for tight spaces: "₹58,400", "$130". */
+export function formatWholeMoney(cents: number, currency: Currency) {
+  let formatter = wholeFormatters.get(currency)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-US', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
+    })
+    wholeFormatters.set(currency, formatter)
+  }
+  return formatter.format(Math.round(cents / 100)).replace('-', '−')
+}
+
 /** Every non-zero currency in a balance, e.g. "$12.00 + €4.50". */
 export function formatBalances(
   balances: Partial<Record<string, number>>,

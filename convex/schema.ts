@@ -101,6 +101,10 @@ export default defineSchema({
       // edited entry's effect on you.
       v.literal('friend_entry_updated'),
       v.literal('group_expense_updated'),
+      // A settle-up payment between two group members. `description` says
+      // who paid whom from your side ("Priya paid you"), `amountCents` is
+      // the amount.
+      v.literal('group_payment'),
     ),
     actorName: v.string(),
     description: v.optional(v.string()),
@@ -126,6 +130,9 @@ export default defineSchema({
         name: v.string(),
         paidCents: v.number(),
         owedCents: v.number(),
+        // Settle-up payments: what this member paid other members minus
+        // what they were paid. Absent until their first payment.
+        settledCents: v.optional(v.number()),
         // The Settlr user this member is, if linked.
         userId: v.optional(v.string()),
       }),
@@ -164,6 +171,18 @@ export default defineSchema({
       searchField: 'description',
       filterFields: ['groupId', 'category', 'paidBy'],
     }),
+
+  // A settle-up payment between two members of a group. It changes their
+  // `settledCents`, not what anyone paid or owes for expenses, so group
+  // spending totals and insights leave it out.
+  groupPayments: defineTable({
+    groupId: v.id('groups'),
+    // Member ids: who handed the money over, and who got it.
+    from: v.string(),
+    to: v.string(),
+    amountCents: v.number(),
+    date: v.string(),
+  }).index('by_groupId_and_date', ['groupId', 'date']),
 
   // A receipt (an image or a PDF in Convex file storage) uploaded by
   // `userId`. It starts unattached; adding or editing an expense attaches

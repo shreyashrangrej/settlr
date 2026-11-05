@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { ArrowDownLeft, ArrowUpRight, Plus, Users, Zap } from 'lucide-react'
+import { ChevronRight, Plus, Users, Zap } from 'lucide-react'
 
 import { AddMenu } from '#/components/add-menu'
 import { budgetStatus, type Spending } from '#/components/budget'
@@ -12,7 +12,6 @@ import { CategoryIcon, groupColor } from '#/components/category'
 import { SelectField } from '#/components/form-fields'
 import { GroupTile } from '#/components/group-tile'
 import { PersonAvatar, sumBalances, useAction } from '#/components/ledger'
-import { NotificationBell } from '#/components/notification-bell'
 import { PageHeader } from '#/components/page-header'
 import { useSession } from '#/components/providers'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -58,8 +57,12 @@ type Balance = {
   name: string
   sub: string
   href: string
+  // Where to record paying it off: the friend's payment form, or the
+  // group's settle-up plan.
+  settleHref: string
   cents: number
   currency: Currency
+  // Groups have a colour; friends get a person avatar.
   color?: string
 }
 
@@ -73,6 +76,7 @@ function toBalances(friends: Array<Friend>, groups: Array<GroupSummary>) {
         name: friend.name,
         sub: 'Friend',
         href: `/friends/${friend.id}`,
+        settleHref: `/friends/${friend.id}?tab=payment`,
         cents,
         currency: currency as Currency,
       })
@@ -85,6 +89,7 @@ function toBalances(friends: Array<Friend>, groups: Array<GroupSummary>) {
       name: group.name,
       sub: `Group · ${plural(group.memberCount, 'person', 'people')}`,
       href: `/groups/${group.id}`,
+      settleHref: `/groups/${group.id}#settle-up`,
       cents: group.myNetCents,
       currency: group.currency,
       color: groupColor(group.id),
@@ -92,6 +97,8 @@ function toBalances(friends: Array<Friend>, groups: Array<GroupSummary>) {
   }
   return rows.sort((a, b) => Math.abs(b.cents) - Math.abs(a.cents))
 }
+
+type Filter = 'all' | 'owed' | 'owe'
 
 // "Good evening" depends on the viewer's clock, so it's only known after
 // hydration; until then (and on the server) it's a plain "Hello".
@@ -117,6 +124,8 @@ export function DashboardView({ month, today }: { month: string; today: string }
   const { data: spending } = useSuspenseQuery(
     convexQuery(api.budgets.monthSpending, { month }),
   )
+  // The balances list's filter; the totals in Net balance set it too.
+  const [filter, setFilter] = useState<Filter>('all')
 
   // Where you stand overall: friends' balances plus your net in each group.
   const balances = toBalances(friends, groups)
@@ -133,57 +142,102 @@ export function DashboardView({ month, today }: { month: string; today: string }
     'USD'
   const firstName = user?.name.split(' ')[0]
 
+  function showBalances(next: Filter) {
+    setFilter(next)
+    document.getElementById('balances')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <>
       <PageHeader
         eyebrow={formatLongDate(today)}
         title={firstName ? `${greeting}, ${firstName}` : greeting}
         actions={
-          <>
-            <span className="hidden lg:block">
-              <NotificationBell />
-            </span>
-            {/* Narrow screens have Add in the tab bar. */}
-            <AddMenu trigger={<Button size="lg" className="max-lg:hidden" />}>
-              <Plus strokeWidth={2.4} />
-              Add expense
-            </AddMenu>
-          </>
+          // Narrow screens have Add in the tab bar.
+          <AddMenu trigger={<Button size="lg" className="max-lg:hidden" />}>
+            <Plus strokeWidth={2.4} />
+            Add expense
+          </AddMenu>
         }
       />
 
-      <div className="grid gap-4.5">
-        <div className="flex flex-wrap items-stretch gap-4.5">
+      {/*
+        Wide screens: two independent columns, so a card is only as tall as
+        its content. Narrow screens: one column, where the column wrappers
+        drop out (`contents`) and `order` puts the cards in reading order
+        (what you owe and the balances before the forms and charts).
+      */}
+      <div className="flex flex-col gap-4.5 xl:grid xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-start">
+        <div className="contents xl:flex xl:flex-col xl:gap-4.5">
           <NetBalance
+            className="max-xl:order-1"
             main={main}
             others={currencies.filter((c) => c !== main)}
+            balances={balances}
             owed={owed}
             owe={owe}
-            open={balances.length}
+            onShow={showBalances}
           />
-          <div className="flex flex-[1_1_220px] flex-col gap-4.5">
-            <DirectionCard direction="owed" balances={balances} totals={owed} main={main} />
-            <DirectionCard direction="owe" balances={balances} totals={owe} main={main} />
-          </div>
-          <QuickSplit groups={groups} today={today} />
+          <Balances
+            className="max-xl:order-3"
+            balances={balances}
+            filter={filter}
+            onFilter={setFilter}
+          />
+          <YourGroups className="max-xl:order-7" groups={groups} />
         </div>
-
-        <div className="flex flex-wrap items-stretch gap-4.5">
-          <Balances balances={balances} />
-          <div className="flex flex-[2_1_320px] flex-col gap-4.5">
-            <ClearWhatYouOwe balances={balances} />
-            <BudgetSummary month={month} budgets={budgets} spending={spending} />
-          </div>
+        <div className="contents xl:flex xl:flex-col xl:gap-4.5">
+          <QuickSplit className="max-xl:order-4" groups={groups} today={today} />
+          <ClearWhatYouOwe
+            className="max-xl:order-2"
+            balances={balances}
+            onShowAll={() => showBalances('owe')}
+          />
+          <BudgetSummary
+            className="max-xl:order-5"
+            month={month}
+            budgets={budgets}
+            spending={spending}
+          />
+          <YourShare className="max-xl:order-6" month={month} spending={spending[0]} />
         </div>
-
-        <div className="flex flex-wrap items-stretch gap-4.5">
-          <YourGroups groups={groups} />
-          <YourShare month={month} spending={spending[0]} />
-        </div>
-
-        <RecentSpending month={month} items={personal.items} />
+        <RecentSpending
+          className="max-xl:order-8 xl:col-span-2"
+          month={month}
+          items={personal.items}
+        />
       </div>
     </>
+  )
+}
+
+/** A friend's avatar, or a group's colour tile. */
+function BalanceAvatar({
+  balance,
+  size = 'default',
+  className,
+}: {
+  balance: Pick<Balance, 'name' | 'color'>
+  size?: 'sm' | 'default' | 'lg'
+  className?: string
+}) {
+  if (!balance.color) {
+    return <PersonAvatar name={balance.name} size={size} className={className} />
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'grid shrink-0 place-items-center text-on-fill',
+        size === 'sm' && 'size-7 rounded-lg [&_svg]:size-3.5',
+        size === 'default' && 'size-8 rounded-[10px] [&_svg]:size-4',
+        size === 'lg' && 'size-10 rounded-xl [&_svg]:size-5',
+        className,
+      )}
+      style={{ background: balance.color }}
+    >
+      <Users />
+    </span>
   )
 }
 
@@ -202,28 +256,38 @@ function HeroFigure({ cents, currency }: { cents: number; currency: Currency }) 
   )
 }
 
+/**
+ * Where you stand: the net figure, a bar of owed against owe, and a tile for
+ * each direction with its totals and who's in it. A tile filters the
+ * balances list to that direction.
+ */
 function NetBalance({
   main,
   others,
+  balances,
   owed,
   owe,
-  open,
+  onShow,
+  className,
 }: {
   main: Currency
   others: Array<Currency>
+  balances: Array<Balance>
   owed: Record<string, number>
   owe: Record<string, number>
-  open: number
+  onShow: (filter: Filter) => void
+  className?: string
 }) {
   const owedCents = owed[main] ?? 0
   const oweCents = owe[main] ?? 0
   const total = owedCents + oweCents
   const owedShare = total ? Math.round((owedCents / total) * 100) : 0
+  const open = balances.length
 
   return (
     <section
       aria-labelledby="net-h"
-      className={cn(card, 'relative flex-[2_1_380px] gap-4.5 overflow-hidden p-6')}
+      className={cn(card, 'relative gap-4.5 overflow-hidden p-6', className)}
     >
       <span
         aria-hidden="true"
@@ -256,7 +320,7 @@ function NetBalance({
           </p>
         )}
       </div>
-      <div className="relative mt-auto grid gap-3">
+      <div className="relative grid gap-3">
         {/* What you're owed against what you owe, in the main currency. */}
         <div
           role="img"
@@ -276,117 +340,115 @@ function NetBalance({
           )}
         </div>
         <div className="grid grid-cols-2 gap-2.5">
-          {(
-            [
-              ['Owed to you', owedCents, 'bg-positive', 'text-positive'],
-              ['You owe', oweCents, 'bg-destructive', 'text-destructive'],
-            ] as const
-          ).map(([label, cents, dot, text]) => (
-            <div key={label} className="grid gap-1 rounded-[14px] bg-field px-3 py-2.5">
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span aria-hidden="true" className={cn('size-[7px] rounded-full', dot)} />
-                {label}
-              </span>
-              <span className={cn('font-mono text-[1.0625rem] font-medium tabular-nums', text)}>
-                {formatMoney(cents, main)}
-              </span>
-            </div>
-          ))}
+          <DirectionTile
+            direction="owed"
+            balances={balances}
+            totals={owed}
+            main={main}
+            onShow={onShow}
+          />
+          <DirectionTile
+            direction="owe"
+            balances={balances}
+            totals={owe}
+            main={main}
+            onShow={onShow}
+          />
         </div>
       </div>
     </section>
   )
 }
 
-function DirectionCard({
+/** One direction's total (per currency) and who's in it, as a filter button. */
+function DirectionTile({
   direction,
   balances,
   totals,
   main,
+  onShow,
 }: {
   direction: 'owed' | 'owe'
   balances: Array<Balance>
   totals: Record<string, number>
   main: Currency
+  onShow: (filter: Filter) => void
 }) {
   const owedToYou = direction === 'owed'
   const rows = balances.filter((b) => (owedToYou ? b.cents > 0 : b.cents < 0))
+  // A friend with balances in two currencies is one person.
   const people = [...new Map(rows.map((b) => [b.href, b])).values()]
-  const amounts = Object.entries(totals).filter(([, cents]) => cents)
-  const tone = owedToYou ? 'text-positive' : 'text-destructive'
+  const mainCents = totals[main] ?? 0
+  const rest = Object.entries(totals).filter(([c, cents]) => c !== main && cents)
+  const label = owedToYou ? 'Owed to you' : 'You owe'
 
   return (
-    <section aria-label={owedToYou ? 'Owed to you' : 'You owe'} className={cn(card, 'flex-1 gap-2.5 p-5')}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-2 font-medium text-muted-foreground">
-          <span
-            className={cn(
-              'grid size-7 place-items-center rounded-lg [&_svg]:size-[15px]',
-              owedToYou ? 'bg-positive/14 text-positive' : 'bg-destructive/14 text-destructive',
-            )}
-          >
-            {owedToYou ? <ArrowDownLeft strokeWidth={2.2} /> : <ArrowUpRight strokeWidth={2.2} />}
-          </span>
-          {owedToYou ? 'Owed to you' : 'You owe'}
+    <button
+      type="button"
+      disabled={people.length === 0}
+      onClick={() => onShow(direction)}
+      title={people.length ? `Show ${plural(people.length, 'balance')}` : undefined}
+      className="grid min-w-0 content-start gap-1 rounded-[14px] bg-field px-3 py-2.5 text-left outline-none enabled:hover:bg-tile focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span
+          aria-hidden="true"
+          className={cn('size-[7px] rounded-full', owedToYou ? 'bg-positive' : 'bg-destructive')}
+        />
+        {label}
+      </span>
+      <span
+        className={cn(
+          'truncate font-mono text-[1.0625rem] font-medium tabular-nums',
+          mainCents === 0
+            ? 'text-muted-foreground'
+            : owedToYou
+              ? 'text-positive'
+              : 'text-destructive',
+        )}
+      >
+        {formatMoney(mainCents, main)}
+      </span>
+      {rest.length > 0 && (
+        <span className="truncate font-mono text-xs text-muted-foreground tabular-nums">
+          {rest.map(([c, cents]) => `+ ${formatMoney(cents, c as Currency)}`).join(' ')}
         </span>
-        <span className="text-xs text-muted-foreground">
-          {people.length === 0 ? 'Nobody' : plural(people.length, 'balance')}
-        </span>
-      </div>
-      <div className="grid gap-0.5">
-        {amounts.length === 0 ? (
-          <p className="font-mono text-3xl font-medium tracking-[-0.03em] text-muted-foreground tabular-nums">
-            {formatMoney(0, main)}
-          </p>
+      )}
+      <span className="mt-1.5 flex min-h-7 items-center">
+        {people.length === 0 ? (
+          <span className="text-xs text-muted-foreground">Nobody</span>
         ) : (
-          amounts.map(([currency, cents], i) => (
-            <p
-              key={currency}
-              className={cn(
-                'font-mono font-medium tracking-[-0.03em] tabular-nums',
-                tone,
-                i === 0 ? 'text-3xl' : 'text-base',
-              )}
-            >
-              {formatMoney(cents, currency as Currency)}
-            </p>
-          ))
-        )}
-      </div>
-      <div className="mt-auto flex min-h-10 items-center justify-between gap-2">
-        <div className="flex">
-          {people.slice(0, 4).map((b, i) => (
-            <PersonAvatar
-              key={b.key}
-              name={b.name}
-              size="sm"
-              className={cn('ring-2 ring-card', i > 0 && '-ml-2')}
-            />
-          ))}
-          {people.length > 4 && (
-            <span className="-ml-2 grid size-7 place-items-center rounded-full bg-segment text-[0.625rem] font-semibold ring-2 ring-card">
-              +{people.length - 4}
-            </span>
-          )}
-        </div>
-        {people.length > 0 && (
-          <Link
-            href={people.length === 1 ? people[0].href : '/friends'}
-            className={cn(
-              buttonVariants({ variant: owedToYou ? 'outline' : 'contrast' }),
-              'no-underline',
+          <>
+            {people.slice(0, 4).map((b, i) => (
+              <BalanceAvatar
+                key={b.key}
+                balance={b}
+                size="sm"
+                className={cn('ring-2 ring-field', i > 0 && '-ml-2')}
+              />
+            ))}
+            {people.length > 4 && (
+              <span className="-ml-2 grid size-7 place-items-center rounded-full bg-segment text-[0.625rem] font-semibold ring-2 ring-field">
+                +{people.length - 4}
+              </span>
             )}
-          >
-            {owedToYou ? 'See who' : 'Settle up'}
-          </Link>
+          </>
         )}
-      </div>
-    </section>
+      </span>
+    </button>
   )
 }
 
 /** Adds an equally split expense to one of your groups, without leaving home. */
-function QuickSplit({ groups, today }: { groups: Array<GroupSummary>; today: string }) {
+function QuickSplit({
+  groups,
+  today,
+  className,
+}: {
+  groups: Array<GroupSummary>
+  today: string
+  className?: string
+}) {
   const [groupId, setGroupId] = useState<string>(groups[0]?.id ?? '')
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
@@ -404,7 +466,7 @@ function QuickSplit({ groups, today }: { groups: Array<GroupSummary>; today: str
 
   if (!selected) {
     return (
-      <section aria-labelledby="quick-h" className={cn(card, 'flex-[1_1_280px] gap-3.5 p-5')}>
+      <section aria-labelledby="quick-h" className={cn(card, 'gap-3.5 p-5', className)}>
         <h2 id="quick-h" className={cardTitle}>
           Quick split
         </h2>
@@ -466,7 +528,7 @@ function QuickSplit({ groups, today }: { groups: Array<GroupSummary>; today: str
       noValidate
       onSubmit={onSubmit}
       aria-labelledby="quick-h"
-      className={cn(card, 'flex-[1_1_280px] gap-3.5 p-5')}
+      className={cn(card, 'gap-3.5 p-5', className)}
     >
       <div className="flex items-center justify-between gap-2">
         <h2 id="quick-h" className={cardTitle}>
@@ -573,10 +635,21 @@ function QuickSplit({ groups, today }: { groups: Array<GroupSummary>; today: str
   )
 }
 
-type Filter = 'all' | 'owed' | 'owe'
-
-function Balances({ balances }: { balances: Array<Balance> }) {
-  const [filter, setFilter] = useState<Filter>('all')
+/**
+ * Everyone you have an open balance with. A row opens the friend or group;
+ * rows you owe also get a Settle button that goes straight to paying it.
+ */
+function Balances({
+  balances,
+  filter,
+  onFilter,
+  className,
+}: {
+  balances: Array<Balance>
+  filter: Filter
+  onFilter: (filter: Filter) => void
+  className?: string
+}) {
   const [showAll, setShowAll] = useState(false)
   const matching = balances.filter(
     (b) => filter === 'all' || (filter === 'owed' ? b.cents > 0 : b.cents < 0),
@@ -584,12 +657,16 @@ function Balances({ balances }: { balances: Array<Balance> }) {
   const shown = showAll ? matching : matching.slice(0, MAX_BALANCES)
 
   return (
-    <section aria-labelledby="bal-h" className={cn(card, 'flex-[3_1_480px] gap-2.5 p-5.5')}>
+    <section
+      id="balances"
+      aria-labelledby="bal-h"
+      className={cn(card, 'scroll-mt-20 gap-2.5 p-5.5', className)}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="bal-h" className={cardTitle}>
           Balances
         </h2>
-        <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
+        <Tabs value={filter} onValueChange={(value) => onFilter(value as Filter)}>
           <TabsList aria-label="Filter balances">
             <TabsTrigger value="all">All · {balances.length}</TabsTrigger>
             <TabsTrigger value="owed">Owed to you</TabsTrigger>
@@ -610,23 +687,16 @@ function Balances({ balances }: { balances: Array<Balance> }) {
           {shown.map((b) => (
             <li
               key={b.key}
-              className="flex items-center gap-3.5 border-t border-divider py-3 last:pb-0"
+              // The name's link covers the whole row (its ::after); the
+              // Settle button sits above it. The row reaches past the
+              // card's padding for its hover fill; ::before is the divider.
+              className="relative -mx-2.5 flex items-center gap-3.5 rounded-xl px-2.5 py-3 before:absolute before:inset-x-2.5 before:top-0 before:h-px before:bg-divider has-[a:hover]:bg-tile/50"
             >
-              {b.color ? (
-                <span
-                  aria-hidden="true"
-                  className="grid size-10 shrink-0 place-items-center rounded-xl text-on-fill"
-                  style={{ background: b.color }}
-                >
-                  <Users className="size-5" />
-                </span>
-              ) : (
-                <PersonAvatar name={b.name} size="lg" />
-              )}
+              <BalanceAvatar balance={b} size="lg" />
               <div className="grid min-w-0 flex-1 gap-0.5">
                 <Link
                   href={b.href}
-                  className="truncate text-[0.9375rem] font-semibold no-underline hover:text-primary"
+                  className="truncate text-[0.9375rem] font-semibold no-underline outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
                 >
                   {b.name}
                 </Link>
@@ -634,7 +704,7 @@ function Balances({ balances }: { balances: Array<Balance> }) {
               </div>
               <div className="grid justify-items-end gap-0.5">
                 <span className="text-xs text-muted-foreground">
-                  {b.cents > 0 ? (b.color ? 'you’re owed' : 'owes you') : 'you owe'}
+                  {b.cents > 0 ? 'owed to you' : 'you owe'}
                 </span>
                 <span
                   className={cn(
@@ -645,15 +715,22 @@ function Balances({ balances }: { balances: Array<Balance> }) {
                   {formatMoney(Math.abs(b.cents), b.currency)}
                 </span>
               </div>
-              <Link
-                href={b.href}
-                className={cn(
-                  buttonVariants({ variant: b.cents > 0 ? 'outline' : 'contrast' }),
-                  'hidden min-w-21 no-underline sm:inline-flex',
-                )}
-              >
-                {b.cents > 0 ? 'View' : 'Settle'}
-              </Link>
+              {b.cents < 0 ? (
+                <Link
+                  href={b.settleHref}
+                  className={cn(
+                    buttonVariants({ variant: 'contrast' }),
+                    'relative z-10 hidden min-w-21 no-underline sm:inline-flex',
+                  )}
+                >
+                  Settle
+                </Link>
+              ) : (
+                <ChevronRight
+                  aria-hidden="true"
+                  className="hidden size-4 shrink-0 text-muted-foreground sm:block sm:w-21"
+                />
+              )}
             </li>
           ))}
         </ul>
@@ -671,12 +748,28 @@ function Balances({ balances }: { balances: Array<Balance> }) {
   )
 }
 
-function ClearWhatYouOwe({ balances }: { balances: Array<Balance> }) {
+/**
+ * What you owe, one payment per person or group, each with a button to
+ * settle it. On narrow screens it's left out when there's nothing to clear.
+ */
+function ClearWhatYouOwe({
+  balances,
+  onShowAll,
+  className,
+}: {
+  balances: Array<Balance>
+  onShowAll: () => void
+  className?: string
+}) {
   const owing = balances.filter((b) => b.cents < 0)
   return (
     <section
       aria-labelledby="settle-h"
-      className="flex flex-col gap-3.5 rounded-3xl border border-highlight-border bg-highlight p-5"
+      className={cn(
+        'flex flex-col gap-3.5 rounded-3xl border border-highlight-border bg-highlight p-5',
+        owing.length === 0 && 'max-xl:hidden',
+        className,
+      )}
     >
       <div className="flex items-start gap-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-primary text-primary-foreground">
@@ -698,20 +791,30 @@ function ClearWhatYouOwe({ balances }: { balances: Array<Balance> }) {
           key={b.key}
           className="flex items-center gap-3 rounded-[14px] bg-background/55 px-3 py-2.5"
         >
-          <PersonAvatar name={b.name} />
+          <BalanceAvatar balance={b} />
           <span className="grid min-w-0 flex-1">
             <span className="truncate font-semibold">{b.name}</span>
-            <span className="truncate text-xs text-muted-foreground">{b.sub}</span>
+            <span className="truncate font-mono text-xs text-destructive tabular-nums">
+              {formatMoney(Math.abs(b.cents), b.currency)}
+            </span>
           </span>
-          <Link href={b.href} className={cn(buttonVariants(), 'font-mono no-underline')}>
-            {formatMoney(Math.abs(b.cents), b.currency)}
+          <Link
+            href={b.settleHref}
+            aria-label={`Settle ${formatMoney(Math.abs(b.cents), b.currency)} with ${b.name}`}
+            className={cn(buttonVariants({ variant: 'contrast' }), 'no-underline')}
+          >
+            Settle
           </Link>
         </div>
       ))}
       {owing.length > PREVIEW && (
-        <Link href="/friends" className="text-[0.8125rem] font-medium text-soft">
-          And {owing.length - PREVIEW} more
-        </Link>
+        <button
+          type="button"
+          onClick={onShowAll}
+          className="self-start text-[0.8125rem] font-medium text-soft hover:text-foreground"
+        >
+          See all {owing.length} in Balances
+        </button>
       )}
     </section>
   )
@@ -721,10 +824,12 @@ function BudgetSummary({
   month,
   budgets,
   spending,
+  className,
 }: {
   month: string
   budgets: Array<{ currency: Currency; amountCents: number }>
   spending: Array<Spending>
+  className?: string
 }) {
   // The budget in the currency you spent most in, else your first one.
   const budget =
@@ -736,7 +841,7 @@ function BudgetSummary({
   const left = budget ? budget.amountCents - spent : 0
 
   return (
-    <section aria-labelledby="budget-h" className={cn(card, 'flex-1 gap-3 p-5')}>
+    <section aria-labelledby="budget-h" className={cn(card, 'gap-3 p-5', className)}>
       <div className="flex min-h-9 items-center justify-between gap-2">
         <h2 id="budget-h" className={cardTitle}>
           Budget for {formatMonth(month).split(' ')[0]}
@@ -794,9 +899,15 @@ function BudgetSummary({
   )
 }
 
-function YourGroups({ groups }: { groups: Array<GroupSummary> }) {
+function YourGroups({
+  groups,
+  className,
+}: {
+  groups: Array<GroupSummary>
+  className?: string
+}) {
   return (
-    <section aria-labelledby="groups-h" className={cn(card, 'flex-[3_1_480px] gap-3.5 p-5.5')}>
+    <section aria-labelledby="groups-h" className={cn(card, 'gap-3.5 p-5.5', className)}>
       <div className="flex min-h-9 items-center justify-between gap-2">
         <h2 id="groups-h" className={cardTitle}>
           Your groups
@@ -831,7 +942,15 @@ const SOURCES = [
 ] as const
 
 /** A donut of this month's spending by where it happened. */
-function YourShare({ month, spending }: { month: string; spending: Spending | undefined }) {
+function YourShare({
+  month,
+  spending,
+  className,
+}: {
+  month: string
+  spending: Spending | undefined
+  className?: string
+}) {
   const parts = SOURCES.map((source) => ({ ...source, cents: spending?.[source.key] ?? 0 }))
   const total = spending?.total ?? 0
   const visible = parts.filter((part) => part.cents > 0)
@@ -841,7 +960,7 @@ function YourShare({ month, spending }: { month: string; spending: Spending | un
   let offset = 0
 
   return (
-    <section aria-labelledby="spend-h" className={cn(card, 'flex-[2_1_320px] gap-4 p-5.5')}>
+    <section aria-labelledby="spend-h" className={cn(card, 'gap-4 p-5.5', className)}>
       <div className="flex min-h-9 items-center justify-between gap-2">
         <h2 id="spend-h" className={cardTitle}>
           Your share in {formatMonth(month).split(' ')[0]}
@@ -850,63 +969,66 @@ function YourShare({ month, spending }: { month: string; spending: Spending | un
           Details
         </Link>
       </div>
-      <div className="flex flex-wrap items-center gap-5.5">
-        <div className="relative size-37.5 shrink-0">
-          <svg
-            role="img"
-            aria-label={
-              total
-                ? `Spending split: ${visible
-                    .map((part) => `${part.label} ${Math.round((part.cents / total) * 100)}%`)
-                    .join(', ')}`
-                : 'No spending yet this month'
-            }
-            viewBox="0 0 42 42"
-            className="size-full -rotate-90"
-          >
-            <circle cx="21" cy="21" r="15.915" fill="none" strokeWidth="5" className="stroke-divider" />
-            {visible.map((part) => {
-              const length = (part.cents / total) * 100
-              const segment = (
-                <circle
-                  key={part.key}
-                  cx="21"
-                  cy="21"
-                  r="15.915"
-                  fill="none"
-                  strokeWidth="5"
-                  stroke={part.color}
-                  strokeDasharray={`${Math.max(length - gap, 0.5)} ${100 - Math.max(length - gap, 0.5)}`}
-                  strokeDashoffset={-offset}
-                />
-              )
-              offset += length
-              return segment
-            })}
-          </svg>
-          <div className="absolute inset-0 grid place-content-center justify-items-center gap-0.5">
-            <span className="font-mono text-base font-medium tabular-nums">
-              {spending ? formatMoney(total, spending.currency) : '—'}
-            </span>
-            <span className="text-[0.6875rem] text-muted-foreground">after splits</span>
-          </div>
-        </div>
-        <ul className="grid flex-[1_1_140px] gap-3">
-          {parts.map((part) => (
-            <li key={part.key} className="flex items-center gap-2.5">
-              <span
-                aria-hidden="true"
-                className="size-2.5 rounded-[3px]"
-                style={{ background: part.color }}
-              />
-              <span className="flex-1">{part.label}</span>
-              <span className="font-mono text-[0.8125rem] tabular-nums">
-                {spending ? formatMoney(part.cents, spending.currency) : '—'}
+      {total === 0 ? (
+        <p className="border-t border-divider py-6 text-center text-[0.8125rem] leading-[1.45] text-muted-foreground">
+          Nothing spent in {formatMonth(month)} yet. Your share of personal, friend and
+          group expenses shows up here.
+        </p>
+      ) : (
+        <div className="flex flex-wrap items-center gap-5.5">
+          <div className="relative size-37.5 shrink-0">
+            <svg
+              role="img"
+              aria-label={`Spending split: ${visible
+                .map((part) => `${part.label} ${Math.round((part.cents / total) * 100)}%`)
+                .join(', ')}`}
+              viewBox="0 0 42 42"
+              className="size-full -rotate-90"
+            >
+              <circle cx="21" cy="21" r="15.915" fill="none" strokeWidth="5" className="stroke-divider" />
+              {visible.map((part) => {
+                const length = (part.cents / total) * 100
+                const segment = (
+                  <circle
+                    key={part.key}
+                    cx="21"
+                    cy="21"
+                    r="15.915"
+                    fill="none"
+                    strokeWidth="5"
+                    stroke={part.color}
+                    strokeDasharray={`${Math.max(length - gap, 0.5)} ${100 - Math.max(length - gap, 0.5)}`}
+                    strokeDashoffset={-offset}
+                  />
+                )
+                offset += length
+                return segment
+              })}
+            </svg>
+            <div className="absolute inset-0 grid place-content-center justify-items-center gap-0.5">
+              <span className="font-mono text-base font-medium tabular-nums">
+                {spending && formatMoney(total, spending.currency)}
               </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+              <span className="text-[0.6875rem] text-muted-foreground">after splits</span>
+            </div>
+          </div>
+          <ul className="grid flex-[1_1_140px] gap-3">
+            {parts.map((part) => (
+              <li key={part.key} className="flex items-center gap-2.5">
+                <span
+                  aria-hidden="true"
+                  className="size-2.5 rounded-[3px]"
+                  style={{ background: part.color }}
+                />
+                <span className="flex-1">{part.label}</span>
+                <span className="font-mono text-[0.8125rem] tabular-nums">
+                  {spending && formatMoney(part.cents, spending.currency)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   )
 }
@@ -914,20 +1036,19 @@ function YourShare({ month, spending }: { month: string; spending: Spending | un
 function RecentSpending({
   month,
   items,
+  className,
 }: {
   month: string
   items: PersonalMonth['items']
+  className?: string
 }) {
   return (
-    <section aria-labelledby="act-h" className={cn(card, 'gap-3 p-5.5')}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section aria-labelledby="act-h" className={cn(card, 'gap-3 p-5.5', className)}>
+      <div className="flex min-h-9 flex-wrap items-center justify-between gap-3">
         <h2 id="act-h" className={cardTitle}>
           Recent personal spending
         </h2>
-        <Link
-          href="/personal"
-          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'font-normal no-underline')}
-        >
+        <Link href="/personal" className={cardLink}>
           View all
         </Link>
       </div>

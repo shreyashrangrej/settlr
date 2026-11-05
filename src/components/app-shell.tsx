@@ -16,6 +16,8 @@ import { useSession } from '#/components/providers'
 import { SiteHeader } from '#/components/site-header'
 import { ThemeToggle } from '#/components/theme-toggle'
 import { buttonVariants } from '#/components/ui/button'
+import { Skeleton } from '#/components/ui/skeleton'
+import { formatMoney, formatWholeMoney } from '#/lib/format'
 import { cn } from '#/lib/utils'
 import { api } from '#convex/_generated/api'
 
@@ -122,13 +124,26 @@ function Sidebar() {
                   'font-mono text-xs tabular-nums',
                   group.myNetCents > 0 ? 'text-positive' : 'text-destructive',
                 )}
+                title={
+                  group.myNetCents > 0
+                    ? `You’re owed ${formatMoney(group.myNetCents, group.currency)}`
+                    : `You owe ${formatMoney(-group.myNetCents, group.currency)}`
+                }
               >
                 {group.myNetCents > 0 ? '+' : '−'}
-                {compact(group.myNetCents)}
+                {formatWholeMoney(Math.abs(group.myNetCents), group.currency)}
               </span>
             )}
           </NavLink>
         ))}
+        {/* Loads in the browser; hold the space so the list doesn't jump in. */}
+        {!groups &&
+          [0, 1, 2].map((i) => (
+            <div key={i} className="flex min-h-10 items-center gap-2.5 px-3">
+              <Skeleton className="size-2 rounded-full" />
+              <Skeleton className="h-3.5 flex-1 rounded" />
+            </div>
+          ))}
         {groups?.length === 0 && (
           <p className="px-3 text-[0.8125rem] text-muted-foreground">No groups yet.</p>
         )}
@@ -168,12 +183,10 @@ function Sidebar() {
   )
 }
 
-// The whole units of an amount for the sidebar, e.g. 341000 → "3,410".
-function compact(cents: number) {
-  return Math.round(Math.abs(cents) / 100).toLocaleString('en-US')
-}
-
-/** Narrow screens: logo, bell, theme and account above the page. */
+/**
+ * Narrow screens: logo, bell and account above the page. The theme toggle
+ * is in the account menu here.
+ */
 function MobileBar() {
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 bg-background/85 px-4 backdrop-blur-md lg:hidden">
@@ -182,7 +195,6 @@ function MobileBar() {
       </Link>
       <div className="flex items-center gap-1">
         <NotificationBell />
-        <ThemeToggle />
         <AccountMenu />
       </div>
     </header>

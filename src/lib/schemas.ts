@@ -70,6 +70,12 @@ export type ExpenseSearch = z.infer<typeof expenseSearchSchema>
 export const listSearchDefaults = { limit: LIST_STEP } as const
 export const listSearchSchema = z.object({ limit })
 
+// A friend's page: the ledger's length, and which form the side panel opens
+// on (the dashboard's "Settle" buttons link to `?tab=payment`).
+export const friendSearchSchema = listSearchSchema.extend({
+  tab: z.enum(['expense', 'payment']).default('expense').catch('expense'),
+})
+
 // An empty month means "the current month".
 export const monthSearchDefaults = { month: '' } as const
 export const monthSearchSchema = z.object({

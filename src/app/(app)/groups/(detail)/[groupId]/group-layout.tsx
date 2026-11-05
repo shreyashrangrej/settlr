@@ -2,14 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowRight, ChartColumn, Pencil, Plus, Receipt } from 'lucide-react'
+import { ArrowRight, ChartColumn, HandCoins, Pencil, Plus, Receipt } from 'lucide-react'
 
+import { RecentPayments, RecordPaymentDialog } from '#/components/group-payments'
 import { PersonAvatar, SignedAmount } from '#/components/ledger'
 import { NavLink } from '#/components/nav-link'
 import { PageHeader, SplitLayout } from '#/components/page-header'
 import { useGroup } from '#/components/use-group'
 import { Badge } from '#/components/ui/badge'
-import { buttonVariants } from '#/components/ui/button'
+import { Button, buttonVariants } from '#/components/ui/button'
 import {
   Card,
   CardContent,
@@ -117,7 +118,7 @@ function Balances({ group }: { group: Group }) {
     <Card>
       <CardHeader>
         <CardTitle>Balances</CardTitle>
-        <CardDescription>Paid minus share, per member.</CardDescription>
+        <CardDescription>Paid minus share, after payments.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <ul className="grid gap-2.5">
@@ -137,8 +138,20 @@ function Balances({ group }: { group: Group }) {
 
         <Separator />
 
-        <div className="grid gap-2">
-          <h3 className="m-0 text-sm font-semibold">Settle up</h3>
+        {/* The dashboard's "Settle" buttons link here. */}
+        <div id="settle-up" className="grid scroll-mt-24 gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="m-0 text-sm font-semibold">Settle up</h3>
+            <RecordPaymentDialog
+              group={group}
+              trigger={
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <HandCoins />
+                  Other payment
+                </Button>
+              }
+            />
+          </div>
           {group.settlements.length === 0 ? (
             <p className="text-sm text-muted-foreground">Everyone is square.</p>
           ) : (
@@ -146,21 +159,45 @@ function Balances({ group }: { group: Group }) {
               {group.settlements.map((s) => (
                 <li
                   key={`${s.from}-${s.to}`}
-                  className="flex items-center gap-2 rounded-[14px] bg-field px-3 py-2.5 text-sm"
+                  className="flex items-center gap-2 rounded-[14px] bg-field py-2.5 pr-2.5 pl-3 text-sm"
                 >
-                  <span className="font-medium">{name(s.from)}</span>
-                  <ArrowRight className="size-3.5 text-muted-foreground" aria-label="pays" />
-                  <span className="font-medium">
-                    {s.to === group.meMemberId ? 'you' : name(s.to)}
+                  <span className="grid min-w-0 flex-1 gap-0.5">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate font-medium">{name(s.from)}</span>
+                      <ArrowRight
+                        className="size-3.5 shrink-0 text-muted-foreground"
+                        aria-label="pays"
+                      />
+                      <span className="truncate font-medium">
+                        {s.to === group.meMemberId ? 'you' : name(s.to)}
+                      </span>
+                    </span>
+                    <span className="font-mono text-[0.8125rem] font-medium tabular-nums">
+                      {formatMoney(s.amountCents, group.currency)}
+                    </span>
                   </span>
-                  <span className="ml-auto font-mono font-medium tabular-nums">
-                    {formatMoney(s.amountCents, group.currency)}
-                  </span>
+                  <RecordPaymentDialog
+                    group={group}
+                    from={s.from}
+                    to={s.to}
+                    amountCents={s.amountCents}
+                    trigger={
+                      <Button
+                        size="sm"
+                        variant={s.from === group.meMemberId ? 'contrast' : 'outline'}
+                        aria-label={`Record that ${name(s.from)} paid ${s.to === group.meMemberId ? 'you' : name(s.to)}`}
+                      >
+                        Record
+                      </Button>
+                    }
+                  />
                 </li>
               ))}
             </ul>
           )}
         </div>
+
+        <RecentPayments group={group} />
       </CardContent>
     </Card>
   )
