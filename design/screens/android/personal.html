@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Personal</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#F2F2EE;text-decoration:none}a:hover{color:#B18CFF}
+button{font:inherit;color:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 412px; height: 915px; position: relative; overflow: hidden; background: #0C0D10; color: #F2F2EE; font-family: 'Geist', 'Helvetica Neue', sans-serif; font-size: 15px; line-height: 1.35">
+
+  <div style="box-sizing: border-box; padding: 36px 20px 0; display: flex; flex-direction: column">
+
+    <header style="height: 64px; display: flex; align-items: center; justify-content: space-between; margin-right: -6px">
+      <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.035em">Personal</h1>
+      <div style="display: flex; align-items: center">
+        <button type="button" aria-label="Previous month" style="width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></button>
+        <span style="min-width: 76px; text-align: center; font-size: 15px; font-weight: 500">Nov 2026</span>
+        <button type="button" aria-label="Next month" disabled style="width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: #4A4D57; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+      </div>
+    </header>
+
+    <section aria-labelledby="spent-h" style="padding-top: 16px; display: flex; flex-direction: column">
+      <h2 id="spent-h" style="margin: 0; font-size: 14px; font-weight: 500; color: #A0A2AB">Spent</h2>
+      <p style="margin: 8px 0 0; font-size: 48px; font-weight: 600; letter-spacing: -0.055em; line-height: 1">₹18,240<span style="font-size: 25px; color: #6E717B">.00</span></p>
+      <div role="img" aria-label="Spending by category" style="margin-top: 22px; height: 10px; display: flex; gap: 2px">
+        <span style="flex: 6420 1 0; border-radius: 2px; background: #FF9B6A"></span>
+        <span style="flex: 4180 1 0; border-radius: 2px; background: #F28DB2"></span>
+        <span style="flex: 2960 1 0; border-radius: 2px; background: #7CB8FF"></span>
+        <span style="flex: 2480 1 0; border-radius: 2px; background: #F2C14E"></span>
+        <span style="flex: 1450 1 0; border-radius: 2px; background: #B18CFF"></span>
+        <span style="flex: 750 1 0; border-radius: 2px; background: #A0A2AB"></span>
+      </div>
+      <div style="margin-top: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px">
+        <div style="height: 32px; display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #FF9B6A"></span><span style="flex: 1; color: #D6D7DC">Food</span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">₹6,420</span></div>
+        <div style="height: 32px; display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #F28DB2"></span><span style="flex: 1; color: #D6D7DC">Groceries</span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">₹4,180</span></div>
+        <div style="height: 32px; display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #7CB8FF"></span><span style="flex: 1; color: #D6D7DC">Transport</span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">₹2,960</span></div>
+        <div style="height: 32px; display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #F2C14E"></span><span style="flex: 1; color: #D6D7DC">Utilities</span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">₹2,480</span></div>
+        <div style="height: 32px; display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #B18CFF"></span><span style="flex: 1; color: #D6D7DC">Fun</span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">₹1,450</span></div>
+        <div style="height: 32px; display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #A0A2AB"></span><span style="flex: 1; color: #D6D7DC">Other</span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">₹750</span></div>
+      </div>
+    </section>
+
+    <a href="budget.html" style="margin-top: 18px; min-height: 58px; box-sizing: border-box; padding: 0 12px 0 16px; border-radius: 16px; background: #16171C; border: 1px solid #24262D; display: flex; align-items: center; gap: 12px; color: #F2F2EE">
+      <span style="flex: 1; display: flex; flex-direction: column; gap: 6px">
+        <span style="display: flex; justify-content: space-between; font-size: 14px"><span style="font-weight: 600">Budget</span><span style="color: #A0A2AB"><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; color: #F2F2EE">₹6,760</span> left</span></span>
+        <span style="height: 4px; border-radius: 1px; background: #24262D; display: flex"><span style="width: 73%; border-radius: 1px; background: #B18CFF"></span></span>
+      </span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A0A2AB" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+    </a>
+
+    <h2 style="margin: 0; padding: 24px 0 4px; font-size: 17px; font-weight: 600; letter-spacing: -0.02em">Expenses</h2>
+    <a href="#" style="min-height: 64px; display: flex; align-items: center; gap: 14px; color: #F2F2EE">
+      <span aria-hidden="true" style="flex: none; width: 40px; height: 40px; border-radius: 12px; background: #1D1F25; color: #FF9B6A; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3"></path><path d="M7 3v18"></path><path d="M20 15V3a4 4 0 0 0-4 4v6a2 2 0 0 0 2 2h2zm0 0v6"></path></svg></span>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Lunch, Koramangala</span><span style="font-size: 13px; color: #A0A2AB">Today</span></span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500">₹420</span>
+    </a>
+    <a href="#" style="min-height: 64px; display: flex; align-items: center; gap: 14px; color: #F2F2EE">
+      <span aria-hidden="true" style="flex: none; width: 40px; height: 40px; border-radius: 12px; background: #1D1F25; color: #7CB8FF; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-5l2.2-4.4A2 2 0 0 1 7 6.5h10a2 2 0 0 1 1.8 1.1L21 12v5h-2"></path><path d="M3 12h18"></path><circle cx="7.5" cy="17" r="2"></circle><circle cx="16.5" cy="17" r="2"></circle><path d="M9.5 17h5"></path></svg></span>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Metro card top-up</span><span style="font-size: 13px; color: #A0A2AB">11 Nov</span></span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500">₹500</span>
+    </a>
+    <a href="#" style="min-height: 64px; display: flex; align-items: center; gap: 14px; color: #F2F2EE">
+      <span aria-hidden="true" style="flex: none; width: 40px; height: 40px; border-radius: 12px; background: #1D1F25; color: #F2C14E; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg></span>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Electricity bill</span><span style="font-size: 13px; color: #A0A2AB; display: flex; align-items: center; gap: 6px">10 Nov<svg role="img" aria-label="Has receipt" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 11-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8L12.5 3a3.7 3.7 0 0 1 5.2 5.2L9 16.9a1.8 1.8 0 0 1-2.6-2.6L14 6.8"></path></svg></span></span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500">₹2,480</span>
+    </a>
+    <a href="#" style="min-height: 64px; display: flex; align-items: center; gap: 14px; color: #F2F2EE">
+      <span aria-hidden="true" style="flex: none; width: 40px; height: 40px; border-radius: 12px; background: #1D1F25; color: #F28DB2; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3 3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7l-3-4z"></path><path d="M3 7h18"></path><path d="M16 11a4 4 0 0 1-8 0"></path></svg></span>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">Vegetables and fruit</span><span style="font-size: 13px; color: #A0A2AB">9 Nov</span></span>
+      <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500">₹860</span>
+    </a>
+  </div>
+
+  <a href="#" aria-label="Add personal expense" style="position: absolute; right: 16px; bottom: 96px; width: 56px; height: 56px; border-radius: 16px; background: #B18CFF; color: #0C0D10; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.45)">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+  </a>
+
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 80px; box-sizing: border-box; padding-bottom: 8px; background: #111216; border-top: 1px solid #1D1F25; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr))">
+    <a href="home.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: #A0A2AB; font-size: 12px; font-weight: 500">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20H4z"></path><path d="M10 20v-5h4v5"></path></svg>
+      Home
+    </a>
+    <a href="groups.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: #A0A2AB; font-size: 12px; font-weight: 500">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path><path d="M18 14.3c2.1.7 3.5 2.8 3.5 5.7"></path></svg>
+      Groups
+    </a>
+    <a href="friends.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: #A0A2AB; font-size: 12px; font-weight: 500">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.8"></circle><path d="M4.5 20.5c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"></path></svg>
+      Friends
+    </a>
+    <a href="personal.html" aria-current="page" style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: #B18CFF; font-size: 12px; font-weight: 600">
+      <span aria-hidden="true" style="position: absolute; top: -1px; left: 50%; margin-left: -16px; width: 32px; height: 3px; border-radius: 0 0 3px 3px; background: #B18CFF"></span>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"></path><path d="M4 7.5V18a2 2 0 0 0 2 2h14V8H6.5A2.5 2.5 0 0 1 4 7.5z"></path><path d="M16 14h.01"></path></svg>
+      Personal
+    </a>
+    <a href="assistant.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; color: #A0A2AB; font-size: 12px; font-weight: 500">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v10a1.5 1.5 0 0 1-1.5 1.5H9l-5 4z"></path></svg>
+      Assistant
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

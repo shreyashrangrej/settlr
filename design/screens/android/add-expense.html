@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add expense</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#F2F2EE;text-decoration:none}a:hover{color:#B18CFF}
+button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:inherit}
+</style>
+</helmet>
+<div style="width: 412px; height: 915px; position: relative; overflow: hidden; background: #0C0D10; color: #F2F2EE; font-family: 'Geist', 'Helvetica Neue', sans-serif; font-size: 15px; line-height: 1.35">
+
+  <div style="box-sizing: border-box; padding-top: 36px; display: flex; flex-direction: column">
+
+    <header style="height: 64px; padding: 0 6px; display: flex; align-items: center; gap: 4px">
+      <a href="group.html" aria-label="Close" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+      </a>
+      <button type="button" aria-label="Split in Coorg Weekend. Change" style="height: 48px; padding: 0 8px; border: 0; border-radius: 12px; background: transparent; display: flex; align-items: center; gap: 10px">
+        <span aria-hidden="true" style="width: 26px; height: 26px; border-radius: 8px; background: #5FD3A0; color: #0C0D10; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center">C</span>
+        <span style="font-size: 18px; font-weight: 600; letter-spacing: -0.02em">Coorg Weekend</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A0A2AB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+      </button>
+    </header>
+
+    <div style="padding: 12px 20px 8px; display: flex; align-items: flex-end; justify-content: space-between">
+      <label style="display: flex; align-items: center; gap: 6px">
+        <span style="font-size: 30px; font-weight: 500; color: #6E717B; letter-spacing: -0.03em">₹</span>
+        <span style="font-size: 58px; font-weight: 600; letter-spacing: -0.055em; line-height: 1">2,480</span>
+        <span aria-hidden="true" style="width: 2px; height: 46px; margin-left: 2px; background: #B18CFF"></span>
+      </label>
+      <span style="padding-bottom: 8px; font-size: 13px; font-weight: 500; color: #A0A2AB">INR</span>
+    </div>
+
+    <div style="padding: 0 20px; display: flex; flex-direction: column">
+      <label style="min-height: 56px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #22242A">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A0A2AB" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"></path></svg>
+        <input aria-label="Description" value="Breakfast at Ainmane" style="flex: 1; min-width: 0; height: 44px; padding: 0; border: 0; outline: 0; background: transparent; font-size: 17px; font-weight: 500">
+      </label>
+
+      <div role="group" aria-label="Category" style="min-height: 58px; margin-right: -20px; display: flex; align-items: center; gap: 8px; overflow: hidden; border-bottom: 1px solid #22242A">
+        <button type="button" aria-pressed="true" style="flex: none; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #B18CFF; background: rgba(177,140,255,0.12); color: #B18CFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 7px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v7a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3"></path><path d="M7 3v18"></path><path d="M20 15V3a4 4 0 0 0-4 4v6a2 2 0 0 0 2 2h2zm0 0v6"></path></svg>
+          Food
+        </button>
+        <button type="button" aria-pressed="false" style="flex: none; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #33353D; background: transparent; color: #D6D7DC; font-size: 14px; display: flex; align-items: center; gap: 7px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F28DB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3 3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7l-3-4z"></path><path d="M3 7h18"></path><path d="M16 11a4 4 0 0 1-8 0"></path></svg>
+          Groceries
+        </button>
+        <button type="button" aria-pressed="false" style="flex: none; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #33353D; background: transparent; color: #D6D7DC; font-size: 14px; display: flex; align-items: center; gap: 7px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7CB8FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17H3v-5l2.2-4.4A2 2 0 0 1 7 6.5h10a2 2 0 0 1 1.8 1.1L21 12v5h-2"></path><path d="M3 12h18"></path><circle cx="7.5" cy="17" r="2"></circle><circle cx="16.5" cy="17" r="2"></circle></svg>
+          Transport
+        </button>
+        <button type="button" aria-pressed="false" style="flex: none; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #33353D; background: transparent; color: #D6D7DC; font-size: 14px; display: flex; align-items: center; gap: 7px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5FD3A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 5v15"></path><path d="M2 9h17a3 3 0 0 1 3 3v8"></path><path d="M2 16h20"></path><path d="M6 9v7"></path></svg>
+          Lodging
+        </button>
+      </div>
+
+      <div style="min-height: 54px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #22242A">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A0A2AB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"></rect><path d="M16 3v4M8 3v4M3.5 10h17"></path></svg>
+        <span style="flex: 1; color: #A0A2AB">Date</span>
+        <button type="button" style="height: 44px; padding: 0; border: 0; background: transparent; font-weight: 500">Today, 12 Nov</button>
+      </div>
+
+      <div style="min-height: 54px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #22242A">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A0A2AB" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.8"></circle><path d="M4.5 20.5c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"></path></svg>
+        <span style="flex: 1; color: #A0A2AB">Paid by</span>
+        <button type="button" style="height: 44px; padding: 0; border: 0; background: transparent; font-weight: 500; display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 24px; height: 24px; border-radius: 50%; background: #B18CFF; color: #0C0D10; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center">AM</span>
+          You
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A0A2AB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        </button>
+      </div>
+
+      <div style="min-height: 54px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #22242A">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A0A2AB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m20 11-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8L12.5 3a3.7 3.7 0 0 1 5.2 5.2L9 16.9a1.8 1.8 0 0 1-2.6-2.6L14 6.8"></path></svg>
+        <span style="flex: 1; color: #A0A2AB">Receipt</span>
+        <button type="button" style="height: 44px; padding: 0; border: 0; background: transparent; font-weight: 600; color: #B18CFF">Attach</button>
+      </div>
+
+      <div style="padding: 20px 0 6px; display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em">Split</h2>
+        <span style="font-size: 14px; color: #A0A2AB">Equally · 4 ways</span>
+      </div>
+
+      <label style="min-height: 52px; display: flex; align-items: center; gap: 14px">
+        <span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 6px; background: #B18CFF; color: #0C0D10; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>
+        <span aria-hidden="true" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #B18CFF; color: #0C0D10; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">AM</span>
+        <span style="flex: 1">You</span>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500">₹620</span>
+      </label>
+      <label style="min-height: 52px; display: flex; align-items: center; gap: 14px">
+        <span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 6px; background: #B18CFF; color: #0C0D10; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>
+        <span aria-hidden="true" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #2B3A55; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">RK</span>
+        <span style="flex: 1">Rohan Kulkarni</span>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500">₹620</span>
+      </label>
+      <label style="min-height: 52px; display: flex; align-items: center; gap: 14px">
+        <span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 6px; background: #B18CFF; color: #0C0D10; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>
+        <span aria-hidden="true" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #55332A; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">AR</span>
+        <span style="flex: 1">Ananya Rao</span>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500">₹620</span>
+      </label>
+      <label style="min-height: 52px; display: flex; align-items: center; gap: 14px">
+        <span aria-hidden="true" style="flex: none; width: 22px; height: 22px; border-radius: 6px; background: #B18CFF; color: #0C0D10; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>
+        <span aria-hidden="true" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #23463A; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center">DS</span>
+        <span style="flex: 1">Dev Shah</span>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500">₹620</span>
+      </label>
+      <label style="min-height: 52px; display: flex; align-items: center; gap: 14px; color: #A0A2AB">
+        <span aria-hidden="true" style="flex: none; width: 22px; height: 22px; box-sizing: border-box; border-radius: 6px; border: 2px solid #4A4D57"></span>
+        <span aria-hidden="true" style="flex: none; width: 32px; height: 32px; border-radius: 50%; background: #4D4326; color: #F2F2EE; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; opacity: 0.55">MI</span>
+        <span style="flex: 1">Meera Iyer</span>
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; color: #8A8D96">—</span>
+      </label>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 14px 16px 24px; background: #111216; border-top: 1px solid #1D1F25; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px">
+      <span style="color: #A0A2AB">Your balance here</span>
+      <span style="display: flex; align-items: center; gap: 8px; font-family: 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 14px">
+        <span style="color: #A0A2AB">+₹3,410</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A8D96" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="to"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+        <span style="color: #7CB8FF; font-weight: 500">+₹5,270</span>
+      </span>
+    </div>
+    <a href="group.html" style="height: 52px; border-radius: 13px; background: #B18CFF; color: #0C0D10; font-weight: 600; font-size: 16px; display: flex; align-items: center; justify-content: center">Add expense</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

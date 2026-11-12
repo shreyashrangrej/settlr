@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#F2F2EE;text-decoration:none}a:hover{color:#B18CFF}
+button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:inherit}
+</style>
+</helmet>
+<div style="width: 412px; height: 915px; box-sizing: border-box; padding: 92px 24px 44px; position: relative; overflow: hidden; background: #0C0D10; color: #F2F2EE; font-family: 'Geist', 'Helvetica Neue', sans-serif; font-size: 15px; line-height: 1.35; display: flex; flex-direction: column; justify-content: space-between">
+
+  <div style="display: flex; align-items: center; gap: 12px">
+    <svg width="40" height="40" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="10" fill="#B18CFF"></rect><path d="M10 22 22 10" stroke="#0C0D10" stroke-width="2.6" stroke-linecap="round"></path><circle cx="11.5" cy="11.5" r="2.6" fill="#0C0D10"></circle><circle cx="20.5" cy="20.5" r="2.6" fill="#0C0D10"></circle></svg>
+    <span style="font-size: 26px; font-weight: 700; letter-spacing: -0.045em">settlr</span>
+  </div>
+
+  <form style="margin: 0; display: flex; flex-direction: column">
+    <h1 style="margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.045em; line-height: 1.1">Sign in</h1>
+    <p style="margin: 8px 0 0; font-size: 15px; color: #A0A2AB">We'll email you a 6-digit code.</p>
+
+    <label style="margin-top: 28px; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 13px; font-weight: 500; color: #A0A2AB">Email</span>
+      <input type="email" value="aarav@example.com" style="height: 54px; box-sizing: border-box; padding: 0 16px; border-radius: 13px; border: 1px solid #B18CFF; background: #16171C; outline: 0; font-size: 16px">
+    </label>
+
+    <a href="home.html" style="margin-top: 14px; height: 54px; border-radius: 13px; background: #B18CFF; color: #0C0D10; font-weight: 600; font-size: 16px; display: flex; align-items: center; justify-content: center">Send code</a>
+
+    <div style="margin: 22px 0; display: flex; align-items: center; gap: 14px; font-size: 13px; color: #8A8D96">
+      <span style="flex: 1; height: 1px; background: #22242A"></span>
+      or
+      <span style="flex: 1; height: 1px; background: #22242A"></span>
+    </div>
+
+    <button type="button" style="height: 54px; border-radius: 13px; border: 1px solid #33353D; background: transparent; font-weight: 600; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 12px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"></path><path d="M20.5 12H12.5"></path></svg>
+      Continue with Google
+    </button>
+  </form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

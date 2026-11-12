@@ -13,6 +13,9 @@ The screens in `screens/` are the source of truth for layout and styling. Open t
 | `screens/mobile-home.html` | Mobile home | 390 × 844 |
 | `screens/mobile-add-expense.html` | Mobile add expense | 390 × 844 |
 | `screens/mobile-assistant.html` | Mobile AI assistant | 390 × 844 |
+| `screens/android/*.html` | Android app: home (and `home-light`), groups, group, add-expense, settle-up, friends, friend, personal, budget, assistant, notifications, sign-in | 412 × 915 |
+
+The Android screens are the reference for `apps/mobile`. They supersede the `mobile-*` mockups' styling: no gradients or glows, no pill shapes (buttons and inputs 12–13 px radius, chips 8 px, FAB a 16 px rounded square, progress bars 1–2 px radius), a flat bottom navigation bar (Home, Groups, Friends, Personal, Assistant) with a 3 px accent bar over the active tab, and the signed-in user's avatar as a solid accent fill. Category tiles are `surface-2` with the icon in the category colour. Groups show their initial on their colour tile.
 
 ## Design tokens
 
