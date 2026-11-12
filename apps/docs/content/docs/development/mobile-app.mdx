@@ -1,0 +1,88 @@
+---
+title: Mobile app
+description: The Android app in apps/mobile, built with Expo and Expo Router.
+icon: Smartphone
+---
+
+`apps/mobile` (package `mobile`) is the Android app: **Expo** (SDK 58) with
+**Expo Router**, in TypeScript. It's built phase by phase; screens that
+aren't built yet show a placeholder. It reuses `@settlr/shared` (schemas,
+money and date formatting) and the Convex `api` types from
+`@settlr/backend/convex/_generated/api`, and talks to the same Convex
+deployment as the web app, so changes on one show up live on the other.
+
+## Run it on your phone
+
+<Steps>
+  <Step>
+    ### Install Expo Go
+
+    Install **Expo Go** from the Play Store. While the app is being built,
+    it runs inside Expo Go, so you don't need Android Studio or an Expo account.
+  </Step>
+  <Step>
+    ### Add `apps/mobile/.env.local`
+
+    Use the same two URLs as `apps/web/.env.local`, renamed:
+
+    ```bash title="apps/mobile/.env.local"
+    EXPO_PUBLIC_CONVEX_URL=https://<deployment>.convex.cloud
+    EXPO_PUBLIC_CONVEX_SITE_URL=https://<deployment>.convex.site
+    ```
+
+    `EXPO_PUBLIC_*` values are inlined into the bundle, so restart the dev
+    server after changing them.
+  </Step>
+  <Step>
+    ### Start the dev server
+
+    ```bash
+    pnpm dev:mobile
+    ```
+
+    Scan the QR code with Expo Go. The phone and the computer must be on the
+    same Wi-Fi; otherwise run `pnpm dev:mobile --tunnel`.
+  </Step>
+</Steps>
+
+## Checks
+
+```bash
+pnpm --filter mobile typecheck        # also part of pnpm typecheck
+pnpm --filter mobile export:android   # bundles the app the way a release build does
+```
+
+`pnpm build` doesn't build the mobile app. Release APKs are built on GitHub
+Actions.
+
+## Layout
+
+| Path | Contents |
+| --- | --- |
+| `src/app/` | Expo Router routes. `_layout.tsx` loads the fonts and wraps everything in the Convex provider; `(tabs)/` holds the five tabs |
+| `src/components/` | `Text` (Geist or Geist Mono, coloured from the theme), `Screen` (a tab's page), `TabBar`, line `icons` |
+| `src/theme/` | Tokens from `design/DESIGN.md` for dark and light (`tokens.ts`), and `useColors()` |
+| `src/lib/` | The Convex client (`convex.ts`) |
+
+Imports use the `@/` alias for `apps/mobile/src`.
+
+## Conventions
+
+- **Design**: the Android mockups in `design/screens/android/` are the
+  reference. The app follows the phone's light or dark setting
+  (`useColors()`); dark is the reference theme. Style with `StyleSheet`
+  and theme tokens, not hex values (the fixed group and avatar fills
+  excepted).
+- **Text**: use `<Text>` from `@/components/text`, not React Native's.
+  Android ignores `fontWeight` for custom fonts, so `Text` picks the Geist
+  family for each weight (`weight={600}`); `mono` switches to Geist Mono
+  with tabular figures for amounts.
+- **Tabs**: the bottom bar is `TabBar`, a flat bar with a 3 px accent
+  line over the active tab. A new tab needs a route in `src/app/(tabs)/`
+  and an entry in `TABS` in `tab-bar.tsx`.
+- **Packages**: add them with `npx expo install <pkg>` in `apps/mobile`,
+  which picks the version that matches the Expo SDK. The app has to keep
+  running in Expo Go, so only use native modules that Expo Go includes.
+- **Metro** is configured for the pnpm workspace automatically; there's no
+  `metro.config.js`. After adding a workspace package, restart with
+  `pnpm dev:mobile --clear`.

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "turbo run dev --filter=web",
     "dev:docs": "turbo run dev --filter=docs",
+    "dev:mobile": "pnpm --filter mobile dev",
     "dev:convex": "pnpm --filter @settlr/backend dev",
     "build": "turbo run build",
     "start": "pnpm --filter web start",

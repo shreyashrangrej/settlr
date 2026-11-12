@@ -47,6 +47,7 @@ Then add the deployment's URLs to `apps/web/.env.local` and set `SITE_URL` and
 | Path | What's there |
 | --- | --- |
 | [`apps/web`](apps/web) | The app: Next.js 16 App Router, shadcn/ui on Base UI, Tailwind 4 |
+| [`apps/mobile`](apps/mobile) | The Android app: Expo and Expo Router (in progress) |
 | [`apps/docs`](apps/docs) | The docs site, built with Fumadocs |
 | [`packages/backend`](packages/backend) | The Convex backend: data, functions and Better Auth |
 | [`packages/shared`](packages/shared) | Zod schemas and formatting used by the app and the backend |
@@ -55,6 +56,7 @@ Then add the deployment's URLs to `apps/web/.env.local` and set `SITE_URL` and
 | Command | |
 | --- | --- |
 | `pnpm dev` / `pnpm dev:docs` | Run the app (`:3000`) or the docs (`:3001`) |
+| `pnpm dev:mobile` | Run the Android app in Expo Go |
 | `pnpm dev:convex` | Push the backend to your dev deployment on every change |
 | `pnpm typecheck` / `pnpm build` | Check or build every workspace |
 

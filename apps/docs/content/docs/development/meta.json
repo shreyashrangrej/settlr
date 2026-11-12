@@ -8,6 +8,7 @@
     "auth",
     "assistant-and-mcp",
     "web-app",
+    "mobile-app",
     "environment",
     "deployment",
     "writing-docs"

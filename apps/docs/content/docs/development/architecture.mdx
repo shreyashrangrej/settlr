@@ -14,6 +14,9 @@ workspaces:
     <Folder name="web">
       <File name="the Next.js 16 app (package web)" />
     </Folder>
+    <Folder name="mobile">
+      <File name="the Android app, Expo and Expo Router (package mobile)" />
+    </Folder>
     <Folder name="docs">
       <File name="this site, built with Fumadocs (package docs)" />
     </Folder>
@@ -36,6 +39,7 @@ workspaces:
 | Workspace | Package | Depends on |
 | --- | --- | --- |
 | `apps/web` | `web` | `@settlr/backend`, `@settlr/shared` |
+| `apps/mobile` | `mobile` | `@settlr/backend`, `@settlr/shared` |
 | `apps/docs` | `docs` | nothing in the repo |
 | `packages/backend` | `@settlr/backend` | `@settlr/shared` |
 | `packages/shared` | `@settlr/shared` | `zod` |

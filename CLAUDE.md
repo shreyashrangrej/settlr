@@ -3,7 +3,7 @@
 Settlr is an expense-splitting app built on Next.js 16 (App Router, React
 19, Turbopack) with Convex as the backend and Better Auth for sign-in. It's
 a Turborepo monorepo (pnpm workspaces): `apps/web` (the app, package
-`web`), `apps/docs` (the Fumadocs documentation site, package `docs`),
+`web`), `apps/mobile` (the Android app, package `mobile`), `apps/docs` (the Fumadocs documentation site, package `docs`),
 `packages/backend` (`@settlr/backend`, the `convex/` folder) and
 `packages/shared` (`@settlr/shared`, code both sides use). See `README.md`
 for the feature overview, and the docs (`apps/docs/content/docs`, live at
@@ -19,6 +19,7 @@ Turborepo runs each in the workspaces that define it.
 pnpm install
 pnpm dev              # the web app, http://localhost:3000
 pnpm dev:docs         # the docs, http://localhost:3001
+pnpm dev:mobile       # the Android app in Expo Go (scan the QR code)
 pnpm dev:convex       # push packages/backend/convex to the dev deployment on every change (run alongside dev)
 pnpm typecheck        # every workspace (web/docs: next typegen && tsc --noEmit)
 pnpm build            # builds apps/web and apps/docs
@@ -84,6 +85,21 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `development/` for people working on it), ordered by each folder's
   `meta.json`; MDX components are registered in `components/mdx.tsx`.
 
+- `apps/mobile/`: the Android app, Expo (SDK 58) with Expo Router,
+  built in phases (the plan is in Notion). `src/app/` routes (`(tabs)/`
+  holds Home, Groups, Friends, Personal, Assistant), `src/theme/` the
+  `DESIGN.md` tokens for dark and light (`useColors()` follows the phone),
+  `src/components/` (`Text` picks the Geist family per weight, since
+  Android ignores `fontWeight` for custom fonts; `TabBar`, `Screen`,
+  `icons`), `src/lib/convex.ts`. Imports use `@/` for its `src/`. It
+  must keep running in Expo Go, so add packages with `npx expo install`
+  and only use native modules Expo Go ships. `.env.local` has
+  `EXPO_PUBLIC_CONVEX_URL` and `EXPO_PUBLIC_CONVEX_SITE_URL`. Check with
+  `pnpm --filter mobile typecheck` and `pnpm --filter mobile
+  export:android`; `pnpm build` doesn't build it, and release APKs are
+  built on GitHub Actions (no EAS). The Android mockups in
+  `design/screens/android/` are its reference. Docs:
+  `development/mobile-app.mdx`.
 - `design/`: the design handoff the UI follows. `DESIGN.md` has the tokens
   and component notes; `screens/*.html` are static mockups (web dashboard,
   add-expense, assistant, and three mobile screens). Their data is sample
