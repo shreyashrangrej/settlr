@@ -23,12 +23,17 @@ deployment as the web app, so changes on one show up live on the other.
   <Step>
     ### Add `apps/mobile/.env.local`
 
-    Use the same two URLs as `apps/web/.env.local`, renamed:
+    Use the same two URLs as `apps/web/.env.local`, renamed, plus the
+    deployment's `SITE_URL` (the web app the app signs in through):
 
     ```bash title="apps/mobile/.env.local"
     EXPO_PUBLIC_CONVEX_URL=https://<deployment>.convex.cloud
     EXPO_PUBLIC_CONVEX_SITE_URL=https://<deployment>.convex.site
+    EXPO_PUBLIC_SITE_URL=https://<your-site>.vercel.app
     ```
+
+    Without `EXPO_PUBLIC_SITE_URL` the app signs in through the
+    `.convex.site` URL, where email codes work but Google doesn't.
 
     `EXPO_PUBLIC_*` values are inlined into the bundle, so restart the dev
     server after changing them.
@@ -45,6 +50,23 @@ deployment as the web app, so changes on one show up live on the other.
   </Step>
 </Steps>
 
+## Sign in
+
+Signed-out people see `sign-in.tsx` (email, or Continue with Google) and
+`verify.tsx` (the 6-digit code). `src/app/_layout.tsx` reads the session
+with `authClient.useSession()` and guards the routes with
+`Stack.Protected`: signing in or out flips the guards and the router
+moves to the tabs or to sign-in by itself, so screens don't navigate after
+it. The session is kept in secure storage, so the app opens signed in.
+[Authentication](/docs/development/auth#the-android-app) covers how it
+works on the server.
+
+To sign in from Expo Go, the deployment's `TRUSTED_ORIGINS` must include
+`exp://` (the dev deployment's does). Without a real inbox, request a code
+for `delivered@resend.dev` and read it with
+`pnpm exec convex data --component betterAuth verification` in
+`packages/backend`.
+
 ## Checks
 
 ```bash
@@ -59,10 +81,10 @@ Actions.
 
 | Path | Contents |
 | --- | --- |
-| `src/app/` | Expo Router routes. `_layout.tsx` loads the fonts and wraps everything in the Convex provider; `(tabs)/` holds the five tabs |
-| `src/components/` | `Text` (Geist or Geist Mono, coloured from the theme), `Screen` (a tab's page), `TabBar`, line `icons` |
+| `src/app/` | Expo Router routes. `_layout.tsx` loads the fonts, wraps everything in the Convex and Better Auth provider and guards the signed-in routes; `(tabs)/` holds the five tabs, `sign-in.tsx` and `verify.tsx` the signed-out screens |
+| `src/components/` | `Text` (Geist or Geist Mono, coloured from the theme), `Button`, `Screen` (a tab's page), `AuthScreen` (the signed-out frame), `TabBar`, `Brand`, line `icons`, and the temporary account button on Home |
 | `src/theme/` | Tokens from `design/DESIGN.md` for dark and light (`tokens.ts`), and `useColors()` |
-| `src/lib/` | The Convex client (`convex.ts`) |
+| `src/lib/` | The Convex client (`convex.ts`) and Better Auth (`auth-client.ts`: the client and the sign-in actions) |
 
 Imports use the `@/` alias for `apps/mobile/src`.
 

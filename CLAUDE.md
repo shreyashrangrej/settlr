@@ -65,7 +65,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   apps for Settings), and `lib/` (`requireUser`, value checks in `input.ts`,
   balance math in `ledger.ts`, receipt attach/delete in `receipts.ts`, enum
   validators). `auth.ts` is the Better Auth instance
-  (email OTP + Google, plus Better Auth's `mcp` OAuth plugin and the
+  (email OTP + Google, `@better-auth/expo` for the Android app with
+  `settlr://` always trusted, plus Better Auth's `mcp` OAuth plugin and the
   `mcpBridge` plugin: it forces a consent step on every MCP authorization,
   rotates refresh tokens, and swaps an MCP access token for a Convex JWT at
   `/api/auth/mcp/convex-token`), `http.ts` mounts its routes, `convex.config.ts`
@@ -90,11 +91,17 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   holds Home, Groups, Friends, Personal, Assistant), `src/theme/` the
   `DESIGN.md` tokens for dark and light (`useColors()` follows the phone),
   `src/components/` (`Text` picks the Geist family per weight, since
-  Android ignores `fontWeight` for custom fonts; `TabBar`, `Screen`,
-  `icons`), `src/lib/convex.ts`. Imports use `@/` for its `src/`. It
+  Android ignores `fontWeight` for custom fonts; `Button`, `TabBar`,
+  `Screen`, `icons`), `src/lib/convex.ts` and `src/lib/auth-client.ts`
+  (Better Auth's `expoClient`, session in `expo-secure-store`). Sign-in
+  is `sign-in.tsx` and `verify.tsx`; the root layout guards routes with
+  `Stack.Protected` on the session, so signing in or out needs no
+  navigation. Imports use `@/` for its `src/`. It
   must keep running in Expo Go, so add packages with `npx expo install`
   and only use native modules Expo Go ships. `.env.local` has
-  `EXPO_PUBLIC_CONVEX_URL` and `EXPO_PUBLIC_CONVEX_SITE_URL`. Check with
+  `EXPO_PUBLIC_CONVEX_URL`, `EXPO_PUBLIC_CONVEX_SITE_URL` and
+  `EXPO_PUBLIC_SITE_URL` (auth goes through the web app's origin, since
+  Google returns there). Check with
   `pnpm --filter mobile typecheck` and `pnpm --filter mobile
   export:android`; `pnpm build` doesn't build it, and release APKs are
   built on GitHub Actions (no EAS). The Android mockups in
@@ -271,8 +278,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 - Convex deployment env vars (`pnpm exec convex env list`): `SITE_URL`
   (the app origin: on the dev deployment, the Vercel site),
   `TRUSTED_ORIGINS` (other origins allowed to sign in, comma-separated; the
-  dev deployment has http://localhost:3000, where email codes work but
-  Google sign-in returns to `SITE_URL`), `BETTER_AUTH_SECRET`, and optional
+  dev deployment has `http://localhost:3000,exp://`: email codes work on
+  localhost but Google sign-in returns to `SITE_URL`, and `exp://` lets
+  Expo Go sign in), `BETTER_AUTH_SECRET`, and optional
   `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (Google sign-in is off until
   both are set) and `RESEND_API_KEY`/`AUTH_EMAIL_FROM`. Without a Resend
   key, sign-in codes are only logged: read them with
@@ -284,8 +292,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   origin. The token exchange calls the Convex plugin's `getToken` endpoint
   with a stand-in session (`mcpBridge` in `convex/auth.ts`), which leans on
   Better Auth internals; recheck it when upgrading `better-auth`.
-- `better-auth` is pinned to the exact version `@convex-dev/better-auth` is
-  built against (1.6.15). Newer 1.6.x releases break the
+- `better-auth` (and `@better-auth/expo`) is pinned to the exact version
+  `@convex-dev/better-auth` is built against (1.6.15). Newer 1.6.x releases break the
   `ConvexBetterAuthProvider` types. Upgrade the two together.
 - To call Convex functions from the CLI as a test user, run the CLI with
   node from `packages/backend`, not `pnpm exec` (cmd.exe mangles the JSON

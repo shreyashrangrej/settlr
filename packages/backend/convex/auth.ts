@@ -1,3 +1,4 @@
+import { expo } from '@better-auth/expo'
 import { createClient, type GenericCtx } from '@convex-dev/better-auth'
 import { convex } from '@convex-dev/better-auth/plugins'
 import {
@@ -34,6 +35,12 @@ const google =
         overrideUserInfoOnSignIn: true,
       }
     : undefined
+
+// The Android app (apps/mobile) signs in through @better-auth/expo: it sends
+// its deep-link URL as the origin, and OAuth sign-ins come back to it with
+// the session cookie in the URL. Expo Go's `exp://` URLs are only trusted
+// where TRUSTED_ORIGINS lists them (the dev deployment).
+const MOBILE_ORIGINS = ['settlr://']
 
 // Issues the Convex JWTs, for browser sessions and (below) MCP clients.
 const convexPlugin = convex({ authConfig })
@@ -183,10 +190,13 @@ const mcpBridge = {
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth({
     baseURL: env.SITE_URL,
-    trustedOrigins: (env.TRUSTED_ORIGINS ?? '')
-      .split(',')
-      .map((origin) => origin.trim())
-      .filter(Boolean),
+    trustedOrigins: [
+      ...MOBILE_ORIGINS,
+      ...(env.TRUSTED_ORIGINS ?? '')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ],
     secret: env.BETTER_AUTH_SECRET,
     database: authComponent.adapter(ctx),
     socialProviders: google ? { google } : {},
@@ -224,6 +234,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
       }),
       mcpPlugin,
       mcpBridge,
+      expo(),
       convexPlugin,
     ],
   } satisfies BetterAuthOptions)

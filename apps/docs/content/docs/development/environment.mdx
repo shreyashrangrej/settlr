@@ -18,7 +18,7 @@ pnpm exec convex env set SITE_URL=https://settlr.example.com
 | --- | --- | --- |
 | `SITE_URL` | Yes | Public origin of the web app. Better Auth's base URL and the OAuth issuer |
 | `BETTER_AUTH_SECRET` | Yes | Signs sessions and tokens (`openssl rand -base64 32`) |
-| `TRUSTED_ORIGINS` | No | Other origins allowed to sign in, comma-separated |
+| `TRUSTED_ORIGINS` | No | Other origins allowed to sign in, comma-separated. Add `exp://` on a dev deployment to sign in from the Android app in Expo Go |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | No | Google sign-in, on when both are set |
 | `RESEND_API_KEY` | No | Emails sign-in codes; without it they're only logged |
 | `AUTH_EMAIL_FROM` | No | Sender for sign-in emails (default `Settlr <onboarding@resend.dev>`) |

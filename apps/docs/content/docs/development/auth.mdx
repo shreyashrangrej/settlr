@@ -42,12 +42,37 @@ Layouts don't re-render on client navigation, so:
 
 The `(app)` route group's layout redirects signed-out visitors to `/`.
 
+## The Android app
+
+The app in `apps/mobile` signs in with the same accounts through
+[`@better-auth/expo`](https://www.better-auth.com/docs/integrations/expo):
+the `expo()` server plugin in `convex/auth.ts`, and `expoClient` in
+`apps/mobile/src/lib/auth-client.ts`.
+
+- The app has no browser origin, so it sends its deep-link URL in an
+  `expo-origin` header, which the plugin uses as the origin. `settlr://`
+  (the app's scheme) is always trusted; Expo Go's `exp://` only where
+  `TRUSTED_ORIGINS` lists it.
+- The session cookie is kept in the phone's secure storage
+  (`expo-secure-store`) and sent as a `Cookie` header, so people stay
+  signed in across restarts.
+- Google opens in an in-app browser through `/expo-authorization-proxy`,
+  which sets the OAuth state cookie, and comes back to the app's deep link
+  with the session in the URL. Google returns to `SITE_URL`, so the state
+  cookie has to be set there: the app talks to `EXPO_PUBLIC_SITE_URL` (the
+  web app, whose `/api/auth/*` route forwards to Convex), not to the
+  `.convex.site` URL.
+- `ConvexBetterAuthProvider` from `@convex-dev/better-auth/react` swaps the
+  session for a Convex JWT, as on the web.
+
 ## Allowed origins
 
 Better Auth's base URL is the deployment's `SITE_URL`. Other origins that may
 sign in go in `TRUSTED_ORIGINS` (comma-separated). On a dev deployment whose
 `SITE_URL` is a hosted site, adding `http://localhost:3000` there lets you
-sign in locally with email codes; Google always returns to `SITE_URL`.
+sign in locally with email codes; Google always returns to `SITE_URL`. Add
+`exp://` to sign in from Expo Go (the dev deployment has
+`http://localhost:3000,exp://`).
 
 ## OAuth for MCP clients
 

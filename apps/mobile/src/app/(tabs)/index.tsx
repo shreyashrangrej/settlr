@@ -1,12 +1,23 @@
 import { formatMoney } from '@settlr/shared/format'
+import { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 
+import { AccountAvatar, AccountCard, useCurrentUser } from '@/components/account-button'
 import { Placeholder, Screen } from '@/components/screen'
 import { Text } from '@/components/text'
 
 export default function HomeScreen() {
+  const { name } = useCurrentUser()
+  const [accountOpen, setAccountOpen] = useState(false)
+  const firstName = name.split(/\s+/)[0]
+
   return (
-    <Screen title="Home" subtitle="Settlr">
+    <Screen
+      title={firstName ? `Hi, ${firstName}` : 'Home'}
+      subtitle="Settlr"
+      actions={<AccountAvatar open={accountOpen} onPress={() => setAccountOpen((open) => !open)} />}
+    >
+      {accountOpen ? <AccountCard /> : null}
       <Placeholder>
         <Text size={14} weight={500} color="muted">
           Net balance

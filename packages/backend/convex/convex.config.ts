@@ -12,6 +12,8 @@ const app = defineApp({
     // Other origins allowed to sign in, comma-separated, e.g.
     // http://localhost:3000 on a dev deployment whose SITE_URL is a
     // hosted site (email codes work there; Google returns to SITE_URL).
+    // Add exp:// there too to sign in from the Android app in Expo Go (the
+    // app's own settlr:// scheme is always trusted, see auth.ts).
     TRUSTED_ORIGINS: v.optional(v.string()),
     // Signs Better Auth sessions and tokens (`openssl rand -base64 32`).
     BETTER_AUTH_SECRET: v.string(),
