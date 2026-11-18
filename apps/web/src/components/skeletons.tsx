@@ -56,9 +56,11 @@ function StatRowSkeleton({ count = 4 }: { count?: number }) {
   )
 }
 
-export function TableSkeleton({ rows = 6 }: { rows?: number }) {
+/** A list card; `filters` adds the expense lists' filter bar above it. */
+export function TableSkeleton({ rows = 6, filters = false }: { rows?: number; filters?: boolean }) {
   return (
     <Panel className="gap-0">
+      {filters && <Skeleton className="mb-4 h-11 w-full rounded-xl" />}
       <Skeleton className="mb-3 h-4 w-full max-w-md" />
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-4 border-t border-divider py-3.5">
@@ -180,7 +182,7 @@ export function DetailSkeleton() {
       <HeaderSkeleton back actions={1} />
       <Split aside={<SideCardSkeleton lines={5} />}>
         <Skeleton className="h-10.5 w-56 rounded-xl" />
-        <TableSkeleton />
+        <TableSkeleton filters />
       </Split>
     </Status>
   )
@@ -211,7 +213,7 @@ export function PersonalSkeleton() {
         }
       >
         <StatRowSkeleton />
-        <TableSkeleton />
+        <TableSkeleton filters />
       </Split>
     </Status>
   )

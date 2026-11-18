@@ -9,6 +9,7 @@ import { ChevronRight, Plus, Users, Zap } from 'lucide-react'
 import { AddMenu } from '#/components/add-menu'
 import { budgetStatus, type Spending } from '#/components/budget'
 import { CategoryIcon, groupColor } from '#/components/category'
+import { ExpenseRow, ExpenseTable } from '#/components/expense-list'
 import { SelectField } from '#/components/form-fields'
 import { GroupTile } from '#/components/group-tile'
 import { PersonAvatar, sumBalances, useAction } from '#/components/ledger'
@@ -18,18 +19,9 @@ import { Button, buttonVariants } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Spinner } from '#/components/ui/spinner'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import {
   categoryLabel,
-  formatDate,
   formatLongDate,
   formatMoney,
   formatMonth,
@@ -1057,42 +1049,18 @@ function RecentSpending({
           No personal expenses in {formatMonth(month)} yet.
         </p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Expense</TableHead>
-              <TableHead className="hidden md:table-cell">Category</TableHead>
-              <TableHead className="hidden md:table-cell">Date</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.slice(0, PREVIEW).map((expense) => (
-              <TableRow key={expense.id}>
-                <TableCell>
-                  <span className="flex items-center gap-3">
-                    <CategoryIcon category={expense.category} />
-                    <span className="grid min-w-0">
-                      <span className="truncate font-semibold">{expense.description}</span>
-                      <span className="truncate text-xs text-muted-foreground md:hidden">
-                        {categoryLabel(expense.category)} · {formatDate(expense.date)}
-                      </span>
-                    </span>
-                  </span>
-                </TableCell>
-                <TableCell className="hidden text-soft md:table-cell">
-                  {categoryLabel(expense.category)}
-                </TableCell>
-                <TableCell className="hidden text-soft md:table-cell">
-                  {formatDate(expense.date)}
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
-                  {formatMoney(expense.amountCents, expense.currency)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ExpenseTable first="Expense" actions={false}>
+          {items.slice(0, PREVIEW).map((expense) => (
+            <ExpenseRow
+              key={expense.id}
+              icon={<CategoryIcon category={expense.category} />}
+              title={expense.description}
+              subtitle={categoryLabel(expense.category)}
+              date={expense.date}
+              amount={formatMoney(expense.amountCents, expense.currency)}
+            />
+          ))}
+        </ExpenseTable>
       )}
     </section>
   )

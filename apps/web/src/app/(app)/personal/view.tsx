@@ -4,11 +4,16 @@ import { useEffect, useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { PiggyBank, Receipt, Tag, Trash2, TrendingUp, Wallet } from 'lucide-react'
+import { PiggyBank, Receipt, Tag, TrendingUp, Wallet } from 'lucide-react'
 
 import { CategoryIcon } from '#/components/category'
-import { ConfirmAction } from '#/components/confirm-action'
-import { EditDialog } from '#/components/edit-dialog'
+import { ExpenseFilters, useListSearch } from '#/components/expense-filters'
+import {
+  ExpenseRow,
+  ExpenseSection,
+  ExpenseTable,
+  RowActions,
+} from '#/components/expense-list'
 import {
   AmountInput,
   CategorySelect,
@@ -32,28 +37,12 @@ import {
   CardHeader,
   CardTitle,
 } from '#/components/ui/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '#/components/ui/empty'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Progress, ProgressLabel, ProgressValue } from '#/components/ui/progress'
 import { Spinner } from '#/components/ui/spinner'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table'
-import {
   categoryLabel,
-  formatDate,
   formatMoney,
   formatMonth,
   parseAmountToCents,
@@ -61,9 +50,13 @@ import {
 } from '@settlr/shared/format'
 import { readPreferences } from '#/lib/preferences'
 import {
+  isFiltered,
   personalExpenseInput,
+  personalSearchDefaults,
   type Category,
+  type ExpenseFilter,
   type PersonalExpenseInput,
+  type PersonalSearch,
   type Currency,
 } from '@settlr/shared/schemas'
 import type { PersonalMonth } from '#/lib/types'
@@ -72,10 +65,21 @@ import { api } from '@settlr/backend/convex/_generated/api'
 
 /**
  * Your own spending for `month`. `thisMonth` comes from the server, so the
- * server and client render the same month.
+ * server and client render the same month. `search` has the list's filters,
+ * which apply to the month's expenses (all loaded, for the totals).
  */
-export function PersonalView({ month, thisMonth }: { month: string; thisMonth: string }) {
+export function PersonalView({
+  month,
+  thisMonth,
+  search,
+}: {
+  month: string
+  thisMonth: string
+  search: PersonalSearch
+}) {
   const { data } = useSuspenseQuery(convexQuery(api.personal.month, { month }))
+  const { update, clearHref } = useListSearch('/personal', search, personalSearchDefaults)
+  const items = filterExpenses(data.items, search)
 
   return (
     <>
@@ -106,49 +110,33 @@ export function PersonalView({ month, thisMonth }: { month: string; thisMonth: s
       >
         <MonthStats data={data} />
 
-        <Card>
-          <CardContent>
-            {data.items.length === 0 ? (
-              <Empty className="py-10">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Wallet />
-                  </EmptyMedia>
-                  <EmptyTitle>No expenses in {formatMonth(month)}</EmptyTitle>
-                  <EmptyDescription>
-                    Log what you spend to see where it goes.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              // Laid out like a group's expenses: fixed widths for the short
-              // columns, the rest for the description, with the category as
-              // its icon and the line under it.
-              <Table className="table-fixed">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="hidden w-28 md:table-cell">Date</TableHead>
-                    <TableHead className="w-32 text-right">Amount</TableHead>
-                    <TableHead className="w-20">
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.items.map((expense) => (
-                    <ExpenseRow key={expense.id} expense={expense} />
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-        {data.truncated && (
-          <p className="text-sm text-muted-foreground">
-            Showing the first {data.items.length} expenses of this month.
-          </p>
-        )}
+        <ExpenseSection
+          filters={
+            data.items.length > 0 && <ExpenseFilters value={search} onChange={update} />
+          }
+          empty={
+            items.length === 0 &&
+            (data.items.length > 0
+              ? {
+                  icon: <Wallet />,
+                  title: 'No matches',
+                  description: `No expenses in ${formatMonth(month)} match these filters.`,
+                  clearHref,
+                }
+              : {
+                  icon: <Wallet />,
+                  title: `No expenses in ${formatMonth(month)}`,
+                  description: 'Log what you spend to see where it goes.',
+                })
+          }
+          note={data.truncated && `Showing the first ${data.items.length} expenses of this month.`}
+        >
+          <ExpenseTable>
+            {items.map((expense) => (
+              <PersonalExpenseRow key={expense.id} expense={expense} />
+            ))}
+          </ExpenseTable>
+        </ExpenseSection>
       </SplitLayout>
     </>
   )
@@ -221,58 +209,47 @@ function ByCategory({ data }: { data: PersonalMonth }) {
 
 type PersonalExpense = PersonalMonth['items'][number]
 
-function ExpenseRow({ expense }: { expense: PersonalExpense }) {
+/** The month's expenses that match `filter`, in its order. */
+function filterExpenses(items: Array<PersonalExpense>, filter: ExpenseFilter) {
+  if (!isFiltered(filter) && filter.sort === 'date' && filter.order === 'desc') return items
+  const q = filter.q.toLowerCase()
+  const dir = filter.order === 'asc' ? 1 : -1
+  return items
+    .filter(
+      (e) =>
+        (filter.category === 'all' || e.category === filter.category) &&
+        (!q || e.description.toLowerCase().includes(q)),
+    )
+    .sort((a, b) =>
+      filter.sort === 'amount'
+        ? (a.amountCents - b.amountCents) * dir
+        : a.date.localeCompare(b.date) * dir,
+    )
+}
+
+function PersonalExpenseRow({ expense }: { expense: PersonalExpense }) {
   const removeExpense = useConvexMutation(api.personal.remove)
   const { run } = useAction(removeExpense, { success: 'Deleted', toastErrors: true })
 
   return (
-    <TableRow>
-      <TableCell className="font-medium">
-        <span className="flex items-center gap-3">
-          <CategoryIcon category={expense.category} />
-          <span className="grid min-w-0">
-            <span className="flex items-center gap-1">
-              <span className="truncate" title={expense.description}>
-                {expense.description}
-              </span>
-              {expense.receiptId && <ReceiptLink source="personal" expenseId={expense.id} />}
-            </span>
-            <span className="truncate text-xs font-normal text-muted-foreground">
-              {categoryLabel(expense.category)}
-              <span className="md:hidden"> · {formatDate(expense.date)}</span>
-            </span>
-          </span>
-        </span>
-      </TableCell>
-      <TableCell className="hidden text-muted-foreground md:table-cell">
-        {formatDate(expense.date)}
-      </TableCell>
-      <TableCell className="text-right font-mono font-medium tabular-nums">
-        {formatMoney(expense.amountCents, expense.currency)}
-      </TableCell>
-      <TableCell>
-        <span className="flex justify-end gap-1">
-          <EditDialog label={`Edit ${expense.description}`} title="Edit expense">
-            {(close) => <ExpenseForm expense={expense} onSaved={close} />}
-          </EditDialog>
-          <ConfirmAction
-            title={`Delete “${expense.description}”?`}
-            description="This can’t be undone."
-            onConfirm={async () => Boolean(await run({ expenseId: expense.id }))}
-            trigger={
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Delete ${expense.description}`}
-                className="text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 />
-              </Button>
-            }
-          />
-        </span>
-      </TableCell>
-    </TableRow>
+    <ExpenseRow
+      icon={<CategoryIcon category={expense.category} />}
+      title={expense.description}
+      receipt={expense.receiptId && <ReceiptLink source="personal" expenseId={expense.id} />}
+      subtitle={categoryLabel(expense.category)}
+      date={expense.date}
+      amount={formatMoney(expense.amountCents, expense.currency)}
+      actions={
+        <RowActions
+          name={expense.description}
+          edit={{
+            title: 'Edit expense',
+            form: (close) => <ExpenseForm expense={expense} onSaved={close} />,
+          }}
+          onDelete={async () => Boolean(await run({ expenseId: expense.id }))}
+        />
+      }
+    />
   )
 }
 

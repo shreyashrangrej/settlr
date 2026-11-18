@@ -20,19 +20,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 // SSR: full. The friend and their ledger are prefetched on the server, then
-// stay live. `limit` (the "show more" size) and `tab` (the side panel's
-// form) live in the URL.
+// stay live. The ledger's filters, sorting and length, and `tab` (the side
+// panel's form), live in the URL.
 export default async function FriendPage({ params, searchParams }: Props) {
   const { friendId } = await params
-  const { limit, tab } = parseSearch(friendSearchSchema, await searchParams)
+  const search = parseSearch(friendSearchSchema, await searchParams)
+  const { tab: _, ...filter } = search
   const [friend, ledger] = await Promise.all([
     prefetchQuery(api.friends.get, { friendId }),
-    prefetchQuery(api.friends.entries, { friendId, limit }),
+    prefetchQuery(api.friends.entries, { friendId, ...filter }),
   ])
   if (!friend.data) notFound()
   return (
     <Prefetched queries={[friend.entry, ledger.entry]}>
-      <FriendView friendId={friendId} limit={limit} tab={tab} />
+      <FriendView friendId={friendId} search={search} />
     </Prefetched>
   )
 }

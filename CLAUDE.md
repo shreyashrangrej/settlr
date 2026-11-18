@@ -145,6 +145,10 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   (`SelectField`, `CurrencySelect`, `CategorySelect`, `AmountInput`,
   `DatePicker`), `receipts.tsx` (`ReceiptField` upload control,
   `ReceiptLink`), `edit-dialog.tsx` (edit a row in a dialog),
+  `expense-list.tsx` (`ExpenseSection`, `ExpenseTable`, `ExpenseRow`,
+  `RowActions`: the expense list every section uses) and
+  `expense-filters.tsx` (`ExpenseFilters`, the shared search/category/
+  who-paid/sort bar, and `useListSearch` for its URL),
   `group-expense-form.tsx` (add/edit a group expense), `notifications.tsx`
   (rows shared by the bell dropdown and the page), `month-nav.tsx`,
   `confirm-action.tsx` (destructive actions behind an alert dialog),
@@ -246,7 +250,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   Summary figures go in a `StatGrid` of `StatCard`s
   (`src/components/stat-card.tsx`), lists of records are tables whose extra
   columns appear on wider screens (`hidden md:table-cell`, with the details
-  folded into the first cell below that). Tables are `table-fixed`: the
+  folded into the first cell below that); expense lists get this from
+  `ExpenseTable`/`ExpenseRow`, so build new ones on those. Tables are `table-fixed`: the
   short columns get fixed widths (`w-28` date, `w-32` amount, `w-20`
   actions) and the first column takes the rest, with an icon tile (e.g.
   `CategoryIcon`) and a muted second line (see the group, personal and

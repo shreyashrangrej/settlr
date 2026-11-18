@@ -62,7 +62,7 @@ export function FriendsView() {
 | --- | --- | --- |
 | `/` (landing hero) | server | Marketing page and sign-in form. Signed-in visitors are redirected to `/dashboard` |
 | `/dashboard`, `/friends`, `/personal`, `/budget` | server | Queries are prefetched with the visitor's token, so the first HTML is complete |
-| `/groups/[groupId]` (and its expense pages) | server | Shareable, filterable URLs render fully on the server |
+| `/groups/[groupId]` (and its expense pages), `/friends/[friendId]` | server | Shareable, filterable URLs render fully on the server |
 | `/receipts/[source]/[expenseId]` | server | The receipt's URL and its expense are prefetched; images show inline, PDFs in the browser's viewer |
 | `/groups/[groupId]/insights`, `/notifications` | data on the server, UI in the browser | The UI uses the viewer's locale, time zone and clock, so it renders in `<ClientOnly>` |
 | `/assistant` | server | Only whether the assistant is set up is prefetched; the conversation lives in the browser |
@@ -77,6 +77,30 @@ Parsed on the server with `parseSearch(schema, await searchParams)`. The
 schemas in `@settlr/shared/schemas` give every field `.default(x).catch(x)`,
 so a bad URL falls back instead of throwing. Build URLs with
 `searchHref(pathname, values, defaults)`, which leaves defaults out.
+
+The expense lists (a group's expenses, a friend's ledger, personal
+spending) share one set of filters, `expenseFilterSchema`: `q`,
+`category`, `paidBy`, `sort` and `order`. The group and friend pages add a
+`limit` and filter in their Convex query; the personal page adds the
+`month` and filters the month's expenses it already loaded, so its totals
+still cover the whole month.
+
+## Expense lists
+
+Every expense list is built from the same components, so they look and
+behave alike:
+
+- `components/expense-filters.tsx`: `ExpenseFilters`, the search,
+  category, who-paid and sort bar (leave out `payers` where it's always
+  you), and `useListSearch(pathname, search, defaults)`, which gives
+  `hrefFor`, `update` (replaces the URL, starting a "show more" list from
+  the top) and `clearHref`.
+- `components/expense-list.tsx`: `ExpenseSection` (the card: filters, the
+  table or an empty state with "Clear filters", "Show more"),
+  `ExpenseTable` (Description, Date, the page's own `columns`, Amount,
+  actions), `ExpenseRow` (icon tile, title with a receipt link, a muted
+  line under it; a column hidden on narrow screens folds into that line)
+  and `RowActions` (edit, as a link or a dialog, and a confirmed delete).
 
 ## Hydration safety
 

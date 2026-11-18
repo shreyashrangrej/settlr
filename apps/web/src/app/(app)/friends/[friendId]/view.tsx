@@ -6,8 +6,16 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { HandCoins, Receipt, Trash2, UserPlus } from 'lucide-react'
 
+import { CategoryIcon, IconTile } from '#/components/category'
 import { ConfirmAction } from '#/components/confirm-action'
-import { EditDialog } from '#/components/edit-dialog'
+import { ExpenseFilters, useListSearch } from '#/components/expense-filters'
+import {
+  ExpenseRow,
+  ExpenseSection,
+  ExpenseTable,
+  RowActions,
+  type ExpenseColumn,
+} from '#/components/expense-list'
 import {
   AmountInput,
   CategorySelect,
@@ -19,6 +27,7 @@ import {
   BalanceText,
   FriendStatusBadge,
   PersonAvatar,
+  SignedAmount,
   useAction,
 } from '#/components/ledger'
 import { useAppRouter } from '#/components/navigation-progress'
@@ -29,14 +38,12 @@ import {
   existingReceipt,
   type ReceiptValue,
 } from '#/components/receipts'
-import { Badge } from '#/components/ui/badge'
-import { Button, buttonVariants } from '#/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
+import { Button } from '#/components/ui/button'
+import { Card, CardContent } from '#/components/ui/card'
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
-  EmptyMedia,
   EmptyTitle,
 } from '#/components/ui/empty'
 import {
@@ -47,57 +54,52 @@ import {
   FieldLabel,
 } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table'
 import { Spinner } from '#/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import {
   categoryLabel,
-  formatDate,
   formatMoney,
   parseAmountToCents,
   todayIsoDate,
 } from '@settlr/shared/format'
 import { readPreferences } from '#/lib/preferences'
-import { searchHref } from '#/lib/search'
 import {
   LIST_STEP,
   friendExpenseInput,
   friendPaymentInput,
-  listSearchDefaults,
+  friendSearchDefaults,
+  isFiltered,
   type Category,
   type Currency,
   type FriendExpenseInput,
   type FriendPaymentInput,
+  type FriendSearch,
 } from '@settlr/shared/schemas'
 import type { Friend, FriendEntry } from '#/lib/types'
-import { cn } from '#/lib/utils'
 import { api } from '@settlr/backend/convex/_generated/api'
 
+const columns: Array<ExpenseColumn> = [
+  { label: 'Paid by', width: 'w-32', from: 'md', className: 'text-foreground' },
+  { label: 'Split', width: 'w-28', from: '2xl' },
+]
+
 /**
- * A friend and your one-on-one ledger. `limit` is the "show more" size;
- * `tab` is the form the side panel starts on.
+ * A friend and your one-on-one ledger. The ledger's filters, sorting and
+ * length (`search`) live in the URL, like a group's expenses; `search.tab`
+ * is the form the side panel starts on.
  */
-export function FriendView({
-  friendId,
-  limit,
-  tab,
-}: {
-  friendId: string
-  limit: number
-  tab: 'expense' | 'payment'
-}) {
+export function FriendView({ friendId, search }: { friendId: string; search: FriendSearch }) {
+  const { tab, ...filter } = search
   const { data: friend } = useSuspenseQuery(
     convexQuery(api.friends.get, { friendId }),
   )
   const { data: ledger } = useSuspenseQuery(
-    convexQuery(api.friends.entries, { friendId, limit }),
+    convexQuery(api.friends.entries, { friendId, ...filter }),
+  )
+  const { hrefFor, update, clearHref } = useListSearch(
+    `/friends/${friendId}`,
+    search,
+    friendSearchDefaults,
   )
 
   // Deleted while open (here or in another tab).
@@ -172,55 +174,43 @@ export function FriendView({
           </>
         }
       >
-        <Card>
-          <CardHeader>
-            <CardTitle>Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {ledger.items.length === 0 ? (
-              <Empty className="py-8">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Receipt />
-                  </EmptyMedia>
-                  <EmptyTitle>Nothing yet</EmptyTitle>
-                  <EmptyDescription>
-                    Add an expense you shared with {friend.name}.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              // Fixed layout: the data columns share the width equally.
-              <Table className="table-fixed">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="hidden md:table-cell">Date</TableHead>
-                    <TableHead className="hidden lg:table-cell">Details</TableHead>
-                    <TableHead className="text-right">Effect</TableHead>
-                    <TableHead className="w-20">
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ledger.items.map((entry) => (
-                    <EntryRow key={entry.id} entry={entry} friend={friend} />
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-        {ledger.hasMore && (
-          <Link
-            href={searchHref(`/friends/${friendId}`, { limit: limit + LIST_STEP }, listSearchDefaults)}
-            scroll={false}
-            className={cn(buttonVariants({ variant: 'outline' }), 'justify-self-center no-underline')}
-          >
-            Show more
-          </Link>
-        )}
+        <ExpenseSection
+          title="Activity"
+          filters={
+            (ledger.items.length > 0 || isFiltered(filter)) && (
+              <ExpenseFilters
+                value={filter}
+                onChange={update}
+                payers={[
+                  { value: 'me', label: 'You paid' },
+                  { value: 'friend', label: `${friend.name} paid` },
+                ]}
+              />
+            )
+          }
+          empty={
+            ledger.items.length === 0 &&
+            (isFiltered(filter)
+              ? {
+                  icon: <Receipt />,
+                  title: 'No matches',
+                  description: 'Nothing matches these filters.',
+                  clearHref,
+                }
+              : {
+                  icon: <Receipt />,
+                  title: 'Nothing yet',
+                  description: `Add an expense you shared with ${friend.name}.`,
+                })
+          }
+          more={ledger.hasMore && hrefFor({ ...search, limit: search.limit + LIST_STEP })}
+        >
+          <ExpenseTable columns={columns}>
+            {ledger.items.map((entry) => (
+              <EntryRow key={entry.id} entry={entry} friend={friend} />
+            ))}
+          </ExpenseTable>
+        </ExpenseSection>
       </SplitLayout>
     </>
   )
@@ -233,114 +223,77 @@ function EntryRow({ entry, friend }: { entry: FriendEntry; friend: Friend }) {
     success: 'Deleted',
     toastErrors: true,
   })
+  const payer = entry.paidBy === 'me' ? 'You' : friendName
   const title =
     entry.kind === 'expense'
       ? entry.description
       : entry.paidBy === 'me'
         ? `You paid ${friendName}`
         : `${friendName} paid you`
-  const detail =
-    entry.kind === 'expense'
-      ? `${entry.paidBy === 'me' ? 'You' : friendName} paid ${formatMoney(entry.amountCents, entry.currency)} · ${
-          entry.split === 'equal' ? 'split equally' : 'owed in full'
-        }`
-      : (entry.note ?? 'Settle-up payment')
 
   return (
-    <TableRow>
-      <TableCell>
-        <span className="flex items-center gap-3">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted [&_svg]:size-4">
-            {entry.kind === 'payment' ? (
-              <HandCoins className="text-primary" />
-            ) : (
-              <Receipt className="text-muted-foreground" />
-            )}
-          </span>
-          <span className="min-w-0">
-            <span className="flex items-center gap-1">
-              <span className="truncate font-medium" title={title}>
-                {title}
-              </span>
-              {entry.kind === 'expense' && entry.receiptId && (
-                <ReceiptLink source="friend" expenseId={entry.id} />
-              )}
-            </span>
-            <span className="block truncate text-xs text-muted-foreground lg:hidden">
-              <span className="md:hidden">{formatDate(entry.date)} · </span>
-              {detail}
-            </span>
-          </span>
-        </span>
-      </TableCell>
-      <TableCell className="hidden text-muted-foreground md:table-cell">
-        {formatDate(entry.date)}
-      </TableCell>
-      <TableCell className="hidden text-muted-foreground lg:table-cell">
-        <span className="flex items-center gap-2">
-          {entry.kind === 'expense' && (
-            <Badge variant="secondary">{categoryLabel(entry.category)}</Badge>
-          )}
-          <span className="truncate" title={detail}>
-            {detail}
-          </span>
-        </span>
-      </TableCell>
-      <TableCell className="text-right">
-        {entry.kind === 'payment' ? (
-          // The description already says who paid whom.
-          <span className="font-mono font-medium tabular-nums">
-            {formatMoney(entry.amountCents, entry.currency)}
-          </span>
+    <ExpenseRow
+      icon={
+        entry.kind === 'expense' ? (
+          <CategoryIcon category={entry.category} />
         ) : (
-          <span
-            className={cn(
-              'block truncate font-mono font-medium tabular-nums',
-              entry.effectCents > 0 ? 'text-positive' : 'text-destructive',
-            )}
-          >
-            {entry.effectCents > 0 ? `${friendName} owes ` : 'You owe '}
-            {formatMoney(Math.abs(entry.effectCents), entry.currency)}
-          </span>
-        )}
-      </TableCell>
-      <TableCell>
-        <span className="flex justify-end gap-1">
-          <EditDialog
-            label={`Edit ${title}`}
-            title={entry.kind === 'expense' ? 'Edit expense' : 'Edit payment'}
-            description={
+          <IconTile className="text-primary">
+            <HandCoins />
+          </IconTile>
+        )
+      }
+      title={title}
+      receipt={
+        entry.kind === 'expense' &&
+        entry.receiptId && <ReceiptLink source="friend" expenseId={entry.id} />
+      }
+      subtitle={
+        entry.kind === 'expense' ? categoryLabel(entry.category) : (entry.note ?? 'Settle-up payment')
+      }
+      date={entry.date}
+      cells={
+        entry.kind === 'expense'
+          ? [
+              { value: payer, folded: `${payer} paid` },
+              entry.split === 'equal' ? 'Equally' : 'Owed in full',
+            ]
+          : // The title already says who paid whom.
+            []
+      }
+      amount={
+        <>
+          <span>{formatMoney(entry.amountCents, entry.currency)}</span>
+          {entry.kind === 'expense' && (
+            // What it did to the balance: + is owed to you.
+            <SignedAmount
+              cents={entry.effectCents}
+              currency={entry.currency}
+              className="text-xs"
+            />
+          )}
+        </>
+      }
+      actions={
+        <RowActions
+          name={title}
+          edit={{
+            title: entry.kind === 'expense' ? 'Edit expense' : 'Edit payment',
+            description:
               friend.status === 'linked'
                 ? `${friendName} sees this ${entry.kind} too, and will be told about the change.`
-                : undefined
-            }
-          >
-            {(close) =>
+                : undefined,
+            form: (close) =>
               entry.kind === 'expense' ? (
                 <ExpenseForm friend={friend} entry={entry} onSaved={close} />
               ) : (
                 <PaymentForm friend={friend} entry={entry} onSaved={close} />
-              )
-            }
-          </EditDialog>
-          <ConfirmAction
-            title={`Delete “${title}”?`}
-            description="Balances will be updated. This can’t be undone."
-            onConfirm={async () => Boolean(await run({ entryId: entry.id }))}
-            trigger={
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Delete ${title}`}
-                className="text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 />
-              </Button>
-            }
-          />
-        </span>
-      </TableCell>
-    </TableRow>
+              ),
+          }}
+          deleteDescription="Balances will be updated. This can’t be undone."
+          onDelete={async () => Boolean(await run({ entryId: entry.id }))}
+        />
+      }
+    />
   )
 }
 

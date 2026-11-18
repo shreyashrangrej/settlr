@@ -39,7 +39,11 @@ The one-on-one ledger: a union of two kinds.
   `date`.
 
 Both carry `userId`, `friendId` and an optional `mirrorId`. Indexes:
-`by_friendId_and_date`, `by_userId_and_date`.
+`by_friendId_and_date`, `by_friendId_and_amountCents`, `by_userId_and_date`,
+and the `search_description` search index (filterable by `friendId`,
+`category` and `paidBy`) that backs the friend page's search. Payments have
+no description or category, so a search or a category filter leaves them
+out.
 
 ### `friendRequests`
 

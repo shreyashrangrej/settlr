@@ -2,63 +2,34 @@
 
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import Link from 'next/link'
-import { Pencil, Receipt, Search, Trash2 } from 'lucide-react'
+import { Receipt } from 'lucide-react'
 
 import { CategoryIcon } from '#/components/category'
-import { ConfirmAction } from '#/components/confirm-action'
-import { SelectField } from '#/components/form-fields'
+import { ExpenseFilters, useListSearch } from '#/components/expense-filters'
+import {
+  ExpenseRow,
+  ExpenseSection,
+  ExpenseTable,
+  RowActions,
+  type ExpenseColumn,
+} from '#/components/expense-list'
 import { useAction } from '#/components/ledger'
-import { useAppRouter } from '#/components/navigation-progress'
 import { ReceiptLink } from '#/components/receipts'
 import { useGroup } from '#/components/use-group'
-import { Button, buttonVariants } from '#/components/ui/button'
-import { Card, CardContent } from '#/components/ui/card'
+import { categoryLabel, formatMoney, memberName } from '@settlr/shared/format'
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '#/components/ui/empty'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '#/components/ui/input-group'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table'
-import { categoryLabel, formatDate, formatMoney, memberName } from '@settlr/shared/format'
-import {
-  CATEGORIES,
   LIST_STEP,
   expenseSearchDefaults,
+  isFiltered,
   type ExpenseSearch,
 } from '@settlr/shared/schemas'
 import type { Group, GroupExpense } from '#/lib/types'
-import { searchHref } from '#/lib/search'
-import { cn } from '#/lib/utils'
 import { api } from '@settlr/backend/convex/_generated/api'
 
-const categoryOptions = [
-  { value: 'all', label: 'All categories' },
-  ...CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) })),
-] as Array<{ value: ExpenseSearch['category']; label: string }>
-
-const ANYONE = 'anyone'
-
-const sortOptions = [
-  { value: 'date:desc', label: 'Newest first' },
-  { value: 'date:asc', label: 'Oldest first' },
-  { value: 'amount:desc', label: 'Largest first' },
-  { value: 'amount:asc', label: 'Smallest first' },
-] as const
+const columns: Array<ExpenseColumn> = [
+  { label: 'Paid by', width: 'w-32', from: 'md', className: 'text-foreground' },
+  { label: 'Split', width: 'w-28', from: '2xl' },
+]
 
 /**
  * A group's expenses. Filters, sorting and the list length (`search`) live
@@ -69,221 +40,77 @@ export function ExpensesView({ groupId, search }: { groupId: string; search: Exp
   const { data: page } = useSuspenseQuery(
     convexQuery(api.groups.expenses, { groupId, ...search }),
   )
-  const router = useAppRouter()
+  const { hrefFor, update, clearHref } = useListSearch(
+    `/groups/${groupId}`,
+    search,
+    expenseSearchDefaults,
+  )
   if (!group) return null
 
-  const hrefFor = (next: ExpenseSearch) =>
-    searchHref(`/groups/${groupId}`, next, expenseSearchDefaults)
-  // A new filter starts the list from the top again.
-  const setSearch = (patch: Partial<ExpenseSearch>) =>
-    router.replace(hrefFor({ ...search, limit: LIST_STEP, ...patch }), { scroll: false })
+  const filtered = isFiltered(search)
+  const payers = group.members.map((m) => ({
+    value: m.id,
+    label: m.id === group.meMemberId ? 'You paid' : `${m.name} paid`,
+  }))
 
   return (
-    <>
-      <Filters group={group} search={search} onChange={setSearch} />
-
-      <Card>
-        <CardContent>
-          {page.items.length === 0 ? (
-            <Empty className="py-10">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Receipt />
-                </EmptyMedia>
-                <EmptyTitle>
-                  {group.expenseCount === 0 ? 'No expenses yet' : 'No matches'}
-                </EmptyTitle>
-                <EmptyDescription>
-                  {group.expenseCount === 0
-                    ? 'Add the first expense to start splitting.'
-                    : 'No expenses match these filters.'}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            // Fixed layout: the short columns get fixed widths and the
-            // description takes the rest, so long names truncate instead of
-            // pushing the amounts around. The category is its icon and the
-            // line under the description.
-            <Table className="table-fixed">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="hidden w-28 md:table-cell">Date</TableHead>
-                  <TableHead className="hidden w-32 md:table-cell">Paid by</TableHead>
-                  <TableHead className="hidden w-28 2xl:table-cell">Split</TableHead>
-                  <TableHead className="w-32 text-right">Amount</TableHead>
-                  <TableHead className="w-20">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {page.items.map((expense) => (
-                  <ExpenseRow key={expense.id} group={group} expense={expense} />
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {page.hasMore && (
-        <Link
-          href={hrefFor({ ...search, limit: search.limit + LIST_STEP })}
-          scroll={false}
-          className={cn(buttonVariants({ variant: 'outline' }), 'justify-self-center no-underline')}
-        >
-          Show more
-        </Link>
-      )}
-    </>
-  )
-}
-
-function Filters({
-  group,
-  search,
-  onChange,
-}: {
-  group: Group
-  search: ExpenseSearch
-  onChange: (patch: Partial<ExpenseSearch>) => void
-}) {
-  // Base UI treats an empty value as "nothing selected", so "anyone" (an
-  // empty `paidBy` in the URL) gets its own value here.
-  const payerOptions = [
-    { value: ANYONE, label: 'Anyone paid' },
-    ...group.members.map((m) => ({
-      value: m.id,
-      label: m.id === group.meMemberId ? 'You paid' : `${m.name} paid`,
-    })),
-  ]
-
-  return (
-    <form
-      role="search"
-      className="grid gap-2 sm:grid-cols-3 xl:grid-cols-[minmax(12rem,2fr)_repeat(3,minmax(8rem,1fr))]"
-      onSubmit={(event) => {
-        event.preventDefault()
-        const q = new FormData(event.currentTarget).get('q')
-        onChange({ q: typeof q === 'string' ? q.trim() : '' })
-      }}
+    <ExpenseSection
+      filters={
+        group.expenseCount > 0 && (
+          <ExpenseFilters value={search} onChange={update} payers={payers} />
+        )
+      }
+      empty={
+        page.items.length === 0 &&
+        (filtered
+          ? {
+              icon: <Receipt />,
+              title: 'No matches',
+              description: 'No expenses match these filters.',
+              clearHref,
+            }
+          : {
+              icon: <Receipt />,
+              title: 'No expenses yet',
+              description: 'Add the first expense to start splitting.',
+            })
+      }
+      more={page.hasMore && hrefFor({ ...search, limit: search.limit + LIST_STEP })}
     >
-      <InputGroup className="sm:col-span-3 xl:col-span-1">
-        <InputGroupAddon>
-          <Search />
-        </InputGroupAddon>
-        <InputGroupInput
-          // Keyed on the URL value so back/forward navigation resets the input.
-          key={search.q}
-          type="search"
-          name="q"
-          placeholder="Search expenses"
-          aria-label="Search expenses"
-          defaultValue={search.q}
-        />
-      </InputGroup>
-      <SelectField
-        aria-label="Category"
-        value={search.category}
-        onChange={(category) => onChange({ category })}
-        options={categoryOptions}
-      />
-      <SelectField
-        aria-label="Paid by"
-        value={search.paidBy || ANYONE}
-        onChange={(paidBy) => onChange({ paidBy: paidBy === ANYONE ? '' : paidBy })}
-        options={payerOptions}
-      />
-      <SelectField
-        aria-label="Sort"
-        value={`${search.sort}:${search.order}` as (typeof sortOptions)[number]['value']}
-        onChange={(value) => {
-          const [sort, order] = value.split(':') as [
-            ExpenseSearch['sort'],
-            ExpenseSearch['order'],
-          ]
-          onChange({ sort, order })
-        }}
-        options={[...sortOptions]}
-      />
-    </form>
+      <ExpenseTable columns={columns}>
+        {page.items.map((expense) => (
+          <GroupExpenseRow key={expense.id} group={group} expense={expense} />
+        ))}
+      </ExpenseTable>
+    </ExpenseSection>
   )
 }
 
-function ExpenseRow({ group, expense }: { group: Group; expense: GroupExpense }) {
+function GroupExpenseRow({ group, expense }: { group: Group; expense: GroupExpense }) {
   const removeExpense = useConvexMutation(api.groups.removeExpense)
   const { run } = useAction(removeExpense, { success: 'Deleted', toastErrors: true })
   const splitCount = expense.splitAmong.length
   const payer =
-    expense.paidBy === group.meMemberId
-      ? 'You'
-      : memberName(group.members, expense.paidBy)
-
-  const split =
-    splitCount === group.members.length ? 'Everyone' : `${splitCount} people`
+    expense.paidBy === group.meMemberId ? 'You' : memberName(group.members, expense.paidBy)
+  const split = splitCount === group.members.length ? 'Everyone' : `${splitCount} people`
 
   return (
-    <TableRow>
-      <TableCell className="font-medium">
-        <span className="flex items-center gap-3">
-          <CategoryIcon category={expense.category} />
-          <span className="grid min-w-0">
-            <span className="flex items-center gap-1">
-              <span className="truncate" title={expense.description}>
-                {expense.description}
-              </span>
-              {expense.receiptId && <ReceiptLink source="group" expenseId={expense.id} />}
-            </span>
-            <span className="truncate text-xs font-normal text-muted-foreground">
-              {categoryLabel(expense.category)}
-              <span className="md:hidden">
-                {' '}
-                · {formatDate(expense.date)} · {payer} paid · {split}
-              </span>
-            </span>
-          </span>
-        </span>
-      </TableCell>
-      <TableCell className="hidden text-muted-foreground md:table-cell">
-        {formatDate(expense.date)}
-      </TableCell>
-      <TableCell className="hidden truncate md:table-cell">{payer}</TableCell>
-      <TableCell className="hidden text-muted-foreground 2xl:table-cell">{split}</TableCell>
-      <TableCell className="text-right font-mono font-medium tabular-nums">
-        {formatMoney(expense.amountCents, group.currency)}
-      </TableCell>
-      <TableCell>
-        <span className="flex justify-end gap-1">
-          <Link
-            href={`/groups/${group.id}/expenses/${expense.id}/edit`}
-            aria-label={`Edit ${expense.description}`}
-            title="Edit"
-            className={cn(
-              buttonVariants({ variant: 'ghost', size: 'icon-sm' }),
-              'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Pencil />
-          </Link>
-          <ConfirmAction
-            title={`Delete “${expense.description}”?`}
-            description="Balances will be updated. This can’t be undone."
-            onConfirm={async () => Boolean(await run({ expenseId: expense.id }))}
-            trigger={
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Delete ${expense.description}`}
-                className="text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 />
-              </Button>
-            }
-          />
-        </span>
-      </TableCell>
-    </TableRow>
+    <ExpenseRow
+      icon={<CategoryIcon category={expense.category} />}
+      title={expense.description}
+      receipt={expense.receiptId && <ReceiptLink source="group" expenseId={expense.id} />}
+      subtitle={categoryLabel(expense.category)}
+      date={expense.date}
+      cells={[{ value: payer, folded: `${payer} paid` }, split]}
+      amount={formatMoney(expense.amountCents, group.currency)}
+      actions={
+        <RowActions
+          name={expense.description}
+          edit={{ href: `/groups/${group.id}/expenses/${expense.id}/edit` }}
+          deleteDescription="Balances will be updated. This can’t be undone."
+          onDelete={async () => Boolean(await run({ expenseId: expense.id }))}
+        />
+      }
+    />
   )
 }

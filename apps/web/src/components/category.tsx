@@ -23,6 +23,30 @@ export const CATEGORY_STYLE: Record<Category, { icon: LucideIcon; color: string 
   other: { icon: Receipt, color: '#A0A2AB' },
 }
 
+/** An icon in the small tile that starts a list row. */
+export function IconTile({
+  className,
+  style,
+  children,
+}: {
+  className?: string
+  style?: React.CSSProperties
+  children: React.ReactNode
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'grid size-8.5 shrink-0 place-items-center rounded-[10px] bg-tile [&_svg]:size-4',
+        className,
+      )}
+      style={style}
+    >
+      {children}
+    </span>
+  )
+}
+
 /** A category's icon in a small tile. */
 export function CategoryIcon({
   category,
@@ -33,16 +57,9 @@ export function CategoryIcon({
 }) {
   const { icon: Icon, color } = CATEGORY_STYLE[category]
   return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        'grid size-8.5 shrink-0 place-items-center rounded-[10px] bg-tile [&_svg]:size-4',
-        className,
-      )}
-      style={{ color }}
-    >
+    <IconTile className={className} style={{ color }}>
       <Icon />
-    </span>
+    </IconTile>
   )
 }
 

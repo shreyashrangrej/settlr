@@ -72,7 +72,13 @@ export default defineSchema({
     ),
   )
     .index('by_friendId_and_date', ['friendId', 'date'])
-    .index('by_userId_and_date', ['userId', 'date']),
+    .index('by_friendId_and_amountCents', ['friendId', 'amountCents'])
+    .index('by_userId_and_date', ['userId', 'date'])
+    // Only expenses have a description, so a text search finds no payments.
+    .searchIndex('search_description', {
+      searchField: 'description',
+      filterFields: ['friendId', 'category', 'paidBy'],
+    }),
 
   // Sent from a friend row that has an email. Matched to the recipient by
   // email, so it waits for them even if they haven't signed up yet.

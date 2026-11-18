@@ -77,19 +77,72 @@ export const get = query({
   },
 })
 
-/** The one-on-one ledger with a friend, newest first. */
+/**
+ * The one-on-one ledger with a friend, filtered and sorted like a group's
+ * expenses, as a "show more" list: up to `limit` rows and whether there are
+ * more. Payments have no category or description, so a category or a
+ * search leaves them out.
+ */
 export const entries = query({
-  args: { friendId: v.string(), limit: v.number() },
+  args: {
+    friendId: v.string(),
+    q: v.string(),
+    category: v.union(v.literal('all'), category),
+    paidBy: v.union(v.literal(''), paidBy),
+    sort: v.union(v.literal('date'), v.literal('amount')),
+    order: v.union(v.literal('desc'), v.literal('asc')),
+    limit: v.number(),
+  },
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx)
     const friend = await findFriend(ctx, userId, args.friendId)
     if (!friend) return { items: [], hasMore: false }
     const limit = input.listLimit(args.limit)
-    const rows = await ctx.db
-      .query('friendEntries')
-      .withIndex('by_friendId_and_date', (q) => q.eq('friendId', friend._id))
-      .order('desc')
-      .take(limit + 1)
+    const q = args.q.trim().slice(0, 100)
+
+    let rows: Array<Doc<'friendEntries'>>
+    if (q) {
+      // Text search ranks by relevance; the requested sort is applied to
+      // the matches that come back.
+      rows = await ctx.db
+        .query('friendEntries')
+        .withSearchIndex('search_description', (s) => {
+          let search = s.search('description', q).eq('friendId', friend._id)
+          if (args.category !== 'all') search = search.eq('category', args.category)
+          if (args.paidBy) search = search.eq('paidBy', args.paidBy)
+          return search
+        })
+        .take(limit + 1)
+      const dir = args.order === 'asc' ? 1 : -1
+      rows.sort((a, b) =>
+        args.sort === 'amount'
+          ? (a.amountCents - b.amountCents) * dir
+          : a.date.localeCompare(b.date) * dir,
+      )
+    } else {
+      const indexed =
+        args.sort === 'amount'
+          ? ctx.db
+              .query('friendEntries')
+              .withIndex('by_friendId_and_amountCents', (i) =>
+                i.eq('friendId', friend._id),
+              )
+          : ctx.db
+              .query('friendEntries')
+              .withIndex('by_friendId_and_date', (i) => i.eq('friendId', friend._id))
+      rows = await indexed
+        .order(args.order)
+        .filter((f) =>
+          f.and(
+            args.category === 'all'
+              ? true
+              : f.eq(f.field('category'), args.category),
+            args.paidBy ? f.eq(f.field('paidBy'), args.paidBy) : true,
+          ),
+        )
+        .take(limit + 1)
+    }
+
     return {
       items: rows
         .slice(0, limit)

@@ -43,18 +43,13 @@ const limit = z.coerce
 
 // --- Search params --------------------------------------------------------
 
-export const expenseSearchDefaults = {
-  q: '',
-  category: 'all',
-  paidBy: '',
-  sort: 'date',
-  order: 'desc',
-  limit: LIST_STEP,
-} as const
-
 // Every field has a default and a catch, so a hand-edited or stale URL never
 // throws: invalid values quietly fall back to the default.
-export const expenseSearchSchema = z.object({
+
+// The filters every expense list has (group, friend and personal): a text
+// search, a category, and the sort. `paidBy` is a group member id, or 'me'
+// / 'friend' on a friend's page; empty means anyone.
+const expenseFilterFields = {
   q: z.string().trim().max(100).default('').catch(''),
   category: z
     .enum(['all', ...CATEGORIES])
@@ -63,18 +58,36 @@ export const expenseSearchSchema = z.object({
   paidBy: z.string().max(64).default('').catch(''),
   sort: z.enum(EXPENSE_SORTS).default('date').catch('date'),
   order: z.enum(SORT_ORDERS).default('desc').catch('desc'),
-  limit,
-})
+}
+
+export const expenseFilterDefaults = {
+  q: '',
+  category: 'all',
+  paidBy: '',
+  sort: 'date',
+  order: 'desc',
+} as const
+export const expenseFilterSchema = z.object(expenseFilterFields)
+export type ExpenseFilter = z.infer<typeof expenseFilterSchema>
+
+/** True when `filter` narrows the list (sorting doesn't). */
+export function isFiltered(filter: Pick<ExpenseFilter, 'q' | 'category' | 'paidBy'>) {
+  return filter.q !== '' || filter.category !== 'all' || filter.paidBy !== ''
+}
+
+// A group's expenses: the filters plus the "show more" length.
+export const expenseSearchDefaults = { ...expenseFilterDefaults, limit: LIST_STEP } as const
+export const expenseSearchSchema = expenseFilterSchema.extend({ limit })
 export type ExpenseSearch = z.infer<typeof expenseSearchSchema>
 
-export const listSearchDefaults = { limit: LIST_STEP } as const
-export const listSearchSchema = z.object({ limit })
-
-// A friend's page: the ledger's length, and which form the side panel opens
-// on (the dashboard's "Settle" buttons link to `?tab=payment`).
-export const friendSearchSchema = listSearchSchema.extend({
+// A friend's page: the ledger's filters and length, and which form the side
+// panel opens on (the dashboard's "Settle" buttons link to `?tab=payment`).
+export const friendSearchDefaults = { ...expenseSearchDefaults, tab: 'expense' } as const
+export const friendSearchSchema = expenseSearchSchema.extend({
+  paidBy: z.enum(['', 'me', 'friend']).default('').catch(''),
   tab: z.enum(['expense', 'payment']).default('expense').catch('expense'),
 })
+export type FriendSearch = z.infer<typeof friendSearchSchema>
 
 // An empty month means "the current month".
 export const monthSearchDefaults = { month: '' } as const
@@ -86,6 +99,12 @@ export const monthSearchSchema = z.object({
     .default('')
     .catch(''),
 })
+
+// Personal expenses: one month, with the same filters (everything there is
+// paid by you, so `paidBy` stays empty).
+export const personalSearchDefaults = { ...monthSearchDefaults, ...expenseFilterDefaults } as const
+export const personalSearchSchema = monthSearchSchema.extend(expenseFilterFields)
+export type PersonalSearch = z.infer<typeof personalSearchSchema>
 
 // --- Connecting an MCP client (/connect) -----------------------------------
 // The OAuth parameters the page reads; it passes the whole query on as is.

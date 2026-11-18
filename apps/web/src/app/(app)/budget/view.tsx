@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { PiggyBank, User, Users, UsersRound, Wallet } from 'lucide-react'
 
 import { BudgetCard, type Spending } from '#/components/budget'
+import { IconTile } from '#/components/category'
 import { MonthNav } from '#/components/month-nav'
 import { PageHeader, SplitLayout } from '#/components/page-header'
 import { StatCard, StatGrid } from '#/components/stat-card'
@@ -127,12 +128,7 @@ export function BudgetView({
                         <TableRow key={`${row.currency}:${source.key}`}>
                           <TableCell className="font-medium">
                             <span className="flex items-center gap-3">
-                              <span
-                                aria-hidden="true"
-                                className="grid size-8.5 shrink-0 place-items-center rounded-[10px] bg-tile text-primary [&_svg]:size-4"
-                              >
-                                {source.icon}
-                              </span>
+                              <IconTile className="text-primary">{source.icon}</IconTile>
                               <span className="grid min-w-0">
                                 <Link
                                   href={source.to}
