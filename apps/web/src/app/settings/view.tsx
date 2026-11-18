@@ -144,7 +144,7 @@ function Connections() {
         {apps.map((app) => (
           <li
             key={app.clientId}
-            className="flex items-center justify-between gap-3 rounded-2xl bg-tile px-4 py-2.5"
+            className="flex items-center justify-between gap-3 rounded-lg bg-tile px-4 py-2.5"
           >
             <span className="min-w-0 truncate text-sm font-medium">{app.name}</span>
             <ConfirmAction

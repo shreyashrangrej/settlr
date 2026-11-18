@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Text } from '@/components/text'
-import { space, useColors } from '@/theme'
+import { radius, space, useColors } from '@/theme'
 
 /** A tab's page: the 22px title row from the mocks, then scrolling content. */
 export function Screen({
@@ -31,7 +31,7 @@ export function Screen({
               {subtitle}
             </Text>
           ) : null}
-          <Text size={22} weight={600} style={styles.title}>
+          <Text size={21} weight={600} style={styles.title}>
             {title}
           </Text>
         </View>
@@ -66,9 +66,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   titles: { flex: 1, gap: 2 },
-  title: { letterSpacing: -0.66 },
+  title: {},
   card: {
-    borderRadius: 20,
+    borderRadius: radius.card,
     borderWidth: 1,
     padding: 16,
     gap: 8,

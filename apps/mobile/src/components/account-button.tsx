@@ -38,7 +38,7 @@ export function AccountAvatar({ open, onPress }: { open: boolean; onPress: () =>
       style={styles.hit}
     >
       <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
-        <Text size={13} weight={700} style={{ color: colors.onAccent }}>
+        <Text size={13} weight={500} style={{ color: colors.onAccent }}>
           {initials(name, email)}
         </Text>
       </View>
@@ -68,7 +68,7 @@ export function AccountCard() {
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.who}>
-        <Text weight={600}>{name || 'No name yet'}</Text>
+        <Text weight={500}>{name || 'No name yet'}</Text>
         <Text size={13} color="muted">
           {email}
         </Text>

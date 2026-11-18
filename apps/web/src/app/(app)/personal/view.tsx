@@ -196,7 +196,7 @@ function ByCategory({ data }: { data: PersonalMonth }) {
           data.byCategory.map((row) => (
             <Progress key={`${row.currency}:${row.category}`} value={(row.cents / max) * 100}>
               <ProgressLabel className="text-sm">{categoryLabel(row.category)}</ProgressLabel>
-              <ProgressValue className="ml-auto text-sm font-mono font-medium tabular-nums">
+              <ProgressValue className="ml-auto text-sm font-medium tabular-nums">
                 {() => formatMoney(row.cents, row.currency)}
               </ProgressValue>
             </Progress>

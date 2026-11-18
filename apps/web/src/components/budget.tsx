@@ -54,14 +54,15 @@ export function budgetStatus(spentCents: number, budgetCents: number) {
 
 const barTone = {
   ok: 'bg-primary',
-  warn: 'bg-[#F2C14E]',
+  warn: 'bg-amber-500',
   over: 'bg-destructive',
 } as const
 
 const badgeTone = {
-  ok: 'bg-primary/12 text-primary',
-  warn: 'bg-[#F2C14E]/15 text-[#9A6B00] dark:text-[#F2C14E]',
-  over: 'bg-destructive/12 text-destructive',
+  // T3 Code's tinted badges: info, warning and error.
+  ok: 'bg-primary/8 text-primary dark:bg-primary/16',
+  warn: 'bg-amber-500/8 text-amber-700 dark:bg-amber-500/16 dark:text-amber-400',
+  over: 'bg-destructive/8 text-destructive dark:bg-destructive/16',
 } as const
 
 /**
@@ -194,7 +195,7 @@ function BudgetProgress({
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between gap-2">
-        <span className={cn('rounded-full px-2.25 py-1 text-xs font-semibold', badgeTone[status.tone])}>
+        <span className={cn('rounded-sm px-1.5 py-0.5 text-xs font-medium', badgeTone[status.tone])}>
           {status.label}
         </span>
         <BudgetDialog
@@ -214,7 +215,7 @@ function BudgetProgress({
         />
       </div>
       <p className="text-sm">
-        <span className="font-mono text-[1.375rem] font-medium tracking-[-0.03em] tabular-nums">
+        <span className="text-[1.375rem] font-medium tracking-[-0.02em] tabular-nums">
           {money(spentCents)}
         </span>{' '}
         <span className="text-muted-foreground">of {money(budget.amountCents)}</span>
@@ -225,7 +226,7 @@ function BudgetProgress({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(Math.min(status.ratio, 1) * 100)}
-        className="h-1.5 overflow-hidden rounded-full bg-segment"
+        className="h-1.5 overflow-hidden rounded-full bg-track"
       >
         <div
           className={cn('h-full rounded-full transition-[width] duration-500', barTone[status.tone])}

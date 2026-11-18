@@ -82,23 +82,26 @@ Actions.
 | Path | Contents |
 | --- | --- |
 | `src/app/` | Expo Router routes. `_layout.tsx` loads the fonts, wraps everything in the Convex and Better Auth provider and guards the signed-in routes; `(tabs)/` holds the five tabs, `sign-in.tsx` and `verify.tsx` the signed-out screens |
-| `src/components/` | `Text` (Geist or Geist Mono, coloured from the theme), `Button`, `Screen` (a tab's page), `AuthScreen` (the signed-out frame), `TabBar`, `Brand`, line `icons`, and the temporary account button on Home |
-| `src/theme/` | Tokens from `design/DESIGN.md` for dark and light (`tokens.ts`), and `useColors()` |
+| `src/components/` | `Text` (DM Sans, coloured from the theme), `Button`, `Screen` (a tab's page), `AuthScreen` (the signed-out frame), `TabBar`, `Brand`, `icons` (Lucide, from `lucide-react-native`), and the temporary account button on Home |
+| `src/theme/` | Tokens from `design/DESIGN.md` (T3 Code's mobile palette, radii and type roles) for dark and light (`tokens.ts`), and `useColors()` |
 | `src/lib/` | The Convex client (`convex.ts`) and Better Auth (`auth-client.ts`: the client and the sign-in actions) |
 
 Imports use the `@/` alias for `apps/mobile/src`.
 
 ## Conventions
 
-- **Design**: the Android mockups in `design/screens/android/` are the
+- **Design**: the look is T3 Code's mobile design system (see
+  `design/DESIGN.md`): pill buttons, 16px fields, 20px cards, a 16px
+  gutter. The Android mockups in `design/screens/android/` are the layout
   reference. The app follows the phone's light or dark setting
   (`useColors()`); dark is the reference theme. Style with `StyleSheet`
   and theme tokens, not hex values (the fixed group and avatar fills
   excepted).
 - **Text**: use `<Text>` from `@/components/text`, not React Native's.
-  Android ignores `fontWeight` for custom fonts, so `Text` picks the Geist
-  family for each weight (`weight={600}`); `mono` switches to Geist Mono
-  with tabular figures for amounts.
+  Android ignores `fontWeight` for custom fonts, so `Text` picks the DM Sans
+  family for each weight (`weight={600}`); `tabular` turns on tabular
+  figures for amounts. Sizes follow T3's roles in `textRoles` (16 for body;
+  11, 12, 13, 14, 18, 21, 26, 30), and semibold is for headings only.
 - **Tabs**: the bottom bar is `TabBar`, a flat bar with a 3 px accent
   line over the active tab. A new tab needs a route in `src/app/(tabs)/`
   and an entry in `TABS` in `tab-bar.tsx`.

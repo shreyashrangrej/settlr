@@ -23,7 +23,7 @@ import { formatDate, formatMoney, memberName, parseAmountToCents, todayIsoDate }
 import type { Group } from '#/lib/types'
 import { api } from '@settlr/backend/convex/_generated/api'
 
-const label = 'text-[0.8125rem] font-medium text-muted-foreground'
+const label = 'text-sm font-medium text-foreground'
 
 /**
  * A button that opens a form for recording a settle-up payment between two
@@ -150,7 +150,7 @@ function PaymentForm({
           <DatePicker id="pay-date" value={date} onChange={setDate} />
         </div>
       </div>
-      {error && <p className="text-[0.8125rem] text-destructive">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
       <DialogFooter>
         <Button type="submit" size="lg" disabled={pending}>
           {pending && <Spinner />}
@@ -173,7 +173,7 @@ export function RecentPayments({ group }: { group: Group }) {
 
   return (
     <div className="grid gap-2">
-      <h3 className="m-0 text-sm font-semibold">Recent payments</h3>
+      <h3 className="m-0 text-sm font-medium">Recent payments</h3>
       <ul className="grid">
         {payments.map((p) => {
           const summary = `${name(p.from)} paid ${p.to === group.meMemberId ? 'you' : name(p.to)}`
@@ -186,7 +186,7 @@ export function RecentPayments({ group }: { group: Group }) {
                 <span className="truncate">{summary}</span>
                 <span className="text-xs text-muted-foreground">{formatDate(p.date)}</span>
               </span>
-              <span className="font-mono font-medium tabular-nums">
+              <span className="font-medium tabular-nums">
                 {formatMoney(p.amountCents, group.currency)}
               </span>
               <ConfirmAction

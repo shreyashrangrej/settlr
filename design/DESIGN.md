@@ -1,7 +1,11 @@
 # Settlr — design spec
 
 Settlr is an app for splitting shared expenses: groups, balances, settling up, and an AI assistant that adds, edits and deletes expenses through chat.
-The screens in `screens/` are the source of truth for layout and styling. Open them in a browser to see them; match their spacing, sizes and colours exactly. They are static mockups: the data in them is sample data.
+The screens in `screens/` are static mockups for layout and content (the data in them is sample data); the look follows the design system below.
+
+## Design system: T3 Code
+
+Settlr uses [T3 Code](https://github.com/pingdotgg/t3code)'s design system: its palette, type, shapes, spacing, component styles and icons (the web values come from T3 Code's `apps/web/src/index.css` and `components/ui`, the mobile ones from its `apps/mobile`). The mockups in `screens/` predate it: use them for **layout and content** (what goes on each screen, in what order), and this file for how things look. Where they disagree, this file wins.
 
 ## Screens
 
@@ -15,65 +19,73 @@ The screens in `screens/` are the source of truth for layout and styling. Open t
 | `screens/mobile-assistant.html` | Mobile AI assistant | 390 × 844 |
 | `screens/android/*.html` | Android app: home (and `home-light`), groups, group, add-expense, settle-up, friends, friend, personal, budget, assistant, notifications, sign-in | 412 × 915 |
 
-The Android screens are the reference for `apps/mobile`. They supersede the `mobile-*` mockups' styling: no gradients or glows, no pill shapes (buttons and inputs 12–13 px radius, chips 8 px, FAB a 16 px rounded square, progress bars 1–2 px radius), a flat bottom navigation bar (Home, Groups, Friends, Personal, Assistant) with a 3 px accent bar over the active tab, and the signed-in user's avatar as a solid accent fill. Category tiles are `surface-2` with the icon in the category colour. Groups show their initial on their colour tile.
+The Android screens are the layout reference for `apps/mobile` (a flat bottom navigation bar with Home, Groups, Friends, Personal, Assistant; group initials on their colour tile).
 
-## Design tokens
+## Colour
 
-### Colour (dark theme only)
+Dark is the default and the reference; light is T3 Code's light appearance. Separation comes from hairline borders, not grey fills.
 
-| Token | Value | Use |
-|---|---|---|
-| `bg` | `#0C0D10` | Page background |
-| `bg-sidebar` | `#111216` | Sidebars, side panels |
-| `surface` | `#16171C` | Cards |
-| `surface-2` | `#1D1F25` | Inner tiles, user chat bubbles, active nav item |
-| `input` | `#0F1014` | Input fields, segmented-control track |
-| `border` | `#24262D` | Card borders |
-| `border-strong` | `#2A2C33` / `#33353D` | Inputs, outline buttons |
-| `divider` | `#22242A` | Row separators |
-| `text` | `#F2F2EE` | Primary text |
-| `text-2` | `#D6D7DC` / `#B9BBC3` | Secondary text |
-| `muted` | `#A0A2AB` | Labels, captions (min contrast on surface ≈ 7:1) |
-| `faint` | `#8A8D96` | Placeholders, table headers |
-| `accent` | `#B18CFF` | Brand violet: primary buttons, active states, links on hover, chart line |
-| `accent-tint` | `rgba(177,140,255,0.12)` | Selected chips, pills |
-| `accent-surface` | `#1B1726` + border `#3D2F63` | Highlight cards ("Clear what you owe", assistant avatar) |
-| `owed` | `#7CB8FF` | Money owed **to** the user (positive) |
-| `owe` | `#FF9B6A` | Money the user **owes** (negative) |
-| `danger-surface` | border `#5A3626`, fill `rgba(255,155,106,0.08)` | Pending deletes |
+### Web (`apps/web/src/styles.css`)
 
-Text on `accent` and on group/category colour fills is `#0C0D10` (dark), never white.
+| Token | Dark | Light | Use |
+|---|---|---|---|
+| `bg` | `#000` | `oklch(99.2% 0 0)` (zinc-25) | Page |
+| `bg-sidebar` | `#000` | zinc-50 | Sidebar |
+| `surface` (`card`, `popover`) | neutral-950 + 3% white (`#111`) | white | Cards, menus, dialogs |
+| `surface-2` (`tile`, `muted`, `accent`) | white 5% | zinc-100 | Inner tiles, hover fills |
+| `field` | white 3.5% | zinc-25 | Inputs, segmented-control track |
+| `border` | white 8% | zinc-200 | Card and row borders |
+| `border-strong` (`input`) | white 11% | zinc-300 | Input and outline-button borders |
+| `divider` | white 6% | zinc-200 at 60% | Row separators |
+| `text` | neutral-100 | zinc-900 | Text |
+| `muted` | neutral-400 | zinc-500 | Descriptions, labels |
+| `faint` | `#8f8f8f` | zinc-500 | Row metadata (T3's secondary label) |
+| `accent` (`primary`) | `oklch(0.571 0.21 264)` | `oklch(0.488 0.217 264)` | Primary buttons, links, focus rings, selection |
+| `accent-surface` / `accent-border` | primary 9% / 32% | primary 5% / 28% | Highlight cards |
+| `owed` (`positive`) | emerald-400 | emerald-700 | Money owed **to** the user (T3's success) |
+| `owe` (`destructive`) | red-500 + 10% white | red-600 | Money the user **owes**, destructive actions (T3's error) |
+| `track` | white 11% | zinc-200 | Progress tracks, timeline rails |
 
-Group colours: Coorg `#5FD3A0`, Flat 4B `#F28DB2`, Office Lunch `#F2C14E`.
-Avatar fills (initials in light text): `#2B3A55`, `#4D4326`, `#23463A`, `#55332A`, `#37305A`. The signed-in user's avatar is `linear-gradient(135deg, #B18CFF, #7CB8FF)` with dark text.
+Warnings use Tailwind's amber (T3's warning). Tinted badges and callouts are the colour at 8% (light) / 16% (dark) behind it, with a 32% border where there is one.
 
-**Money rule:** blue = owed to you, orange = you owe. Always pair the colour with a word ("owes you", "you owe") or a sign (+/−) so it never relies on colour alone.
+Category colours, group fills and avatar hues are Tailwind's 400 shades: orange, pink, blue, emerald, amber, violet, rose, neutral. Avatars and category tiles use T3's label tint (the colour at 14% over the surface, the glyph mixed 78% with the text colour); group tiles are a solid fill with dark text (`on-fill`).
 
-### Typography
+**Money rule:** green = owed to you, red = you owe. Always pair the colour with a word ("owes you", "you owe") or a sign (+/−) so it never relies on colour alone.
 
-- UI font: **Geist** (400/500/600/700), fallback `'Helvetica Neue', sans-serif`.
-- Numbers and amounts: **Geist Mono** (400/500/600), fallback `ui-monospace, monospace`.
-- Google Fonts: `https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap`
-- Hero balance: 60 px (web) / 46 px (mobile), weight 600, letter-spacing −0.055em; decimals at half size in `#6E717B`.
-- Page title: 30 px / 600 / −0.04em. Card titles: 16 px / 600 / −0.02em. Body 14 px. Captions 12–13 px. Uppercase section labels: 11 px / 600 / letter-spacing 0.1em.
-- Currency: Indian rupee, Indian digit grouping (`₹1,860`, `₹42,000`). Use `−` (U+2212) for negatives.
+### Android (`apps/mobile/src/theme/tokens.ts`)
 
-### Shape and spacing
+T3 Code's mobile palette: dark screen `#0A0A0A`, cards `#111111`, grouped cards `#1A1B1B`, borders `#191919`, text `#F5F5F5`, muted `#838383`, primary `#346BF1`, danger `#FF6467`; light screen `#FCFCFC`, cards white, borders `#E4E4E7`, text `#27272A`, muted `#6F6F79`, primary `#1B4ED8`, danger `#C10007`. Owed is emerald, as on the web.
 
-- Radii: cards 22 px, inner tiles 14–18 px, inputs and buttons 10–14 px, pills 99 px, mobile nav bar 33 px.
-- Card padding 20–24 px. Grid gap between cards 18 px. Row padding 12 px vertical.
-- Minimum touch target 44 × 44 px.
-- Web layout: sidebar (~232 px) plus content in a max-width 1220 px container. Cards sit in flex-wrap rows so they stack on narrow screens.
+## Typography
 
-## Components (as used in the screens)
+- Web UI font: the system UI font on Apple devices (`-apple-system`), **Inter** elsewhere, then Segoe UI and `system-ui`. Code-like text (URLs, codes) uses the system monospace (`ui-monospace`, SF Mono, Menlo, Consolas). Amounts are in the UI font with tabular figures (`tabular-nums`), not a monospace.
+- Android: **DM Sans** (400/500/600/700), T3 Code's mobile face; amounts use tabular figures.
+- Web sizes (T3 Code's): body and controls 14 px (`text-sm`; 16 px below `sm` so iOS doesn't zoom), descriptions and metadata 12 px (`text-xs`), dense labels 11/10 px (`text-2xs`/`text-3xs`). Page titles and dialog titles 20 px, card and section titles 16 px, all semibold. Large figures: the hero balance 36–48 px, stat values 24 px.
+- Android sizes (T3's mobile roles): 11, 12, 13, 14, 16 (body), 18, 21 (screen title), 26, 30.
+- Weights: **semibold (600) only for headings and large figures**; medium (500) for buttons, labels, row titles, badges and nav items; regular for body. No uppercase or letter-spaced labels; tracking is default except a slight negative tracking on large figures.
+- Currency: Indian digit grouping for INR (`₹1,860`, `₹42,000`). Use `−` (U+2212) for negatives.
 
-- **Buttons:** primary = accent fill, dark text; secondary = transparent with `border-strong`; "Settle" = `#F2F2EE` fill with dark text; destructive confirm = `owe` fill with dark text.
-- **Segmented control:** `input` track with 1 px border, active segment `#2A2C33`.
-- **Chips / toggles:** pill, `aria-pressed`; selected = accent border + accent-tint fill + accent text.
-- **Balance row:** avatar, name + group(s), age pill (e.g. "19 days", orange tint once overdue), amount label + amount, action button (Remind / Settle).
-- **Group card:** colour icon tile, member avatar stack, budget progress bar (6 px), balance line.
-- **Charts:** net-balance area chart (accent line, 10 % accent fill, dashed zero line); spending donut with legend and values.
-- **Mobile nav:** floating pill bar with Home, Groups, a central accent "Add" button, Activity, Insights.
+## Shape and spacing
+
+- Web radii (8 px base): buttons, inputs, menus, tiles 8 px (`rounded-lg`); small buttons and menu items 4–6 px; badges 4 px (`rounded-sm`); cards 12 px (`rounded-xl`); dialogs 16 px (`rounded-2xl`); chips and the account avatar are round.
+- Web controls: 32 px tall from `sm` (36 px below), small 28 px, large 36 px; on touch screens every button has a 44 × 44 px hit area.
+- Web spacing: page padding 20 px (24 px from `sm`), 24 px from the page header to the content, 16 px between cards, 16 px inside cards. Sidebar rows are 32 px.
+- Android: buttons and chips are pills (48 px / 40 px tall), fields 16 px radius and 54 px tall, cards 20 px, 16 px screen gutter and 16 px between sections.
+- Shadows: a faint `shadow-xs` under cards and controls, a 1 px inner highlight on filled buttons, soft long drops under menus and dialogs. No glows or gradients.
+
+## Components
+
+- **Buttons:** primary = blue fill, white text, inner highlight; outline = `input` border on the popover colour; ghost = no border, accent fill on hover; "Settle" (`contrast`) = the text colour as a fill; destructive = red fill. Pressing scales to 97%.
+- **Fields:** 8 px, `input` border, faint fill in dark, a 3 px inset ring of the primary at 24% on focus.
+- **Segmented control (`Tabs`):** a tinted track (`input` at 40% / `field`), active segment white (light) or white 8% (dark) with a hairline shadow.
+- **Chips / toggles:** round, `input` border; selected = a neutral fill (`foreground` at 8–12%) and full-colour text, not the accent.
+- **Menus, selects, popovers:** frosted glass (`dropdown-glass`): the surface at ~80% with a 12–16 px blur, 10% border, rows 28 px tall at 4 px radius.
+- **Dialogs:** frosted glass (`dialog-glass`) over a blurred backdrop, 16 px radius, 24 px padding, 20 px semibold title, and a full-width muted footer band under a hairline holding the actions.
+- **Cards:** 12 px radius, hairline border, `surface` fill, faint shadow; titles 16 px semibold, links in the header 12 px medium muted.
+- **Sidebar:** 32 px rows, muted 16 px icons, the current page a quiet fill (white and raised in light mode); section labels 12 px medium muted.
+- **Skeletons:** `muted` at 15% with T3's stepped breathing animation.
+- **Icons:** [Lucide](https://lucide.dev) on both apps (`lucide-react`, `lucide-react-native`) at a 1.75 stroke, 16 px in controls (18 px below `sm`), 14 px inline.
+- **Charts:** primary line with a 10% fill; spending donut uses the category colours.
 
 ## AI assistant behaviour (from the mockups)
 

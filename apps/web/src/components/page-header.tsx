@@ -23,8 +23,8 @@ export function BackButton({
   return (
     <Button
       variant="outline"
-      size="icon-lg"
-      className="shrink-0 border-border bg-card text-muted-foreground"
+      size="icon"
+      className="shrink-0"
       aria-label={label}
       title={label}
       onClick={() => (canGoBack() ? router.back() : router.push(fallback))}
@@ -56,24 +56,24 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'mb-4.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 pb-1.5',
+        'mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3',
         className,
       )}
     >
-      <div className="flex min-w-0 items-center gap-3.5">
+      <div className="flex min-w-0 items-center gap-3">
         {back && <BackButton {...back} />}
         {media}
-        <div className="grid min-w-0 gap-1">
-          {eyebrow && <p className="text-[0.8125rem] text-muted-foreground">{eyebrow}</p>}
-          <h1 className="m-0 truncate text-[1.875rem] leading-[1.1] font-semibold tracking-[-0.04em]">
+        <div className="grid min-w-0 gap-0.5">
+          {eyebrow && <p className="text-xs text-muted-foreground">{eyebrow}</p>}
+          <h1 className="m-0 truncate text-xl leading-snug font-semibold">
             {title}
           </h1>
           {description && (
-            <p className="text-[0.8125rem] text-muted-foreground">{description}</p>
+            <p className="text-sm text-muted-foreground">{description}</p>
           )}
         </div>
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2.5">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   )
 }
@@ -91,9 +91,9 @@ export function SplitLayout({
   aside: React.ReactNode
 }) {
   return (
-    <div className="grid items-start gap-4.5 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4.5">{children}</div>
-      <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4.5 min-[1400px]:sticky min-[1400px]:top-6">
+    <div className="grid items-start gap-4 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">{children}</div>
+      <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 min-[1400px]:sticky min-[1400px]:top-6">
         {aside}
       </aside>
     </div>

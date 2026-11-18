@@ -64,7 +64,7 @@ export function ReceiptView({ source, expenseId }: { source: string; expenseId: 
         title={expense.description}
         description={
           <span className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-foreground tabular-nums">
+            <span className="font-medium text-foreground tabular-nums">
               {formatMoney(expense.amountCents, expense.currency)}
             </span>
             · {formatDate(expense.date)}
@@ -89,10 +89,10 @@ export function ReceiptView({ source, expenseId }: { source: string; expenseId: 
             <iframe
               src={receipt.url}
               title={`Receipt for ${expense.description}`}
-              className="h-[75vh] w-full rounded-2xl border bg-field"
+              className="h-[75vh] w-full rounded-lg border bg-field"
             />
           ) : (
-            <div className="grid place-items-center rounded-2xl bg-field p-2">
+            <div className="grid place-items-center rounded-lg bg-field p-2">
               <img
                 src={receipt.url}
                 alt={`Receipt for ${expense.description}`}

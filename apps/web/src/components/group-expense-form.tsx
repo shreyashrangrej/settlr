@@ -20,7 +20,7 @@ import type { Group, GroupExpenseDetail } from '#/lib/types'
 import { cn } from '#/lib/utils'
 import { api } from '@settlr/backend/convex/_generated/api'
 
-const label = 'text-[0.8125rem] font-medium text-soft'
+const label = 'text-sm font-medium text-foreground'
 
 // Each participant's share, split the way the server does it
 // (convex/lib/ledger.ts): leftover cents go to the first ones in member order.
@@ -121,17 +121,17 @@ export function GroupExpenseForm({
     <form
       noValidate
       onSubmit={onSubmit}
-      className="overflow-hidden rounded-[28px] border bg-card"
+      className="overflow-hidden rounded-2xl border bg-card"
     >
-      <header className="flex items-center gap-3.5 border-b border-divider px-6 py-5">
-        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground [&_svg]:size-5">
+      <header className="flex items-center gap-3 border-b px-6 py-4">
+        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground [&_svg]:size-5">
           {expense ? <Pencil /> : <Plus strokeWidth={2.4} />}
         </span>
         <div className="grid min-w-0 gap-0.5">
-          <h2 className="m-0 text-xl font-semibold tracking-[-0.03em]">
+          <h2 className="m-0 text-xl leading-snug font-semibold">
             {expense ? 'Edit expense' : 'Add an expense'}
           </h2>
-          <p className="truncate text-[0.8125rem] text-muted-foreground">
+          <p className="truncate text-xs text-muted-foreground">
             {expense ? 'In' : 'Goes into'} {group.name} · {plural(group.members.length, 'member')}
           </p>
         </div>
@@ -141,11 +141,11 @@ export function GroupExpenseForm({
         <div className="flex min-w-0 flex-[3_1_26rem] flex-col gap-5 p-6">
           <label
             htmlFor="ge-amount"
-            className="flex flex-col gap-2 rounded-[20px] border border-primary bg-background px-5 py-4.5"
+            className="flex flex-col gap-2 rounded-xl border border-input bg-field px-4.5 py-4 shadow-xs/5 transition-shadow focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/24 focus-within:ring-inset"
           >
             <span className="text-xs text-muted-foreground">Amount</span>
             <span className="flex items-center gap-3">
-              <span className="rounded-[10px] bg-tile px-2.5 py-1.5 text-[0.8125rem] font-semibold text-soft">
+              <span className="rounded-md bg-foreground/6 px-2 py-1 text-xs font-medium text-foreground dark:bg-foreground/8">
                 {group.currency}
               </span>
               <input
@@ -156,7 +156,7 @@ export function GroupExpenseForm({
                 value={amount}
                 autoFocus={!expense}
                 onChange={(e) => setAmount(e.target.value)}
-                className="min-w-0 flex-1 border-0 bg-transparent font-mono text-[2.75rem] leading-none font-medium tracking-[-0.04em] tabular-nums outline-none placeholder:text-dim"
+                className="min-w-0 flex-1 border-0 bg-transparent text-4xl leading-none font-semibold tracking-[-0.03em] tabular-nums outline-none placeholder:text-dim"
               />
             </span>
           </label>
@@ -170,7 +170,7 @@ export function GroupExpenseForm({
               value={description}
               maxLength={80}
               placeholder="Dinner"
-              className="h-12 md:text-[0.9375rem]"
+              
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
@@ -185,7 +185,7 @@ export function GroupExpenseForm({
               <label htmlFor="ge-date" className={label}>
                 Date
               </label>
-              <DatePicker id="ge-date" value={date} onChange={setDate} className="h-12" />
+              <DatePicker id="ge-date" value={date} onChange={setDate} />
             </div>
             <div className="grid gap-2">
               <label htmlFor="ge-paid-by" className={label}>
@@ -195,7 +195,7 @@ export function GroupExpenseForm({
                 id="ge-paid-by"
                 value={paidBy}
                 onChange={setPaidBy}
-                className="data-[size=default]:h-12"
+                
                 options={group.members.map((m) => ({
                   value: m.id,
                   label: m.id === me ? 'You' : m.name,
@@ -215,13 +215,13 @@ export function GroupExpenseForm({
 
         <aside
           aria-labelledby="ge-split"
-          className="flex min-w-0 flex-[2_1_20rem] flex-col gap-4.5 border-t border-divider bg-field p-6 lg:border-t-0 lg:border-l"
+          className="flex min-w-0 flex-[2_1_20rem] flex-col gap-4 border-t bg-muted/40 p-6 lg:border-t-0 lg:border-l"
         >
           <div className="flex items-center justify-between gap-2">
-            <h3 id="ge-split" className="m-0 text-base font-semibold tracking-[-0.02em]">
+            <h3 id="ge-split" className="m-0 text-base font-semibold">
               Split
             </h3>
-            <span className="text-[0.8125rem] text-muted-foreground">Equally</span>
+            <span className="text-xs text-muted-foreground">Equally</span>
           </div>
 
           <div className="grid gap-2">
@@ -232,7 +232,7 @@ export function GroupExpenseForm({
                   key={m.id}
                   htmlFor={`split-${m.id}`}
                   className={cn(
-                    'flex min-h-14 cursor-pointer items-center gap-3 rounded-[14px] border bg-card px-3',
+                    'flex min-h-14 cursor-pointer items-center gap-3 rounded-lg border bg-card px-3',
                     !included && 'opacity-60',
                   )}
                 >
@@ -249,7 +249,7 @@ export function GroupExpenseForm({
                   />
                   <PersonAvatar name={m.name} me={m.id === me} />
                   <span className="grid min-w-0 flex-1">
-                    <span className="truncate font-semibold">{m.id === me ? 'You' : m.name}</span>
+                    <span className="truncate font-medium">{m.id === me ? 'You' : m.name}</span>
                     <span className="truncate text-xs text-muted-foreground">
                       {m.id === paidBy
                         ? cents
@@ -262,7 +262,7 @@ export function GroupExpenseForm({
                           : 'not included'}
                     </span>
                   </span>
-                  <span className="font-mono font-medium tabular-nums">
+                  <span className="font-medium tabular-nums">
                     {included ? formatMoney(shares.get(m.id) ?? 0, group.currency) : '—'}
                   </span>
                 </label>
@@ -270,10 +270,10 @@ export function GroupExpenseForm({
             })}
           </div>
 
-          <div className="grid gap-3 rounded-2xl border bg-card p-4">
+          <div className="grid gap-3 rounded-xl border bg-card p-4">
             <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">Total</span>
-              <span className="font-mono font-medium tabular-nums">
+              <span className="font-medium tabular-nums">
                 {formatMoney(cents, group.currency)}
               </span>
             </div>
@@ -291,7 +291,7 @@ export function GroupExpenseForm({
               </span>
               <span
                 className={cn(
-                  'font-mono font-medium tabular-nums',
+                  'font-medium tabular-nums',
                   paidBy === me ? 'text-positive' : myShare > 0 && 'text-destructive',
                 )}
               >
@@ -311,17 +311,17 @@ export function GroupExpenseForm({
 
           {error && <FieldError>{error}</FieldError>}
 
-          <div className="mt-auto flex gap-2.5">
+          <div className="mt-auto flex gap-2">
             <Link
               href={`/groups/${group.id}`}
               className={cn(
-                buttonVariants({ variant: 'outline' }),
-                'h-12.5 flex-1 rounded-[14px] text-sm no-underline',
+                buttonVariants({ variant: 'outline', size: 'lg' }),
+                'flex-1 no-underline',
               )}
             >
               Cancel
             </Link>
-            <Button type="submit" className="h-12.5 flex-[2] rounded-[14px] text-sm" disabled={pending}>
+            <Button type="submit" size="lg" className="flex-[2]" disabled={pending}>
               {pending && <Spinner />}
               {expense ? 'Save changes' : 'Save expense'}
             </Button>

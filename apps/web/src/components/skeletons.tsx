@@ -16,7 +16,7 @@ function Status({ children }: { children: React.ReactNode }) {
 /** An empty card the size of the real one. */
 function Panel({ className, children }: { className?: string; children?: React.ReactNode }) {
   return (
-    <div className={cn('flex min-w-0 flex-col gap-3 rounded-3xl border bg-card p-5.5', className)}>
+    <div className={cn('flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-4 shadow-xs/5', className)}>
       {children}
     </div>
   )
@@ -24,9 +24,9 @@ function Panel({ className, children }: { className?: string; children?: React.R
 
 function HeaderSkeleton({ back = false, actions = 0 }: { back?: boolean; actions?: number }) {
   return (
-    <div className="mb-4.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 pb-1.5">
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 pb-1.5">
       <div className="flex items-center gap-3.5">
-        {back && <Skeleton className="size-11 rounded-xl" />}
+        {back && <Skeleton className="size-11 rounded-lg" />}
         <div className="grid gap-2">
           <Skeleton className="h-8 w-56" />
           <Skeleton className="h-4 w-72 max-w-[60vw]" />
@@ -35,7 +35,7 @@ function HeaderSkeleton({ back = false, actions = 0 }: { back?: boolean; actions
       {actions > 0 && (
         <div className="flex gap-2.5">
           {Array.from({ length: actions }, (_, i) => (
-            <Skeleton key={i} className="h-11 w-36 rounded-xl" />
+            <Skeleton key={i} className="h-9 w-32 rounded-lg sm:h-8" />
           ))}
         </div>
       )}
@@ -45,7 +45,7 @@ function HeaderSkeleton({ back = false, actions = 0 }: { back?: boolean; actions
 
 function StatRowSkeleton({ count = 4 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-4.5">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-4">
       {Array.from({ length: count }, (_, i) => (
         <Panel key={i} className="gap-2.5 p-5">
           <Skeleton className="h-7 w-28" />
@@ -60,11 +60,11 @@ function StatRowSkeleton({ count = 4 }: { count?: number }) {
 export function TableSkeleton({ rows = 6, filters = false }: { rows?: number; filters?: boolean }) {
   return (
     <Panel className="gap-0">
-      {filters && <Skeleton className="mb-4 h-11 w-full rounded-xl" />}
+      {filters && <Skeleton className="mb-4 h-9 w-full rounded-lg sm:h-8" />}
       <Skeleton className="mb-3 h-4 w-full max-w-md" />
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-4 border-t border-divider py-3.5">
-          <Skeleton className="size-8.5 rounded-[10px]" />
+          <Skeleton className="size-8.5 rounded-lg" />
           <Skeleton className="h-4 flex-1" />
           <Skeleton className="hidden h-4 w-24 md:block" />
           <Skeleton className="hidden h-4 w-24 md:block" />
@@ -78,12 +78,12 @@ export function TableSkeleton({ rows = 6, filters = false }: { rows?: number; fi
 function CardGridSkeleton({ count = 6, min = '15rem' }: { count?: number; min?: string }) {
   return (
     <div
-      className="grid gap-4.5"
+      className="grid gap-4"
       style={{ gridTemplateColumns: `repeat(auto-fill,minmax(${min},1fr))` }}
     >
       {Array.from({ length: count }, (_, i) => (
         <Panel key={i} className="gap-3.5 p-5">
-          <Skeleton className="size-10 rounded-xl" />
+          <Skeleton className="size-10 rounded-lg" />
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-28" />
@@ -98,7 +98,7 @@ function SideCardSkeleton({ lines = 4, className }: { lines?: number; className?
     <Panel className={className}>
       <Skeleton className="h-5 w-32" />
       {Array.from({ length: lines }, (_, i) => (
-        <Skeleton key={i} className="h-11 w-full rounded-xl" />
+        <Skeleton key={i} className="h-9 w-full rounded-lg sm:h-8" />
       ))}
     </Panel>
   )
@@ -106,9 +106,9 @@ function SideCardSkeleton({ lines = 4, className }: { lines?: number; className?
 
 function Split({ children, aside }: { children: React.ReactNode; aside: React.ReactNode }) {
   return (
-    <div className="grid items-start gap-4.5 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="grid min-w-0 gap-4.5">{children}</div>
-      <div className="grid gap-4.5">{aside}</div>
+    <div className="grid items-start gap-4 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid min-w-0 gap-4">{children}</div>
+      <div className="grid gap-4">{aside}</div>
     </div>
   )
 }
@@ -118,7 +118,7 @@ export function PageSkeleton() {
   return (
     <Status>
       <HeaderSkeleton />
-      <div className="grid gap-4.5">
+      <div className="grid gap-4">
         <StatRowSkeleton />
         <TableSkeleton />
       </div>
@@ -132,20 +132,20 @@ export function DashboardSkeleton() {
     <Status>
       <HeaderSkeleton actions={1} />
       {/* The dashboard's two columns (one on narrow screens). */}
-      <div className="grid items-start gap-4.5 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <div className="grid gap-4.5">
-          <Panel className="gap-4.5 p-6">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="grid gap-4">
+          <Panel className="gap-4 p-6">
             <Skeleton className="h-5 w-28" />
             <Skeleton className="h-14 w-64 max-w-full" />
             <Skeleton className="h-2.5 w-full rounded-full" />
             <div className="grid grid-cols-2 gap-2.5">
-              <Skeleton className="h-24 rounded-[14px]" />
-              <Skeleton className="h-24 rounded-[14px]" />
+              <Skeleton className="h-24 rounded-lg" />
+              <Skeleton className="h-24 rounded-lg" />
             </div>
           </Panel>
           <TableSkeleton rows={4} />
         </div>
-        <div className="grid gap-4.5">
+        <div className="grid gap-4">
           <SideCardSkeleton lines={4} className="p-5" />
           <SideCardSkeleton lines={2} className="p-5" />
         </div>
@@ -181,7 +181,7 @@ export function DetailSkeleton() {
     <Status>
       <HeaderSkeleton back actions={1} />
       <Split aside={<SideCardSkeleton lines={5} />}>
-        <Skeleton className="h-10.5 w-56 rounded-xl" />
+        <Skeleton className="h-9 w-56 rounded-lg sm:h-8" />
         <TableSkeleton filters />
       </Split>
     </Status>
@@ -192,7 +192,7 @@ export function DetailSkeleton() {
 export function InsightsSkeleton() {
   return (
     <Status>
-      <div className="grid gap-4.5">
+      <div className="grid gap-4">
         <StatRowSkeleton />
         <CardGridSkeleton count={3} min="22rem" />
       </div>
@@ -238,16 +238,16 @@ export function AssistantSkeleton() {
     <Status>
       <div className="flex min-h-[calc(100svh-13rem)] flex-col lg:min-h-[calc(100svh-4.5rem)]">
         <div className="flex min-h-10 items-center gap-2.5">
-          <Skeleton className="size-8 rounded-[10px]" />
+          <Skeleton className="size-8 rounded-lg" />
           <Skeleton className="h-5 w-24" />
         </div>
         <div className="mx-auto grid w-full max-w-190 gap-2.5 py-17 sm:grid-cols-2">
           {Array.from({ length: 4 }, (_, i) => (
-            <Skeleton key={i} className="h-17 rounded-2xl" />
+            <Skeleton key={i} className="h-17 rounded-lg" />
           ))}
         </div>
         <div className="flex-1" />
-        <Skeleton className="mx-auto mb-4.5 h-15 w-full max-w-190 rounded-[20px]" />
+        <Skeleton className="mx-auto mb-4 h-15 w-full max-w-190 rounded-xl" />
       </div>
     </Status>
   )
@@ -259,7 +259,7 @@ export function ReceiptSkeleton() {
     <Status>
       <div className="mx-auto w-full max-w-4xl">
         <HeaderSkeleton back actions={1} />
-        <Skeleton className="h-[60vh] w-full rounded-3xl" />
+        <Skeleton className="h-[60vh] w-full rounded-xl" />
       </div>
     </Status>
   )
@@ -269,7 +269,7 @@ export function ReceiptSkeleton() {
 export function FormSkeleton() {
   return (
     <Status>
-      <Skeleton className="h-[34rem] w-full rounded-[28px]" />
+      <Skeleton className="h-[34rem] w-full rounded-2xl" />
     </Status>
   )
 }

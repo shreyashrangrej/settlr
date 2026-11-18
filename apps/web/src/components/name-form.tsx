@@ -47,16 +47,16 @@ export function NameForm({ email }: { email: string }) {
 
   return (
     <div className="grid place-items-center py-12">
-      <Card className="w-full max-w-md gap-6 px-6 py-8 sm:px-8">
+      <Card className="w-full max-w-md gap-6 p-6">
         <header className="grid gap-4">
           <span
             aria-hidden="true"
-            className="grid size-11 place-items-center rounded-xl border border-highlight-border bg-highlight text-primary"
+            className="grid size-11 place-items-center rounded-lg border border-highlight-border bg-highlight text-primary"
           >
             <UserRound className="size-5" />
           </span>
           <div className="grid gap-1.5">
-            <h1 className="m-0 text-2xl font-semibold tracking-[-0.03em]">
+            <h1 className="m-0 text-xl leading-snug font-semibold">
               What’s your name?
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -87,7 +87,6 @@ export function NameForm({ email }: { email: string }) {
               maxLength={NAME_MAX_LENGTH}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-11 text-[0.9375rem]"
               aria-invalid={fieldError ? true : undefined}
               aria-describedby={fieldError ? 'profile-name-error' : undefined}
             />
@@ -97,7 +96,7 @@ export function NameForm({ email }: { email: string }) {
           </Field>
           <Button
             type="submit"
-            className="h-11 w-full text-[0.9375rem]"
+            className="w-full"
             disabled={pending}
           >
             {pending && <Spinner />}

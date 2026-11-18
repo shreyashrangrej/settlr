@@ -274,7 +274,7 @@ export function ExpenseRow({
         </TableCell>
       ))}
       <TableCell className="text-right">
-        <span className="grid justify-items-end font-mono font-medium tabular-nums [&>*]:max-w-full [&>*]:truncate">
+        <span className="grid justify-items-end font-medium tabular-nums [&>*]:max-w-full [&>*]:truncate">
           {amount}
         </span>
       </TableCell>

@@ -90,9 +90,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   built in phases (the plan is in Notion). `src/app/` routes (`(tabs)/`
   holds Home, Groups, Friends, Personal, Assistant), `src/theme/` the
   `DESIGN.md` tokens for dark and light (`useColors()` follows the phone),
-  `src/components/` (`Text` picks the Geist family per weight, since
+  `src/components/` (`Text` picks the DM Sans family per weight, since
   Android ignores `fontWeight` for custom fonts; `Button`, `TabBar`,
-  `Screen`, `icons`), `src/lib/convex.ts` and `src/lib/auth-client.ts`
+  `Screen`, `icons` (Lucide via `lucide-react-native`)), `src/lib/convex.ts` and `src/lib/auth-client.ts`
   (Better Auth's `expoClient`, session in `expo-secure-store`). Sign-in
   is `sign-in.tsx` and `verify.tsx`; the root layout guards routes with
   `Stack.Protected` on the session, so signing in or out needs no
@@ -165,11 +165,14 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `prefetched.tsx` (`<Prefetched>`), `client-only.tsx` (`<ClientOnly>`),
   `nav-link.tsx` (`<NavLink>`, sets `data-status="active"`),
   `navigation-progress.tsx` (top bar, `useAppRouter()`).
-- `src/styles.css`: design tokens from `design/DESIGN.md` (`--bg`,
-  `--surface`, `--accent`, `--owed`, `--owe`, ...), mapped to shadcn color
-  names in `@theme inline` plus the design's own (`tile`, `field`,
-  `divider`, `soft`, `faint`, `highlight`, `contrast`, `segment`,
-  `on-fill`, `positive`), and the landing hero's CSS. Use the tokens, not
+- `src/styles.css`: design tokens from `design/DESIGN.md`, which is T3
+  Code's design system (`--bg`, `--surface`, `--accent`, `--owed`, `--owe`,
+  ...), mapped to shadcn color names in `@theme inline` plus the design's
+  own (`tile`, `field`, `divider`, `faint`, `highlight`, `contrast`,
+  `segment`, `track`, `on-fill`, `positive`), T3's frosted-glass utilities
+  (`dropdown-glass`, `dialog-glass`, `dialog-backdrop`, `surface-glass`),
+  its `text-2xs`/`text-3xs` sizes and skeleton animation, and the landing
+  hero's CSS. Use the tokens, not
   hex values; the fixed group, category and avatar fills in `category.tsx`
   and `ledger.tsx` are the exception.
 - Auth on the web side: `src/lib/auth-client.ts` (browser client and the
@@ -225,15 +228,21 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   "this month" and "today" are computed in the server page and passed down. For the viewer's locale use
   `new Intl.NumberFormat().resolvedOptions().locale`, not
   `navigator.language`, which can be an invalid tag such as `en-US@posix`.
-- **Design**: dark is the reference theme and the default; the light theme
-  is derived from it. Violet (`primary`) is the brand; money is blue
-  (`positive`, owed to you) or orange (`destructive`, you owe), always with
-  a word or a sign beside it. Amounts are in Geist Mono (`font-mono
-  tabular-nums`), via `SignedAmount` where they have a direction. Cards are
-  `rounded-3xl border bg-card`, inner tiles `bg-tile`/`bg-field` at 14-18px,
-  buttons and inputs 10-14px. `Tabs` is the segmented control; `Button` has
-  a `contrast` variant (the light "Settle" button) and `destructive` is a
-  solid orange confirm.
+- **Design**: Settlr follows T3 Code's design system (see
+  `design/DESIGN.md`): a true-black dark theme (the default) and T3's zinc
+  light theme, a blue `primary`, Inter (system UI font on Apple devices),
+  Lucide icons at a 1.75 stroke. Money is green (`positive`, owed to you)
+  or red (`destructive`, you owe), always with a word or a sign beside it,
+  in the UI font with `tabular-nums` (no monospace), via `SignedAmount`
+  where it has a direction. Semibold only for headings and big figures;
+  `font-medium` for buttons, labels, row titles and badges; descriptions
+  `text-xs text-muted-foreground`. Cards are `rounded-xl border bg-card
+  shadow-xs/5` with `p-4`, titles `text-base font-semibold`; inner tiles
+  and controls `rounded-lg`, badges `rounded-sm`; menus, selects and
+  popovers use `dropdown-glass`, dialogs `dialog-glass`. Controls are
+  `h-8` from `sm` (`h-9` below): don't override their heights. `Tabs` is
+  the segmented control; `Button` has a `contrast` variant (the "Settle"
+  button) and `destructive` is a solid red confirm.
 - **Styling**: use shadcn components and Tailwind utilities (no new
   hand-written CSS). Base UI uses a `render` prop, not `asChild`: e.g.
   `<Item render={<Link href="..." />}>` or `<DropdownMenuTrigger
@@ -241,8 +250,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `buttonVariants(...)` on a `<Link>`. Confirm destructive actions with
   `ConfirmAction`, not `window.confirm`, and report success with
   `useAction(fn, { success: '...' })` (a sonner toast).
-- **Layout**: pages take the full width beside the sidebar, with 18px
-  between cards. Rows of cards are `flex flex-wrap` with
+- **Layout**: pages take the full width beside the sidebar (padding
+  `px-5 sm:px-6`, T3's page gutter), with 16px (`gap-4`) between cards and
+  24px under the page header. Rows of cards are `flex flex-wrap` with
   `flex-[grow_1_basis]` so they stack on narrow screens. The dashboard is
   two independent columns from `xl` (so no card stretches to match a
   neighbour); below that the column wrappers are `contents` and

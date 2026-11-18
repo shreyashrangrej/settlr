@@ -12,24 +12,24 @@ export function GroupTile({ group, className }: { group: GroupSummary; className
     <Link
       href={`/groups/${group.id}`}
       className={cn(
-        'flex flex-col gap-3.5 rounded-2xl border border-input/70 bg-tile p-4 no-underline outline-none hover:border-primary/50 focus-visible:ring-3 focus-visible:ring-ring/50',
+        'flex flex-col gap-3 rounded-lg border bg-field p-3.5 no-underline outline-none transition-colors hover:border-input hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
         className,
       )}
     >
       <div className="flex items-center justify-between gap-2">
         <span
           aria-hidden="true"
-          className="grid size-10 place-items-center rounded-xl text-on-fill"
+          className="grid size-9 place-items-center rounded-lg text-on-fill"
           style={{ background: groupColor(group.id) }}
         >
-          <Users className="size-5" />
+          <Users className="size-4.5" />
         </span>
-        <span className="rounded-full bg-segment px-2 py-0.5 text-xs font-medium text-soft">
+        <span className="rounded-sm bg-foreground/6 px-1.5 py-0.5 text-xs font-medium text-foreground dark:bg-foreground/8">
           {group.currency}
         </span>
       </div>
       <div className="grid gap-0.5">
-        <span className="truncate text-[0.9375rem] font-semibold">{group.name}</span>
+        <span className="truncate text-sm font-medium">{group.name}</span>
         <span className="truncate text-xs text-muted-foreground">
           {plural(group.memberCount, 'person', 'people')}
           {!group.isOwner && ' · shared with you'}
@@ -39,7 +39,7 @@ export function GroupTile({ group, className }: { group: GroupSummary; className
         {formatWholeMoney(group.totalCents, group.currency)} spent ·{' '}
         {plural(group.expenseCount, 'expense')}
       </span>
-      <span className="mt-auto text-[0.8125rem] text-muted-foreground">
+      <span className="mt-auto text-xs text-muted-foreground">
         {group.myNetCents === 0 ? (
           'You’re square'
         ) : (
@@ -47,7 +47,7 @@ export function GroupTile({ group, className }: { group: GroupSummary; className
             {group.myNetCents > 0 ? 'You’re owed ' : 'You owe '}
             <span
               className={cn(
-                'font-mono tabular-nums',
+                'tabular-nums',
                 group.myNetCents > 0 ? 'text-positive' : 'text-destructive',
               )}
             >

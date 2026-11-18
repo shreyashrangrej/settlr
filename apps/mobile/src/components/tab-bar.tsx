@@ -54,7 +54,7 @@ export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarPr
           >
             {active && <View style={[styles.indicator, { backgroundColor: colors.accent }]} />}
             <tab.Icon color={color} strokeWidth={active ? 2 : 1.8} />
-            <Text size={12} weight={active ? 600 : 500} style={{ color }}>
+            <Text size={12} weight={500} style={{ color }}>
               {tab.label}
             </Text>
           </Pressable>

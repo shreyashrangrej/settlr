@@ -6,7 +6,7 @@ import { radius, useColors } from '@/theme'
 
 type Variant = 'primary' | 'outline' | 'contrast' | 'ghost'
 
-/** Buttons from the Android mocks: 54px tall (`size="lg"`) or 44px, 13px corners. */
+/** T3 Code's mobile buttons: pills, 48px tall (`size="lg"`) or 40px, medium weight. */
 export function Button({
   children,
   onPress,
@@ -57,7 +57,7 @@ export function Button({
       ) : (
         <View style={styles.row}>
           {icon}
-          <Text size={size === 'lg' ? 16 : 14} weight={600} style={{ color: fill.text }}>
+          <Text size={size === 'lg' ? 16 : 14} weight={500} style={{ color: fill.text }}>
             {children}
           </Text>
         </View>
@@ -69,11 +69,11 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     borderWidth: 1,
-    borderRadius: radius.control,
+    borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  lg: { height: 54, paddingHorizontal: 20 },
-  md: { height: 44, paddingHorizontal: 18, borderRadius: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  lg: { height: 48, paddingHorizontal: 20 },
+  md: { height: 40, paddingHorizontal: 16 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 })

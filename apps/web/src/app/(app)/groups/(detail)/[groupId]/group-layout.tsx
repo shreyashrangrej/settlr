@@ -32,7 +32,7 @@ import { cn } from '#/lib/utils'
 
 // Page links styled like the segmented control (TabsList/TabsTrigger).
 const tabLink =
-  'inline-flex h-full items-center gap-1.5 rounded-[9px] px-3.5 text-[0.8125rem] text-muted-foreground no-underline transition-colors hover:text-foreground data-[status=active]:bg-segment data-[status=active]:font-semibold data-[status=active]:text-foreground [&_svg]:size-3.5'
+  'inline-flex h-full items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-muted-foreground no-underline transition-[color,background-color,box-shadow] hover:bg-background/55 hover:text-foreground sm:text-[0.8125rem] dark:hover:bg-input/32 data-[status=active]:bg-segment data-[status=active]:text-foreground data-[status=active]:shadow-xs/10 [&_svg]:size-3.5'
 
 /** A group's header, section tabs and balances around its pages. */
 export function GroupLayoutView({ children }: { children: React.ReactNode }) {
@@ -93,7 +93,7 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
         children
       ) : (
         <SplitLayout aside={<Balances group={group} />}>
-          <nav aria-label="Group sections" className={cn(tabsListVariants(), 'h-10.5')}>
+          <nav aria-label="Group sections" className={tabsListVariants()}>
             <NavLink href={`/groups/${group.id}`} exact className={tabLink}>
               <Receipt />
               Expenses
@@ -141,7 +141,7 @@ function Balances({ group }: { group: Group }) {
         {/* The dashboard's "Settle" buttons link here. */}
         <div id="settle-up" className="grid scroll-mt-24 gap-2">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="m-0 text-sm font-semibold">Settle up</h3>
+            <h3 className="m-0 text-sm font-medium">Settle up</h3>
             <RecordPaymentDialog
               group={group}
               trigger={
@@ -159,7 +159,7 @@ function Balances({ group }: { group: Group }) {
               {group.settlements.map((s) => (
                 <li
                   key={`${s.from}-${s.to}`}
-                  className="flex items-center gap-2 rounded-[14px] bg-field py-2.5 pr-2.5 pl-3 text-sm"
+                  className="flex items-center gap-2 rounded-lg bg-field py-2.5 pr-2.5 pl-3 text-sm"
                 >
                   <span className="grid min-w-0 flex-1 gap-0.5">
                     <span className="flex min-w-0 items-center gap-2">
@@ -172,7 +172,7 @@ function Balances({ group }: { group: Group }) {
                         {s.to === group.meMemberId ? 'you' : name(s.to)}
                       </span>
                     </span>
-                    <span className="font-mono text-[0.8125rem] font-medium tabular-nums">
+                    <span className="text-sm font-medium tabular-nums">
                       {formatMoney(s.amountCents, group.currency)}
                     </span>
                   </span>

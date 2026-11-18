@@ -58,12 +58,12 @@ export function GroupsView() {
           </EmptyContent>
         </Empty>
       ) : (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4.5">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">
           {groups.map((group) => (
             <li key={group.id}>
               <GroupTile
                 group={group}
-                className="h-full rounded-3xl border-border bg-card p-5"
+                className="h-full rounded-xl border-border bg-card p-4 shadow-xs/5"
               />
             </li>
           ))}

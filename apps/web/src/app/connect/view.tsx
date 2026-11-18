@@ -50,16 +50,16 @@ export function ConnectView({ clientId, consentCode }: { clientId: string; conse
 
   return (
     <div className="mx-auto max-w-md py-6">
-      <Card className="gap-6 px-6 py-8 sm:px-8">
+      <Card className="gap-6 p-6">
         <header className="grid gap-4">
           <span
             aria-hidden="true"
-            className="grid size-11 place-items-center rounded-xl border border-highlight-border bg-highlight text-primary"
+            className="grid size-11 place-items-center rounded-lg border border-highlight-border bg-highlight text-primary"
           >
             <PlugZap className="size-5" />
           </span>
           <div className="grid gap-1.5">
-            <h1 className="m-0 text-2xl font-semibold tracking-[-0.03em] break-words">
+            <h1 className="m-0 text-xl leading-snug font-semibold break-words">
               Connect {name} to Settlr?
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -72,9 +72,9 @@ export function ConnectView({ clientId, consentCode }: { clientId: string; conse
           </div>
         </header>
 
-        <div className="grid gap-2 rounded-2xl bg-tile px-4 py-3.5 text-sm">
+        <div className="grid gap-2 rounded-lg bg-tile px-4 py-3.5 text-sm">
           <p className="font-medium">It will be able to:</p>
-          <ul className="grid list-disc gap-1 pl-5 text-soft">
+          <ul className="grid list-disc gap-1 pl-5 text-muted-foreground">
             <li>See your friends, groups and expenses</li>
             <li>Add, change and delete expenses for you</li>
           </ul>

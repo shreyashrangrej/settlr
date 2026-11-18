@@ -31,10 +31,10 @@ export function AuthScreen({ top, children }: { top: ReactNode; children: ReactN
 export function AuthTitle({ title, subtitle }: { title: string; subtitle: ReactNode }) {
   return (
     <View style={styles.titles}>
-      <Text size={32} weight={600} style={styles.title}>
+      <Text size={30} weight={600} style={styles.title}>
         {title}
       </Text>
-      <Text size={15} color="muted">
+      <Text size={14} color="muted">
         {subtitle}
       </Text>
     </View>
@@ -60,5 +60,5 @@ const styles = StyleSheet.create({
   },
   form: { gap: 14 },
   titles: { gap: 8, marginBottom: 14 },
-  title: { letterSpacing: -1.44, lineHeight: 36 },
+  title: { letterSpacing: -0.6, lineHeight: 36 },
 })

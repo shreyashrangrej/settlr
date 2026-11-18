@@ -45,7 +45,7 @@ const STARTERS: ReadonlyArray<{
     icon: Search,
     tone: 'bg-positive/14 text-positive',
   },
-  { label: 'Edit an expense', example: 'Change the coffee to 150', icon: Pencil, tone: 'bg-tile text-soft' },
+  { label: 'Edit an expense', example: 'Change the coffee to 150', icon: Pencil, tone: 'bg-tile text-muted-foreground' },
   {
     label: 'Delete an expense',
     example: 'Delete the coffee',
@@ -169,7 +169,7 @@ export function AssistantView() {
     >
       <div className="flex min-h-[calc(100svh-13rem)] min-w-0 flex-col lg:min-h-[calc(100svh-4.5rem)]">
         <header className="flex min-h-10 items-center justify-between gap-3">
-          <h1 className="m-0 flex items-center gap-2.5 text-[1.0625rem] font-semibold tracking-[-0.02em]">
+          <h1 className="m-0 flex items-center gap-2.5 text-base font-semibold">
             <AssistantMark />
             Assistant
           </h1>
@@ -195,7 +195,7 @@ export function AssistantView() {
             )}
             {messages.length === 0 && (
               <div className="grid gap-6 py-10">
-                <h2 className="m-0 text-center text-2xl font-semibold tracking-[-0.03em]">
+                <h2 className="m-0 text-center text-xl font-semibold">
                   What should I do?
                 </h2>
                 <ul className="grid gap-2.5 sm:grid-cols-2">
@@ -205,20 +205,20 @@ export function AssistantView() {
                         type="button"
                         disabled={!configured}
                         onClick={() => fillExample(starter.example)}
-                        className="flex w-full items-center gap-3 rounded-2xl border bg-card p-3.5 text-left outline-none enabled:hover:border-primary/50 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+                        className="flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left outline-none enabled:hover:border-input enabled:hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:opacity-50"
                       >
                         <span
                           aria-hidden="true"
                           className={cn(
-                            'grid size-9 shrink-0 place-items-center rounded-[10px] [&_svg]:size-4',
+                            'grid size-9 shrink-0 place-items-center rounded-lg [&_svg]:size-4',
                             starter.tone,
                           )}
                         >
                           <starter.icon />
                         </span>
                         <span className="grid min-w-0">
-                          <span className="font-semibold">{starter.label}</span>
-                          <span className="truncate text-[0.8125rem] text-muted-foreground">
+                          <span className="font-medium">{starter.label}</span>
+                          <span className="truncate text-xs text-muted-foreground">
                             “{starter.example}”
                           </span>
                         </span>
@@ -254,7 +254,7 @@ export function AssistantView() {
             void submit()
           }}
         >
-          <div className="mx-auto flex max-w-190 items-end gap-2 rounded-[20px] border border-input bg-card py-2 pr-2 pl-4 focus-within:border-primary">
+          <div className="mx-auto flex max-w-190 items-end gap-2 rounded-xl border bg-card py-2 pr-2 pl-4 shadow-xs/5 transition-colors focus-within:border-ring dark:shadow-[0_14px_32px_-18px_rgb(0_0_0/75%)]">
             <label htmlFor={`${id}-message`} className="sr-only">
               Message the assistant
             </label>
@@ -290,7 +290,7 @@ export function AssistantView() {
       </div>
 
       {hasChanges && (
-        <aside className="rounded-3xl border bg-sidebar p-5 xl:sticky xl:top-6">
+        <aside className="rounded-xl border bg-sidebar p-4 xl:sticky xl:top-6">
           <Changes messages={messages} decisions={decisions} />
         </aside>
       )}
@@ -303,7 +303,7 @@ function AssistantMark({ className }: { className?: string }) {
     <span
       aria-hidden="true"
       className={cn(
-        'grid size-8 shrink-0 place-items-center rounded-[10px] border border-highlight-border bg-highlight text-primary [&_svg]:size-4',
+        'grid size-8 shrink-0 place-items-center rounded-lg border border-highlight-border bg-highlight text-primary [&_svg]:size-4',
         className,
       )}
     >
@@ -333,7 +333,7 @@ function ChatMessage({
 }) {
   if (message.role === 'user') {
     return (
-      <p className="max-w-[78%] self-end rounded-[18px_18px_4px_18px] bg-tile px-4 py-3 leading-normal whitespace-pre-wrap">
+      <p className="max-w-[78%] self-end rounded-2xl rounded-br-sm bg-tile px-4 py-3 leading-normal whitespace-pre-wrap">
         {message.content}
       </p>
     )
@@ -347,7 +347,7 @@ function ChatMessage({
   }
   return (
     <AssistantTurn>
-      <p className="leading-normal whitespace-pre-wrap text-soft">{message.content}</p>
+      <p className="leading-normal whitespace-pre-wrap text-foreground">{message.content}</p>
       {message.events.map((event, i) => (
         <EventCard
           key={i}
@@ -391,24 +391,24 @@ function where(expense: AssistantExpense) {
       : `In ${expense.with}`
 }
 
-const eventCard = 'overflow-hidden rounded-2xl border bg-card'
-const applied = 'flex items-center gap-1.5 text-[0.8125rem] font-semibold text-primary'
-const quietLink = 'text-[0.8125rem] text-muted-foreground no-underline hover:text-primary'
+const eventCard = 'overflow-hidden rounded-xl border bg-card'
+const applied = 'flex items-center gap-1.5 text-xs font-medium text-primary'
+const quietLink = 'text-xs font-medium text-muted-foreground no-underline hover:text-foreground'
 
 /** One expense: what it is, where it lives and what it cost. */
 function ExpenseRow({ expense, className }: { expense: AssistantExpense; className?: string }) {
   return (
     <div className={cn('flex items-center gap-3 px-4 py-3.5', className)}>
-      <CategoryIcon category={expense.category} className="size-9.5 rounded-[11px] [&_svg]:size-4.5" />
+      <CategoryIcon category={expense.category} className="size-9.5 rounded-lg [&_svg]:size-4.5" />
       <span className="grid min-w-0 flex-1 gap-0.5">
-        <span className="truncate font-semibold">{expense.description}</span>
+        <span className="truncate font-medium">{expense.description}</span>
         <span className="truncate text-xs text-muted-foreground">
           {categoryLabel(expense.category)} · {where(expense)} · {formatDate(expense.date)}
           {expense.detail && ` · ${expense.detail}`}
         </span>
       </span>
       <span className="grid justify-items-end gap-0.5">
-        <span className="font-mono text-[1.0625rem] font-medium tabular-nums">
+        <span className="text-base font-medium tabular-nums">
           {formatMoney(expense.amountCents, expense.currency)}
         </span>
         {expense.myShareCents !== expense.amountCents && (
@@ -444,11 +444,11 @@ function CreatedCard({ event }: { event: Extract<ChatEvent, { type: 'created' }>
   return (
     <div className={eventCard}>
       <div className="flex items-center gap-3 px-4 py-3.5">
-        <span className="grid size-9.5 shrink-0 place-items-center rounded-[11px] bg-primary/14 text-primary [&_svg]:size-4.5">
+        <span className="grid size-9.5 shrink-0 place-items-center rounded-lg bg-primary/14 text-primary [&_svg]:size-4.5">
           <Icon />
         </span>
         <span className="grid min-w-0 flex-1 gap-0.5">
-          <span className="truncate font-semibold">{event.name}</span>
+          <span className="truncate font-medium">{event.name}</span>
           <span className="truncate text-xs text-muted-foreground">{event.detail}</span>
         </span>
       </div>
@@ -489,20 +489,20 @@ function EditCard({ before, after }: { before: AssistantExpense; after: Assistan
   return (
     <div className={cn(eventCard, 'grid gap-2.5 px-4 py-3.5')}>
       <div className="flex items-center justify-between gap-2">
-        <span className="min-w-0 truncate font-semibold">Edit · {after.description}</span>
+        <span className="min-w-0 truncate font-medium">Edit · {after.description}</span>
         <span className={cn(applied, 'text-xs')}>
           <Check className="size-3.5" strokeWidth={2.6} />
           Applied
         </span>
       </div>
       {changed.length === 0 ? (
-        <p className="text-[0.8125rem] text-muted-foreground">Nothing changed.</p>
+        <p className="text-xs text-muted-foreground">Nothing changed.</p>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(150px,100%),1fr))] gap-2">
           {changed.map((change) => (
-            <div key={change.label} className="grid gap-1 rounded-xl bg-field px-3 py-2.5">
+            <div key={change.label} className="grid gap-1 rounded-lg bg-field px-3 py-2.5">
               <span className="text-xs text-muted-foreground">{change.label}</span>
-              <span className="font-mono text-[0.8125rem]">
+              <span className="text-xs">
                 <s className="text-faint">{change.before}</s> → {change.after}
               </span>
             </div>
@@ -527,15 +527,15 @@ function FoundList({ event }: { event: Extract<ChatEvent, { type: 'found' }> }) 
   return (
     <div className={eventCard}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 bg-field/60 px-4 py-2.5">
-        <span className="font-semibold">
+        <span className="font-medium">
           {plural(event.count, 'expense')}
           {event.capped && '+'}
         </span>
-        <span className="text-[0.8125rem] text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           {event.totals.map((t, i) => (
             <span key={t.currency}>
               {i > 0 && ' + '}
-              <span className="font-mono font-medium text-foreground tabular-nums">
+              <span className="font-medium text-foreground tabular-nums">
                 {formatMoney(t.cents, t.currency)}
               </span>
               {t.myShareCents !== t.cents &&
@@ -602,11 +602,11 @@ function DeleteOffer({
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="min-w-0 truncate font-semibold">Delete · {expense.description}</span>
+        <span className="min-w-0 truncate font-medium">Delete · {expense.description}</span>
         <span
           className={cn(
-            'shrink-0 rounded-full px-2.25 py-0.75 text-xs font-semibold',
-            waiting ? 'bg-destructive/14 text-destructive' : 'bg-divider text-soft',
+            'shrink-0 rounded-sm px-1.5 py-0.5 text-xs font-medium',
+            waiting ? 'bg-destructive/8 text-destructive dark:bg-destructive/16' : 'bg-foreground/8 text-foreground',
           )}
         >
           {waiting ? 'Waiting for you' : decision === 'deleted' ? 'Deleted' : 'Kept'}
@@ -614,22 +614,22 @@ function DeleteOffer({
       </div>
       <div
         className={cn(
-          'flex items-center gap-3 rounded-xl px-3 py-2.5',
+          'flex items-center gap-3 rounded-lg px-3 py-2.5',
           going ? 'border border-dashed border-danger-border bg-destructive/8' : 'bg-field',
         )}
       >
         <span
           className={cn(
-            'w-14 shrink-0 text-[0.6875rem] font-semibold tracking-[0.06em]',
+            'w-14 shrink-0 text-xs font-medium',
             going ? 'text-destructive' : 'text-muted-foreground',
           )}
         >
-          {going ? 'DELETE' : 'KEEP'}
+          {going ? 'Delete' : 'Keep'}
         </span>
-        <span className={cn('min-w-0 flex-1 truncate', going && 'text-soft line-through')}>
+        <span className={cn('min-w-0 flex-1 truncate', going && 'text-muted-foreground line-through')}>
           {expense.description} · {where(expense)} · {formatDate(expense.date)}
         </span>
-        <span className={cn('font-mono tabular-nums', going && 'text-soft line-through')}>
+        <span className={cn('tabular-nums', going && 'text-muted-foreground line-through')}>
           {formatMoney(expense.amountCents, expense.currency)}
         </span>
       </div>
@@ -675,10 +675,10 @@ function CreatedStep({
         <span className="grid size-5.5 place-items-center rounded-full bg-primary text-primary-foreground [&_svg]:size-3">
           <Icon strokeWidth={2.6} />
         </span>
-        {!last && <span className="min-h-4.5 w-0.5 flex-1 bg-segment" />}
+        {!last && <span className="min-h-4.5 w-px flex-1 bg-track" />}
       </span>
       <span className={cn('grid min-w-0 flex-1 gap-0.5', !last && 'pb-3.5')}>
-        <span className="truncate font-semibold">
+        <span className="truncate font-medium">
           {event.kind === 'group' ? 'Created' : 'Added friend'} {event.name}
         </span>
         <span className="truncate text-xs text-muted-foreground">{event.detail}</span>
@@ -702,7 +702,7 @@ function Changes({ messages, decisions }: { messages: Array<Message>; decisions:
 
   return (
     <div className="grid gap-3">
-      <h2 className="m-0 text-[0.9375rem] font-semibold tracking-[-0.02em]">Changes</h2>
+      <h2 className="m-0 text-base font-semibold">Changes</h2>
       {items.length === 0 ? null : (
         <ol className="grid">
           {items.map(({ key, event }, i) => {
@@ -726,7 +726,7 @@ function Changes({ messages, decisions }: { messages: Array<Message>; decisions:
                           ? 'bg-primary text-primary-foreground'
                           : event.type === 'updated'
                             ? 'bg-positive text-background'
-                            : 'bg-segment text-soft',
+                            : 'bg-foreground/8 text-foreground',
                       )}
                     >
                       {event.type === 'added' ? (
@@ -738,10 +738,10 @@ function Changes({ messages, decisions }: { messages: Array<Message>; decisions:
                       )}
                     </span>
                   )}
-                  {!last && <span className="min-h-4.5 w-0.5 flex-1 bg-segment" />}
+                  {!last && <span className="min-h-4.5 w-px flex-1 bg-track" />}
                 </span>
                 <span className={cn('grid min-w-0 flex-1 gap-0.5', !last && 'pb-3.5')}>
-                  <span className="truncate font-semibold">
+                  <span className="truncate font-medium">
                     {event.type === 'added'
                       ? 'Added'
                       : event.type === 'updated'

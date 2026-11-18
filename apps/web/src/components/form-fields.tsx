@@ -112,10 +112,10 @@ export function CategoryChips({
             aria-pressed={selected}
             onClick={() => onChange(category)}
             className={cn(
-              'flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[0.8125rem] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-[15px]',
+              'flex h-8 items-center gap-1.5 rounded-full border border-input px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset [&_svg]:size-3.5',
               selected
-                ? 'border-primary bg-primary/12 font-semibold text-primary'
-                : 'border-input hover:bg-tile',
+                ? 'bg-foreground/8 text-foreground dark:bg-foreground/12'
+                : 'bg-field text-muted-foreground hover:bg-accent/50 hover:text-foreground',
             )}
           >
             <Icon />
@@ -151,7 +151,7 @@ export function AmountInput({
         value={value}
         aria-invalid={invalid || undefined}
         onChange={(e) => onChange(e.target.value)}
-        className="font-mono tabular-nums"
+        className="tabular-nums"
       />
       <InputGroupAddon align="inline-end">
         <InputGroupText>{currency}</InputGroupText>
@@ -200,7 +200,7 @@ export function DatePicker({
             type="button"
             variant="outline"
             className={cn(
-              'h-11 w-full justify-start rounded-xl border-border bg-field px-3 text-sm font-normal hover:bg-field',
+              'w-full justify-start bg-field px-[calc(--spacing(3)-1px)] font-normal dark:bg-field',
               className,
             )}
           />

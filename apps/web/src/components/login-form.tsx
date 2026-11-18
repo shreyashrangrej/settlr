@@ -128,7 +128,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
   // Signed in: the home route is redirecting to the dashboard.
   if (isAuthenticated || session) {
     return (
-      <Card className={cn('items-center gap-3 px-6 py-10', className)}>
+      <Card className={cn('items-center gap-3 p-6 py-10', className)}>
         <Spinner className="size-5 text-primary" />
         <p className="text-sm text-muted-foreground">Signing you in…</p>
       </Card>
@@ -137,11 +137,11 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
 
   return (
     <Card className={cn('gap-0 overflow-hidden py-0', className)}>
-      <div className="grid gap-6 px-6 pt-8 pb-6 sm:px-8">
+      <div className="grid gap-6 p-6">
         <header className="grid gap-4">
           <span
             aria-hidden="true"
-            className="grid size-11 place-items-center rounded-xl border border-highlight-border bg-highlight text-primary"
+            className="grid size-11 place-items-center rounded-lg border border-highlight-border bg-highlight text-primary"
           >
             {step === 'email' ? (
               <ReceiptText className="size-5" />
@@ -151,7 +151,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
           </span>
           {step === 'email' ? (
             <div className="grid gap-1.5">
-              <h2 className="m-0 text-2xl font-semibold tracking-[-0.03em]">
+              <h2 className="m-0 text-xl leading-snug font-semibold">
                 Sign in to Settlr
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -160,7 +160,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
             </div>
           ) : (
             <div className="grid gap-1.5">
-              <h2 className="m-0 text-2xl font-semibold tracking-[-0.03em]">
+              <h2 className="m-0 text-xl leading-snug font-semibold">
                 Check your inbox
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -179,7 +179,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
             <Button
               type="button"
               variant="outline"
-              className="h-11 w-full gap-3 text-[0.9375rem]"
+              className="w-full"
               disabled={busy}
               onClick={() => run('google', () => signInWithGoogle(next))}
             >
@@ -203,7 +203,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
                 <div className="relative">
                   <Mail
                     aria-hidden="true"
-                    className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+                    className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
                   />
                   <Input
                     id="login-email"
@@ -214,7 +214,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 text-[0.9375rem]"
+                    className="pl-9"
                     aria-invalid={fieldError ? true : undefined}
                     aria-describedby={fieldError ? 'login-email-error' : undefined}
                   />
@@ -227,7 +227,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
               </div>
               <Button
                 type="submit"
-                className="h-11 w-full text-[0.9375rem]"
+                className="w-full"
                 disabled={busy}
               >
                 {pending === 'send' && <Spinner />}
@@ -263,7 +263,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
                       key={i}
                       index={i}
                       aria-invalid={fieldError ? true : undefined}
-                      className="size-12 rounded-xl border bg-field font-mono text-lg font-medium first:rounded-xl last:rounded-xl"
+                      className="size-12 rounded-lg border bg-field font-mono text-lg font-medium first:rounded-lg last:rounded-lg"
                     />
                   ))}
                 </InputOTPGroup>
@@ -275,7 +275,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
 
             <Button
               type="submit"
-              className="h-11 w-full text-[0.9375rem]"
+              className="w-full"
               disabled={busy || otp.length < OTP_LENGTH}
             >
               {pending === 'verify' && <Spinner />}

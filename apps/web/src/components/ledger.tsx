@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { hashIndex } from '#/components/category'
+import { hashIndex, labelTint } from '#/components/category'
 import { Avatar, AvatarFallback } from '#/components/ui/avatar'
 import { Badge } from '#/components/ui/badge'
 import { errorMessage } from '#/lib/errors'
@@ -63,7 +63,7 @@ export function SignedAmount({
   return (
     <span
       className={cn(
-        'font-mono font-medium whitespace-nowrap tabular-nums',
+        'font-medium whitespace-nowrap tabular-nums',
         cents > 0 ? 'text-positive' : cents < 0 ? 'text-destructive' : 'text-muted-foreground',
         className,
       )}
@@ -97,7 +97,7 @@ export function BalanceText({
           {cents > 0 ? `${them} owe${them === 'They' ? '' : 's'} you ` : 'You owe '}
           <span
             className={cn(
-              'font-mono font-medium tabular-nums',
+              'font-medium tabular-nums',
               cents > 0 ? 'text-positive' : 'text-destructive',
             )}
           >
@@ -109,8 +109,9 @@ export function BalanceText({
   )
 }
 
-// Avatar fills, picked from the name so a person keeps their colour.
-const AVATAR_FILLS = ['#2B3A55', '#4D4326', '#23463A', '#55332A', '#37305A']
+// Avatar hues, picked from the name so a person keeps their colour. They're
+// drawn as T3 Code's label tint (see `labelTint`), so they suit both themes.
+const AVATAR_HUES = ['#60A5FA', '#FBBF24', '#34D399', '#FB7185', '#A78BFA']
 
 export function PersonAvatar({
   name,
@@ -120,7 +121,7 @@ export function PersonAvatar({
 }: {
   name: string
   size?: 'default' | 'sm' | 'lg'
-  /** The signed-in user, who gets the brand gradient. */
+  /** The signed-in user, who gets the brand colour. */
   me?: boolean
   className?: string
 }) {
@@ -133,12 +134,8 @@ export function PersonAvatar({
   return (
     <Avatar size={size} className={className}>
       <AvatarFallback
-        className={cn('uppercase', me ? 'font-bold text-on-fill' : 'text-[#F2F2EE]')}
-        style={{
-          background: me
-            ? 'linear-gradient(135deg, #B18CFF, #7CB8FF)'
-            : AVATAR_FILLS[hashIndex(name, AVATAR_FILLS.length)],
-        }}
+        className={cn('uppercase', me ? 'bg-primary text-primary-foreground' : '')}
+        style={me ? undefined : labelTint(AVATAR_HUES[hashIndex(name, AVATAR_HUES.length)])}
       >
         {initials || '?'}
       </AvatarFallback>

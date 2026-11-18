@@ -22,14 +22,14 @@ export default function HomeScreen() {
         <Text size={14} weight={500} color="muted">
           Net balance
         </Text>
-        <Text mono size={40} weight={600} style={styles.hero}>
+        <Text tabular size={40} weight={600} style={styles.hero}>
           {formatMoney(482000, 'INR')}
         </Text>
         <View style={styles.row}>
-          <Text mono size={17} weight={500} color="owed">
+          <Text tabular size={18} weight={500} color="owed">
             +{formatMoney(735000, 'INR')}
           </Text>
-          <Text mono size={17} weight={500} color="owe">
+          <Text tabular size={18} weight={500} color="owe">
             {formatMoney(-253000, 'INR')}
           </Text>
         </View>
@@ -42,6 +42,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { letterSpacing: -2, lineHeight: 48 },
+  hero: { letterSpacing: -1.2, lineHeight: 48 },
   row: { flexDirection: 'row', gap: 16 },
 })

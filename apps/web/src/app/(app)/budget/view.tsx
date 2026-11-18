@@ -145,7 +145,7 @@ export function BudgetView({
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
                             <span className="flex items-center gap-2.5">
-                              <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-segment">
+                              <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-track">
                                 <span
                                   className="block h-full rounded-full bg-primary"
                                   style={{ width: `${share}%` }}
@@ -156,7 +156,7 @@ export function BudgetView({
                               </span>
                             </span>
                           </TableCell>
-                          <TableCell className="text-right font-mono font-medium tabular-nums">
+                          <TableCell className="text-right font-medium tabular-nums">
                             {formatMoney(row[source.key], row.currency)}
                           </TableCell>
                         </TableRow>

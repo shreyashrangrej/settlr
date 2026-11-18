@@ -1,14 +1,9 @@
 import {
-  Geist_400Regular,
-  Geist_500Medium,
-  Geist_600SemiBold,
-  Geist_700Bold,
-} from '@expo-google-fonts/geist'
-import {
-  GeistMono_400Regular,
-  GeistMono_500Medium,
-  GeistMono_600SemiBold,
-} from '@expo-google-fonts/geist-mono'
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans'
 import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
 import { useFonts } from 'expo-font'
 import { Stack } from 'expo-router'
@@ -27,13 +22,10 @@ export default function RootLayout() {
   const colors = useColors()
   const isDark = useIsDark()
   const [fontsLoaded, fontError] = useFonts({
-    Geist_400Regular,
-    Geist_500Medium,
-    Geist_600SemiBold,
-    Geist_700Bold,
-    GeistMono_400Regular,
-    GeistMono_500Medium,
-    GeistMono_600SemiBold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
   })
   // The Expo plugin restores the last session from secure storage at once,
   // so this only waits on a first launch (or after signing out).

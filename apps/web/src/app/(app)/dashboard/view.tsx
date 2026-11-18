@@ -36,10 +36,10 @@ import { api } from '@settlr/backend/convex/_generated/api'
 const PREVIEW = 5
 const MAX_BALANCES = 8
 
-const card = 'flex min-w-0 flex-col rounded-3xl border bg-card'
-const cardTitle = 'm-0 text-base font-semibold tracking-[-0.02em]'
+const card = 'flex min-w-0 flex-col rounded-xl border bg-card shadow-xs/5'
+const cardTitle = 'm-0 text-base font-semibold'
 const cardLink =
-  'text-[0.8125rem] font-medium text-muted-foreground no-underline hover:text-primary'
+  'text-xs font-medium text-muted-foreground no-underline hover:text-foreground'
 const fieldLabel = 'text-xs text-muted-foreground'
 
 // One line in the balances list: a friend (per currency) or a group you
@@ -159,8 +159,8 @@ export function DashboardView({ month, today }: { month: string; today: string }
         drop out (`contents`) and `order` puts the cards in reading order
         (what you owe and the balances before the forms and charts).
       */}
-      <div className="flex flex-col gap-4.5 xl:grid xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-start">
-        <div className="contents xl:flex xl:flex-col xl:gap-4.5">
+      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-start">
+        <div className="contents xl:flex xl:flex-col xl:gap-4">
           <NetBalance
             className="max-xl:order-1"
             main={main}
@@ -178,7 +178,7 @@ export function DashboardView({ month, today }: { month: string; today: string }
           />
           <YourGroups className="max-xl:order-7" groups={groups} />
         </div>
-        <div className="contents xl:flex xl:flex-col xl:gap-4.5">
+        <div className="contents xl:flex xl:flex-col xl:gap-4">
           <QuickSplit className="max-xl:order-4" groups={groups} today={today} />
           <ClearWhatYouOwe
             className="max-xl:order-2"
@@ -222,8 +222,8 @@ function BalanceAvatar({
       className={cn(
         'grid shrink-0 place-items-center text-on-fill',
         size === 'sm' && 'size-7 rounded-lg [&_svg]:size-3.5',
-        size === 'default' && 'size-8 rounded-[10px] [&_svg]:size-4',
-        size === 'lg' && 'size-10 rounded-xl [&_svg]:size-5',
+        size === 'default' && 'size-8 rounded-lg [&_svg]:size-4',
+        size === 'lg' && 'size-10 rounded-lg [&_svg]:size-5',
         className,
       )}
       style={{ background: balance.color }}
@@ -238,11 +238,11 @@ function HeroFigure({ cents, currency }: { cents: number; currency: Currency }) 
   const text = formatMoney(Math.abs(cents), currency)
   const dot = text.lastIndexOf('.')
   return (
-    <p className="text-[2.875rem] leading-[0.95] font-semibold tracking-[-0.055em] sm:text-6xl">
+    <p className="text-4xl leading-none font-semibold tracking-[-0.03em] tabular-nums sm:text-5xl">
       {cents > 0 ? '+' : cents < 0 ? '−' : ''}
       {dot === -1 ? text : text.slice(0, dot)}
       {dot !== -1 && (
-        <span className="text-[1.5rem] text-dim sm:text-3xl">{text.slice(dot)}</span>
+        <span className="text-2xl text-dim sm:text-3xl">{text.slice(dot)}</span>
       )}
     </p>
   )
@@ -279,24 +279,20 @@ function NetBalance({
   return (
     <section
       aria-labelledby="net-h"
-      className={cn(card, 'relative gap-4.5 overflow-hidden p-6', className)}
+      className={cn(card, 'relative gap-4 overflow-hidden p-5', className)}
     >
-      <span
-        aria-hidden="true"
-        className="absolute -top-30 -right-20 size-80 rounded-full bg-primary opacity-[0.07] blur-[60px]"
-      />
       <div className="relative flex flex-wrap items-center justify-between gap-3">
         <h2 id="net-h" className="m-0 text-sm font-medium tracking-normal text-muted-foreground">
           Net balance
         </h2>
-        <span className="rounded-full bg-primary/12 px-2.5 py-1.25 text-[0.8125rem] font-semibold text-primary">
+        <span className="rounded-sm bg-primary/8 px-1.5 py-0.5 text-xs font-medium text-primary dark:bg-primary/16">
           {open === 0 ? 'All settled up' : `${plural(open, 'open balance')}`}
         </span>
       </div>
       <div className="relative grid gap-2">
         <HeroFigure cents={owedCents - oweCents} currency={main} />
         {others.length > 0 && (
-          <p className="font-mono text-[0.8125rem] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {others.map((c, i) => {
               const net = (owed[c] ?? 0) - (owe[c] ?? 0)
               return (
@@ -323,7 +319,7 @@ function NetBalance({
           }
           className="flex h-2.5 gap-1 overflow-hidden rounded-full"
         >
-          {total === 0 && <span className="flex-1 rounded-full bg-segment" />}
+          {total === 0 && <span className="flex-1 rounded-full bg-track" />}
           {owedCents > 0 && (
             <span className="rounded-full bg-positive" style={{ flexGrow: owedCents }} />
           )}
@@ -380,7 +376,7 @@ function DirectionTile({
       disabled={people.length === 0}
       onClick={() => onShow(direction)}
       title={people.length ? `Show ${plural(people.length, 'balance')}` : undefined}
-      className="grid min-w-0 content-start gap-1 rounded-[14px] bg-field px-3 py-2.5 text-left outline-none enabled:hover:bg-tile focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="grid min-w-0 content-start gap-1 rounded-lg bg-field px-3 py-2.5 text-left outline-none enabled:hover:bg-tile focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
     >
       <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span
@@ -391,7 +387,7 @@ function DirectionTile({
       </span>
       <span
         className={cn(
-          'truncate font-mono text-[1.0625rem] font-medium tabular-nums',
+          'truncate text-base font-medium tabular-nums',
           mainCents === 0
             ? 'text-muted-foreground'
             : owedToYou
@@ -402,7 +398,7 @@ function DirectionTile({
         {formatMoney(mainCents, main)}
       </span>
       {rest.length > 0 && (
-        <span className="truncate font-mono text-xs text-muted-foreground tabular-nums">
+        <span className="truncate text-xs text-muted-foreground tabular-nums">
           {rest.map(([c, cents]) => `+ ${formatMoney(cents, c as Currency)}`).join(' ')}
         </span>
       )}
@@ -420,7 +416,7 @@ function DirectionTile({
               />
             ))}
             {people.length > 4 && (
-              <span className="-ml-2 grid size-7 place-items-center rounded-full bg-segment text-[0.625rem] font-semibold ring-2 ring-field">
+              <span className="-ml-2 grid size-7 place-items-center rounded-full bg-muted text-3xs font-medium text-muted-foreground ring-2 ring-card">
                 +{people.length - 4}
               </span>
             )}
@@ -458,11 +454,11 @@ function QuickSplit({
 
   if (!selected) {
     return (
-      <section aria-labelledby="quick-h" className={cn(card, 'gap-3.5 p-5', className)}>
+      <section aria-labelledby="quick-h" className={cn(card, 'gap-3.5 p-4', className)}>
         <h2 id="quick-h" className={cardTitle}>
           Quick split
         </h2>
-        <p className="text-[0.8125rem] leading-[1.45] text-muted-foreground">
+        <p className="text-xs leading-normal text-muted-foreground">
           Start a group for a trip, a flat or a regular dinner, then split expenses in it
           from here.
         </p>
@@ -520,7 +516,7 @@ function QuickSplit({
       noValidate
       onSubmit={onSubmit}
       aria-labelledby="quick-h"
-      className={cn(card, 'gap-3.5 p-5', className)}
+      className={cn(card, 'gap-3.5 p-4', className)}
     >
       <div className="flex items-center justify-between gap-2">
         <h2 id="quick-h" className={cardTitle}>
@@ -528,7 +524,7 @@ function QuickSplit({
         </h2>
         <span className="text-xs text-muted-foreground">{selected.currency}</span>
       </div>
-      <label className="grid gap-1.5 rounded-[14px] border bg-field px-3.5 py-3 focus-within:border-primary">
+      <label className="grid gap-1.5 rounded-lg border bg-field px-3.5 py-3 focus-within:border-primary">
         <span className={fieldLabel}>Amount</span>
         <input
           inputMode="decimal"
@@ -536,7 +532,7 @@ function QuickSplit({
           placeholder="0.00"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-full min-w-0 border-0 bg-transparent font-mono text-[1.75rem] leading-tight font-medium tracking-[-0.03em] tabular-nums outline-none placeholder:text-dim"
+          className="w-full min-w-0 border-0 bg-transparent text-[1.75rem] leading-tight font-semibold tracking-[-0.02em] tabular-nums outline-none placeholder:text-dim"
         />
       </label>
       <label className="grid gap-1.5">
@@ -571,7 +567,7 @@ function QuickSplit({
               }))}
             />
           ) : (
-            <Skeleton className="h-11 rounded-xl" />
+            <Skeleton className="h-9 rounded-lg sm:h-8" />
           )}
         </div>
       </div>
@@ -592,10 +588,10 @@ function QuickSplit({
                   )
                 }
                 className={cn(
-                  'flex min-h-9 items-center gap-1.5 rounded-full border py-0 pr-3 pl-1 text-[0.8125rem] font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                  'flex h-8 items-center gap-1.5 rounded-full border border-input py-0 pr-3 pl-1 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                   included
-                    ? 'border-primary bg-primary/10'
-                    : 'border-input text-muted-foreground',
+                    ? 'bg-foreground/8 text-foreground dark:bg-foreground/12'
+                    : 'bg-field text-muted-foreground hover:bg-accent/50',
                 )}
               >
                 <PersonAvatar
@@ -610,11 +606,11 @@ function QuickSplit({
           })}
         </div>
       </div>
-      {error && <p className="text-[0.8125rem] text-destructive">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
       <div className="mt-auto flex items-center justify-between gap-2.5 pt-1">
         <span className="grid gap-0.5">
           <span className={fieldLabel}>Each pays</span>
-          <span className="font-mono text-base font-medium tabular-nums">
+          <span className="text-base font-medium tabular-nums">
             {formatMoney(share, selected.currency)}
           </span>
         </span>
@@ -652,7 +648,7 @@ function Balances({
     <section
       id="balances"
       aria-labelledby="bal-h"
-      className={cn(card, 'scroll-mt-20 gap-2.5 p-5.5', className)}
+      className={cn(card, 'scroll-mt-20 gap-2.5 p-4', className)}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="bal-h" className={cardTitle}>
@@ -688,11 +684,11 @@ function Balances({
               <div className="grid min-w-0 flex-1 gap-0.5">
                 <Link
                   href={b.href}
-                  className="truncate text-[0.9375rem] font-semibold no-underline outline-none group-hover/row:text-primary after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+                  className="truncate text-sm font-medium no-underline outline-none group-hover/row:text-primary after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
                 >
                   {b.name}
                 </Link>
-                <span className="truncate text-[0.8125rem] text-muted-foreground">{b.sub}</span>
+                <span className="truncate text-xs text-muted-foreground">{b.sub}</span>
               </div>
               <div className="grid justify-items-end gap-0.5">
                 <span className="text-xs text-muted-foreground">
@@ -700,7 +696,7 @@ function Balances({
                 </span>
                 <span
                   className={cn(
-                    'font-mono text-[0.9375rem] font-medium tabular-nums',
+                    'text-sm font-medium tabular-nums',
                     b.cents > 0 ? 'text-positive' : 'text-destructive',
                   )}
                 >
@@ -758,20 +754,20 @@ function ClearWhatYouOwe({
     <section
       aria-labelledby="settle-h"
       className={cn(
-        'flex flex-col gap-3.5 rounded-3xl border border-highlight-border bg-highlight p-5',
+        'flex flex-col gap-3.5 rounded-xl border border-highlight-border bg-highlight p-4 shadow-xs/5',
         owing.length === 0 && 'max-xl:hidden',
         className,
       )}
     >
       <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-primary text-primary-foreground">
+        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
           <Zap className="size-4.5" strokeWidth={2.2} />
         </span>
         <div className="grid gap-0.5">
           <h2 id="settle-h" className={cardTitle}>
             {owing.length === 0 ? 'Nothing to clear' : 'Clear what you owe'}
           </h2>
-          <p className="text-[0.8125rem] leading-[1.45] text-soft">
+          <p className="text-xs leading-normal text-muted-foreground">
             {owing.length === 0
               ? 'You don’t owe anyone. When you do, it shows up here.'
               : `${plural(owing.length, 'payment')} ${owing.length === 1 ? 'settles' : 'settle'} everything you owe. Record each one once you’ve paid.`}
@@ -781,12 +777,12 @@ function ClearWhatYouOwe({
       {owing.slice(0, PREVIEW).map((b) => (
         <div
           key={b.key}
-          className="flex items-center gap-3 rounded-[14px] bg-background/55 px-3 py-2.5"
+          className="flex items-center gap-3 rounded-lg bg-background/55 px-3 py-2.5"
         >
           <BalanceAvatar balance={b} />
           <span className="grid min-w-0 flex-1">
-            <span className="truncate font-semibold">{b.name}</span>
-            <span className="truncate font-mono text-xs text-destructive tabular-nums">
+            <span className="truncate font-medium">{b.name}</span>
+            <span className="truncate text-xs text-destructive tabular-nums">
               {formatMoney(Math.abs(b.cents), b.currency)}
             </span>
           </span>
@@ -803,7 +799,7 @@ function ClearWhatYouOwe({
         <button
           type="button"
           onClick={onShowAll}
-          className="self-start text-[0.8125rem] font-medium text-soft hover:text-foreground"
+          className="self-start text-xs font-medium text-muted-foreground hover:text-foreground"
         >
           See all {owing.length} in Balances
         </button>
@@ -833,7 +829,7 @@ function BudgetSummary({
   const left = budget ? budget.amountCents - spent : 0
 
   return (
-    <section aria-labelledby="budget-h" className={cn(card, 'gap-3 p-5', className)}>
+    <section aria-labelledby="budget-h" className={cn(card, 'gap-3 p-4', className)}>
       <div className="flex min-h-9 items-center justify-between gap-2">
         <h2 id="budget-h" className={cardTitle}>
           Budget for {formatMonth(month).split(' ')[0]}
@@ -845,7 +841,7 @@ function BudgetSummary({
       {budget && status ? (
         <>
           <p className="text-muted-foreground">
-            <span className="font-mono text-[1.375rem] font-medium tracking-[-0.03em] text-foreground tabular-nums">
+            <span className="text-[1.375rem] font-medium tracking-[-0.02em] text-foreground tabular-nums">
               {formatMoney(spent, budget.currency)}
             </span>{' '}
             of {formatMoney(budget.amountCents, budget.currency)}
@@ -857,7 +853,7 @@ function BudgetSummary({
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={Math.round(Math.min(status.ratio, 1) * 100)}
-              className="flex h-1.5 rounded-full bg-segment"
+              className="flex h-1.5 rounded-full bg-track"
             >
               <span
                 className={cn(
@@ -865,7 +861,7 @@ function BudgetSummary({
                   status.tone === 'over'
                     ? 'bg-destructive'
                     : status.tone === 'warn'
-                      ? 'bg-[#F2C14E]'
+                      ? 'bg-amber-500'
                       : 'bg-primary',
                 )}
                 style={{ width: `${Math.min(status.ratio, 1) * 100}%` }}
@@ -882,7 +878,7 @@ function BudgetSummary({
           </div>
         </>
       ) : (
-        <p className="text-[0.8125rem] leading-[1.45] text-muted-foreground">
+        <p className="text-xs leading-normal text-muted-foreground">
           Set a monthly limit for everything you spend, including your share with friends
           and in groups, and see how the month is going.
         </p>
@@ -899,7 +895,7 @@ function YourGroups({
   className?: string
 }) {
   return (
-    <section aria-labelledby="groups-h" className={cn(card, 'gap-3.5 p-5.5', className)}>
+    <section aria-labelledby="groups-h" className={cn(card, 'gap-3.5 p-4', className)}>
       <div className="flex min-h-9 items-center justify-between gap-2">
         <h2 id="groups-h" className={cardTitle}>
           Your groups
@@ -952,7 +948,7 @@ function YourShare({
   let offset = 0
 
   return (
-    <section aria-labelledby="spend-h" className={cn(card, 'gap-4 p-5.5', className)}>
+    <section aria-labelledby="spend-h" className={cn(card, 'gap-4 p-4', className)}>
       <div className="flex min-h-9 items-center justify-between gap-2">
         <h2 id="spend-h" className={cardTitle}>
           Your share in {formatMonth(month).split(' ')[0]}
@@ -962,7 +958,7 @@ function YourShare({
         </Link>
       </div>
       {total === 0 ? (
-        <p className="border-t border-divider py-6 text-center text-[0.8125rem] leading-[1.45] text-muted-foreground">
+        <p className="border-t border-divider py-6 text-center text-xs leading-normal text-muted-foreground">
           Nothing spent in {formatMonth(month)} yet. Your share of personal, friend and
           group expenses shows up here.
         </p>
@@ -998,7 +994,7 @@ function YourShare({
               })}
             </svg>
             <div className="absolute inset-0 grid place-content-center justify-items-center gap-0.5">
-              <span className="font-mono text-base font-medium tabular-nums">
+              <span className="text-base font-medium tabular-nums">
                 {spending && formatMoney(total, spending.currency)}
               </span>
               <span className="text-[0.6875rem] text-muted-foreground">after splits</span>
@@ -1013,7 +1009,7 @@ function YourShare({
                   style={{ background: part.color }}
                 />
                 <span className="flex-1">{part.label}</span>
-                <span className="font-mono text-[0.8125rem] tabular-nums">
+                <span className="text-xs tabular-nums">
                   {spending && formatMoney(part.cents, spending.currency)}
                 </span>
               </li>
@@ -1035,7 +1031,7 @@ function RecentSpending({
   className?: string
 }) {
   return (
-    <section aria-labelledby="act-h" className={cn(card, 'gap-3 p-5.5', className)}>
+    <section aria-labelledby="act-h" className={cn(card, 'gap-3 p-4', className)}>
       <div className="flex min-h-9 flex-wrap items-center justify-between gap-3">
         <h2 id="act-h" className={cardTitle}>
           Recent personal spending

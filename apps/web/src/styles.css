@@ -14,41 +14,53 @@
 @custom-variant data-vertical (&[data-orientation="vertical"]);
 
 :root {
-  /* The light theme is derived from the dark one, which is the design's
-     reference (and the default, see src/lib/theme.ts). */
+  /* T3 Code's palette (github.com/pingdotgg/t3code, apps/web/src/index.css):
+     quiet zinc neutrals, a blue primary, emerald and red for +/−. Dark is
+     the default (see src/lib/theme.ts); light is T3's light appearance. */
   color-scheme: light;
-  --bg: #f6f6f3;
-  --bg-sidebar: #efefeb;
-  --surface: #ffffff;
-  --surface-2: #f0f0ec;
-  --field: #fafaf8;
-  --border: #e2e2dc;
-  --border-strong: #d0d0c9;
-  --divider: #e8e8e3;
-  --text: #15161a;
-  --text-2: #3c3e46;
-  --muted: #5f626b;
-  --faint: #7c7f88;
-  --dim: #9a9ca4;
-  --accent: #6a3fdb;
-  --accent-contrast: #ffffff;
-  --accent-surface: #f1ebff;
-  --accent-border: #cdbcf6;
-  /* Money: `owed` is owed to you, `owe` is what you owe. */
-  --owed: #1f6fd1;
-  --owe: #c2531b;
-  --owe-contrast: #ffffff;
-  --danger-border: #ecc3ab;
+  --bg: oklch(99.2% 0 0);
+  --bg-sidebar: var(--color-zinc-50);
+  --surface: var(--color-white);
+  --surface-2: var(--color-zinc-100);
+  --field: oklch(99.2% 0 0);
+  --border: var(--color-zinc-200);
+  --border-strong: var(--color-zinc-300);
+  --divider: color-mix(in srgb, var(--color-zinc-200) 60%, transparent);
+  --text: var(--color-zinc-900);
+  --muted: var(--color-zinc-500);
+  /* T3's secondary label: row metadata a step below titles. */
+  --faint: var(--color-zinc-500);
+  --dim: var(--color-zinc-400);
+  --accent: oklch(0.488 0.217 264);
+  --accent-contrast: var(--color-white);
+  --accent-surface: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  --accent-border: color-mix(in srgb, var(--accent) 28%, transparent);
+  /* Money: `owed` is owed to you (T3's success), `owe` is what you owe and
+     destructive actions (T3's error). */
+  --owed: var(--color-emerald-700);
+  --owe: var(--color-red-600);
+  --owe-contrast: var(--color-white);
+  --danger-border: color-mix(in srgb, var(--owe) 32%, transparent);
   /* Text on the group and category colour fills. */
   --on-fill: #0c0d10;
-  --contrast: #15161a;
-  --contrast-text: #f6f6f3;
-  --segment: #ffffff;
-  --skeleton: #e9e9e4;
-  --radius: 12px;
-  --font: 'Geist', 'Helvetica Neue', system-ui, sans-serif;
-  --mono: 'Geist Mono', ui-monospace, monospace;
-  --shadow-color: 250 30% 20%;
+  --contrast: var(--color-zinc-900);
+  --contrast-text: oklch(99.2% 0 0);
+  /* The active segment of a segmented control. */
+  --segment: var(--color-white);
+  /* Progress tracks and timeline rails. */
+  --track: var(--color-zinc-200);
+  --skeleton: color-mix(in srgb, var(--muted) 15%, transparent);
+  --radius: 0.5rem;
+  --font:
+    -apple-system, BlinkMacSystemFont, var(--font-inter), 'Inter', 'Segoe UI', system-ui,
+    sans-serif;
+  --mono:
+    ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+  --shadow-color: 240 6% 10%;
+  /* Frosted popups and dialogs, as in T3 Code. */
+  --glass-blur: 12px;
+  --glass-opacity: 80%;
+  --glass-saturation: 1.14;
 
   /* shadcn's variable names, for component styles that read them directly
      (e.g. the toaster). They follow the tokens above in both themes. */
@@ -63,33 +75,37 @@
 }
 
 .dark {
+  /* True black canvas; cards and popups keep a hair of lift, and borders
+     (white at 8%) do the separating instead of grey fills. */
   color-scheme: dark;
-  --bg: #0c0d10;
-  --bg-sidebar: #111216;
-  --surface: #16171c;
-  --surface-2: #1d1f25;
-  --field: #0f1014;
-  --border: #24262d;
-  --border-strong: #33353d;
-  --divider: #22242a;
-  --text: #f2f2ee;
-  --text-2: #d6d7dc;
-  --muted: #a0a2ab;
-  --faint: #8a8d96;
-  --dim: #6e717b;
-  --accent: #b18cff;
-  --accent-contrast: #0c0d10;
-  --accent-surface: #1b1726;
-  --accent-border: #3d2f63;
-  --owed: #7cb8ff;
-  --owe: #ff9b6a;
-  --owe-contrast: #0c0d10;
-  --danger-border: #5a3626;
-  --contrast: #f2f2ee;
-  --contrast-text: #0c0d10;
-  --segment: #2a2c33;
-  --skeleton: #1d1f25;
+  --bg: #000;
+  --bg-sidebar: #000;
+  --surface: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
+  --surface-2: rgb(255 255 255 / 5%);
+  --field: rgb(255 255 255 / 3.5%);
+  --border: rgb(255 255 255 / 8%);
+  --border-strong: rgb(255 255 255 / 11%);
+  --divider: rgb(255 255 255 / 6%);
+  --text: var(--color-neutral-100);
+  --muted: var(--color-neutral-400);
+  --faint: #8f8f8f;
+  --dim: var(--color-neutral-500);
+  --accent: oklch(0.571 0.21 264);
+  --accent-contrast: var(--color-white);
+  --accent-surface: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  --accent-border: color-mix(in srgb, var(--accent) 32%, transparent);
+  --owed: var(--color-emerald-400);
+  --owe: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
+  --owe-contrast: var(--color-white);
+  --danger-border: color-mix(in srgb, var(--owe) 32%, transparent);
+  --contrast: var(--color-neutral-100);
+  --contrast-text: #000;
+  --segment: rgb(255 255 255 / 8%);
+  --track: rgb(255 255 255 / 11%);
+  --skeleton: color-mix(in srgb, var(--muted) 15%, transparent);
   --shadow-color: 0 0% 0%;
+  --glass-blur: 16px;
+  --glass-saturation: 1.08;
 }
 
 /* shadcn/ui color names mapped onto the tokens above, so Tailwind utilities
@@ -99,6 +115,11 @@
 @theme inline {
   --font-sans: var(--font);
   --font-mono: var(--mono);
+  /* T3 Code's dense steps below text-xs: 2xs is 11px, 3xs 10px. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: calc(1 / 0.6875);
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: calc(0.875 / 0.625);
   --color-background: var(--bg);
   --color-foreground: var(--text);
   --color-sidebar: var(--bg-sidebar);
@@ -124,7 +145,6 @@
   --color-tile: var(--surface-2);
   --color-field: var(--field);
   --color-divider: var(--divider);
-  --color-soft: var(--text-2);
   --color-faint: var(--faint);
   --color-dim: var(--dim);
   --color-highlight: var(--accent-surface);
@@ -134,14 +154,98 @@
   --color-contrast: var(--contrast);
   --color-contrast-foreground: var(--contrast-text);
   --color-segment: var(--segment);
+  --color-track: var(--track);
   --color-skeleton: var(--skeleton);
-  /* Buttons and inputs 10-14px, inner tiles 18px, cards 22px. */
+  /* T3 Code's scale on an 8px base: controls 8px (lg), cards 12px (xl),
+     dialogs 16px (2xl). */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 2px);
-  --radius-2xl: calc(var(--radius) + 6px);
-  --radius-3xl: calc(var(--radius) + 10px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-skeleton: skeleton 2.4s infinite;
+  /* One stepped opacity breath per skeleton (T3 Code's), so the compositor
+     draws a few frames per cycle instead of one per vsync. */
+  @keyframes skeleton {
+    0%,
+    42% {
+      opacity: 1;
+      animation-timing-function: steps(4);
+    }
+    50%,
+    92% {
+      opacity: 0.55;
+      animation-timing-function: steps(4);
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+}
+
+/* T3 Code's frosted surfaces: menus, selects and popovers (dropdown-glass),
+   dialogs (dialog-glass) over a blurred backdrop (dialog-backdrop), and the
+   sticky bars (surface-glass). Each falls back to a solid fill where
+   backdrop-filter isn't supported. */
+@utility surface-glass {
+  background: color-mix(in srgb, var(--bg) var(--glass-opacity), transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background: var(--bg) !important;
+  }
+}
+
+@utility dropdown-glass {
+  background: color-mix(
+    in srgb,
+    var(--surface) 18%,
+    color-mix(in srgb, var(--surface) var(--glass-opacity), transparent)
+  );
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  box-shadow: 0 16px 40px -18px rgb(0 0 0 / 55%);
+
+  @variant dark {
+    box-shadow: 0 18px 44px -18px rgb(0 0 0 / 80%);
+  }
+
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background: var(--surface) !important;
+  }
+}
+
+@utility dialog-glass {
+  background: color-mix(in srgb, var(--bg) var(--glass-opacity), transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  border-color: color-mix(in srgb, var(--text) 10%, transparent);
+  box-shadow: 0 24px 64px -24px rgb(0 0 0 / 65%);
+
+  @variant dark {
+    border-color: rgb(255 255 255 / 8%);
+    box-shadow:
+      inset 0 1px rgb(255 255 255 / 4%),
+      0 24px 72px -20px rgb(0 0 0 / 90%);
+  }
+
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background: var(--surface) !important;
+  }
+}
+
+@utility dialog-backdrop {
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+
+  @variant dark {
+    background: color-mix(in srgb, var(--bg) 64%, transparent);
+  }
 }
 
 /* Element defaults live in the base layer so Tailwind utilities on shadcn
@@ -175,17 +279,15 @@
   }
 
   h1 {
-    font-size: 1.875rem;
-    letter-spacing: -0.04em;
+    font-size: 1.25rem;
   }
 
   h2 {
     font-size: 1rem;
-    letter-spacing: -0.02em;
   }
 
   h3 {
-    font-size: 1rem;
+    font-size: 0.875rem;
     margin-top: 1.25rem;
   }
 
@@ -202,6 +304,12 @@
   a:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  /* T3 Code's lighter icon stroke: any CSS beats lucide's stroke-width="2"
+     attribute, and `stroke-*` utilities still win over this layer. */
+  :where(svg.lucide[stroke-width='2']) {
+    stroke-width: 1.75;
   }
 }
 
@@ -252,10 +360,10 @@ main.app-shell {
 
 .hero__title {
   margin: 0 0 1.25rem;
-  font-size: clamp(2.9rem, 6.2vw, 5rem);
+  font-size: clamp(2.5rem, 5.4vw, 4.25rem);
   font-weight: 600;
-  line-height: 0.98;
-  letter-spacing: -0.055em;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
 }
 
 .hero__accent {
@@ -265,7 +373,7 @@ main.app-shell {
 .hero__lede {
   max-width: 33rem;
   color: var(--muted);
-  font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
   line-height: 1.6;
 }
 
@@ -298,8 +406,8 @@ main.app-shell {
   width: 1.1rem;
   height: 1.1rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent);
+  background: color-mix(in srgb, var(--owed) 14%, transparent);
+  color: var(--owed);
   font-size: 0.65rem;
   font-weight: 700;
 }
@@ -311,8 +419,8 @@ main.app-shell {
   max-width: 26rem;
   justify-self: end;
   box-shadow:
-    0 40px 120px -30px hsl(var(--shadow-color) / 0.6),
-    0 16px 32px -16px hsl(var(--shadow-color) / 0.3);
+    0 24px 72px -24px hsl(var(--shadow-color) / 0.5),
+    0 1px 2px hsl(var(--shadow-color) / 0.05);
   animation: hero-rise 1s 0.2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 

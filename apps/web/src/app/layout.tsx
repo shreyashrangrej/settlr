@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { Suspense } from 'react'
 
@@ -19,6 +20,10 @@ export const metadata: Metadata = {
   icons: { icon: { url: '/favicon.svg', type: 'image/svg+xml' } },
 }
 
+// T3 Code's type: the system UI font on Apple devices, Inter elsewhere (see
+// `--font` in styles.css, which reads this variable), system monospace.
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 }
 
 // The root layout renders the whole document on the server for every
@@ -36,15 +41,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     // The theme script adds `.dark` to <html> before hydration, so its class
     // is expected to differ from the server render.
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
-        />
       </head>
       <body>
         {/* It reads the search params, which needs a Suspense boundary. */}

@@ -65,7 +65,7 @@ export function NotificationBell() {
           />
         }
       >
-        <Bell className="size-[18px]" />
+        <Bell className="size-4.5" />
         {count > 0 && (
           // The count is in the button's label; the dot just flags it.
           <span

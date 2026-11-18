@@ -99,7 +99,7 @@ export default function VerifyScreen() {
         subtitle={
           <>
             Enter the {OTP_LENGTH}-digit code we sent to{' '}
-            <Text size={15} weight={500}>
+            <Text size={16} weight={500}>
               {email}
             </Text>
             .
@@ -125,7 +125,7 @@ export default function VerifyScreen() {
                 },
               ]}
             >
-              <Text mono size={24} weight={500}>
+              <Text tabular size={26} weight={500}>
                 {code[i] ?? ''}
               </Text>
             </View>
