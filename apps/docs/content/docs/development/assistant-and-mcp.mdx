@@ -21,7 +21,13 @@ and, converted to JSON Schema, tells the model what to send.
 | `add_friend` | `api.friends.create` |
 | `search_expenses` | reads through `internal.assistant.search` |
 | `update_expense` | `api.personal.update`, `api.friends.updateExpense` or `api.groups.updateExpense` |
+| `record_payment` | `api.friends.addPayment` or `api.groups.addPayment` |
 | `delete_expense` | `api.personal.remove`, `api.friends.removeEntry` or `api.groups.removeExpense` |
+
+`record_payment` takes a `friend` or a `group`, `from` and (in a group) `to`.
+Without an `amount` it settles in full: the whole balance with the friend,
+or the group's settle-up plan from one member to the other. It returns
+`balance_now`, and a `payment` event in the chat.
 
 Writes go through the **same public mutations as the forms, as the caller**,
 and reads through internal queries in `convex/assistant.ts` that are scoped
@@ -44,11 +50,15 @@ viewer's local date and default currency:
    (`convex/lib/openrouter.ts`, 45-second timeout) with the tools.
 3. It runs the tool calls the model makes and sends back the results, for up
    to 5 rounds, then returns the reply plus **events** the chat renders:
-   expenses added, updated and found, groups and friends created, and
-   deletions to confirm.
+   expenses added, updated and found, payments recorded, groups and friends
+   created, and deletions to confirm.
 
 The history is trimmed to the last 12 messages, and each message's length is
-capped. `delete_expense` isn't run by the model in the chat: it becomes a
+capped. Each reply's **memo** (the expenses it was about, by ref, so "make
+that 60" works) goes back to the model as a separate system message after
+that reply, not inside it; models copy what's in their own earlier replies,
+and a memo inside one used to leak into the chat. Any copy that slips
+through is stripped from the reply. `delete_expense` isn't run by the model in the chat: it becomes a
 `delete` event, and the expense is only deleted when the user presses
 **Delete**. `api.assistant.status` tells the page whether
 `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` are set.

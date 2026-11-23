@@ -315,7 +315,7 @@ function systemPrompt(context: Context, today: string, defaultCurrency: Currency
         .join('\n')
     : '(none yet)'
 
-  return `You are the assistant in Settlr, an app for tracking and splitting expenses. You add, find and change the user's expenses, and create groups and friends, by calling tools.
+  return `You are the AI Assistant in Settlr, an app for tracking and splitting expenses. You add, find and change the user's expenses, record settle-up payments, and create groups and friends, by calling tools.
 
 Today is ${weekday}, ${today}. The user is ${JSON.stringify(context.name)}. Their default currency is ${defaultCurrency}.
 
@@ -338,6 +338,12 @@ Creating groups and friends:
 - create_group when the user asks for a new group. Its members are just names (the user is added automatically); they don't need to be friends or have accounts. If they also describe an expense for it, add it with add_group_expense in the same reply.
 - add_friend when they ask to add a friend. If they want an expense with someone who isn't a friend or in one of their groups, ask whether to add them as a friend first.
 
+Settle-up payments (record_payment):
+- When someone paid someone back ("Prathamesh paid me 20k", "I paid Sam back", "settled up with Priya"), record a payment, not an expense. It changes balances, not spending.
+- With a friend: pass friend, and from ("me" or the friend). In a group: pass group, from and to (to defaults to the user). If the person is a friend, use the friend; if they're only in a group, use that group. If they're both a friend and in a group, or in several groups, and it's unclear which balance they paid off, ask.
+- Leave amount out only when the user says they settled up in full; otherwise never guess it. Group payments are in the group's currency.
+- After recording, say where the balance stands now (balance_now).
+
 Finding (search_expenses):
 - Use it for any question about their expenses or spending: lists, totals, "how much did I spend on...". Turn periods into date_from/date_to ("this month" is from the 1st to today).
 - "amount" is the whole expense; "your_share" is what it cost the user. When they ask what they spent, use your_share totals.
@@ -346,13 +352,23 @@ Finding (search_expenses):
 Changing and deleting:
 - You need the expense's ref: take it from earlier in the conversation, or call search_expenses first. If more than one expense fits and it's unclear which one they mean, ask. Never guess.
 - update_expense changes it right away. delete_expense only offers it: tell the user to press Delete under your reply to confirm.
-- You can't move an expense between personal, a friend and a group, change a group expense's currency, record settle-up payments or handle receipts; say those are done in the app.
+- You can't move an expense between personal, a friend and a group, change a group expense's currency, change or delete settle-up payments, or handle receipts; say those are done in the app.
 
 Always:
 - Only act on the latest message. Earlier messages were already handled; never repeat their changes.
 - Work out relative dates ("yesterday", "last Friday") from today.
 - Reply briefly with what you did or found. If a tool returned an error, explain it plainly and say what the user can do.
-- Plain text only, no markdown.`
+- Plain text only, no markdown. Never repeat the reference notes about earlier replies (refs and the lines after them); they're for you, not the user.`
+}
+
+const MEMO_HEADER = 'Expenses in the previous reply'
+
+// Removes a memo the model echoed into its reply (now or in an older
+// version, which put it in brackets after the reply).
+function withoutMemo(text: string) {
+  return text
+    .replace(/\[?\s*Expenses in (?:this|the previous) reply[\s\S]*$/i, '')
+    .trimEnd()
 }
 
 // A line per expense in this reply, sent back with it as history, so a
@@ -360,7 +376,7 @@ Always:
 function memoOf(events: Array<ChatEvent>) {
   const seen = new Map<string, ExpenseView>()
   for (const event of events) {
-    if (event.type === 'created') continue
+    if (event.type === 'created' || event.type === 'payment') continue
     const list = event.type === 'found' ? event.expenses : [event.expense]
     for (const e of list) seen.set(e.ref, e)
   }
@@ -380,6 +396,7 @@ function summarize(events: Array<ChatEvent>) {
     count('created') && `created ${count('created')}`,
     count('added') && `added ${count('added')}`,
     count('updated') && `updated ${count('updated')}`,
+    count('payment') && `recorded ${count('payment')} payment${count('payment') === 1 ? '' : 's'}`,
   ].filter(Boolean)
   return parts.length ? `Done: ${parts.join(', ')}.` : 'Done.'
 }
@@ -417,17 +434,25 @@ export const send = action({
     if (history.at(-1)?.role !== 'user') throw new ConvexError('Type a message.')
     const messages: Array<ChatMessage> = [
       { role: 'system', content: systemPrompt(context, today, args.currency) },
-      ...history.map((m): ChatMessage => {
+      ...history.flatMap((m): Array<ChatMessage> => {
         if (m.role === 'user') {
-          return { role: 'user', content: input.text(m.content, 'Message', MAX_USER_MESSAGE) }
+          return [{ role: 'user', content: input.text(m.content, 'Message', MAX_USER_MESSAGE) }]
         }
+        // The expenses a reply was about go after it as a note of their
+        // own, not inside the reply: models copy what's in their earlier
+        // replies, and the note once showed up in the chat.
         const memo = m.memo?.slice(0, MAX_MEMO)
-        return {
-          role: 'assistant',
-          content:
-            m.content.slice(0, MAX_ASSISTANT_MESSAGE) +
-            (memo ? `\n\n[Expenses in this reply, as ref | description | amount | date | with:\n${memo}]` : ''),
-        }
+        return [
+          { role: 'assistant', content: withoutMemo(m.content).slice(0, MAX_ASSISTANT_MESSAGE) },
+          ...(memo
+            ? [
+                {
+                  role: 'system' as const,
+                  content: `${MEMO_HEADER} (ref | description | amount | date | with), for you only, never shown to the user:\n${memo}`,
+                },
+              ]
+            : []),
+        ]
       }),
     ]
 
@@ -481,6 +506,7 @@ export const send = action({
     // Searches made only to find something to change aren't worth showing.
     const changed = events.some((e) => e.type === 'updated' || e.type === 'delete')
     const shown = changed ? events.filter((e) => e.type !== 'found') : events
+    reply = reply ? withoutMemo(reply) : null
     return {
       reply:
         reply ||

@@ -57,7 +57,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   dashboard's recent list), `assistant.ts` (the `/assistant` chat: an action that
   calls OpenRouter with tool calling, plus the internal queries its search
   and edit tools read through; the tools, in `lib/assistantTools.ts`, add, find
-  and edit expenses and create groups and friends; they write through the
+  and edit expenses, record settle-up payments, and create groups and
+  friends; they write through the
   public mutations above as the caller (creating reloads the friends and
   groups the tools match names against, so one reply can create a group
   and add to it), and deleting is only offered, the user confirms it in

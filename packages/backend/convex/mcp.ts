@@ -17,7 +17,7 @@ import { requireUser } from './lib/auth'
 
 // The assistant's tools over MCP (Model Context Protocol), so Claude,
 // ChatGPT and other agents can add, find, change and delete the user's
-// expenses. The web app's /api/mcp route checks the client's OAuth token
+// expenses and record settle-up payments. The web app's /api/mcp route checks the client's OAuth token
 // (see `mcpBridge` in convex/auth.ts), then passes each JSON-RPC request to
 // `handle` as the user. The client's own model does the talking, so there's
 // no OpenRouter call here; deleting is a real tool, and the client asks the
@@ -37,7 +37,8 @@ const INSTRUCTIONS = `Settlr tracks and splits expenses. These tools act as the 
 - In search results, "amount" is the whole expense and "your_share" is what it cost the user; use your_share for "how much did I spend".
 - To change or delete an expense, get its ref from search_expenses. If more than one expense fits, ask which one.
 - delete_expense can't be undone, so check with the user before calling it.
-- Settle-up payments, receipts, moving an expense between personal, a friend and a group, and changing a group expense's currency are done in the Settlr app.`
+- record_payment logs a settle-up payment, when someone pays someone back ("Sam paid me 500"): with a friend (from "me" or "friend"), or between two members of a group (from and to; to defaults to the user). It changes balances, not spending, so it isn't an expense. Leave the amount out only when the user settled up in full. If the person is both a friend and in a group, or it's unclear which balance they paid off, ask. It returns balance_now: tell the user where things stand.
+- Changing or deleting settle-up payments, receipts, moving an expense between personal, a friend and a group, and changing a group expense's currency are done in the Settlr app.`
 
 type Annotations = {
   title: string
@@ -96,6 +97,13 @@ const mcpTools: Array<{
     name: 'update_expense',
     ...tools.update_expense,
     annotations: { title: 'Change an expense', destructiveHint: true, idempotentHint: true },
+  },
+  {
+    name: 'record_payment',
+    ...tools.record_payment,
+    // It adds a payment rather than changing one, but calling it twice
+    // records two.
+    annotations: { title: 'Record a settle-up payment', destructiveHint: false, idempotentHint: false },
   },
   {
     name: 'delete_expense',

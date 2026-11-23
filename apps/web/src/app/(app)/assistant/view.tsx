@@ -5,8 +5,10 @@ import { convexQuery, useConvexAction, useConvexMutation } from '@convex-dev/rea
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import {
+  ArrowRight,
   ArrowUp,
   Check,
+  HandCoins,
   Pencil,
   Plus,
   Search,
@@ -407,6 +409,8 @@ function EventCard({
       return <FoundList event={event} />
     case 'created':
       return <CreatedCard event={event} />
+    case 'payment':
+      return <PaymentCard event={event} />
   }
 }
 
@@ -489,6 +493,74 @@ function CreatedCard({ event }: { event: Extract<ChatEvent, { type: 'created' }>
         </Link>
       </div>
     </div>
+  )
+}
+
+/** A settle-up payment the assistant recorded: who paid whom, and where it leaves you. */
+function PaymentCard({ event }: { event: Extract<ChatEvent, { type: 'payment' }> }) {
+  return (
+    <div className={eventCard}>
+      <div className="flex items-center gap-3 px-4 py-3.5">
+        <span className="grid size-9.5 shrink-0 place-items-center rounded-lg bg-positive/14 text-positive [&_svg]:size-4.5">
+          <HandCoins />
+        </span>
+        <span className="grid min-w-0 flex-1 gap-0.5">
+          <span className="flex min-w-0 items-center gap-1.5 font-medium">
+            <span className="truncate">{event.from}</span>
+            <ArrowRight className="size-3.5 shrink-0 text-faint" role="img" aria-label="paid" />
+            <span className="truncate">{event.to}</span>
+          </span>
+          <span className="truncate text-xs text-muted-foreground">
+            Settle-up · {event.kind === 'group' ? `In ${event.where}` : `With ${event.where}`} ·{' '}
+            {formatDate(event.date)}
+          </span>
+        </span>
+        <span className="text-base font-medium tabular-nums">
+          {formatMoney(event.amountCents, event.currency)}
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-divider bg-field/60 px-4 py-2.5">
+        <span className={applied}>
+          <Check className="size-3.5" strokeWidth={2.6} />
+          Payment recorded
+          <span className="font-normal text-muted-foreground">· {event.balance}</span>
+        </span>
+        <Link href={event.href} className={quietLink}>
+          Open
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+/** A recorded payment in the Changes panel. */
+function PaymentStep({
+  event,
+  last,
+}: {
+  event: Extract<ChatEvent, { type: 'payment' }>
+  last: boolean
+}) {
+  return (
+    <li className="flex gap-3">
+      <span className="flex flex-col items-center">
+        <span className="grid size-5.5 place-items-center rounded-full bg-positive text-background [&_svg]:size-3">
+          <HandCoins strokeWidth={2.6} />
+        </span>
+        {!last && <span className="min-h-4.5 w-px flex-1 bg-track" />}
+      </span>
+      <span className={cn('grid min-w-0 flex-1 gap-0.5', !last && 'pb-3.5')}>
+        <span className="truncate font-medium">
+          {event.from} paid {event.to === 'You' ? 'you' : event.to}
+        </span>
+        <span className="truncate text-xs text-muted-foreground">
+          {formatMoney(event.amountCents, event.currency)} · {event.where}
+        </span>
+      </span>
+      <Link href={event.href} className="text-xs text-muted-foreground no-underline hover:text-primary">
+        Open
+      </Link>
+    </li>
   )
 }
 
@@ -736,6 +808,9 @@ function Changes({ messages, decisions }: { messages: Array<Message>; decisions:
             const last = i === items.length - 1
             if (event.type === 'created') {
               return <CreatedStep key={key} event={event} last={last} />
+            }
+            if (event.type === 'payment') {
+              return <PaymentStep key={key} event={event} last={last} />
             }
             const { expense } = event
             const decision = event.type === 'delete' ? decisions[expense.ref] : undefined

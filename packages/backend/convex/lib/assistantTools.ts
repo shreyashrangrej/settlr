@@ -48,6 +48,21 @@ export type ChatEvent =
   | { type: 'delete'; expense: ExpenseView }
   // A new group or friend. `detail` is a line about it, `href` its page.
   | { type: 'created'; kind: 'group' | 'friend'; name: string; detail: string; href: string }
+  // A settle-up payment, with a friend or between two group members. `from`
+  // and `to` are names, or "You"; `where` is the friend or group, `balance`
+  // a line about where things stand after it, `href` its page.
+  | {
+      type: 'payment'
+      kind: 'friend' | 'group'
+      from: string
+      to: string
+      amountCents: number
+      currency: Currency
+      date: string
+      where: string
+      balance: string
+      href: string
+    }
 
 const fields = {
   description: z
@@ -186,6 +201,40 @@ export const tools = {
         .describe('Group expenses only: names of the members sharing it'),
     }),
   },
+  record_payment: {
+    description:
+      'Record a settle-up payment: money one person paid another to pay back what they owed ("Sam paid me 500", "I paid Priya back"). It changes balances, not spending, so it isn’t an expense. Either with a friend (one on one), or between two members of a group.',
+    args: z.object({
+      friend: z
+        .string()
+        .optional()
+        .describe('The friend, for a one-on-one payment. Give this or group, not both'),
+      group: z
+        .string()
+        .optional()
+        .describe('The group, for a payment between two of its members'),
+      from: z.string().describe('Who paid: "me" (the user) or the person’s name'),
+      to: z
+        .string()
+        .optional()
+        .describe(
+          'Who received it: "me" or a name. Leave out when it’s the user, or with a friend (it’s the other one of you)',
+        ),
+      amount: fields.amount
+        .optional()
+        .describe(
+          'In the main unit of the currency. Leave out only when the user says they settled up in full: it then clears the whole balance between them',
+        ),
+      currency: z
+        .enum(CURRENCIES)
+        .optional()
+        .describe(
+          'Friend payments only, if the user names one; leave out for the currency of your balance with them. Group payments are in the group’s currency',
+        ),
+      date: fields.date,
+      note: z.string().trim().max(80).optional().describe('Friend payments only, e.g. "UPI"'),
+    }),
+  },
   delete_expense: {
     description:
       'Offer to delete an expense, given its ref. Nothing is deleted yet: the app shows the user a Delete button to confirm.',
@@ -294,6 +343,176 @@ async function viewOf(ctx: ActionCtx, ref: string): Promise<ExpenseView> {
 async function added(ctx: ActionCtx, ref: string): Promise<ToolOutcome> {
   const expense = await viewOf(ctx, ref)
   return { result: { ok: true, added: forModel(expense) }, events: [{ type: 'added', expense }] }
+}
+
+// "₹1,200.00" with a direction, from the user's side: positive means
+// they're owed.
+function balanceLine(cents: number, currency: Currency, other: string) {
+  if (cents === 0) return `You and ${other} are square`
+  return cents > 0
+    ? `${other} owes you ${formatMoney(cents, currency)}`
+    : `You owe ${other} ${formatMoney(-cents, currency)}`
+}
+
+async function recordPayment(
+  ctx: ActionCtx,
+  context: Context,
+  defaults: { today: string; currency: Currency },
+  a: z.infer<typeof tools.record_payment.args>,
+): Promise<ToolOutcome> {
+  if (Boolean(a.friend) === Boolean(a.group)) {
+    return fail('Say whether the payment is with a friend or in a group (one of them).')
+  }
+  const date = a.date ?? defaults.today
+
+  if (a.friend) {
+    const found = findByName(context.friends, a.friend, 'friend')
+    if (typeof found === 'string') return fail(found)
+    const friend = await ctx.runQuery(api.friends.get, { friendId: found.id })
+    if (!friend) return fail(`There’s no friend called “${a.friend}”.`)
+    const side = (who: string) => {
+      const lower = who.trim().toLowerCase()
+      if (isMe(lower, context)) return 'me' as const
+      if (lower === 'friend' || findByName([friend], who, 'friend') === friend) return 'friend' as const
+      return null
+    }
+    const paidBy = side(a.from)
+    if (!paidBy) return fail(`“${a.from}” isn’t you or ${friend.name}.`)
+    if (a.to !== undefined) {
+      const to = side(a.to)
+      if (!to) return fail(`“${a.to}” isn’t you or ${friend.name}.`)
+      if (to === paidBy) return fail('A payment goes from one of you to the other.')
+    }
+    // The balance it settles: the one currency you have with them, unless
+    // the user named another.
+    const owing = Object.entries(friend.balances).filter(([, cents]) => cents) as Array<
+      [Currency, number]
+    >
+    const currency = a.currency ?? (owing.length === 1 ? owing[0][0] : defaults.currency)
+    const balance = friend.balances[currency] ?? 0 // positive: they owe you
+    let amountCents: number
+    if (a.amount !== undefined) {
+      amountCents = toCents(a.amount)
+    } else {
+      // Settling in full: whoever owes pays it all.
+      const owed = paidBy === 'friend' ? balance : -balance
+      if (owed <= 0) {
+        return fail(
+          `There’s nothing for ${paidBy === 'me' ? 'you' : friend.name} to pay back in ${currency} (${balanceLine(balance, currency, friend.name)}). Ask for the amount.`,
+        )
+      }
+      amountCents = owed
+    }
+    await ctx.runMutation(api.friends.addPayment, {
+      friendId: friend.id,
+      amountCents,
+      currency,
+      paidBy,
+      note: a.note?.trim() || undefined,
+      date,
+    })
+    const after = (await ctx.runQuery(api.friends.get, { friendId: friend.id }))?.balances[currency] ?? 0
+    const line = balanceLine(after, currency, friend.name)
+    const from = paidBy === 'me' ? 'You' : friend.name
+    const to = paidBy === 'me' ? friend.name : 'You'
+    return {
+      result: {
+        ok: true,
+        recorded_payment: { from, to, amount: formatMoney(amountCents, currency), date },
+        balance_now: line,
+      },
+      events: [
+        {
+          type: 'payment',
+          kind: 'friend',
+          from,
+          to,
+          amountCents,
+          currency,
+          date,
+          where: friend.name,
+          balance: line,
+          href: `/friends/${friend.id}`,
+        },
+      ],
+    }
+  }
+
+  const found = findByName(context.groups, a.group!, 'group')
+  if (typeof found === 'string') return fail(found)
+  if (a.currency && a.currency !== found.currency) {
+    return fail(`Payments in ${found.name} are always in ${found.currency}.`)
+  }
+  const find = memberFinder(context, found)
+  const payer = find(a.from)
+  if (typeof payer === 'string') return fail(payer)
+  const payee = find(a.to ?? 'me')
+  if (typeof payee === 'string') return fail(payee)
+  if (payer.id === payee.id) {
+    return fail(
+      a.to === undefined
+        ? 'Who did they pay? Ask who received it.'
+        : 'A payment goes from one person to another.',
+    )
+  }
+  let amountCents: number
+  if (a.amount !== undefined) {
+    amountCents = toCents(a.amount)
+  } else {
+    // Settling in full: what the group's settle-up plan has this person
+    // paying the other.
+    const group = await ctx.runQuery(api.groups.get, { groupId: found.id })
+    const planned = group?.settlements.find((s) => s.from === payer.id && s.to === payee.id)
+    if (!planned) {
+      return fail(
+        `${found.name}’s settle-up plan has nothing from ${payer.name} to ${payee.name}. Ask for the amount.`,
+      )
+    }
+    amountCents = planned.amountCents
+  }
+  await ctx.runMutation(api.groups.addPayment, {
+    groupId: found.id,
+    from: payer.id,
+    to: payee.id,
+    amountCents,
+    date,
+  })
+  const group = await ctx.runQuery(api.groups.get, { groupId: found.id })
+  const myNet = group?.members.find((m) => m.id === found.meMemberId)?.netCents ?? 0
+  const line =
+    myNet === 0
+      ? `You’re square in ${found.name}`
+      : myNet > 0
+        ? `You’re owed ${formatMoney(myNet, found.currency)} in ${found.name}`
+        : `You owe ${formatMoney(-myNet, found.currency)} in ${found.name}`
+  const name = (m: { id: string; name: string }) => (m.id === found.meMemberId ? 'You' : m.name)
+  return {
+    result: {
+      ok: true,
+      recorded_payment: {
+        from: name(payer),
+        to: name(payee),
+        amount: formatMoney(amountCents, found.currency),
+        group: found.name,
+        date,
+      },
+      balance_now: line,
+    },
+    events: [
+      {
+        type: 'payment',
+        kind: 'group',
+        from: name(payer),
+        to: name(payee),
+        amountCents,
+        currency: found.currency,
+        date,
+        where: found.name,
+        balance: line,
+        href: `/groups/${found.id}`,
+      },
+    ],
+  }
 }
 
 /**
@@ -533,6 +752,12 @@ export async function runTool(
         result: { ok: true, before: forModel(before), after: forModel(expense) },
         events: [{ type: 'updated', expense, before }],
       }
+    }
+
+    case 'record_payment': {
+      const parsed = tools[name].args.safeParse(rawArgs)
+      if (!parsed.success) return fail(z.prettifyError(parsed.error))
+      return await recordPayment(ctx, context, defaults, parsed.data)
     }
 
     case 'delete_expense': {

@@ -11,7 +11,7 @@ friend, and it makes the changes through the same checks as the forms.
 
 ## What it can do
 
-<Tabs items={['Add', 'Find', 'Change', 'Create']}>
+<Tabs items={['Add', 'Find', 'Change', 'Settle up', 'Create']}>
   <Tab value="Add">
     - "Add tea personal expense 50"
     - "Lunch with Sam 24, I paid, split equally"
@@ -27,6 +27,15 @@ friend, and it makes the changes through the same checks as the forms.
     - "Change the tea to 60"
     - "Make yesterday's taxi a transport expense"
   </Tab>
+  <Tab value="Settle up">
+    - "Priya paid me 500"
+    - "I paid Sam back 1200"
+    - "In the Goa trip, Alex settled up with me in full"
+
+    It records a settle-up payment, with a friend or between two members of
+    a group, and tells you where the balance stands now. Say "in full" to
+    clear the whole balance; otherwise give the amount.
+  </Tab>
   <Tab value="Create">
     - "New group Pune stay with Vaishnavi, hotel 2000 split equally"
     - "Add Alex as a friend"
@@ -36,7 +45,8 @@ friend, and it makes the changes through the same checks as the forms.
 </Tabs>
 
 Under each reply, Settlr shows what actually happened: the expenses added,
-changed or found, and links to new groups and friends.
+changed or found, the payments recorded, and links to new groups and
+friends.
 
 ## Deleting
 
@@ -52,8 +62,10 @@ press it.
   missing, it asks.
 - Dates default to today, and the currency to your default currency.
 - The conversation lives in your browser and isn't saved.
-- Settle-up payments, receipts, and moving an expense between personal, a
-  friend and a group are done in the app itself.
+- If someone is both your friend and in one of your groups, it asks which
+  balance a payment settles.
+- Changing or deleting a payment, receipts, and moving an expense between
+  personal, a friend and a group are done in the app itself.
 
 <Callout type="info">
   The assistant runs on a language model through OpenRouter. If the page says
