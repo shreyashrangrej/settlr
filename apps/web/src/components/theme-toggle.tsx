@@ -3,18 +3,19 @@
 import { Moon, Sun } from 'lucide-react'
 
 import { Button } from '#/components/ui/button'
-import { applyTheme } from '#/lib/theme'
+import { applyTheme, originOf } from '#/lib/theme'
 import { cn } from '#/lib/utils'
 
 /**
  * Light/dark switch, in the signed-out header and the app's top bar. It
  * saves an explicit choice (Settings → Appearance → Theme → System goes
- * back to following the device) and cross-fades (`applyTheme`).
+ * back to following the device), and the new theme spreads out from the
+ * button in a circle (`applyTheme`).
  */
 export function ThemeToggle({ className }: { className?: string }) {
-  function toggle() {
+  function toggle(event: React.MouseEvent<HTMLButtonElement>) {
     const isDark = document.documentElement.classList.contains('dark')
-    applyTheme(isDark ? 'light' : 'dark')
+    applyTheme(isDark ? 'light' : 'dark', originOf(event))
   }
 
   // Both icons are rendered and swapped with the `dark:` variant, so the

@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import { signOut } from '#/lib/auth-client'
-import { applyTheme } from '#/lib/theme'
+import { applyTheme, originOf } from '#/lib/theme'
 
 // The signed-in user's menu, with their details, shortcuts, the theme
 // switch and sign-out. `row` is the sidebar's footer (avatar and name),
@@ -131,9 +131,10 @@ export function AccountMenu({
               agree. */}
           <DropdownMenuItem
             closeOnClick={false}
-            onClick={() =>
+            onClick={(event) =>
               applyTheme(
                 document.documentElement.classList.contains('dark') ? 'light' : 'dark',
+                originOf(event.nativeEvent),
               )
             }
           >

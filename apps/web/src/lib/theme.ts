@@ -109,14 +109,78 @@ export function readThemeChoice(): ThemeChoice {
   return stored === 'light' || stored === 'dark' ? stored : 'system'
 }
 
-export function applyTheme(choice: ThemeChoice) {
+/** Where a theme switch starts from, in viewport pixels. */
+export type RevealOrigin = { x: number; y: number }
+
+/**
+ * The centre of the control an event came from (a button, menu item or
+ * tab), for `applyTheme`'s wipe. Undefined when there's no element.
+ */
+export function originOf(event: Event | { target: EventTarget | null } | undefined) {
+  const target = event?.target
+  if (!(target instanceof Element)) return undefined
+  const control = target.closest('button, [role="menuitem"], [role="tab"]') ?? target
+  const box = control.getBoundingClientRect()
+  return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+}
+
+/**
+ * Switches light/dark. From `origin` (the control pressed), the new theme
+ * pours out of it in a growing circle, over the old one (Lucid Dungeon's
+ * wipe); without one it cross-fades like the other appearance changes.
+ */
+export function applyTheme(choice: ThemeChoice, origin?: RevealOrigin) {
   const dark =
     choice === 'system'
       ? window.matchMedia('(prefers-color-scheme: dark)').matches
       : choice === 'dark'
   write(THEME_STORAGE_KEY, choice === 'system' ? null : choice)
   if (dark === (currentTheme() === 'dark')) return
-  withViewTransition(() => document.documentElement.classList.toggle('dark', dark))
+  const change = () => document.documentElement.classList.toggle('dark', dark)
+  if (origin) circleReveal(origin, change)
+  else withViewTransition(change)
+}
+
+const REVEAL_TIMING: KeyframeAnimationOptions = {
+  duration: 480,
+  // Brisk start, gentle landing: one gesture rather than something drawn.
+  easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  pseudoElement: '::view-transition-new(root)',
+}
+
+/**
+ * Applies `change` in a view transition whose new snapshot is clipped by a
+ * circle growing from `origin` until it covers the furthest corner. Every
+ * frame shows one finished theme or the other, never a blend of the two.
+ * `data-reveal` on <html> switches the default cross-fade off for it
+ * (styles.css). Unsupported browsers and reduced motion just switch.
+ */
+function circleReveal({ x, y }: RevealOrigin, change: () => void) {
+  if (typeof document.startViewTransition !== 'function' || prefersReducedMotion()) {
+    change()
+    return
+  }
+  const root = document.documentElement
+  root.dataset.reveal = ''
+  const transition = document.startViewTransition(change)
+  transition.ready
+    .then(() => {
+      const width = window.innerWidth
+      const height = window.innerHeight
+      const radius = Math.hypot(Math.max(x, width - x), Math.max(y, height - y))
+      // In percentages of the snapshot rather than pixels: mobile browsers
+      // can size the snapshot differently from the viewport (a collapsible
+      // address bar), and percentages still land on the button. A circle's
+      // percentage radius is of the box's diagonal over √2.
+      const at = `${(x / width) * 100}% ${(y / height) * 100}%`
+      const reach = (radius / (Math.hypot(width, height) / Math.SQRT2)) * 100
+      root.animate(
+        { clipPath: [`circle(0% at ${at})`, `circle(${reach}% at ${at})`] },
+        REVEAL_TIMING,
+      )
+    })
+    .catch(() => {})
+  transition.finished.finally(() => delete root.dataset.reveal)
 }
 
 export function readAccent(): Accent {

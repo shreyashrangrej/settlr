@@ -36,6 +36,7 @@ import {
   applyFrame,
   applyMotion,
   applyTheme,
+  originOf,
   readAccent,
   readFrame,
   readMotion,
@@ -135,9 +136,9 @@ function AppearanceCard() {
           </FieldContent>
           <Tabs
             value={theme}
-            onValueChange={(value: ThemeChoice) => {
+            onValueChange={(value: ThemeChoice, details) => {
               setTheme(value)
-              applyTheme(value)
+              applyTheme(value, originOf(details.event))
             }}
           >
             <TabsList aria-label="Theme">

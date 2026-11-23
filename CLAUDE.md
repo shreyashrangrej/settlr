@@ -139,7 +139,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 - `src/lib/`: isomorphic code: `types.ts`, `dashboard.ts` (the recent
   expenses args the dashboard's page and view share),
   `search.ts` (`parseSearch`, `searchHref`), `preferences.ts`
-  (localStorage; throws on the server), `theme.ts` (light/dark) and
+  (localStorage; throws on the server), `theme.ts` (appearance; `applyTheme(choice, originOf(event))` wipes the
+  new theme in as a circle from the control pressed) and
   `utils.ts` (shadcn's `cn`).
 - `src/components/ui/`: shadcn/ui components built on **Base UI**
   (`@base-ui/react`, style `base-nova` in `components.json`), not Radix.

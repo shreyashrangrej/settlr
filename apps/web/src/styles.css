@@ -555,6 +555,19 @@
     animation-timing-function: var(--ease);
   }
 
+  /* The theme switch's circle wipe (`circleReveal` in src/lib/theme.ts):
+     no cross-fade, the new theme is clipped open over the old one, which
+     stays whole beneath it. `plus-lighter`, the default blend, would make
+     the overlap glow. */
+  :root[data-reveal]::view-transition-old(root),
+  :root[data-reveal]::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+  :root[data-reveal]::view-transition-new(root) {
+    z-index: 1;
+  }
+
   /* Less motion, when the system asks for it or the viewer picked it in
      Settings (`data-motion="reduce"` on <html>): animations and
      transitions finish at once, so things still appear and change state,
