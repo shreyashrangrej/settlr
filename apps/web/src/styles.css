@@ -272,6 +272,9 @@
   --animate-fade-in: fade-in 0.2s var(--ease) both;
   --animate-grow-x: grow-x 0.8s 0.12s var(--ease) both;
   --animate-pop: pop 0.42s var(--spring) both;
+  /* The assistant's robot: a slow bob, and a blink every few seconds. */
+  --animate-bob: bob 3.2s ease-in-out infinite;
+  --animate-blink: blink 4.8s ease-in-out infinite;
   /* Gr8r's shimmer: a lighter band sweeping across the placeholder. */
   @keyframes skeleton {
     from {
@@ -307,6 +310,28 @@
   @keyframes grow-x {
     from {
       transform: scaleX(0);
+    }
+  }
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-3px);
+    }
+  }
+  @keyframes blink {
+    0%,
+    88%,
+    100% {
+      transform: scaleY(1);
+    }
+    91% {
+      transform: scaleY(0.1);
+    }
+    94% {
+      transform: scaleY(1);
     }
   }
   @keyframes pop {

@@ -5,7 +5,7 @@ import { prefetchQuery } from '#/server/convex.server'
 import { api } from '@settlr/backend/convex/_generated/api'
 import { AssistantView } from './view'
 
-export const metadata: Metadata = { title: 'Assistant · Settlr' }
+export const metadata: Metadata = { title: 'AI Assistant · Settlr' }
 
 // SSR: full. A chat that adds expenses from plain language ("Add tea
 // personal expense 50"). Only whether the assistant is set up is prefetched;

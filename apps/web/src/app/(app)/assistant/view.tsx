@@ -10,7 +10,6 @@ import {
   Pencil,
   Plus,
   Search,
-  Sparkles,
   Trash2,
   UserPlus,
   Users,
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react'
 
 import { CategoryIcon } from '#/components/category'
+import { RobotIcon } from '#/components/robot-icon'
 import { useAction } from '#/components/ledger'
 import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert'
 import { Button } from '#/components/ui/button'
@@ -177,7 +177,7 @@ export function AssistantView() {
         {/* The breadcrumb names the page and the empty chat introduces it,
             so there's no visible title; once there's a conversation, the
             only thing up here is starting a new one. */}
-        <h1 className="sr-only">Assistant</h1>
+        <h1 className="sr-only">AI Assistant</h1>
         {messages.length > 0 && (
           <div className="mx-auto flex w-full max-w-190 justify-end">
             <Button variant="outline" onClick={newChat} disabled={pending}>
@@ -192,7 +192,7 @@ export function AssistantView() {
           <div className="mx-auto flex w-full max-w-190 flex-1 flex-col gap-5.5 *:animate-rise-in">
             {!configured && (
               <Alert>
-                <Sparkles />
+                <RobotIcon />
                 <AlertTitle>The assistant isn’t set up yet</AlertTitle>
                 <AlertDescription>
                   Set <code>OPENROUTER_API_KEY</code> and <code>OPENROUTER_MODEL</code> on the
@@ -205,7 +205,8 @@ export function AssistantView() {
               // composer.
               <div className="my-auto grid gap-7 py-6">
                 <div className="grid justify-items-center gap-2 text-center">
-                  <AssistantMark className="size-11 rounded-xl [&_svg]:size-5" />
+                  {/* The big one bobs and blinks now and then. */}
+                  <AssistantMark className="size-12 animate-bob rounded-xl [&_svg]:size-6 [&_.robot-eye]:origin-center [&_.robot-eye]:animate-blink [&_.robot-eye]:[transform-box:fill-box]" />
                   <h2 className="m-0 mt-2 text-xl font-semibold">What should I do?</h2>
                   <p className="max-w-md text-sm text-muted-foreground">
                     Tell me about an expense the way you’d text a friend, or ask about your
@@ -272,7 +273,7 @@ export function AssistantView() {
         >
           <div className="mx-auto flex max-w-190 items-end gap-2 rounded-xl border border-input bg-field py-1.5 pr-1.5 pl-4 shadow-[0_1px_2px_rgb(0_0_0/4%),0_10px_28px_-14px_rgb(0_0_0/18%)] transition-[border-color,box-shadow] duration-140 focus-within:border-ring focus-within:ring-3 focus-within:ring-primary-soft dark:shadow-[0_14px_32px_-18px_rgb(0_0_0/75%)]">
             <label htmlFor={`${id}-message`} className="sr-only">
-              Message the assistant
+              Message the AI Assistant
             </label>
             <textarea
               id={`${id}-message`}
@@ -333,7 +334,7 @@ function AssistantMark({ className }: { className?: string }) {
         className,
       )}
     >
-      <Sparkles />
+      <RobotIcon />
     </span>
   )
 }

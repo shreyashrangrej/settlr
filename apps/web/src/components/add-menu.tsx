@@ -1,8 +1,9 @@
 'use client'
 
-import { Sparkles, User, Users, Wallet } from 'lucide-react'
+import { User, Users, Wallet } from 'lucide-react'
 
 import { useAppRouter } from '#/components/navigation-progress'
+import { RobotIcon } from '#/components/robot-icon'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +17,7 @@ const DESTINATIONS = [
   { to: '/groups', label: 'In a group', icon: Users },
   { to: '/friends', label: 'With a friend', icon: User },
   { to: '/personal', label: 'Just for me', icon: Wallet },
-  { to: '/assistant', label: 'Ask the assistant', icon: Sparkles },
+  { to: '/assistant', label: 'Ask the AI Assistant', icon: RobotIcon },
 ] as const
 
 /**

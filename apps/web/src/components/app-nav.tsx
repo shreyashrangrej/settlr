@@ -2,12 +2,13 @@ import {
   LayoutDashboard,
   PiggyBank,
   ReceiptText,
-  Sparkles,
   User,
   Users,
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
+
+import { RobotIcon } from '#/components/robot-icon'
 
 // The signed-in area's sections, in the order the sidebar lists them:
 // `top` ones sit at the head of the sidebar, `money` ones under its
@@ -35,9 +36,9 @@ export const APP_SECTIONS: ReadonlyArray<{
   },
   {
     to: '/assistant',
-    label: 'Assistant',
-    short: 'Assistant',
-    icon: Sparkles,
+    label: 'AI Assistant',
+    short: 'AI Assistant',
+    icon: RobotIcon,
     exact: false,
     mobile: false,
     place: 'top',

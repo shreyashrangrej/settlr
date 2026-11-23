@@ -176,7 +176,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   below `lg` the sidebar is a drawer and a tab bar runs along the bottom;
   `site-header.tsx` is the signed-out top bar), `app-nav.tsx` (the
   list of sections), `add-menu.tsx` ("Add expense" menu), `brand.tsx`
-  (logo), `category.tsx` (category icons and colours, `groupColor`),
+  (logo), `robot-icon.ts` (`RobotIcon`, the AI Assistant's icon: a Lucide
+  icon made with `createLucideIcon`, whose `.robot-eye`s can blink), `category.tsx` (category icons and colours, `groupColor`),
   `group-tile.tsx`, `stat-card.tsx`. Framework glue:
   `providers.tsx` (Convex + TanStack Query clients, `useSession()`),
   `prefetched.tsx` (`<Prefetched>`), `client-only.tsx` (`<ClientOnly>`),
