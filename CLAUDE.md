@@ -168,7 +168,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   that the root layout reads, so it renders at the right width; from `lg`
   the sidebar and the top bar form one frame in the sidebar colour (which
   also rims the right and bottom of the window), painted with `frame-art`
-  (a solid deep shade of the chosen accent with a fine film grain; sidebar
+  (a solid deep shade of the chosen accent; sidebar
   hover and active fills are washes of the text colour, `bg-foreground/6`
   and `/10`, so they sit on any tint), and the page sits in a
   rounded inset panel below the bar that is the page's scroller (so

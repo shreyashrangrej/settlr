@@ -95,10 +95,8 @@
   --ease: cubic-bezier(0.23, 1, 0.32, 1);
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --dur: 140ms;
-  /* The app frame (`frame-art`): how much accent it takes, and how strong
-     its grain is. */
+  /* How much accent the app frame (`frame-art`) takes. */
   --frame-tint: 9%;
-  --frame-grain: 0.3;
 
   /* shadcn's variable names, for component styles that read them directly
      (e.g. the toaster). They follow the tokens above in both themes. */
@@ -156,7 +154,6 @@
   --shadow-pop: 0 16px 40px -10px rgb(0 0 0 / 60%), 0 0 0 1px var(--border-strong);
   --shadow-color: 0 0% 0%;
   --frame-tint: 12%;
-  --frame-grain: 0.16;
 }
 
 /* Gr8r's accent choices (Settings → Appearance), light and dark. */
@@ -402,25 +399,10 @@
 
 /* The app frame (the sidebar, top bar and rim around the page panel, from
    `lg`): a solid, deep shade of the accent, so it follows the accent picked
-   in Settings, with a fine film grain over it (SVG fractal noise, blended
-   soft-light) for a printed feel. The sidebar and top bar are transparent
-   over it. `--frame-tint` and `--frame-grain` set the strength per theme. */
+   in Settings. The sidebar and top bar are transparent over it.
+   `--frame-tint` sets how much accent it takes, per theme. */
 @utility frame-art {
-  position: relative;
-  isolation: isolate;
-  overflow: clip;
   background-color: color-mix(in oklab, var(--accent) var(--frame-tint), var(--bg-sidebar));
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    opacity: var(--frame-grain);
-    mix-blend-mode: soft-light;
-  }
 }
 
 /* A list whose items rise in one after another when they mount (Gr8r's

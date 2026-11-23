@@ -89,7 +89,7 @@ export function AppShell({
 
   return (
     // From `lg` the frame (sidebar, top bar and rim) is `frame-art`: a deep
-    // shade of the accent with a fine grain (styles.css).
+    // shade of the accent (styles.css).
     <div className="flex min-h-svh items-stretch bg-background lg:h-svh lg:frame-art">
       <aside
         data-collapsed={collapsed || undefined}
