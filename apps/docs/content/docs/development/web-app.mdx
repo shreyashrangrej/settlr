@@ -138,7 +138,9 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
   `styles.css`: `animate-rise-in`, `animate-fade-in`, `animate-grow-x` (a
   bar growing from `origin-left`) and `animate-pop` (springs in) run when
   an element mounts, and `stagger` on a list makes its items rise in one
-  after another (table bodies have it). `RouteTransition` in the app shell
+  after another (table bodies have it, set to fade without moving via
+  `[--stagger-animation:fade-in]`, so rows never poke out of the table's
+  scroll container and flash a scrollbar). `RouteTransition` in the app shell
   plays the page's rise-in when the page changes (the first two path
   segments, so a group's sub-pages, which share its header, don't replay
   it), since Next.js keeps a page mounted when only its params change.
