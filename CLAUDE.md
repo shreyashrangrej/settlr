@@ -175,7 +175,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `sticky` offsets like `top-4` and `scrollIntoView` work against it, not
   the window; on phones the window scrolls and the top bar sticks, so
   anchors there need `scroll-mt-15`); the top bar, with
-  no bottom border, has the breadcrumb, bell, "New" menu and account on
+  no bottom border, has the breadcrumb, light/dark switch (`ThemeToggle`),
+  bell, "New" menu and account on
   every width;
   below `lg` the sidebar is a drawer and a tab bar runs along the bottom;
   `site-header.tsx` is the signed-out top bar), `app-nav.tsx` (the

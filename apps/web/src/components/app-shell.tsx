@@ -28,6 +28,7 @@ import { NotificationBell } from '#/components/notification-bell'
 import { RouteTransition } from '#/components/route-transition'
 import { useSession } from '#/components/providers'
 import { SiteHeader } from '#/components/site-header'
+import { ThemeToggle } from '#/components/theme-toggle'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Skeleton } from '#/components/ui/skeleton'
 import { formatMoney, formatWholeMoney } from '@settlr/shared/format'
@@ -354,7 +355,7 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?
 
 /**
  * Gr8r's top bar: the breadcrumb lined up with the page's gutter, then the
- * bell, the "New" menu and your avatar. Below `lg` it starts with the menu button
+ * light/dark switch, the bell, the "New" menu and your avatar. Below `lg` it starts with the menu button
  * that opens the navigation drawer.
  */
 function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
@@ -373,6 +374,7 @@ function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
       </Button>
       <Breadcrumbs />
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        <ThemeToggle />
         <NotificationBell />
         <AddMenu
           trigger={
