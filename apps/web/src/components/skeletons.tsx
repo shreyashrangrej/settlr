@@ -54,8 +54,9 @@ function HeaderSkeleton({
 
 function StatRowSkeleton({ count = 4 }: { count?: number }) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-card">
-      <div className="-mt-px -ml-px grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]">
+    // Laid out like StatGrid: four across when there's room, else 2×2.
+    <div className="@container overflow-hidden rounded-xl border bg-card">
+      <div className="-mt-px -ml-px grid grid-cols-2 @2xl:grid-cols-4">
         {Array.from({ length: count }, (_, i) => (
           <div key={i} className="flex flex-col gap-2 border-t border-l px-4 py-3.5">
             <Skeleton className="h-4 w-24" />

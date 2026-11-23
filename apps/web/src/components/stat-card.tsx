@@ -1,11 +1,16 @@
+import { Children } from 'react'
+
 import { cn } from '#/lib/utils'
 
 /**
  * Gr8r Studio's stats strip (`.stats`): one bordered box whose figures sit
- * side by side with hairlines between them, wrapping onto more rows on
- * narrow screens. Each cell draws its own left and top hairline, and the
+ * side by side with hairlines between them. It never leaves a figure on a
+ * row of its own: all in one row when the strip is wide enough (a
+ * container query, so it follows the column it's in, not the window),
+ * otherwise two per row (four figures make a 2×2 grid; an odd last one
+ * spans the row). Each cell draws its own left and top hairline, and the
  * grid is pulled 1px up and left under the box's clipped edge, so only the
- * lines between cells show however the row wraps.
+ * lines between cells show.
  */
 export function StatGrid({
   children,
@@ -14,9 +19,17 @@ export function StatGrid({
   children: React.ReactNode
   className?: string
 }) {
+  const count = Children.toArray(children).filter(Boolean).length
   return (
-    <div className={cn('overflow-hidden rounded-xl border bg-card', className)}>
-      <div className="-mt-px -ml-px grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]">
+    <div className={cn('@container overflow-hidden rounded-xl border bg-card', className)}>
+      <div
+        className={cn(
+          '-mt-px -ml-px grid grid-cols-2 [&>*:last-child:nth-child(odd)]:col-span-2',
+          count === 4 && '@2xl:grid-cols-4',
+          count === 3 && '@xl:grid-cols-3',
+          count >= 3 && '@xl:[&>*:last-child:nth-child(odd)]:col-span-1',
+        )}
+      >
         {children}
       </div>
     </div>
