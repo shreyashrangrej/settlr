@@ -10,7 +10,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "h-9 w-full min-w-0 px-[calc(--spacing(3)-1px)] sm:h-8 file:me-3 file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground rounded-lg border border-input bg-field text-base text-foreground shadow-xs/5 transition-shadow outline-none not-dark:bg-clip-padding placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/24 focus-visible:ring-inset disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-64 aria-invalid:border-destructive/36 focus-visible:aria-invalid:border-destructive/64 focus-visible:aria-invalid:ring-destructive/16 sm:text-sm dark:aria-invalid:ring-destructive/24 [&:disabled,&:focus-visible,&[aria-invalid=true]]:shadow-none",
+        "h-9 w-full min-w-0 rounded-lg px-2.5 sm:h-7.5 file:me-3 file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground border border-input bg-field text-lg text-foreground transition-[border-color,box-shadow] duration-140 outline-none placeholder:text-faint hover:border-[color-mix(in_srgb,var(--border-strong)_60%,var(--faint))] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-primary-soft disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-muted disabled:text-faint aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/10 sm:text-sm",
         className
       )}
       {...props}

@@ -46,15 +46,19 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          // Gr8r Studio's toast: inverted (the text colour as the fill),
+          // 8px corners, 12.5px text and the long popover shadow.
+          "--normal-bg": "var(--text)",
+          "--normal-text": "var(--text-inv)",
+          "--normal-border": "transparent",
+          "--border-radius": "8px",
         } as React.CSSProperties
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast: "cn-toast !text-ui !shadow-[var(--shadow-pop)] !py-2.5 !pr-2.5 !pl-3",
+          success: "[&_[data-icon]]:text-positive",
+          error: "[&_[data-icon]]:text-destructive",
         },
       }}
       {...props}

@@ -54,15 +54,15 @@ export function budgetStatus(spentCents: number, budgetCents: number) {
 
 const barTone = {
   ok: 'bg-primary',
-  warn: 'bg-amber-500',
+  warn: 'bg-warning',
   over: 'bg-destructive',
 } as const
 
 const badgeTone = {
-  // T3 Code's tinted badges: info, warning and error.
-  ok: 'bg-primary/8 text-primary dark:bg-primary/16',
-  warn: 'bg-amber-500/8 text-amber-700 dark:bg-amber-500/16 dark:text-amber-400',
-  over: 'bg-destructive/8 text-destructive dark:bg-destructive/16',
+  // Gr8r Studio's tinted badges: accent, amber and red washes.
+  ok: 'bg-primary/10 text-primary',
+  warn: 'bg-warning/12 text-warning',
+  over: 'bg-destructive/10 text-destructive',
 } as const
 
 /**

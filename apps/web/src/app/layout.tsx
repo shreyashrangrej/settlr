@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Geist, Geist_Mono } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { Suspense } from 'react'
 
@@ -20,9 +20,14 @@ export const metadata: Metadata = {
   icons: { icon: { url: '/favicon.svg', type: 'image/svg+xml' } },
 }
 
-// T3 Code's type: the system UI font on Apple devices, Inter elsewhere (see
-// `--font` in styles.css, which reads this variable), system monospace.
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+// Gr8r Studio's type: Geist for the UI and Geist Mono for codes and key
+// hints (`--font` and `--mono` in styles.css read these variables).
+const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' })
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+  display: 'swap',
+})
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 }
 
@@ -41,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     // The theme script adds `.dark` to <html> before hydration, so its class
     // is expected to differ from the server render.
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>

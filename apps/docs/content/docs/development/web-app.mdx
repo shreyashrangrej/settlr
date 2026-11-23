@@ -16,7 +16,7 @@ use the `#/` alias for `apps/web/src`.
 | `src/lib/` | Isomorphic helpers: `types`, `search`, `preferences`, `theme`, `utils` |
 | `src/components/` | App components |
 | `src/components/ui/` | shadcn/ui components built on Base UI |
-| `src/styles.css` | Design tokens from `design/DESIGN.md` (T3 Code's design system) |
+| `src/styles.css` | Design tokens from `design/DESIGN.md` (Gr8r Studio's design system) |
 
 Route groups such as `(list)`, `(detail)` and `(expenses)` only exist to give
 sibling pages their own `loading.tsx`.
@@ -125,21 +125,29 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
   `<DropdownMenuTrigger render={<Button />}>`.
 - Style with Tailwind utilities and the design tokens, not hex values or new
   CSS.
-- Dark is the reference theme and the default: the `.dark` class on
-  `<html>`, set before paint. Theme-dependent markup must render the same on
-  the server, for example both icons with one hidden by `dark:hidden`.
-- The look is [T3 Code](https://github.com/pingdotgg/t3code)'s design
-  system, written up in `design/DESIGN.md`: a true-black dark theme and a
-  zinc light one, a blue `primary`, Inter (the system UI font on Apple
-  devices), [Lucide](https://lucide.dev) icons at a 1.75 stroke, 8px
-  controls, 12px cards and frosted menus and dialogs.
+- The theme is the `.dark` class on `<html>`, set before paint: the
+  viewer's saved choice, or else the system setting (followed live).
+  Theme-dependent markup must render the same on the server, for example
+  both icons with one hidden by `dark:hidden`.
+- The look is [Gr8r Studio](https://github.com/gr8rstudio/gr8r-studio)'s
+  design system, written up in `design/DESIGN.md`: warm paper neutrals in
+  light and warm charcoal in dark, an indigo `primary`, Geist and Geist
+  Mono, [Lucide](https://lucide.dev) icons at a 1.8 stroke, 30px controls
+  with 6px corners, 10px cards with no shadow, solid menus on a soft long
+  shadow, and a dense type scale (`text-sm` is the 13.5px body, `text-ui`
+  12.5px for buttons and tabs, `text-2xl` the 23px page title).
+- The shell is Gr8r's: a 252px sidebar (a 52px rail when collapsed) with
+  uppercase section labels, a 46px top bar with the breadcrumb, the bell,
+  **New** and the account menu, and pages centred at up to 1160px. Below
+  `lg` the sidebar is a drawer and a tab bar runs along the bottom.
 - Money is green (`positive`, owed to you) or red (`destructive`, you owe),
   always with a word or a sign, in the UI font with tabular figures
   (`tabular-nums`).
 - Headings and large figures are semibold; buttons, labels, row titles and
   badges are `font-medium`; descriptions are `text-xs text-muted-foreground`.
-  Cards are `rounded-xl border bg-card` with `p-4`, 16px apart. Don't
-  override control heights (`h-8` from `sm`, `h-9` below).
+  Cards are `rounded-xl border bg-card` with `p-3.5`, 16px apart, and
+  card titles `text-sm font-semibold`. Don't override control heights
+  (`h-7.5` from `sm`, `h-8.5` below).
 - Confirm destructive actions with `ConfirmAction`, and report success with
   `useAction(fn, { success: '...' })`, which shows a toast.
 

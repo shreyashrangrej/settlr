@@ -1,5 +1,5 @@
-// Light/dark theme. The design is dark, so that's the default; a choice made
-// with the toggle is stored per browser. The `.dark` class on <html> drives
+// Light/dark theme. Until the viewer picks one with the toggle (stored per
+// browser), it follows the system setting, live. The `.dark` class on <html> drives
 // both the CSS tokens in styles.css and Tailwind's `dark:` variant.
 
 export const THEME_STORAGE_KEY = 'settlr:theme'
@@ -10,11 +10,17 @@ export type Theme = 'light' | 'dark'
 // paint. SSR can't know the viewer's choice, so without this the page would
 // flash.
 export const themeInitScript = `(function () {
-  var dark = true;
-  try {
-    dark = localStorage.getItem('${THEME_STORAGE_KEY}') !== 'light';
-  } catch (e) {}
-  document.documentElement.classList.toggle('dark', dark);
+  var media = window.matchMedia('(prefers-color-scheme: dark)');
+  function apply() {
+    var choice = null;
+    try {
+      choice = localStorage.getItem('${THEME_STORAGE_KEY}');
+    } catch (e) {}
+    var dark = choice ? choice === 'dark' : media.matches;
+    document.documentElement.classList.toggle('dark', dark);
+  }
+  apply();
+  if (media.addEventListener) media.addEventListener('change', apply);
 })();`
 
 export function applyTheme(theme: Theme) {

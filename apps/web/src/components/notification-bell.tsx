@@ -58,19 +58,19 @@ export function NotificationBell() {
         render={
           <Button
             variant="ghost"
-            size="icon-lg"
+            size="icon"
             aria-label={label}
             title={label}
-            className="relative text-muted-foreground data-popup-open:bg-tile"
+            className="relative data-popup-open:bg-raised data-popup-open:text-foreground"
           />
         }
       >
-        <Bell className="size-4.5" />
+        <Bell className="size-4" />
         {count > 0 && (
           // The count is in the button's label; the dot just flags it.
           <span
             aria-hidden="true"
-            className="absolute top-2.5 right-[11px] size-[7px] rounded-full bg-destructive"
+            className="absolute top-1.5 right-1.75 size-[7px] rounded-full bg-primary ring-2 ring-background"
           />
         )}
       </PopoverTrigger>

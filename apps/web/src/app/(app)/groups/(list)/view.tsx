@@ -63,7 +63,7 @@ export function GroupsView() {
             <li key={group.id}>
               <GroupTile
                 group={group}
-                className="h-full rounded-xl border-border bg-card p-4 shadow-xs/5"
+                className="h-full rounded-xl border-border bg-card p-3.5"
               />
             </li>
           ))}

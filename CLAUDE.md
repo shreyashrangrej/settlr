@@ -153,11 +153,12 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   (rows shared by the bell dropdown and the page), `month-nav.tsx`,
   `confirm-action.tsx` (destructive actions behind an alert dialog),
   `account-menu.tsx` (account dropdown with the theme switch and sign-out),
-  `app-shell.tsx` (the frame: sidebar on wide screens, collapsible to an
-  icon rail with Ctrl/⌘+B and remembered in the `settlr_sidebar` cookie
-  that the root layout reads, so it renders at the right width; top bar
-  and floating tab bar on narrow ones; `site-header.tsx` is the signed-out
-  top bar), `app-nav.tsx` (the
+  `app-shell.tsx` (the frame: the sidebar on wide screens, collapsible to
+  an icon rail with Ctrl/⌘+B and remembered in the `settlr_sidebar` cookie
+  that the root layout reads, so it renders at the right width; the top
+  bar with the breadcrumb, bell, "New" menu and account on every width;
+  below `lg` the sidebar is a drawer and a tab bar runs along the bottom;
+  `site-header.tsx` is the signed-out top bar), `app-nav.tsx` (the
   list of sections), `add-menu.tsx` ("Add expense" menu), `brand.tsx`
   (logo), `category.tsx` (category icons and colours, `groupColor`),
   `group-tile.tsx`, `stat-card.tsx`. Framework glue:
@@ -165,16 +166,18 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `prefetched.tsx` (`<Prefetched>`), `client-only.tsx` (`<ClientOnly>`),
   `nav-link.tsx` (`<NavLink>`, sets `data-status="active"`),
   `navigation-progress.tsx` (top bar, `useAppRouter()`).
-- `src/styles.css`: design tokens from `design/DESIGN.md`, which is T3
-  Code's design system (`--bg`, `--surface`, `--accent`, `--owed`, `--owe`,
-  ...), mapped to shadcn color names in `@theme inline` plus the design's
-  own (`tile`, `field`, `divider`, `faint`, `highlight`, `contrast`,
-  `segment`, `track`, `on-fill`, `positive`), T3's frosted-glass utilities
-  (`dropdown-glass`, `dialog-glass`, `dialog-backdrop`, `surface-glass`),
-  its `text-2xs`/`text-3xs` sizes and skeleton animation, and the landing
-  hero's CSS. Use the tokens, not
-  hex values; the fixed group, category and avatar fills in `category.tsx`
-  and `ledger.tsx` are the exception.
+- `src/styles.css`: design tokens from `design/DESIGN.md`, which is Gr8r
+  Studio's design system (`--bg`, `--surface`, `--accent`, `--owed`,
+  `--owe`, the label hues `--green` ... `--gray`, ...), mapped to shadcn
+  color names in `@theme inline` plus the design's own (`tile`, `raised`,
+  `sunken`, `field`, `divider`, `faint`, `dim`, `highlight`,
+  `primary-soft`, `contrast`, `segment`, `track`, `positive`, `warning`),
+  Gr8r's type scale (it overrides Tailwind's: `text-sm` is 13.5px, `text-ui`
+  12.5px, `text-base` 14.5px, `text-2xl` 23px), its radii, the floating
+  surfaces (`popover-panel`, `modal-panel`, `modal-scrim`), the
+  `skeleton-shimmer` and `kbd` utilities, and the landing hero's CSS. Use
+  the tokens, not hex values; category, group and avatar colours are the
+  label hues, drawn with `labelTint`/`avatarTint` from `category.tsx`.
 - Auth on the web side: `src/lib/auth-client.ts` (browser client and the
   sign-in actions), `src/server/auth.server.ts` (proxy handler, token and
   session) and `src/app/api/auth/[...all]/route.ts` (forwards `/api/auth/*`
@@ -228,21 +231,25 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   "this month" and "today" are computed in the server page and passed down. For the viewer's locale use
   `new Intl.NumberFormat().resolvedOptions().locale`, not
   `navigator.language`, which can be an invalid tag such as `en-US@posix`.
-- **Design**: Settlr follows T3 Code's design system (see
-  `design/DESIGN.md`): a true-black dark theme (the default) and T3's zinc
-  light theme, a blue `primary`, Inter (system UI font on Apple devices),
-  Lucide icons at a 1.75 stroke. Money is green (`positive`, owed to you)
+- **Design**: the web app follows Gr8r Studio's design system
+  (github.com/gr8rstudio/gr8r-studio, see `design/DESIGN.md`): warm paper
+  neutrals in light and warm charcoal in dark (it follows the system
+  until the viewer picks one), an indigo `primary`, Geist and Geist Mono,
+  Lucide icons at a 1.8 stroke. Money is green (`positive`, owed to you)
   or red (`destructive`, you owe), always with a word or a sign beside it,
   in the UI font with `tabular-nums` (no monospace), via `SignedAmount`
   where it has a direction. Semibold only for headings and big figures;
   `font-medium` for buttons, labels, row titles and badges; descriptions
-  `text-xs text-muted-foreground`. Cards are `rounded-xl border bg-card
-  shadow-xs/5` with `p-4`, titles `text-base font-semibold`; inner tiles
-  and controls `rounded-lg`, badges `rounded-sm`; menus, selects and
-  popovers use `dropdown-glass`, dialogs `dialog-glass`. Controls are
-  `h-8` from `sm` (`h-9` below): don't override their heights. `Tabs` is
-  the segmented control; `Button` has a `contrast` variant (the "Settle"
-  button) and `destructive` is a solid red confirm.
+  `text-xs text-muted-foreground`. Cards are `rounded-xl border bg-card`
+  (10px, no shadow) with `p-3.5`, titles `text-sm font-semibold`; inner
+  tiles and controls `rounded-lg` (6px), badges `rounded-md` (5px);
+  menus, selects and popovers use `popover-panel`, dialogs `modal-panel`.
+  Controls are `h-7.5` (30px) from `sm` (`h-8.5` below): don't override
+  their heights. Sidebar section labels are Gr8r's uppercase `text-2xs`
+  headings. `Tabs` is the segmented control (`variant="line"` for
+  underlined tabs); `Button`'s `outline` is Gr8r's secondary button, it
+  has a `contrast` variant (the "Settle" button) and `destructive` is a
+  solid red confirm.
 - **Styling**: use shadcn components and Tailwind utilities (no new
   hand-written CSS). Base UI uses a `render` prop, not `asChild`: e.g.
   `<Item render={<Link href="..." />}>` or `<DropdownMenuTrigger
@@ -250,9 +257,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `buttonVariants(...)` on a `<Link>`. Confirm destructive actions with
   `ConfirmAction`, not `window.confirm`, and report success with
   `useAction(fn, { success: '...' })` (a sonner toast).
-- **Layout**: pages take the full width beside the sidebar (padding
-  `px-5 sm:px-6`, T3's page gutter), with 16px (`gap-4`) between cards and
-  24px under the page header. Rows of cards are `flex flex-wrap` with
+- **Layout**: pages are centred at up to 1160px beside the sidebar
+  (padding `px-4 sm:px-6`, Gr8r's gutter, set by `AppShell`), with 16px
+  (`gap-4`) between cards and 20px under the page header. Rows of cards are `flex flex-wrap` with
   `flex-[grow_1_basis]` so they stack on narrow screens. The dashboard is
   two independent columns from `xl` (so no card stretches to match a
   neighbour); below that the column wrappers are `contents` and
@@ -270,16 +277,17 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   get a max width. `SplitLayout` gives a page a main area and a 22rem
   sidebar from 1400px (below that the column beside the app sidebar is too
   narrow, so it stacks). Viewport breakpoints see the whole window, not the
-  content column, which is 232px narrower on `lg` and up (72px with the
-  sidebar collapsed).
+  content column, which is 252px narrower on `lg` and up (52px with the
+  sidebar collapsed) and at most 1160px wide.
 - **Loading**: give each page a `loading.tsx` rendering its page-shaped
   skeleton from `src/components/skeletons.tsx`. The top bar
   (`navigation-progress.tsx`) starts on link clicks and `useAppRouter()`
   navigations. Nested pages pass `back={{ fallback: '/path', label }}` to
-  `PageHeader` for a back button.
+  `PageHeader` for a back button (phones only; wider screens use the top
+  bar's breadcrumb, which `app-shell.tsx` builds from the path).
 - Dark mode is the `.dark` class on `<html>` (set before paint by the inline
-  script in `src/app/layout.tsx`; on unless the viewer chose light), not
-  `prefers-color-scheme`, so style dark variants
+  script in `src/app/layout.tsx`: the viewer's saved choice, otherwise the
+  system setting), not `prefers-color-scheme`, so style dark variants
   with `.dark` / `dark:`. Theme-dependent markup must render the same on the
   server, e.g. render both icons and hide one with `dark:hidden`.
   Element-level CSS rules go in `@layer base`, or they override Tailwind

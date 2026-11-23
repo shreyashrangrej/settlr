@@ -141,11 +141,11 @@ export function GroupExpenseForm({
         <div className="flex min-w-0 flex-[3_1_26rem] flex-col gap-5 p-6">
           <label
             htmlFor="ge-amount"
-            className="flex flex-col gap-2 rounded-xl border border-input bg-field px-4.5 py-4 shadow-xs/5 transition-shadow focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/24 focus-within:ring-inset"
+            className="flex flex-col gap-2 rounded-xl border border-input bg-field px-4.5 py-4 transition-shadow focus-within:border-ring focus-within:ring-3 focus-within:ring-primary-soft focus-within:ring-inset"
           >
             <span className="text-xs text-muted-foreground">Amount</span>
             <span className="flex items-center gap-3">
-              <span className="rounded-md bg-foreground/6 px-2 py-1 text-xs font-medium text-foreground dark:bg-foreground/8">
+              <span className="rounded-md border bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                 {group.currency}
               </span>
               <input
@@ -270,7 +270,7 @@ export function GroupExpenseForm({
             })}
           </div>
 
-          <div className="grid gap-3 rounded-xl border bg-card p-4">
+          <div className="grid gap-3 rounded-xl border bg-card p-3.5">
             <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">Total</span>
               <span className="font-medium tabular-nums">

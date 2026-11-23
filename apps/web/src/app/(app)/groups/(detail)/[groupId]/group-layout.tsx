@@ -25,14 +25,14 @@ import {
   EmptyTitle,
 } from '#/components/ui/empty'
 import { Separator } from '#/components/ui/separator'
-import { tabsListVariants } from '#/components/ui/tabs'
 import { formatMoney, memberName } from '@settlr/shared/format'
 import type { Group } from '#/lib/types'
 import { cn } from '#/lib/utils'
 
-// Page links styled like the segmented control (TabsList/TabsTrigger).
+// Page links styled as Gr8r's underlined tabs (its project view tabs): muted
+// labels on a hairline, the current one in the text colour over a 2px bar.
 const tabLink =
-  'inline-flex h-full items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-muted-foreground no-underline transition-[color,background-color,box-shadow] hover:bg-background/55 hover:text-foreground sm:text-[0.8125rem] dark:hover:bg-input/32 data-[status=active]:bg-segment data-[status=active]:text-foreground data-[status=active]:shadow-xs/10 [&_svg]:size-3.5'
+  "relative inline-flex h-9 items-center gap-1.5 px-2.5 text-ui font-medium text-muted-foreground no-underline transition-colors duration-140 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:text-foreground data-[status=active]:after:absolute data-[status=active]:after:inset-x-2 data-[status=active]:after:-bottom-px data-[status=active]:after:h-0.5 data-[status=active]:after:rounded-full data-[status=active]:after:bg-foreground data-[status=active]:after:content-[''] [&_svg]:size-3.5"
 
 /** A group's header, section tabs and balances around its pages. */
 export function GroupLayoutView({ children }: { children: React.ReactNode }) {
@@ -93,7 +93,7 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
         children
       ) : (
         <SplitLayout aside={<Balances group={group} />}>
-          <nav aria-label="Group sections" className={tabsListVariants()}>
+          <nav aria-label="Group sections" className="flex gap-0.5 overflow-x-auto border-b [scrollbar-width:none]">
             <NavLink href={`/groups/${group.id}`} exact className={tabLink}>
               <Receipt />
               Expenses

@@ -91,7 +91,7 @@ export function NewGroupView() {
                 <FieldLegend variant="label">Members</FieldLegend>
                 <FieldDescription>Up to 20 people, including you.</FieldDescription>
                 <div className="grid gap-2">
-                  <div className="flex h-9 items-center gap-2.5 rounded-lg border bg-muted px-3 text-sm sm:h-8">
+                  <div className="flex h-9 items-center gap-2.5 rounded-lg border bg-muted px-2.5 text-sm sm:h-7.5">
                     <PersonAvatar name={user?.name || 'You'} size="sm" />
                     <span className="truncate">{user?.name || 'You'}</span>
                     <Badge variant="secondary" className="ml-auto">You</Badge>

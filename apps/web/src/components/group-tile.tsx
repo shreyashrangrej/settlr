@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Users } from 'lucide-react'
 
-import { groupColor } from '#/components/category'
+import { groupColor, labelTint } from '#/components/category'
 import { formatMoney, formatWholeMoney, plural } from '@settlr/shared/format'
 import type { GroupSummary } from '#/lib/types'
 import { cn } from '#/lib/utils'
@@ -12,19 +12,19 @@ export function GroupTile({ group, className }: { group: GroupSummary; className
     <Link
       href={`/groups/${group.id}`}
       className={cn(
-        'flex flex-col gap-3 rounded-lg border bg-field p-3.5 no-underline outline-none transition-colors hover:border-input hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+        'flex flex-col gap-3 rounded-xl border bg-card p-3.5 no-underline outline-none transition-[background-color,border-color] duration-140 hover:border-input hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
         className,
       )}
     >
       <div className="flex items-center justify-between gap-2">
         <span
           aria-hidden="true"
-          className="grid size-9 place-items-center rounded-lg text-on-fill"
-          style={{ background: groupColor(group.id) }}
+          className="grid size-8 place-items-center rounded-lg"
+          style={labelTint(groupColor(group.id))}
         >
-          <Users className="size-4.5" />
+          <Users className="size-4" />
         </span>
-        <span className="rounded-sm bg-foreground/6 px-1.5 py-0.5 text-xs font-medium text-foreground dark:bg-foreground/8">
+        <span className="rounded-md border bg-muted px-1.5 py-px text-xs font-medium text-muted-foreground">
           {group.currency}
         </span>
       </div>

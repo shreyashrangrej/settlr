@@ -4,39 +4,41 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "#/lib/utils"
 
-// T3 Code's button (apps/web/src/components/ui/button.tsx): 8px radius,
-// medium weight, a 1px inner highlight on filled and outline buttons, a
-// slight press scale, and a 44px hit area on touch screens. Controls are a
-// step taller below `sm`, where text is 16px so iOS doesn't zoom.
+// Gr8r Studio's button (src/styles/components.css `.btn`): 30px tall, 6px
+// radius, 12.5px medium text, 6px between icon and label, and a slight
+// press scale. Primary is the indigo fill with a faint inner bottom edge;
+// outline is Gr8r's secondary (the surface with a strong hairline and a
+// small shadow); ghost is muted text that fills on hover. Below `sm`
+// controls are a step taller, and touch screens get a 44px hit area.
 const buttonVariants = cva(
-  "group/button relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border bg-clip-padding text-base font-medium whitespace-nowrap outline-none select-none transition-[box-shadow,scale,background-color,color] [&:active:not([aria-haspopup]):not(:disabled)]:scale-[0.97] before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-lg)-1px)] pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-64 aria-disabled:cursor-not-allowed aria-disabled:opacity-64 aria-invalid:border-destructive/36 sm:text-sm [&_svg]:pointer-events-none [&_svg]:-mx-0.5 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4",
+  "group/button relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap outline-none select-none transition-[background-color,border-color,color,box-shadow,scale] duration-140 [&:active:not([aria-haspopup]):not(:disabled)]:scale-[0.97] pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-45 disabled:shadow-none aria-disabled:pointer-events-none aria-disabled:opacity-45 aria-invalid:border-destructive sm:text-ui [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:opacity-90 [&_svg:not([class*='size-'])]:size-4 sm:[&_svg:not([class*='size-'])]:size-3.5",
   {
     variants: {
       variant: {
         default:
-          "border-primary bg-primary text-primary-foreground shadow-xs shadow-primary/24 not-disabled:inset-shadow-[0_1px_--theme(--color-white/16%)] hover:bg-primary/90 active:inset-shadow-[0_1px_--theme(--color-black/8%)] [:disabled,:active]:shadow-none",
-        // The light "Settle" button: the text colour as a fill.
+          "bg-primary text-primary-foreground shadow-[inset_0_-1px_0_rgb(0_0_0/12%)] hover:bg-[color-mix(in_srgb,var(--accent)_88%,var(--text))] active:bg-[color-mix(in_srgb,var(--accent)_78%,var(--text))]",
+        // The "Settle" button: the text colour as a fill.
         contrast:
-          "border-contrast bg-contrast text-contrast-foreground shadow-xs/5 hover:bg-contrast/88 [:disabled,:active]:shadow-none",
+          "bg-contrast text-contrast-foreground hover:bg-contrast/88",
         outline:
-          "border-input bg-popover text-foreground shadow-xs/5 not-dark:bg-clip-padding not-disabled:not-active:before:shadow-[0_1px_--theme(--color-black/4%)] hover:bg-accent/50 aria-expanded:bg-accent/50 dark:bg-field dark:not-disabled:not-active:before:shadow-[0_-1px_--theme(--color-white/6%)] dark:hover:bg-input/64 dark:aria-expanded:bg-input/64 [:disabled,:active]:shadow-none [&_svg:not([class*='text-'])]:text-muted-foreground",
+          "border-input bg-card text-foreground shadow-xs hover:bg-muted active:bg-raised aria-expanded:bg-muted",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/90 active:bg-secondary/80 aria-expanded:bg-secondary/80 dark:hover:bg-input/64",
+          "bg-muted text-foreground hover:bg-raised aria-expanded:bg-raised",
         ghost:
-          "border-transparent text-foreground hover:bg-accent aria-expanded:bg-accent [&_svg:not([class*='text-'])]:text-muted-foreground",
+          "text-muted-foreground hover:bg-muted hover:text-foreground active:bg-raised aria-expanded:bg-raised aria-expanded:text-foreground",
         destructive:
-          "border-destructive bg-destructive text-destructive-foreground shadow-xs shadow-destructive/24 not-disabled:inset-shadow-[0_1px_--theme(--color-white/16%)] hover:bg-destructive/90 active:inset-shadow-[0_1px_--theme(--color-black/8%)] [:disabled,:active]:shadow-none",
-        link: "border-transparent text-primary underline-offset-4 hover:underline",
+          "bg-destructive text-destructive-foreground hover:bg-[color-mix(in_srgb,var(--owe)_88%,#000)]",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-[calc(--spacing(3)-1px)] sm:h-8",
-        xs: "h-7 gap-1 rounded-md px-[calc(--spacing(2)-1px)] text-sm before:rounded-[calc(var(--radius-md)-1px)] sm:h-6 sm:text-xs [&_svg:not([class*='size-'])]:size-4 sm:[&_svg:not([class*='size-'])]:size-3.5",
-        sm: "h-8 gap-1.5 px-[calc(--spacing(2.5)-1px)] sm:h-7",
-        lg: "h-10 px-[calc(--spacing(3.5)-1px)] sm:h-9",
-        icon: "size-9 sm:size-8",
+        default: "h-8.5 px-3 sm:h-7.5 sm:px-[11px]",
+        xs: "h-6.5 gap-1 rounded-sm px-2 text-xs sm:h-5.5 sm:px-1.5 sm:text-xs [&_svg:not([class*='size-'])]:size-3.5 sm:[&_svg:not([class*='size-'])]:size-3",
+        sm: "h-7.5 px-2.5 text-xs sm:h-6.5 sm:px-2 sm:text-xs",
+        lg: "h-10 px-3.5 text-sm sm:h-9 sm:text-sm",
+        icon: "size-8.5 sm:size-7.5",
         "icon-xs":
-          "size-7 rounded-md before:rounded-[calc(var(--radius-md)-1px)] sm:size-6 [&_svg:not([class*='size-'])]:size-4 sm:[&_svg:not([class*='size-'])]:size-3.5",
-        "icon-sm": "size-8 sm:size-7",
+          "size-6.5 rounded-sm sm:size-5.5 [&_svg:not([class*='size-'])]:size-3.5",
+        "icon-sm": "size-7.5 sm:size-6.5",
         "icon-lg": "size-10 sm:size-9",
       },
     },

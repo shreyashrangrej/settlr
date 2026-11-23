@@ -20,8 +20,8 @@ export function SiteHeader() {
   const { user } = useSession()
 
   return (
-    <header className="sticky top-0 z-40 surface-glass">
-      <div className="app-shell flex h-14 items-center justify-between gap-2">
+    <header className="sticky top-0 z-40 border-b bg-background">
+      <div className="app-shell flex h-12 items-center justify-between gap-2">
         <Link href="/" className="no-underline" aria-label="Settlr, home">
           <Logo />
         </Link>

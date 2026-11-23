@@ -22,9 +22,9 @@ export function BackButton({
   const router = useAppRouter()
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="icon"
-      className="shrink-0"
+      className="-ml-1.5 shrink-0 sm:hidden"
       aria-label={label}
       title={label}
       onClick={() => (canGoBack() ? router.back() : router.push(fallback))}
@@ -34,7 +34,11 @@ export function BackButton({
   )
 }
 
-/** Title row at the top of a page, with optional back button and actions. */
+/**
+ * Gr8r Studio's page header (`.ph`): a 23px semibold title with a muted line
+ * under it, and the actions on the right. The back button only shows on
+ * phones; wider screens have the breadcrumb in the top bar.
+ */
 export function PageHeader({
   title,
   eyebrow,
@@ -56,24 +60,26 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3',
+        'mb-5 flex flex-wrap items-start justify-between gap-3',
         className,
       )}
     >
       <div className="flex min-w-0 items-center gap-3">
         {back && <BackButton {...back} />}
         {media}
-        <div className="grid min-w-0 gap-0.5">
-          {eyebrow && <p className="text-xs text-muted-foreground">{eyebrow}</p>}
-          <h1 className="m-0 truncate text-xl leading-snug font-semibold">
+        <div className="grid min-w-0">
+          {eyebrow && <p className="mb-1 text-xs text-faint tabular-nums">{eyebrow}</p>}
+          <h1 className="m-0 truncate text-xl leading-tight font-semibold tracking-[-0.022em] text-balance sm:text-2xl">
             {title}
           </h1>
           {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
           )}
         </div>
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex flex-wrap items-center gap-1.5 max-sm:w-full">{actions}</div>
+      )}
     </div>
   )
 }
@@ -93,7 +99,7 @@ export function SplitLayout({
   return (
     <div className="grid items-start gap-4 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">{children}</div>
-      <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 min-[1400px]:sticky min-[1400px]:top-6">
+      <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 min-[1400px]:sticky min-[1400px]:top-17">
         {aside}
       </aside>
     </div>

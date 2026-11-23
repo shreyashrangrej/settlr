@@ -8,8 +8,11 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-// The signed-in area's sections, in the order the sidebar lists them. The
-// mobile bar shows the ones marked `mobile`; the rest are in the account menu.
+// The signed-in area's sections, in the order the sidebar lists them:
+// `top` ones sit at the head of the sidebar, `money` ones under its
+// "Expenses" heading (like Gr8r Studio's top items and its Workspace
+// group). The mobile tab bar shows the ones marked `mobile`; the rest are in
+// the navigation drawer.
 export const APP_SECTIONS: ReadonlyArray<{
   to: string
   label: string
@@ -18,11 +21,51 @@ export const APP_SECTIONS: ReadonlyArray<{
   icon: LucideIcon
   exact: boolean
   mobile: boolean
+  place: 'top' | 'money'
 }> = [
-  { to: '/dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard, exact: true, mobile: true },
-  { to: '/groups', label: 'Groups', short: 'Groups', icon: Users, exact: false, mobile: true },
-  { to: '/friends', label: 'Friends', short: 'Friends', icon: User, exact: false, mobile: true },
-  { to: '/personal', label: 'Personal', short: 'Personal', icon: Wallet, exact: false, mobile: true },
-  { to: '/budget', label: 'Budget', short: 'Budget', icon: PiggyBank, exact: false, mobile: false },
-  { to: '/assistant', label: 'Assistant', short: 'Assistant', icon: Sparkles, exact: false, mobile: false },
+  {
+    to: '/dashboard',
+    label: 'Dashboard',
+    short: 'Home',
+    icon: LayoutDashboard,
+    exact: true,
+    mobile: true,
+    place: 'top',
+  },
+  {
+    to: '/assistant',
+    label: 'Assistant',
+    short: 'Assistant',
+    icon: Sparkles,
+    exact: false,
+    mobile: false,
+    place: 'top',
+  },
+  { to: '/groups', label: 'Groups', short: 'Groups', icon: Users, exact: false, mobile: true, place: 'money' },
+  { to: '/friends', label: 'Friends', short: 'Friends', icon: User, exact: false, mobile: true, place: 'money' },
+  {
+    to: '/personal',
+    label: 'Personal',
+    short: 'Personal',
+    icon: Wallet,
+    exact: false,
+    mobile: true,
+    place: 'money',
+  },
+  {
+    to: '/budget',
+    label: 'Budget',
+    short: 'Budget',
+    icon: PiggyBank,
+    exact: false,
+    mobile: false,
+    place: 'money',
+  },
 ]
+
+/** The section a path belongs to, for the breadcrumb's first step. */
+export function sectionFor(pathname: string) {
+  return APP_SECTIONS.find(
+    (section) => pathname === section.to || pathname.startsWith(`${section.to}/`),
+  )
+}

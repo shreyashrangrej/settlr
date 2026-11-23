@@ -6,7 +6,7 @@ function Empty({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="empty"
       className={cn(
-        "flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-xl border-dashed p-6 text-center text-balance md:p-10",
+        "flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border-dashed px-6 py-10 text-center text-balance md:py-14",
         className
       )}
       {...props}
@@ -30,7 +30,8 @@ const emptyMediaVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent",
-        icon: "relative flex size-9 shrink-0 items-center justify-center rounded-md border bg-card text-foreground shadow-sm/5 not-dark:bg-clip-padding before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-md)-1px)] before:shadow-[0_1px_--theme(--color-black/4%)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)] [&_svg:not([class*='size-'])]:size-4.5",
+        // Gr8r's empty-state glyph: a bare 22px icon in the dim text colour.
+        icon: "relative flex shrink-0 items-center justify-center text-dim [&_svg:not([class*='size-'])]:size-5.5",
       },
     },
     defaultVariants: {
@@ -59,7 +60,7 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="empty-title"
       className={cn(
-        "text-[1.0625rem] leading-6 font-semibold",
+        "text-base leading-snug font-semibold",
         className
       )}
       {...props}
@@ -72,7 +73,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
     <div
       data-slot="empty-description"
       className={cn(
-        "text-[0.8125rem] leading-[1.125rem] text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        "max-w-[340px] text-ui text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
         className
       )}
       {...props}

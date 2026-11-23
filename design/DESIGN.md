@@ -3,9 +3,9 @@
 Settlr is an app for splitting shared expenses: groups, balances, settling up, and an AI assistant that adds, edits and deletes expenses through chat.
 The screens in `screens/` are static mockups for layout and content (the data in them is sample data); the look follows the design system below.
 
-## Design system: T3 Code
+## Design system: Gr8r Studio (web), T3 Code (Android, for now)
 
-Settlr uses [T3 Code](https://github.com/pingdotgg/t3code)'s design system: its palette, type, shapes, spacing, component styles and icons (the web values come from T3 Code's `apps/web/src/index.css` and `components/ui`, the mobile ones from its `apps/mobile`). The mockups in `screens/` predate it: use them for **layout and content** (what goes on each screen, in what order), and this file for how things look. Where they disagree, this file wins.
+The web app uses [Gr8r Studio](https://github.com/gr8rstudio/gr8r-studio)'s design system: its palette, type, shapes, spacing, component styles, shell and icons (the values come from its `src/styles/tokens.css`, `base.css`, `components.css`, `shell.css`, `panels.css` and `overlays.css`). The Android app still follows [T3 Code](https://github.com/pingdotgg/t3code)'s mobile system (below) until it's moved over. The mockups in `screens/` predate both: use them for **layout and content** (what goes on each screen, in what order), and this file for how things look. Where they disagree, this file wins.
 
 ## Screens
 
@@ -23,32 +23,35 @@ The Android screens are the layout reference for `apps/mobile` (a flat bottom na
 
 ## Colour
 
-Dark is the default and the reference; light is T3 Code's light appearance. Separation comes from hairline borders, not grey fills.
+Light and dark are both full palettes (dark is redefined, not inverted). With no saved choice the theme follows the system. Separation comes from hairline borders, not grey fills or shadows.
 
 ### Web (`apps/web/src/styles.css`)
 
-| Token | Dark | Light | Use |
+| Token | Light | Dark | Use |
 |---|---|---|---|
-| `bg` | `#000` | `oklch(99.2% 0 0)` (zinc-25) | Page |
-| `bg-sidebar` | `#000` | zinc-50 | Sidebar |
-| `surface` (`card`, `popover`) | neutral-950 + 3% white (`#111`) | white | Cards, menus, dialogs |
-| `surface-2` (`tile`, `muted`, `accent`) | white 5% | zinc-100 | Inner tiles, hover fills |
-| `field` | white 3.5% | zinc-25 | Inputs, segmented-control track |
-| `border` | white 8% | zinc-200 | Card and row borders |
-| `border-strong` (`input`) | white 11% | zinc-300 | Input and outline-button borders |
-| `divider` | white 6% | zinc-200 at 60% | Row separators |
-| `text` | neutral-100 | zinc-900 | Text |
-| `muted` | neutral-400 | zinc-500 | Descriptions, labels |
-| `faint` | `#8f8f8f` | zinc-500 | Row metadata (T3's secondary label) |
-| `accent` (`primary`) | `oklch(0.571 0.21 264)` | `oklch(0.488 0.217 264)` | Primary buttons, links, focus rings, selection |
-| `accent-surface` / `accent-border` | primary 9% / 32% | primary 5% / 28% | Highlight cards |
-| `owed` (`positive`) | emerald-400 | emerald-700 | Money owed **to** the user (T3's success) |
-| `owe` (`destructive`) | red-500 + 10% white | red-600 | Money the user **owes**, destructive actions (T3's error) |
-| `track` | white 11% | zinc-200 | Progress tracks, timeline rails |
+| `bg` (`background`) | `#ffffff` | `#1d1d1c` | Content area and top bar |
+| `bg-page` (`page`) | `#fbfaf8` | `#1a1a19` | Gr8r's page tone, for full-bleed screens |
+| `bg-sidebar` | `#f4f3f0` | `#151514` | Sidebar and its drawer |
+| `surface` (`card`, `popover`) | `#ffffff` | `#1d1d1c` | Cards, menus, dialogs |
+| `surface-2` (`tile`, `muted`, `accent`) | `#f6f5f2` | `#252524` | Hover fills, inner tiles |
+| `surface-3` (`raised`) | `#eeede9` | `#2d2d2b` | Pressed fills, sidebar hover, segmented track, skeletons |
+| `sunken` | `#f7f6f3` | `#181817` | Recessed panels |
+| `border` | `#e9e7e2` | `#2c2b29` | Card, bar and table borders |
+| `border-strong` (`input`) | `#dad7d0` | `#3a3936` | Input and outline-button borders |
+| `divider` | `#f0eeea` | `#252523` | Row separators, menu separators |
+| `text` | `#1d1c1a` | `#eceae5` | Text |
+| `muted` | `#57544e` | `#b5b2ab` | Descriptions, labels, idle nav text (Gr8r's text-2) |
+| `faint` | `#6b6760` | `#9a968f` | Hints, metadata, section headings (text-3) |
+| `dim` | `#8c8880` | `#6f6c66` | Idle icons, separators (text-4) |
+| `accent` (`primary`) | `#4b5bd6` | `#8e9af3` | Primary buttons, links, focus, selection, unread dots |
+| `accent-soft` (`primary-soft`) | accent at 10% | accent at 10% | Focus rings, the signed-in user's avatar |
+| `accent-line` / `accent-surface` | accent 38% / 5% | same | Highlight cards |
+| `owed` (`positive`) | `#25754b` | `#5cba86` | Money owed **to** the user |
+| `owe` (`destructive`) | `#b23c30` | `#e57d70` | Money the user **owes**, destructive actions |
+| `warning` | `#8f5e0e` | `#d8a443` | Warnings |
+| `overlay` (`modal-scrim`) | warm black 28% | black 55% | Behind dialogs and the drawer |
 
-Warnings use Tailwind's amber (T3's warning). Tinted badges and callouts are the colour at 8% (light) / 16% (dark) behind it, with a 32% border where there is one.
-
-Category colours, group fills and avatar hues are Tailwind's 400 shades: orange, pink, blue, emerald, amber, violet, rose, neutral. Avatars and category tiles use T3's label tint (the colour at 14% over the surface, the glyph mixed 78% with the text colour); group tiles are a solid fill with dark text (`on-fill`).
+Label hues (`--green`, `--amber`, `--red`, `--blue`, `--violet`, `--teal`, `--rose`, `--orange`, `--gray`) are Gr8r's, lighter in dark mode. Categories, groups and avatars use them as tints: icon tiles are the hue at 16% over the surface with the glyph in the hue (mixed 72% toward the text in dark); avatars are the hue at 17% with the initials mixed 55% toward the text. Tinted badges are the colour at 10–12% with no border.
 
 **Money rule:** green = owed to you, red = you owe. Always pair the colour with a word ("owes you", "you owe") or a sign (+/−) so it never relies on colour alone.
 
@@ -58,33 +61,38 @@ T3 Code's mobile palette: dark screen `#0A0A0A`, cards `#111111`, grouped cards 
 
 ## Typography
 
-- Web UI font: the system UI font on Apple devices (`-apple-system`), **Inter** elsewhere, then Segoe UI and `system-ui`. Code-like text (URLs, codes) uses the system monospace (`ui-monospace`, SF Mono, Menlo, Consolas). Amounts are in the UI font with tabular figures (`tabular-nums`), not a monospace.
-- Android: **DM Sans** (400/500/600/700), T3 Code's mobile face; amounts use tabular figures.
-- Web sizes (T3 Code's): body and controls 14 px (`text-sm`; 16 px below `sm` so iOS doesn't zoom), descriptions and metadata 12 px (`text-xs`), dense labels 11/10 px (`text-2xs`/`text-3xs`). Page titles and dialog titles 20 px, card and section titles 16 px, all semibold. Large figures: the hero balance 36–48 px, stat values 24 px.
-- Android sizes (T3's mobile roles): 11, 12, 13, 14, 16 (body), 18, 21 (screen title), 26, 30.
-- Weights: **semibold (600) only for headings and large figures**; medium (500) for buttons, labels, row titles, badges and nav items; regular for body. No uppercase or letter-spaced labels; tracking is default except a slight negative tracking on large figures.
+- Web: **Geist** for the UI and **Geist Mono** for codes and key hints (`next/font`), with Geist's `ss01` and `cv11` features. Amounts are in the UI font with tabular figures (`tabular-nums`).
+- Web sizes are Gr8r's, which override Tailwind's scale in `styles.css`: body and controls 13.5 px (`text-sm`; inputs are 16 px below `sm` so iOS doesn't zoom), buttons, tabs, badges and the breadcrumb 12.5 px (`text-ui`), descriptions and metadata 12 px (`text-xs`), counts and section headings 11 px (`text-2xs`). Card titles 13.5 px semibold, section and dialog titles 14.5 px (`text-base`), page titles 23 px (`text-2xl`, 19 px on phones) with −0.022em tracking. Stat values 22 px. The dashboard's hero balance stays 36–48 px.
+- Android: **DM Sans** (400/500/600/700), T3 Code's mobile face; amounts use tabular figures. Sizes (T3's mobile roles): 11, 12, 13, 14, 16 (body), 18, 21 (screen title), 26, 30.
+- Weights: **semibold (600) for headings and large figures**; medium (500) for buttons, labels, row titles, badges and the current nav item; 450 for idle nav items; regular for body. Sidebar section headings are Gr8r's uppercase 11 px semibold labels with 0.06em tracking; nothing else is uppercase.
 - Currency: Indian digit grouping for INR (`₹1,860`, `₹42,000`). Use `−` (U+2212) for negatives.
 
 ## Shape and spacing
 
-- Web radii (8 px base): buttons, inputs, menus, tiles 8 px (`rounded-lg`); small buttons and menu items 4–6 px; badges 4 px (`rounded-sm`); cards 12 px (`rounded-xl`); dialogs 16 px (`rounded-2xl`); chips and the account avatar are round.
-- Web controls: 32 px tall from `sm` (36 px below), small 28 px, large 36 px; on touch screens every button has a 44 × 44 px hit area.
-- Web spacing: page padding 20 px (24 px from `sm`), 24 px from the page header to the content, 16 px between cards, 16 px inside cards. Sidebar rows are 32 px.
+- Web radii: 4 px (kbd, small icon buttons), 5 px (badges, segments), 6 px (buttons, inputs, menu rows, tiles: `rounded-lg`), 10 px (cards, menus, popovers: `rounded-xl`), 12 px (dialogs: `rounded-2xl`); avatars and counts are round.
+- Web controls: 30 px tall from `sm` (34 px below), small 26 px, extra-small 22 px, large 36 px; on touch screens every button has a 44 × 44 px hit area.
+- Web spacing (4 px scale): pages centred at up to 1160 px with a 24 px gutter (16 px on phones), 28 px above the page header and 20 px under it, 16 px between cards, 14 px inside them. Sidebar 252 px (52 px collapsed) with 30 px rows; top bar 46 px; table rows 40 px with a 34 px header.
+- Shadows: none on cards; a 1 px soft shadow under outline buttons and the current sidebar item; a long soft drop that carries its own hairline under menus, popovers, dialogs and toasts.
+- Motion: 140 ms colour transitions, `cubic-bezier(0.23, 1, 0.32, 1)` easing, popovers rise 4 px and scale from 97%, dialogs rise 8 px, buttons press to 97%.
 - Android: buttons and chips are pills (48 px / 40 px tall), fields 16 px radius and 54 px tall, cards 20 px, 16 px screen gutter and 16 px between sections.
-- Shadows: a faint `shadow-xs` under cards and controls, a 1 px inner highlight on filled buttons, soft long drops under menus and dialogs. No glows or gradients.
 
 ## Components
 
-- **Buttons:** primary = blue fill, white text, inner highlight; outline = `input` border on the popover colour; ghost = no border, accent fill on hover; "Settle" (`contrast`) = the text colour as a fill; destructive = red fill. Pressing scales to 97%.
-- **Fields:** 8 px, `input` border, faint fill in dark, a 3 px inset ring of the primary at 24% on focus.
-- **Segmented control (`Tabs`):** a tinted track (`input` at 40% / `field`), active segment white (light) or white 8% (dark) with a hairline shadow.
-- **Chips / toggles:** round, `input` border; selected = a neutral fill (`foreground` at 8–12%) and full-colour text, not the accent.
-- **Menus, selects, popovers:** frosted glass (`dropdown-glass`): the surface at ~80% with a 12–16 px blur, 10% border, rows 28 px tall at 4 px radius.
-- **Dialogs:** frosted glass (`dialog-glass`) over a blurred backdrop, 16 px radius, 24 px padding, 20 px semibold title, and a full-width muted footer band under a hairline holding the actions.
-- **Cards:** 12 px radius, hairline border, `surface` fill, faint shadow; titles 16 px semibold, links in the header 12 px medium muted.
-- **Sidebar:** 32 px rows, muted 16 px icons, the current page a quiet fill (white and raised in light mode); section labels 12 px medium muted.
-- **Skeletons:** `muted` at 15% with T3's stepped breathing animation.
-- **Icons:** [Lucide](https://lucide.dev) on both apps (`lucide-react`, `lucide-react-native`) at a 1.75 stroke, 16 px in controls (18 px below `sm`), 14 px inline.
+- **Shell:** the sidebar (`bg-sidebar`, hairline right edge): the logo and name with a collapse button, Dashboard, Assistant and Notifications (an accent count pill), an "Expenses" section, a "Groups" section with a + button and each group as a tinted icon with its balance, and Help, Settings and the account row at the foot above a hairline. Rows are 30 px, muted, with dim icons; hover is the raised fill; the current page is the surface lifted by a hairline and a small shadow (light) or the raised fill (dark). The 46 px top bar has the breadcrumb on the content gutter (section / group or friend / page), then the bell (an accent dot when unread), an outline **New** menu button and the avatar. Below `lg` the sidebar opens as a drawer from the top bar's menu button or **More**, and a flat bar of tabs (Home, Groups, Friends, Personal, More) runs along the bottom.
+- **Page header:** the title, a muted line under it (or a faint eyebrow above), actions on the right with 6 px between them.
+- **Buttons:** primary = indigo fill with a faint inner bottom edge, darkening toward the text colour on hover; outline (Gr8r's secondary) = surface with the strong border and a small shadow; ghost = muted text that fills on hover; secondary = the hover fill; "Settle" (`contrast`) = the text colour as a fill; destructive = red fill. Pressing scales to 97%.
+- **Fields:** 6 px, strong border on the surface, the border darkening on hover; focus is an accent border with a 3 px accent-soft ring; errors are a red border with a red-soft ring. Checkboxes 15 px with a 1.5 px border.
+- **Segmented control (`Tabs`):** the raised track with 2 px padding, 12 px medium segments, the active one the surface with a hairline and a small shadow. Underlined tabs (`variant="line"`, the group page's sections): muted labels on a hairline, the current one in the text colour over a 2 px bar.
+- **Badges:** 20 px, 5 px radius, 12 px medium; neutral is the hover fill with a hairline, tones are a 10–12% wash.
+- **Menus, selects, popovers:** the solid surface on the long popover shadow, 10 px radius, 4 px padding, 30 px rows at 6 px radius with muted icons; uppercase 11 px group labels; separators run edge to edge.
+- **Dialogs:** 12 px radius near the top of the screen (10% down), 16 px padding, a 14.5 px semibold title, the actions in a footer under a hairline; the scrim is a flat warm wash, no blur.
+- **Cards:** 10 px radius, hairline border, surface fill, no shadow; 13.5 px semibold titles; links in the header 12 px medium muted.
+- **Stats:** one bordered strip with hairlines between the figures: a 12.5 px muted label with a 14 px icon, the 22 px semibold value, a faint 12 px hint.
+- **Tables:** a 34 px header row in 12 px medium muted text over a hairline, 40 px rows with divider lines.
+- **Toasts:** inverted (the text colour as the fill), 8 px radius, 12.5 px text, the success or error icon in green or red.
+- **Skeletons:** the raised fill with a lighter band sweeping across (1.3 s).
+- **Empty states:** a bare 22 px dim glyph, a 14.5 px semibold title and a 12.5 px muted line, centred.
+- **Icons:** [Lucide](https://lucide.dev) on both apps (`lucide-react`, `lucide-react-native`); on the web at Gr8r's 1.8 stroke, 16 px in nav rows, 14 px in buttons and inline.
 - **Charts:** primary line with a 10% fill; spending donut uses the category colours.
 
 ## AI assistant behaviour (from the mockups)

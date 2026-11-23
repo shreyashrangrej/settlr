@@ -112,10 +112,12 @@ export function CategoryChips({
             aria-pressed={selected}
             onClick={() => onChange(category)}
             className={cn(
-              'flex h-8 items-center gap-1.5 rounded-full border border-input px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset [&_svg]:size-3.5',
+              // Gr8r's filter chips: a bordered pill button, and the accent
+              // chip (accent wash and line) when chosen.
+              'flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors duration-140 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:h-6.5 sm:px-2 [&_svg]:size-3.5',
               selected
-                ? 'bg-foreground/8 text-foreground dark:bg-foreground/12'
-                : 'bg-field text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                ? 'border-highlight-border bg-primary-soft text-foreground'
+                : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
             <Icon />

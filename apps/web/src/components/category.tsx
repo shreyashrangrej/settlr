@@ -12,27 +12,36 @@ import {
 import type { Category } from '@settlr/shared/schemas'
 import { cn } from '#/lib/utils'
 
-// Each category's icon and colour, the same wherever an expense is shown
-// (Tailwind's 400 shades).
+// Each category's icon and colour, the same wherever an expense is shown.
+// The colours are Gr8r Studio's label hues (`--orange`, `--rose`, ... in
+// styles.css), which each theme defines, so they're CSS variables here.
 export const CATEGORY_STYLE: Record<Category, { icon: LucideIcon; color: string }> = {
-  food: { icon: Utensils, color: '#FB923C' },
-  groceries: { icon: ShoppingBag, color: '#F472B6' },
-  transport: { icon: Car, color: '#60A5FA' },
-  lodging: { icon: BedDouble, color: '#34D399' },
-  utilities: { icon: Zap, color: '#FBBF24' },
-  entertainment: { icon: Ticket, color: '#A78BFA' },
-  other: { icon: Receipt, color: '#A3A3A3' },
+  food: { icon: Utensils, color: 'var(--orange)' },
+  groceries: { icon: ShoppingBag, color: 'var(--rose)' },
+  transport: { icon: Car, color: 'var(--blue)' },
+  lodging: { icon: BedDouble, color: 'var(--teal)' },
+  utilities: { icon: Zap, color: 'var(--amber)' },
+  entertainment: { icon: Ticket, color: 'var(--violet)' },
+  other: { icon: Receipt, color: 'var(--gray)' },
 }
 
 /**
- * T3 Code's label tint: a faint wash of the colour behind a foreground-mixed
- * version of it, so it reads in both themes. Opaque, so stacked avatars
- * don't show through each other.
+ * Gr8r's icon tint (its project icons): a 16% wash of the hue behind the
+ * glyph in the hue itself (mixed toward the text colour in dark mode, see
+ * `--tint-ink`). Opaque, so stacked tiles don't show through each other.
  */
 export function labelTint(color: string): React.CSSProperties {
   return {
-    color: `color-mix(in srgb, ${color} 78%, var(--text))`,
-    background: `color-mix(in srgb, ${color} 14%, var(--surface))`,
+    color: `color-mix(in srgb, ${color} var(--tint-ink), var(--text))`,
+    background: `color-mix(in srgb, ${color} 16%, var(--surface))`,
+  }
+}
+
+/** Gr8r's avatar tint: a 17% wash with the initials mixed 55% toward the text. */
+export function avatarTint(color: string): React.CSSProperties {
+  return {
+    color: `color-mix(in srgb, ${color} 55%, var(--text))`,
+    background: `color-mix(in srgb, ${color} 17%, var(--surface))`,
   }
 }
 
@@ -50,7 +59,7 @@ export function IconTile({
     <span
       aria-hidden="true"
       className={cn(
-        'grid size-8 shrink-0 place-items-center rounded-lg bg-tile [&_svg]:size-4',
+        'grid size-7 shrink-0 place-items-center rounded-md bg-tile [&_svg]:size-3.5',
         className,
       )}
       style={style}
@@ -76,9 +85,17 @@ export function CategoryIcon({
   )
 }
 
-// Colours for things the user names (groups); picked from the name's key so
-// a group keeps its colour everywhere. Text on them is `on-fill` (dark).
-const FILLS = ['#34D399', '#F472B6', '#FBBF24', '#60A5FA', '#A78BFA', '#FB923C']
+// Colours for things the user names (groups); picked from the id so a group
+// keeps its colour everywhere. Drawn as a tint (`labelTint`), or as a dot.
+const FILLS = [
+  'var(--green)',
+  'var(--rose)',
+  'var(--amber)',
+  'var(--blue)',
+  'var(--violet)',
+  'var(--orange)',
+  'var(--teal)',
+]
 
 export function hashIndex(key: string, length: number) {
   let hash = 0

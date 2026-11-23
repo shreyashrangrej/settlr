@@ -1,16 +1,28 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { Bell, PanelLeftClose, PanelLeftOpen, Plus, Sparkles } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import {
+  Bell,
+  ChevronDown,
+  CircleHelp,
+  Ellipsis,
+  Menu,
+  PanelLeft,
+  Plus,
+  Settings,
+  Users,
+} from 'lucide-react'
 
 import { AccountMenu } from '#/components/account-menu'
 import { AddMenu } from '#/components/add-menu'
-import { APP_SECTIONS } from '#/components/app-nav'
-import { Logo, LogoMark } from '#/components/brand'
-import { groupColor } from '#/components/category'
+import { APP_SECTIONS, sectionFor } from '#/components/app-nav'
+import { LogoMark } from '#/components/brand'
+import { groupColor, labelTint } from '#/components/category'
 import { NavLink } from '#/components/nav-link'
 import { NotificationBell } from '#/components/notification-bell'
 import { useSession } from '#/components/providers'
@@ -19,29 +31,31 @@ import { Button, buttonVariants } from '#/components/ui/button'
 import { Skeleton } from '#/components/ui/skeleton'
 import { formatMoney, formatWholeMoney } from '@settlr/shared/format'
 import { SIDEBAR_COOKIE } from '#/lib/sidebar'
+import { DOCS_URL } from '#/lib/site'
 import { cn } from '#/lib/utils'
 import { api } from '@settlr/backend/convex/_generated/api'
 
 // How many groups the sidebar lists; "All groups" has the rest.
 const SIDEBAR_GROUPS = 6
 
-// T3 Code's sidebar: 32px rows, muted icons, a quiet fill on hover and a
-// slightly stronger one (white, raised, in light mode) on the current page.
-const sectionLabel = 'text-xs font-medium text-muted-foreground'
-const row =
-  'text-sm text-foreground no-underline outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:bg-foreground/8 data-[status=active]:font-medium data-[status=active]:text-foreground not-dark:data-[status=active]:bg-card not-dark:data-[status=active]:shadow-xs/5 not-dark:data-[status=active]:ring-1 not-dark:data-[status=active]:ring-border/70'
-const navItem = cn(
-  'flex h-8 items-center gap-2 rounded-lg [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground hover:[&_svg]:text-foreground data-[status=active]:[&_svg]:text-foreground',
-  row,
-)
+// Gr8r Studio's sidebar row (`.sitem`): 30px, muted text and dim icons that
+// brighten on hover over a raised fill; the current page is the plain
+// surface lifted by a hairline and a small shadow (light) or the raised
+// fill (dark).
+const sideItem =
+  'relative flex h-7.5 w-full items-center gap-2.25 rounded-lg px-2 text-left text-sm font-[450] whitespace-nowrap text-muted-foreground no-underline outline-none transition-colors duration-140 hover:bg-raised hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:bg-card data-[status=active]:font-medium data-[status=active]:text-foreground data-[status=active]:shadow-[0_1px_2px_rgb(0_0_0/5%),0_0_0_1px_var(--border)] dark:data-[status=active]:bg-raised dark:data-[status=active]:shadow-none [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-dim hover:[&>svg]:text-muted-foreground data-[status=active]:[&>svg]:text-muted-foreground'
+// Gr8r's sidebar group heading (`.sgroup-h`): 11px, uppercase, tracked.
+const sideHeading =
+  'flex h-6 items-center px-2 text-2xs font-semibold tracking-[0.06em] text-faint uppercase'
 
 /**
- * The frame around every page. Signed in, it's the sidebar (wide screens) or
- * a top bar and a floating tab bar (narrow ones) around the content, which
- * takes the rest of the width; signed out, or while a new account still has
- * to give its name, it's just the top bar. `sidebarCollapsed` is the
- * viewer's choice, read from a cookie on the server so the first render
- * already has the right width.
+ * The frame around every page. Signed in, it's Gr8r Studio's shell: the
+ * sidebar beside a column of top bar (breadcrumb, bell, New, account) and
+ * page. Below `lg` the sidebar becomes a drawer the top bar's menu button
+ * opens, and a tab bar runs along the bottom. Signed out, or while a new
+ * account still has to give its name, it's just the site header.
+ * `sidebarCollapsed` is the viewer's choice, read from a cookie on the
+ * server so the first render already has the right width.
  */
 export function AppShell({
   children,
@@ -52,6 +66,12 @@ export function AppShell({
 }) {
   const { user } = useSession()
   const signedIn = user !== null && user.name !== ''
+  const [collapsed, toggle] = useCollapsed(sidebarCollapsed)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const pathname = usePathname()
+
+  // Following a link in the drawer closes it.
+  useEffect(() => setDrawerOpen(false), [pathname])
 
   if (!signedIn) {
     return (
@@ -64,14 +84,35 @@ export function AppShell({
 
   return (
     <div className="flex min-h-svh items-stretch">
-      <Sidebar initialCollapsed={sidebarCollapsed} />
+      <aside
+        data-collapsed={collapsed || undefined}
+        className={cn(
+          'sticky top-0 hidden h-svh shrink-0 border-r bg-sidebar select-none lg:block',
+          collapsed ? 'w-13' : 'w-63',
+        )}
+      >
+        <SidebarContent collapsed={collapsed} onToggle={toggle} />
+      </aside>
+
+      <DialogPrimitive.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Backdrop className="fixed inset-0 z-50 modal-scrim duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 lg:hidden" />
+          <DialogPrimitive.Popup className="fixed inset-y-0 left-0 z-50 w-70 max-w-[calc(100vw-3rem)] border-r bg-sidebar shadow-[var(--shadow-pop)] outline-none duration-220 ease-out-quint data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left lg:hidden">
+            <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
+            <SidebarContent collapsed={false} />
+          </DialogPrimitive.Popup>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
+
       <div className="flex min-w-0 flex-1 flex-col">
-        <MobileBar />
-        <main className="min-w-0 flex-1 px-5 pt-5 pb-32 sm:px-6 lg:pt-6 lg:pb-12">
+        <TopBar onOpenNav={() => setDrawerOpen(true)} />
+        {/* Gr8r's page: centred, at most 1160px, on the shared 24px gutter
+            (16px on phones). */}
+        <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-5 pb-28 sm:px-6 lg:pt-7 lg:pb-18">
           {children}
         </main>
       </div>
-      <MobileNav />
+      <BottomNav onMore={() => setDrawerOpen(true)} />
     </div>
   )
 }
@@ -100,263 +141,349 @@ function useCollapsed(initial: boolean) {
 }
 
 /**
- * Wide screens: the sections, your groups and your account. Collapsed, it's
- * a rail of icons (names in their tooltips), and groups are colour tiles.
+ * The sidebar's contents: the brand row, the sections, your groups, and
+ * help, settings and your account at the foot. Collapsed (wide screens
+ * only), it's a 52px rail of icons with the names in their tooltips.
+ * `onToggle` is the collapse button; the drawer has none.
  */
-function Sidebar({ initialCollapsed }: { initialCollapsed: boolean }) {
-  const [collapsed, toggle] = useCollapsed(initialCollapsed)
+function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?: () => void }) {
   const { data: unread = 0 } = useQuery(convexQuery(api.notifications.unreadCount, {}))
   const { data: groups } = useQuery(convexQuery(api.groups.list, {}))
-  const item = cn(navItem, collapsed ? 'justify-center px-0' : 'px-2.5')
+  const item = cn(sideItem, collapsed && 'justify-center px-0')
   const toggleLabel = collapsed ? 'Expand sidebar (Ctrl+B)' : 'Collapse sidebar (Ctrl+B)'
+  const label = (text: string) => <span className={cn('truncate', collapsed && 'sr-only')}>{text}</span>
+  const sectionLink = (section: (typeof APP_SECTIONS)[number]) => (
+    <NavLink
+      key={section.to}
+      href={section.to}
+      exact={section.exact}
+      className={item}
+      title={collapsed ? section.label : undefined}
+    >
+      <section.icon />
+      {label(section.label)}
+    </NavLink>
+  )
 
   return (
-    <aside
-      data-collapsed={collapsed || undefined}
-      className={cn(
-        'sticky top-0 hidden h-svh shrink-0 flex-col gap-5 overflow-x-hidden overflow-y-auto border-r [scrollbar-width:none] bg-sidebar py-3 lg:flex',
-        collapsed ? 'w-18 px-3' : 'w-58 px-2.5',
-      )}
-    >
-      <div
-        className={cn(
-          'flex items-center gap-2',
-          collapsed ? 'flex-col' : 'h-10 justify-between pl-1.5',
-        )}
-      >
-        <Link href="/dashboard" className="no-underline" aria-label="Settlr, dashboard">
-          {collapsed ? <LogoMark /> : <Logo />}
-        </Link>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={toggle}
-          aria-label={toggleLabel}
-          title={toggleLabel}
-          className="text-muted-foreground"
+    <div className="flex h-full flex-col">
+      <div className={cn('flex items-center gap-0.5 px-2 pt-2 pb-1', collapsed && 'justify-center')}>
+        <Link
+          href="/dashboard"
+          aria-label="Settlr, dashboard"
+          className={cn(
+            'flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.25 no-underline outline-none transition-colors duration-140 hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+            !collapsed && 'flex-1',
+          )}
         >
-          {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
-        </Button>
+          <LogoMark className="size-5.5" />
+          {!collapsed && <span className="truncate text-sm font-semibold">Settlr</span>}
+        </Link>
+        {onToggle && !collapsed && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onToggle}
+            aria-label={toggleLabel}
+            title={toggleLabel}
+          >
+            <PanelLeft />
+          </Button>
+        )}
       </div>
 
-      <nav aria-label="Main" className="grid gap-0.5">
-        {!collapsed && <p className={cn(sectionLabel, 'flex h-7 items-center px-2.5')}>Menu</p>}
-        {APP_SECTIONS.map((section) => (
-          <NavLink
-            key={section.to}
-            href={section.to}
-            exact={section.exact}
-            className={item}
-            title={collapsed ? section.label : undefined}
-          >
-            <section.icon />
-            <span className={cn(collapsed && 'sr-only')}>{section.label}</span>
-          </NavLink>
-        ))}
+      {/* Scrolls without a visible bar, which would eat width and push the
+          rail's icons off centre. */}
+      <nav
+        aria-label="Main"
+        className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-2 pt-1 pb-3 [scrollbar-width:none]"
+      >
+        {onToggle && collapsed && (
+          <button type="button" className={item} onClick={onToggle} aria-label={toggleLabel} title={toggleLabel}>
+            <PanelLeft />
+          </button>
+        )}
+        {APP_SECTIONS.filter((section) => section.place === 'top').map(sectionLink)}
         <NavLink
           href="/notifications"
-          className={cn(item, 'relative')}
+          className={item}
           title={collapsed ? 'Notifications' : undefined}
         >
           <Bell />
-          <span className={cn(collapsed ? 'sr-only' : 'flex-1')}>
-            Notifications
-            {collapsed && unread > 0 && ` (${unread} unread)`}
-          </span>
+          {label(collapsed && unread > 0 ? `Notifications (${unread} unread)` : 'Notifications')}
           {unread > 0 &&
             (collapsed ? (
               <span
                 aria-hidden="true"
-                className="absolute top-1.5 right-2.5 size-1.5 rounded-full bg-primary"
+                className="absolute top-1.5 right-3 size-1.5 rounded-full bg-primary"
               />
             ) : (
-              <span className="grid h-4.5 min-w-4.5 place-items-center rounded-sm bg-primary px-1 text-2xs font-medium text-primary-foreground tabular-nums">
+              <span className="ml-auto grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-2xs font-semibold text-primary-foreground tabular-nums">
                 {unread > 99 ? '99+' : unread}
               </span>
             ))}
         </NavLink>
-      </nav>
 
-      <div className="grid gap-0.5">
         <div
-          className={cn(
-            'flex items-center',
-            collapsed ? 'justify-center pb-1' : 'h-7 justify-between pr-0.5 pl-2.5',
-          )}
+          className={cn('mt-3.5 flex flex-col', collapsed && 'mt-2.5 border-t pt-2.5')}
         >
-          {!collapsed && <p className={sectionLabel}>Groups</p>}
-          <Link
-            href="/groups/new"
-            aria-label="New group"
-            title="New group"
-            className={cn(
-              buttonVariants({ variant: 'ghost', size: 'icon-xs' }),
-              'text-muted-foreground',
-            )}
-          >
-            <Plus />
-          </Link>
+          {!collapsed && <p className={sideHeading}>Expenses</p>}
+          {APP_SECTIONS.filter((section) => section.place === 'money').map(sectionLink)}
         </div>
-        {groups?.slice(0, SIDEBAR_GROUPS).map((group) => {
-          const balance =
-            group.myNetCents > 0
-              ? `You’re owed ${formatMoney(group.myNetCents, group.currency)}`
-              : group.myNetCents < 0
-                ? `You owe ${formatMoney(-group.myNetCents, group.currency)}`
-                : 'You’re square'
-          return collapsed ? (
-            <NavLink
-              key={group.id}
-              href={`/groups/${group.id}`}
-              title={`${group.name} · ${balance}`}
-              className={cn('grid h-9 place-items-center rounded-lg', row)}
-            >
-              <span
-                className="grid size-6 place-items-center rounded-md text-2xs font-medium text-on-fill uppercase"
-                style={{ background: groupColor(group.id) }}
+
+        <div className={cn('mt-3.5 flex flex-col', collapsed && 'mt-2.5 border-t pt-2.5')}>
+          {!collapsed && (
+            <div className={cn(sideHeading, 'group/heading pr-0.5')}>
+              <span className="flex-1">Groups</span>
+              <Link
+                href="/groups/new"
+                aria-label="New group"
+                title="New group"
+                className={cn(buttonVariants({ variant: 'ghost', size: 'icon-xs' }), 'size-5.5 sm:size-5.5')}
               >
-                <span aria-hidden="true">{group.name.charAt(0)}</span>
-                <span className="sr-only">{group.name}</span>
-              </span>
-            </NavLink>
-          ) : (
-            <NavLink
-              key={group.id}
-              href={`/groups/${group.id}`}
-              className={cn('flex h-8 items-center gap-2.5 rounded-lg px-2.5', row)}
-            >
-              <span
-                aria-hidden="true"
-                className="size-2 shrink-0 rounded-[3px]"
-                style={{ background: groupColor(group.id) }}
-              />
-              <span className="min-w-0 flex-1 truncate">{group.name}</span>
-              {group.myNetCents !== 0 && (
-                <span
-                  className={cn(
-                    'text-xs font-medium tabular-nums',
-                    group.myNetCents > 0 ? 'text-positive' : 'text-destructive',
-                  )}
-                  title={balance}
-                >
-                  {group.myNetCents > 0 ? '+' : '−'}
-                  {formatWholeMoney(Math.abs(group.myNetCents), group.currency)}
-                </span>
-              )}
-            </NavLink>
-          )
-        })}
-        {/* Loads in the browser; hold the space so the list doesn't jump in. */}
-        {!groups &&
-          [0, 1, 2].map((i) =>
-            collapsed ? (
-              <div key={i} className="grid h-9 place-items-center">
-                <Skeleton className="size-6 rounded-md" />
-              </div>
-            ) : (
-              <div key={i} className="flex h-8 items-center gap-2.5 px-2.5">
-                <Skeleton className="size-2 rounded-[3px]" />
-                <Skeleton className="h-3.5 flex-1 rounded" />
-              </div>
-            ),
+                <Plus />
+              </Link>
+            </div>
           )}
-        {!collapsed && groups?.length === 0 && (
-          <p className="px-2.5 py-1.5 text-xs text-muted-foreground">No groups yet.</p>
-        )}
-        {!collapsed && groups && groups.length > SIDEBAR_GROUPS && (
-          <Link
-            href="/groups"
-            className="flex h-8 items-center px-2.5 text-xs text-muted-foreground no-underline hover:text-foreground"
-          >
-            All {groups.length} groups
-          </Link>
-        )}
-      </div>
+          {groups?.slice(0, SIDEBAR_GROUPS).map((group) => {
+            const balance =
+              group.myNetCents > 0
+                ? `You’re owed ${formatMoney(group.myNetCents, group.currency)}`
+                : group.myNetCents < 0
+                  ? `You owe ${formatMoney(-group.myNetCents, group.currency)}`
+                  : 'You’re square'
+            return (
+              <NavLink
+                key={group.id}
+                href={`/groups/${group.id}`}
+                title={collapsed ? `${group.name} · ${balance}` : undefined}
+                className={item}
+              >
+                {/* Gr8r's project icon: the group's hue as a tinted tile. */}
+                <span
+                  aria-hidden="true"
+                  className="grid size-4.5 shrink-0 place-items-center rounded-md [&_svg]:size-3"
+                  style={labelTint(groupColor(group.id))}
+                >
+                  <Users />
+                </span>
+                {label(group.name)}
+                {!collapsed && group.myNetCents !== 0 && (
+                  <span
+                    className={cn(
+                      'ml-auto pl-1 text-2xs font-medium tabular-nums',
+                      group.myNetCents > 0 ? 'text-positive' : 'text-destructive',
+                    )}
+                    title={balance}
+                  >
+                    {group.myNetCents > 0 ? '+' : '−'}
+                    {formatWholeMoney(Math.abs(group.myNetCents), group.currency)}
+                  </span>
+                )}
+              </NavLink>
+            )
+          })}
+          {/* Loads in the browser; hold the space so the list doesn't jump in. */}
+          {!groups &&
+            [0, 1, 2].map((i) => (
+              <div key={i} className={cn('flex h-7.5 items-center gap-2.25 px-2', collapsed && 'justify-center px-0')}>
+                <Skeleton className="size-4.5 rounded-md" />
+                {!collapsed && <Skeleton className="h-3 flex-1 rounded" />}
+              </div>
+            ))}
+          {!collapsed && groups?.length === 0 && (
+            <p className="px-2 py-1.5 text-xs text-faint">No groups yet.</p>
+          )}
+          {!collapsed && groups && groups.length > SIDEBAR_GROUPS && (
+            <Link href="/groups" className={cn(sideItem, 'text-ui')}>
+              <Ellipsis />
+              All {groups.length} groups
+            </Link>
+          )}
+        </div>
+      </nav>
 
       {/* minmax(0,1fr): the column stays the sidebar's width instead of
           growing to fit the account name. */}
-      <div className="mt-auto grid grid-cols-[minmax(0,1fr)] gap-2">
-        {/* Dropped when collapsed (Assistant is in the menu) and on short
-            screens, where the lists above need the room. */}
-        {!collapsed && (
-          <div className="mx-0.5 grid gap-2 rounded-xl border bg-card p-3 shadow-xs/5 [@media(max-height:56rem)]:hidden">
-            <span className="flex items-center gap-2 text-sm font-medium">
-              <Sparkles className="size-4 text-primary" aria-hidden="true" />
-              Add it by typing
-            </span>
-            <span className="text-xs leading-[1.45] text-muted-foreground">
-              Tell the assistant what you spent and who shared it.
-            </span>
-            <Link
-              href="/assistant"
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-0.5 no-underline')}
-            >
-              Ask the assistant
-            </Link>
-          </div>
-        )}
+      <div className="grid grid-cols-[minmax(0,1fr)] border-t px-2 pt-1.5 pb-2">
+        <a
+          href={DOCS_URL}
+          target="_blank"
+          rel="noreferrer"
+          className={item}
+          title={collapsed ? 'Help & docs' : undefined}
+        >
+          <CircleHelp />
+          {label('Help & docs')}
+        </a>
+        <NavLink href="/settings" className={item} title={collapsed ? 'Settings' : undefined}>
+          <Settings />
+          {label('Settings')}
+        </NavLink>
         {/* The theme switch is in the account menu. */}
         <AccountMenu variant={collapsed ? 'compact' : 'row'} />
       </div>
-    </aside>
+    </div>
   )
 }
 
 /**
- * Narrow screens: logo, bell and account above the page. The theme toggle
- * is in the account menu here.
+ * Gr8r's top bar: the breadcrumb on the content gutter, then the bell, the
+ * "New" menu and your avatar. Below `lg` it starts with the menu button
+ * that opens the navigation drawer.
  */
-function MobileBar() {
+function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b surface-glass px-4 lg:hidden">
-      <Link href="/dashboard" className="no-underline" aria-label="Settlr, dashboard">
-        <Logo />
-      </Link>
-      <div className="flex items-center gap-1">
+    <header className="sticky top-0 z-40 flex h-11.5 shrink-0 items-center gap-1.5 border-b bg-background pr-3 pl-2 sm:pl-4 lg:pl-6">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="lg:hidden"
+        aria-label="Open navigation"
+        onClick={onOpenNav}
+      >
+        <Menu />
+      </Button>
+      <Breadcrumbs />
+      <div className="ml-auto flex shrink-0 items-center gap-1.5">
         <NotificationBell />
-        <AccountMenu />
+        <AddMenu
+          trigger={
+            <Button variant="outline" size="sm" aria-label="Add expense" className="max-sm:px-2" />
+          }
+        >
+          <Plus />
+          <span className="max-sm:hidden">New</span>
+          <ChevronDown className="size-3 max-sm:hidden" />
+        </AddMenu>
+        <span className="max-sm:hidden">
+          <AccountMenu />
+        </span>
       </div>
     </header>
   )
 }
 
-const tab =
-  'flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-lg text-3xs font-medium text-muted-foreground no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:text-foreground [&_svg]:size-5'
+// Steps under a section that aren't the record itself.
+const SUBPAGES: Record<string, string> = {
+  new: 'New',
+  edit: 'Edit',
+  insights: 'Insights',
+}
 
-/** Narrow screens: the floating pill of tabs, with Add in the middle. */
-function MobileNav() {
-  const tabs = APP_SECTIONS.filter((section) => section.mobile)
-  const half = Math.ceil(tabs.length / 2)
-  const link = (section: (typeof tabs)[number]) => (
-    <NavLink key={section.to} href={section.to} exact={section.exact} className={tab}>
-      <section.icon />
-      {section.short}
-    </NavLink>
-  )
+/**
+ * Where you are: the section, then the group or friend (with the group's
+ * colour), then the page within it. Names come from the same live lists the
+ * sidebar reads, so they're usually already loaded.
+ */
+function Breadcrumbs() {
+  const pathname = usePathname()
+  const parts = pathname.split('/').filter(Boolean)
+  const section = sectionFor(pathname)
+  const inGroup = parts[0] === 'groups' && parts[1] !== undefined && parts[1] !== 'new'
+  const inFriend = parts[0] === 'friends' && parts[1] !== undefined
+  const { data: groups } = useQuery(convexQuery(api.groups.list, {}))
+  const { data: friends } = useQuery(convexQuery(api.friends.list, inFriend ? {} : 'skip'))
+
+  type Crumb = { label: React.ReactNode; href?: string }
+  const crumbs: Array<Crumb> = []
+  if (section) {
+    crumbs.push({ label: section.label, href: section.to })
+    if (inGroup) {
+      const group = groups?.find((g) => g.id === parts[1])
+      crumbs.push({
+        href: `/groups/${parts[1]}`,
+        label: (
+          <>
+            <span
+              aria-hidden="true"
+              className="grid size-4 shrink-0 place-items-center rounded-sm [&_svg]:size-2.5"
+              style={labelTint(groupColor(parts[1]))}
+            >
+              <Users />
+            </span>
+            <span className="truncate">{group?.name ?? 'Group'}</span>
+          </>
+        ),
+      })
+      if (parts[2] === 'expenses' && parts[3] === 'new') crumbs.push({ label: 'New expense' })
+      else if (parts[2] === 'expenses' && parts[4] === 'edit') crumbs.push({ label: 'Edit expense' })
+      else if (parts[2] && SUBPAGES[parts[2]]) crumbs.push({ label: SUBPAGES[parts[2]] })
+    } else if (parts[0] === 'groups' && parts[1] === 'new') {
+      crumbs.push({ label: 'New group' })
+    } else if (inFriend) {
+      const friend = friends?.find((f) => f.id === parts[1])
+      crumbs.push({ label: friend?.name ?? 'Friend' })
+    }
+  } else if (parts[0] === 'notifications') {
+    crumbs.push({ label: 'Notifications' })
+  } else if (parts[0] === 'settings') {
+    crumbs.push({ label: 'Settings' })
+  } else if (parts[0] === 'receipts') {
+    crumbs.push({ label: 'Receipt' })
+  }
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 bg-linear-to-b from-transparent to-background to-55% px-4 pt-10 pb-[max(1rem,env(safe-area-inset-bottom))] lg:hidden">
-      <nav
-        aria-label="Main"
-        className="pointer-events-auto mx-auto grid h-15 max-w-md grid-cols-5 items-center rounded-2xl dropdown-glass px-1.5"
-      >
-        {tabs.slice(0, half).map(link)}
-        <div className="grid place-items-center">
-          <AddMenu
-            side="top"
-            trigger={
-              <button
-                type="button"
-                aria-label="Add expense"
-                className="grid size-11 place-items-center rounded-xl border border-primary bg-primary text-primary-foreground shadow-xs shadow-primary/24 inset-shadow-[0_1px_--theme(--color-white/16%)] outline-none hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              />
-            }
-          >
-            <Plus className="size-5" strokeWidth={2.25} />
-          </AddMenu>
-        </div>
-        {tabs.slice(half).map(link)}
-      </nav>
-    </div>
+    <nav aria-label="Breadcrumb" className="min-w-0">
+      <ol className="flex min-w-0 items-center gap-2 text-ui text-muted-foreground">
+        {crumbs.map((crumb, i) => {
+          const last = i === crumbs.length - 1
+          return (
+            <li key={i} className={cn('flex min-w-0 items-center gap-2', !last && 'max-sm:hidden')}>
+              {i > 0 && (
+                <span aria-hidden="true" className="text-xs text-dim max-sm:hidden">
+                  /
+                </span>
+              )}
+              {last || !crumb.href ? (
+                <span
+                  aria-current={last ? 'page' : undefined}
+                  className={cn(
+                    'flex min-w-0 items-center gap-1.5 whitespace-nowrap',
+                    last && 'font-medium text-foreground',
+                  )}
+                >
+                  {crumb.label}
+                </span>
+              ) : (
+                <Link
+                  href={crumb.href}
+                  className="flex min-w-0 items-center gap-1.5 py-0.75 whitespace-nowrap no-underline transition-colors duration-140 hover:text-foreground"
+                >
+                  {crumb.label}
+                </Link>
+              )}
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
+  )
+}
+
+const tab =
+  'relative flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-lg py-1.25 text-2xs text-faint no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:text-foreground [&_svg]:size-4.75'
+
+/**
+ * Narrow screens: Gr8r's flat bottom bar of sections, with More opening the
+ * navigation drawer. Adding is the top bar's New button.
+ */
+function BottomNav({ onMore }: { onMore: () => void }) {
+  return (
+    <nav
+      aria-label="Sections"
+      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background px-1.5 pt-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))] lg:hidden"
+    >
+      {APP_SECTIONS.filter((section) => section.mobile).map((section) => (
+        <NavLink key={section.to} href={section.to} exact={section.exact} className={tab}>
+          <section.icon />
+          {section.short}
+        </NavLink>
+      ))}
+      <button type="button" className={tab} onClick={onMore}>
+        <Ellipsis />
+        More
+      </button>
+    </nav>
   )
 }

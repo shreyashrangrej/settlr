@@ -8,7 +8,7 @@ import { ChevronRight, Plus, Users, Zap } from 'lucide-react'
 
 import { AddMenu } from '#/components/add-menu'
 import { budgetStatus, type Spending } from '#/components/budget'
-import { CategoryIcon, groupColor } from '#/components/category'
+import { CategoryIcon, groupColor, labelTint } from '#/components/category'
 import { ExpenseRow, ExpenseTable } from '#/components/expense-list'
 import { SelectField } from '#/components/form-fields'
 import { GroupTile } from '#/components/group-tile'
@@ -36,8 +36,8 @@ import { api } from '@settlr/backend/convex/_generated/api'
 const PREVIEW = 5
 const MAX_BALANCES = 8
 
-const card = 'flex min-w-0 flex-col rounded-xl border bg-card shadow-xs/5'
-const cardTitle = 'm-0 text-base font-semibold'
+const card = 'flex min-w-0 flex-col rounded-xl border bg-card'
+const cardTitle = 'm-0 text-sm font-semibold'
 const cardLink =
   'text-xs font-medium text-muted-foreground no-underline hover:text-foreground'
 const fieldLabel = 'text-xs text-muted-foreground'
@@ -220,13 +220,13 @@ function BalanceAvatar({
     <span
       aria-hidden="true"
       className={cn(
-        'grid shrink-0 place-items-center text-on-fill',
-        size === 'sm' && 'size-7 rounded-lg [&_svg]:size-3.5',
-        size === 'default' && 'size-8 rounded-lg [&_svg]:size-4',
-        size === 'lg' && 'size-10 rounded-lg [&_svg]:size-5',
+        'grid shrink-0 place-items-center',
+        size === 'sm' && 'size-5.5 rounded-md [&_svg]:size-3',
+        size === 'default' && 'size-7 rounded-md [&_svg]:size-3.5',
+        size === 'lg' && 'size-9 rounded-lg [&_svg]:size-4.5',
         className,
       )}
-      style={{ background: balance.color }}
+      style={labelTint(balance.color)}
     >
       <Users />
     </span>
@@ -454,7 +454,7 @@ function QuickSplit({
 
   if (!selected) {
     return (
-      <section aria-labelledby="quick-h" className={cn(card, 'gap-3.5 p-4', className)}>
+      <section aria-labelledby="quick-h" className={cn(card, 'gap-3.5 p-3.5', className)}>
         <h2 id="quick-h" className={cardTitle}>
           Quick split
         </h2>
@@ -516,7 +516,7 @@ function QuickSplit({
       noValidate
       onSubmit={onSubmit}
       aria-labelledby="quick-h"
-      className={cn(card, 'gap-3.5 p-4', className)}
+      className={cn(card, 'gap-3.5 p-3.5', className)}
     >
       <div className="flex items-center justify-between gap-2">
         <h2 id="quick-h" className={cardTitle}>
@@ -567,7 +567,7 @@ function QuickSplit({
               }))}
             />
           ) : (
-            <Skeleton className="h-9 rounded-lg sm:h-8" />
+            <Skeleton className="h-9 rounded-lg sm:h-7.5" />
           )}
         </div>
       </div>
@@ -588,10 +588,10 @@ function QuickSplit({
                   )
                 }
                 className={cn(
-                  'flex h-8 items-center gap-1.5 rounded-full border border-input py-0 pr-3 pl-1 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                  'flex h-8 items-center gap-1.5 rounded-lg border py-0 pr-2.5 pl-1 text-xs font-medium transition-colors duration-140 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:h-7',
                   included
-                    ? 'bg-foreground/8 text-foreground dark:bg-foreground/12'
-                    : 'bg-field text-muted-foreground hover:bg-accent/50',
+                    ? 'border-highlight-border bg-primary-soft text-foreground'
+                    : 'bg-card text-muted-foreground hover:bg-muted',
                 )}
               >
                 <PersonAvatar
@@ -648,7 +648,7 @@ function Balances({
     <section
       id="balances"
       aria-labelledby="bal-h"
-      className={cn(card, 'scroll-mt-20 gap-2.5 p-4', className)}
+      className={cn(card, 'scroll-mt-20 gap-2.5 p-3.5', className)}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="bal-h" className={cardTitle}>
@@ -754,7 +754,7 @@ function ClearWhatYouOwe({
     <section
       aria-labelledby="settle-h"
       className={cn(
-        'flex flex-col gap-3.5 rounded-xl border border-highlight-border bg-highlight p-4 shadow-xs/5',
+        'flex flex-col gap-3.5 rounded-xl border border-highlight-border bg-highlight p-3.5',
         owing.length === 0 && 'max-xl:hidden',
         className,
       )}
@@ -829,7 +829,7 @@ function BudgetSummary({
   const left = budget ? budget.amountCents - spent : 0
 
   return (
-    <section aria-labelledby="budget-h" className={cn(card, 'gap-3 p-4', className)}>
+    <section aria-labelledby="budget-h" className={cn(card, 'gap-3 p-3.5', className)}>
       <div className="flex min-h-9 items-center justify-between gap-2">
         <h2 id="budget-h" className={cardTitle}>
           Budget for {formatMonth(month).split(' ')[0]}
@@ -861,7 +861,7 @@ function BudgetSummary({
                   status.tone === 'over'
                     ? 'bg-destructive'
                     : status.tone === 'warn'
-                      ? 'bg-amber-500'
+                      ? 'bg-warning'
                       : 'bg-primary',
                 )}
                 style={{ width: `${Math.min(status.ratio, 1) * 100}%` }}
@@ -895,7 +895,7 @@ function YourGroups({
   className?: string
 }) {
   return (
-    <section aria-labelledby="groups-h" className={cn(card, 'gap-3.5 p-4', className)}>
+    <section aria-labelledby="groups-h" className={cn(card, 'gap-3.5 p-3.5', className)}>
       <div className="flex min-h-9 items-center justify-between gap-2">
         <h2 id="groups-h" className={cardTitle}>
           Your groups
@@ -948,7 +948,7 @@ function YourShare({
   let offset = 0
 
   return (
-    <section aria-labelledby="spend-h" className={cn(card, 'gap-4 p-4', className)}>
+    <section aria-labelledby="spend-h" className={cn(card, 'gap-4 p-3.5', className)}>
       <div className="flex min-h-9 items-center justify-between gap-2">
         <h2 id="spend-h" className={cardTitle}>
           Your share in {formatMonth(month).split(' ')[0]}
@@ -1031,7 +1031,7 @@ function RecentSpending({
   className?: string
 }) {
   return (
-    <section aria-labelledby="act-h" className={cn(card, 'gap-3 p-4', className)}>
+    <section aria-labelledby="act-h" className={cn(card, 'gap-3 p-3.5', className)}>
       <div className="flex min-h-9 flex-wrap items-center justify-between gap-3">
         <h2 id="act-h" className={cardTitle}>
           Recent personal spending

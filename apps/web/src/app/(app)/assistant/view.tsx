@@ -167,7 +167,7 @@ export function AssistantView() {
         hasChanges && 'xl:grid-cols-[minmax(0,1fr)_20rem]',
       )}
     >
-      <div className="flex min-h-[calc(100svh-13rem)] min-w-0 flex-col lg:min-h-[calc(100svh-4.5rem)]">
+      <div className="flex min-h-[calc(100svh-11.125rem)] min-w-0 flex-col lg:min-h-[calc(100svh-9.125rem)]">
         <header className="flex min-h-10 items-center justify-between gap-3">
           <h1 className="m-0 flex items-center gap-2.5 text-base font-semibold">
             <AssistantMark />
@@ -248,13 +248,13 @@ export function AssistantView() {
         </div>
 
         <form
-          className="sticky bottom-25 z-10 bg-background pt-3 pb-2 lg:bottom-0 lg:pb-4.5"
+          className="sticky bottom-[calc(3.625rem+env(safe-area-inset-bottom))] z-10 bg-background pt-3 pb-2 lg:bottom-0 lg:pb-4.5"
           onSubmit={(event) => {
             event.preventDefault()
             void submit()
           }}
         >
-          <div className="mx-auto flex max-w-190 items-end gap-2 rounded-xl border bg-card py-2 pr-2 pl-4 shadow-xs/5 transition-colors focus-within:border-ring dark:shadow-[0_14px_32px_-18px_rgb(0_0_0/75%)]">
+          <div className="mx-auto flex max-w-190 items-end gap-2 rounded-xl border bg-card py-2 pr-2 pl-4 transition-colors focus-within:border-ring dark:shadow-[0_14px_32px_-18px_rgb(0_0_0/75%)]">
             <label htmlFor={`${id}-message`} className="sr-only">
               Message the assistant
             </label>
@@ -290,7 +290,7 @@ export function AssistantView() {
       </div>
 
       {hasChanges && (
-        <aside className="rounded-xl border bg-sidebar p-4 xl:sticky xl:top-6">
+        <aside className="rounded-xl border bg-sunken p-3.5 xl:sticky xl:top-17">
           <Changes messages={messages} decisions={decisions} />
         </aside>
       )}
@@ -606,7 +606,7 @@ function DeleteOffer({
         <span
           className={cn(
             'shrink-0 rounded-sm px-1.5 py-0.5 text-xs font-medium',
-            waiting ? 'bg-destructive/8 text-destructive dark:bg-destructive/16' : 'bg-foreground/8 text-foreground',
+            waiting ? 'bg-destructive/10 text-destructive' : 'bg-raised text-foreground',
           )}
         >
           {waiting ? 'Waiting for you' : decision === 'deleted' ? 'Deleted' : 'Kept'}
@@ -721,12 +721,12 @@ function Changes({ messages, decisions }: { messages: Array<Message>; decisions:
                   ) : (
                     <span
                       className={cn(
-                        'grid size-5.5 place-items-center rounded-full text-on-fill [&_svg]:size-3',
+                        'grid size-5.5 place-items-center rounded-full [&_svg]:size-3',
                         event.type === 'added'
                           ? 'bg-primary text-primary-foreground'
                           : event.type === 'updated'
                             ? 'bg-positive text-background'
-                            : 'bg-foreground/8 text-foreground',
+                            : 'bg-raised text-foreground',
                       )}
                     >
                       {event.type === 'added' ? (

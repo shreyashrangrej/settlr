@@ -62,11 +62,11 @@ export function AccountMenu({
               type="button"
               aria-label="Account menu"
               title={label}
-              className="grid place-items-center rounded-lg p-1 outline-none hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-foreground/8"
+              className="grid h-9 w-full place-items-center rounded-lg outline-none transition-colors duration-140 hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-raised"
             />
           }
         >
-          <PersonAvatar name={label} me className="size-7" />
+          <PersonAvatar name={label} me className="size-6.5" />
         </DropdownMenuTrigger>
       ) : variant === 'row' ? (
         <DropdownMenuTrigger
@@ -74,16 +74,16 @@ export function AccountMenu({
             <button
               type="button"
               aria-label="Account menu"
-              className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-left outline-none hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-foreground/8"
+              className="flex h-9 min-w-0 flex-1 items-center gap-2.25 rounded-lg px-2 text-left outline-none transition-colors duration-140 hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-raised"
             />
           }
         >
-          <PersonAvatar name={label} me className="size-7" />
+          <PersonAvatar name={label} me className="size-6.5" />
           {/* The email is in the menu; the row only has room for the name. */}
           <span className="min-w-0 flex-1 truncate text-sm font-medium" title={user.name || undefined}>
             {user.name || 'Your account'}
           </span>
-          <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
+          <ChevronsUpDown className="size-3.25 shrink-0 text-faint" />
         </DropdownMenuTrigger>
       ) : (
         <DropdownMenuTrigger
@@ -91,12 +91,12 @@ export function AccountMenu({
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full before:rounded-full"
+              className="w-auto px-0.5"
               aria-label="Account menu"
             />
           }
         >
-          <PersonAvatar name={label} me />
+          <PersonAvatar name={label} me className="size-6.5" />
         </DropdownMenuTrigger>
       )}
       <DropdownMenuContent align={variant === 'avatar' ? 'end' : 'start'} className="w-60">

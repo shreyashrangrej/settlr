@@ -14,53 +14,77 @@
 @custom-variant data-vertical (&[data-orientation="vertical"]);
 
 :root {
-  /* T3 Code's palette (github.com/pingdotgg/t3code, apps/web/src/index.css):
-     quiet zinc neutrals, a blue primary, emerald and red for +/−. Dark is
-     the default (see src/lib/theme.ts); light is T3's light appearance. */
+  /* Gr8r Studio's palette (github.com/gr8rstudio/gr8r-studio,
+     src/styles/tokens.css): warm paper neutrals, an indigo accent, and
+     muted green and red for +/−. Light is defined here and dark is
+     redefined (not inverted) under `.dark`; with no saved choice the theme
+     follows the system (see src/lib/theme.ts). */
   color-scheme: light;
-  --bg: oklch(99.2% 0 0);
-  --bg-sidebar: var(--color-zinc-50);
-  --surface: var(--color-white);
-  --surface-2: var(--color-zinc-100);
-  --field: oklch(99.2% 0 0);
-  --border: var(--color-zinc-200);
-  --border-strong: var(--color-zinc-300);
-  --divider: color-mix(in srgb, var(--color-zinc-200) 60%, transparent);
-  --text: var(--color-zinc-900);
-  --muted: var(--color-zinc-500);
-  /* T3's secondary label: row metadata a step below titles. */
-  --faint: var(--color-zinc-500);
-  --dim: var(--color-zinc-400);
-  --accent: oklch(0.488 0.217 264);
-  --accent-contrast: var(--color-white);
+  /* The content area is the plain surface; the sidebar sits a step darker. */
+  --bg: #ffffff;
+  --bg-page: #fbfaf8;
+  --bg-sidebar: #f4f3f0;
+  --surface: #ffffff;
+  --surface-2: #f6f5f2;
+  --surface-3: #eeede9;
+  --sunken: #f7f6f3;
+  --field: #ffffff;
+  --overlay: rgb(24 22 19 / 28%);
+  --border: #e9e7e2;
+  --border-strong: #dad7d0;
+  --divider: #f0eeea;
+  /* Four text steps: text, muted (descriptions, labels), faint (hints,
+     metadata), dim (placeholder-quiet: idle icons, separators). */
+  --text: #1d1c1a;
+  --muted: #57544e;
+  --faint: #6b6760;
+  --dim: #8c8880;
+  --text-inv: #ffffff;
+  --accent: #4b5bd6;
+  --accent-contrast: #ffffff;
+  --accent-soft: color-mix(in srgb, var(--accent) 10%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 38%, transparent);
   --accent-surface: color-mix(in srgb, var(--accent) 5%, var(--surface));
-  --accent-border: color-mix(in srgb, var(--accent) 28%, transparent);
-  /* Money: `owed` is owed to you (T3's success), `owe` is what you owe and
-     destructive actions (T3's error). */
-  --owed: var(--color-emerald-700);
-  --owe: var(--color-red-600);
-  --owe-contrast: var(--color-white);
+  --accent-border: var(--accent-line);
+  /* Money: `owed` is owed to you (green), `owe` is what you owe and
+     destructive actions (red). */
+  --owed: #25754b;
+  --owe: #b23c30;
+  --owe-contrast: #ffffff;
   --danger-border: color-mix(in srgb, var(--owe) 32%, transparent);
-  /* Text on the group and category colour fills. */
-  --on-fill: #0c0d10;
-  --contrast: var(--color-zinc-900);
-  --contrast-text: oklch(99.2% 0 0);
+  --warning: #8f5e0e;
+  /* The label hues behind category, group and avatar tints. */
+  --green: #25754b;
+  --amber: #8f5e0e;
+  --red: #b23c30;
+  --blue: #3570c4;
+  --violet: #7652c2;
+  --teal: #1e8580;
+  --rose: #bc4270;
+  --orange: #c0612b;
+  --gray: #8a867e;
+  /* How much of the hue a tinted glyph keeps (the rest is the text colour). */
+  --tint-ink: 100%;
+  --on-fill: #ffffff;
+  --contrast: #1d1c1a;
+  --contrast-text: #ffffff;
   /* The active segment of a segmented control. */
-  --segment: var(--color-white);
+  --segment: var(--surface);
   /* Progress tracks and timeline rails. */
-  --track: var(--color-zinc-200);
-  --skeleton: color-mix(in srgb, var(--muted) 15%, transparent);
-  --radius: 0.5rem;
+  --track: var(--surface-3);
+  --skeleton: var(--surface-3);
+  --skeleton-shine: var(--surface-2);
+  --shadow-sm: 0 1px 2px rgb(28 25 20 / 5%);
+  --shadow-pop:
+    0 12px 32px -8px rgb(28 25 20 / 16%), 0 2px 6px -2px rgb(28 25 20 / 6%), 0 0 0 1px var(--border);
+  --radius: 0.375rem;
   --font:
-    -apple-system, BlinkMacSystemFont, var(--font-inter), 'Inter', 'Segoe UI', system-ui,
-    sans-serif;
+    var(--font-geist), 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
   --mono:
-    ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
-  --shadow-color: 240 6% 10%;
-  /* Frosted popups and dialogs, as in T3 Code. */
-  --glass-blur: 12px;
-  --glass-opacity: 80%;
-  --glass-saturation: 1.14;
+    var(--font-geist-mono), 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --shadow-color: 30 10% 10%;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* shadcn's variable names, for component styles that read them directly
      (e.g. the toaster). They follow the tokens above in both themes. */
@@ -75,37 +99,48 @@
 }
 
 .dark {
-  /* True black canvas; cards and popups keep a hair of lift, and borders
-     (white at 8%) do the separating instead of grey fills. */
+  /* Gr8r's dark theme: warm charcoal, not black, with the sidebar a step
+     darker than the content and borders doing the separating. */
   color-scheme: dark;
-  --bg: #000;
-  --bg-sidebar: #000;
-  --surface: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
-  --surface-2: rgb(255 255 255 / 5%);
-  --field: rgb(255 255 255 / 3.5%);
-  --border: rgb(255 255 255 / 8%);
-  --border-strong: rgb(255 255 255 / 11%);
-  --divider: rgb(255 255 255 / 6%);
-  --text: var(--color-neutral-100);
-  --muted: var(--color-neutral-400);
-  --faint: #8f8f8f;
-  --dim: var(--color-neutral-500);
-  --accent: oklch(0.571 0.21 264);
-  --accent-contrast: var(--color-white);
-  --accent-surface: color-mix(in srgb, var(--accent) 9%, var(--surface));
-  --accent-border: color-mix(in srgb, var(--accent) 32%, transparent);
-  --owed: var(--color-emerald-400);
-  --owe: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
-  --owe-contrast: var(--color-white);
-  --danger-border: color-mix(in srgb, var(--owe) 32%, transparent);
-  --contrast: var(--color-neutral-100);
-  --contrast-text: #000;
-  --segment: rgb(255 255 255 / 8%);
-  --track: rgb(255 255 255 / 11%);
-  --skeleton: color-mix(in srgb, var(--muted) 15%, transparent);
+  --bg: #1d1d1c;
+  --bg-page: #1a1a19;
+  --bg-sidebar: #151514;
+  --surface: #1d1d1c;
+  --surface-2: #252524;
+  --surface-3: #2d2d2b;
+  --sunken: #181817;
+  --field: #1d1d1c;
+  --overlay: rgb(0 0 0 / 55%);
+  --border: #2c2b29;
+  --border-strong: #3a3936;
+  --divider: #252523;
+  --text: #eceae5;
+  --muted: #b5b2ab;
+  --faint: #9a968f;
+  --dim: #6f6c66;
+  --text-inv: #151514;
+  --accent: #8e9af3;
+  --accent-contrast: #12131c;
+  --owed: #5cba86;
+  --owe: #e57d70;
+  --owe-contrast: #151514;
+  --warning: #d8a443;
+  --green: #5cba86;
+  --amber: #d8a443;
+  --red: #e57d70;
+  --blue: #72a5ea;
+  --violet: #a98deb;
+  --teal: #58c0b6;
+  --rose: #e68aab;
+  --orange: #e3925f;
+  --gray: #8f8b84;
+  --tint-ink: 72%;
+  --on-fill: #151514;
+  --contrast: #eceae5;
+  --contrast-text: #151514;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-pop: 0 16px 40px -10px rgb(0 0 0 / 60%), 0 0 0 1px var(--border-strong);
   --shadow-color: 0 0% 0%;
-  --glass-blur: 16px;
-  --glass-saturation: 1.08;
 }
 
 /* shadcn/ui color names mapped onto the tokens above, so Tailwind utilities
@@ -115,13 +150,31 @@
 @theme inline {
   --font-sans: var(--font);
   --font-mono: var(--mono);
-  /* T3 Code's dense steps below text-xs: 2xs is 11px, 3xs 10px. */
-  --text-2xs: 0.6875rem;
-  --text-2xs--line-height: calc(1 / 0.6875);
+  /* Gr8r's type scale, which is a notch denser than Tailwind's: body and
+     controls 13.5px (sm), section titles 14.5px (base), page titles 23px
+     (2xl). `ui` (12.5px) is for buttons, tabs, badges and breadcrumbs;
+     2xs (11px) for counts and section labels. */
   --text-3xs: 0.625rem;
-  --text-3xs--line-height: calc(0.875 / 0.625);
+  --text-3xs--line-height: 1.4;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1.4;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.45;
+  --text-ui: 0.78125rem;
+  --text-ui--line-height: 1.45;
+  --text-sm: 0.84375rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 0.90625rem;
+  --text-base--line-height: 1.45;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.45;
+  --text-xl: 1.1875rem;
+  --text-xl--line-height: 1.3;
+  --text-2xl: 1.4375rem;
+  --text-2xl--line-height: 1.2;
   --color-background: var(--bg);
   --color-foreground: var(--text);
+  --color-page: var(--bg-page);
   --color-sidebar: var(--bg-sidebar);
   --color-card: var(--surface);
   --color-card-foreground: var(--text);
@@ -138,17 +191,21 @@
   --color-destructive: var(--owe);
   --color-destructive-foreground: var(--owe-contrast);
   --color-positive: var(--owed);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--border-strong);
   --color-ring: var(--accent);
   /* Beyond shadcn's names: the design's extra surfaces and text steps. */
   --color-tile: var(--surface-2);
+  --color-raised: var(--surface-3);
+  --color-sunken: var(--sunken);
   --color-field: var(--field);
   --color-divider: var(--divider);
   --color-faint: var(--faint);
   --color-dim: var(--dim);
   --color-highlight: var(--accent-surface);
   --color-highlight-border: var(--accent-border);
+  --color-primary-soft: var(--accent-soft);
   --color-danger-border: var(--danger-border);
   --color-on-fill: var(--on-fill);
   --color-contrast: var(--contrast);
@@ -156,96 +213,89 @@
   --color-segment: var(--segment);
   --color-track: var(--track);
   --color-skeleton: var(--skeleton);
-  /* T3 Code's scale on an 8px base: controls 8px (lg), cards 12px (xl),
-     dialogs 16px (2xl). */
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  /* Gr8r's radii: 4px (xs: kbd, small icon buttons), 5px (badges,
+     segments), 6px (buttons, inputs, menu rows), 10px (cards, menus,
+     popovers), 12px (dialogs). */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.3125rem;
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 1rem;
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
-  --animate-skeleton: skeleton 2.4s infinite;
-  /* One stepped opacity breath per skeleton (T3 Code's), so the compositor
-     draws a few frames per cycle instead of one per vsync. */
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --animate-skeleton: skeleton 1.3s ease-in-out infinite;
+  --animate-pop-in: pop-in 0.16s var(--ease) both;
+  --animate-modal-in: modal-in 0.26s var(--ease) both;
+  /* Gr8r's shimmer: a lighter band sweeping across the placeholder. */
   @keyframes skeleton {
-    0%,
-    42% {
-      opacity: 1;
-      animation-timing-function: steps(4);
+    from {
+      background-position: 120% 0;
     }
-    50%,
-    92% {
-      opacity: 0.55;
-      animation-timing-function: steps(4);
+    to {
+      background-position: -100% 0;
     }
-    100% {
-      opacity: 1;
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.97);
+    }
+  }
+  @keyframes modal-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
     }
   }
 }
 
-/* T3 Code's frosted surfaces: menus, selects and popovers (dropdown-glass),
-   dialogs (dialog-glass) over a blurred backdrop (dialog-backdrop), and the
-   sticky bars (surface-glass). Each falls back to a solid fill where
-   backdrop-filter isn't supported. */
-@utility surface-glass {
-  background: color-mix(in srgb, var(--bg) var(--glass-opacity), transparent);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-
-  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    background: var(--bg) !important;
-  }
+/* Gr8r's floating surfaces: menus, selects and popovers (popover-panel) are
+   the solid surface on a soft long shadow that carries its own hairline;
+   dialogs (modal-panel) are the same at a larger radius, over a flat warm
+   scrim (modal-scrim). */
+@utility popover-panel {
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
 }
 
-@utility dropdown-glass {
-  background: color-mix(
-    in srgb,
-    var(--surface) 18%,
-    color-mix(in srgb, var(--surface) var(--glass-opacity), transparent)
+@utility modal-panel {
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+
+@utility modal-scrim {
+  background: var(--overlay);
+}
+
+/* The shimmering placeholder block. */
+@utility skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton) 0%,
+    var(--skeleton-shine) 45%,
+    var(--skeleton) 90%
   );
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
-  box-shadow: 0 16px 40px -18px rgb(0 0 0 / 55%);
-
-  @variant dark {
-    box-shadow: 0 18px 44px -18px rgb(0 0 0 / 80%);
-  }
-
-  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    background: var(--surface) !important;
-  }
+  background-size: 220% 100%;
 }
 
-@utility dialog-glass {
-  background: color-mix(in srgb, var(--bg) var(--glass-opacity), transparent);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  border-color: color-mix(in srgb, var(--text) 10%, transparent);
-  box-shadow: 0 24px 64px -24px rgb(0 0 0 / 65%);
-
-  @variant dark {
-    border-color: rgb(255 255 255 / 8%);
-    box-shadow:
-      inset 0 1px rgb(255 255 255 / 4%),
-      0 24px 72px -20px rgb(0 0 0 / 90%);
-  }
-
-  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    background: var(--surface) !important;
-  }
-}
-
-@utility dialog-backdrop {
-  background: color-mix(in srgb, var(--bg) 60%, transparent);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-
-  @variant dark {
-    background: color-mix(in srgb, var(--bg) 64%, transparent);
-  }
+/* Keyboard hint, e.g. ⌘K: mono, hairline border with a heavier base. */
+@utility kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-bottom-width: 1.5px;
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1;
 }
 
 /* Element defaults live in the base layer so Tailwind utilities on shadcn
@@ -261,9 +311,42 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--font);
-    font-size: 0.875rem;
-    line-height: 1.5;
+    font-size: var(--text-sm);
+    line-height: 1.45;
     overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  input,
+  textarea,
+  [contenteditable] {
+    caret-color: var(--accent);
+  }
+
+  /* Gr8r's thin scrollbars: a rounded thumb inset in a clear track. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--dim);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   a {
@@ -279,15 +362,17 @@
   }
 
   h1 {
-    font-size: 1.25rem;
+    font-size: var(--text-2xl);
+    letter-spacing: -0.022em;
   }
 
   h2 {
-    font-size: 1rem;
+    font-size: var(--text-base);
+    letter-spacing: -0.01em;
   }
 
   h3 {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     margin-top: 1.25rem;
   }
 
@@ -306,10 +391,10 @@
     outline-offset: 2px;
   }
 
-  /* T3 Code's lighter icon stroke: any CSS beats lucide's stroke-width="2"
+  /* Gr8r's icon stroke (1.8): any CSS beats lucide's stroke-width="2"
      attribute, and `stroke-*` utilities still win over this layer. */
   :where(svg.lucide[stroke-width='2']) {
-    stroke-width: 1.75;
+    stroke-width: 1.8;
   }
 }
 

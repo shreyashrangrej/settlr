@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { hashIndex, labelTint } from '#/components/category'
+import { avatarTint, hashIndex } from '#/components/category'
 import { Avatar, AvatarFallback } from '#/components/ui/avatar'
 import { Badge } from '#/components/ui/badge'
 import { errorMessage } from '#/lib/errors'
@@ -110,8 +110,16 @@ export function BalanceText({
 }
 
 // Avatar hues, picked from the name so a person keeps their colour. They're
-// drawn as T3 Code's label tint (see `labelTint`), so they suit both themes.
-const AVATAR_HUES = ['#60A5FA', '#FBBF24', '#34D399', '#FB7185', '#A78BFA']
+// drawn as Gr8r Studio's avatar tint (see `avatarTint`), so they suit both
+// themes.
+const AVATAR_HUES = [
+  'var(--blue)',
+  'var(--amber)',
+  'var(--green)',
+  'var(--rose)',
+  'var(--violet)',
+  'var(--teal)',
+]
 
 export function PersonAvatar({
   name,
@@ -134,8 +142,8 @@ export function PersonAvatar({
   return (
     <Avatar size={size} className={className}>
       <AvatarFallback
-        className={cn('uppercase', me ? 'bg-primary text-primary-foreground' : '')}
-        style={me ? undefined : labelTint(AVATAR_HUES[hashIndex(name, AVATAR_HUES.length)])}
+        className={cn('uppercase', me ? 'bg-primary-soft text-primary' : '')}
+        style={me ? undefined : avatarTint(AVATAR_HUES[hashIndex(name, AVATAR_HUES.length)])}
       >
         {initials || '?'}
       </AvatarFallback>
