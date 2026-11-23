@@ -163,11 +163,12 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `app-shell.tsx` (the frame: the sidebar on wide screens, collapsible to
   an icon rail with Ctrl/⌘+B and remembered in the `settlr_sidebar` cookie
   that the root layout reads, so it renders at the right width; from `lg`
-  the sidebar colour rims the window and the top bar and page sit in a
-  rounded inset panel that is the page's scroller (so `sticky` offsets
-  like `top-4` and `scrollIntoView` work against it, not the window; on
-  phones the window scrolls); the top bar isn't pinned (it scrolls away
-  with the page) and, with
+  the sidebar and the top bar form one frame in the sidebar colour (which
+  also rims the right and bottom of the window), and the page sits in a
+  rounded inset panel below the bar that is the page's scroller (so
+  `sticky` offsets like `top-4` and `scrollIntoView` work against it, not
+  the window; on phones the window scrolls and the top bar sticks, so
+  anchors there need `scroll-mt-15`); the top bar, with
   no bottom border, has the breadcrumb, bell, "New" menu and account on
   every width;
   below `lg` the sidebar is a drawer and a tab bar runs along the bottom;

@@ -50,11 +50,11 @@ const sideHeading =
 
 /**
  * The frame around every page. Signed in, it's Gr8r Studio's shell, inset:
- * from `lg` the sidebar's colour runs round the whole window as a rim, and
- * the top bar (breadcrumb, bell, New, account) and page sit in a rounded
- * panel inside it that scrolls on its own, so its corners stay put. The
- * top bar isn't pinned: it scrolls away with the page, so the whole height
- * goes to content and nothing slides beneath a bar. Below
+ * from `lg` the sidebar and the top bar (breadcrumb, bell, New, account)
+ * form one frame in the sidebar's colour, which also rims the right and
+ * bottom of the window, and the page sits in a rounded panel inside it
+ * that scrolls on its own. The bar stays in view and content stops at the
+ * panel's edge instead of sliding under it. Below
  * `lg` the sidebar becomes a drawer the top bar's menu button opens, the
  * panel fills the screen, and a tab bar runs along the bottom. Signed out, or while a new
  * account still has to give its name, it's just the site header.
@@ -108,16 +108,16 @@ export function AppShell({
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>
 
-      {/* The inset panel: 8px of rim above, right and below it (the
-          sidebar is the rim on the left), rounded, and the page's scroller
-          from `lg` (the window scrolls on phones). The top bar scrolls with
-          the page. */}
-      <div className="flex min-w-0 flex-1 flex-col bg-background lg:my-2 lg:mr-2 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-xs">
+      <div className="flex min-w-0 flex-1 flex-col lg:h-svh">
         <TopBar onOpenNav={() => setDrawerOpen(true)} />
-        <div className="flex flex-1 flex-col">
+        {/* The inset panel: below the top bar, with 8px of rim to its right
+            and below it (the sidebar is the frame on the left), rounded,
+            and the page's scroller from `lg` (the window scrolls on
+            phones). */}
+        <div className="flex min-w-0 flex-1 flex-col bg-background lg:mr-2 lg:mb-2 lg:min-h-0 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-xs">
           {/* Gr8r's page: centred, at most 1160px, on the shared 24px
               gutter (16px on phones). */}
-          <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-4 lg:pb-12">
+          <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-5 lg:pb-12">
             {children}
           </main>
         </div>
@@ -338,13 +338,15 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?
 }
 
 /**
- * Gr8r's top bar: the breadcrumb on the content gutter, then the bell, the
- * "New" menu and your avatar. Below `lg` it starts with the menu button
+ * Gr8r's top bar: the breadcrumb lined up with the page's gutter, then the
+ * bell, the "New" menu and your avatar. Below `lg` it starts with the menu button
  * that opens the navigation drawer.
  */
 function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
   return (
-    <header className="flex h-11.5 shrink-0 items-center gap-1.5 pr-3 pl-2 sm:pl-4 lg:pl-6">
+    // On phones it sticks to the top of the window over the page, with a
+    // hairline under it; from `lg` it's part of the frame, above the panel.
+    <header className="sticky top-0 z-40 flex h-11.5 shrink-0 items-center gap-1.5 border-b bg-background pr-3 pl-2 sm:pl-4 lg:static lg:border-b-0 lg:bg-sidebar lg:pr-2.5 lg:pl-6">
       <Button
         variant="ghost"
         size="icon"

@@ -167,7 +167,7 @@ export function AssistantView() {
         hasChanges && 'xl:grid-cols-[minmax(0,1fr)_20rem]',
       )}
     >
-      <div className="flex min-h-[calc(100svh-10.625rem)] min-w-0 flex-col lg:min-h-[calc(100svh-8rem)]">
+      <div className="flex min-h-[calc(100svh-10.625rem)] min-w-0 flex-col lg:min-h-[calc(100svh-7.75rem)]">
         <header className="flex min-h-10 items-center justify-between gap-3">
           <h1 className="m-0 flex items-center gap-2.5 text-base font-semibold">
             <AssistantMark />

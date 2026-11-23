@@ -586,7 +586,7 @@ function Balances({
     <section
       id="balances"
       aria-labelledby="bal-h"
-      className={cn(panel, 'scroll-mt-4', className)}
+      className={cn(panel, 'scroll-mt-15 lg:scroll-mt-4', className)}
     >
       <PanelHeader id="bal-h" title="Balances">
         <Tabs value={filter} onValueChange={(value) => onFilter(value as Filter)}>
