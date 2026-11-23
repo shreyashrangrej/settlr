@@ -167,12 +167,23 @@ export function AssistantView() {
         hasChanges && 'xl:grid-cols-[minmax(0,1fr)_20rem]',
       )}
     >
-      <div className="flex min-h-[calc(100svh-10.625rem)] min-w-0 flex-col lg:min-h-[calc(100svh-7.75rem)]">
-        <header className="flex min-h-10 items-center justify-between gap-3">
-          <h1 className="m-0 flex items-center gap-2.5 text-base font-semibold">
+      {/* The chat fills the page panel exactly, so the composer sits at its
+          foot: it cancels the page's bottom padding (all of it from `lg`; on
+          phones, all but the bottom tab bar's height) and is as tall as
+          what's left (100svh less the top bar, the panel's rim and the
+          page's top padding; on phones the top bar, top padding and tab
+          bar). */}
+      <div className="flex min-h-[calc(100svh-7.25rem-env(safe-area-inset-bottom))] min-w-0 flex-col max-lg:mb-[calc(env(safe-area-inset-bottom)-3.375rem)] lg:-mb-12 lg:min-h-[calc(100svh-4.75rem)]">
+        <header className="mx-auto flex min-h-10 w-full max-w-190 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
             <AssistantMark />
-            Assistant
-          </h1>
+            <div className="grid min-w-0">
+              <h1 className="m-0 text-base leading-snug font-semibold">Assistant</h1>
+              <p className="truncate text-xs text-muted-foreground">
+                Adds, finds and changes expenses in plain words.
+              </p>
+            </div>
+          </div>
           {messages.length > 0 && (
             <Button variant="outline" onClick={newChat} disabled={pending}>
               <Plus />
@@ -181,9 +192,9 @@ export function AssistantView() {
           )}
         </header>
 
-        <div role="log" aria-label="Conversation" className="flex-1 py-7">
+        <div role="log" aria-label="Conversation" className="flex flex-1 flex-col py-7">
           {/* Each message rises in as it arrives. */}
-          <div className="mx-auto flex max-w-190 flex-col gap-5.5 *:animate-rise-in">
+          <div className="mx-auto flex w-full max-w-190 flex-1 flex-col gap-5.5 *:animate-rise-in">
             {!configured && (
               <Alert>
                 <Sparkles />
@@ -195,10 +206,17 @@ export function AssistantView() {
               </Alert>
             )}
             {messages.length === 0 && (
-              <div className="grid gap-6 py-10">
-                <h2 className="m-0 text-center text-xl font-semibold">
-                  What should I do?
-                </h2>
+              // The empty chat sits in the middle of the space above the
+              // composer.
+              <div className="my-auto grid gap-7 py-6">
+                <div className="grid justify-items-center gap-2 text-center">
+                  <AssistantMark className="size-11 rounded-xl [&_svg]:size-5" />
+                  <h2 className="m-0 mt-2 text-xl font-semibold">What should I do?</h2>
+                  <p className="max-w-md text-sm text-muted-foreground">
+                    Tell me about an expense the way you’d text a friend, or ask about your
+                    spending. I’ll check with you before deleting anything.
+                  </p>
+                </div>
                 <ul className="stagger grid gap-2.5 sm:grid-cols-2">
                   {STARTERS.map((starter) => (
                     <li key={starter.label}>
@@ -248,14 +266,16 @@ export function AssistantView() {
           </div>
         </div>
 
+        {/* Pinned to the bottom of the panel (above the tab bar on phones),
+            with a fade above it for the messages that scroll under it. */}
         <form
-          className="sticky bottom-[calc(3.625rem+env(safe-area-inset-bottom))] z-10 bg-background pt-3 pb-2 lg:bottom-0 lg:pb-4.5"
+          className="sticky bottom-[calc(3.625rem+env(safe-area-inset-bottom))] z-10 bg-background pt-1 pb-3 before:pointer-events-none before:absolute before:inset-x-0 before:-top-8 before:h-8 before:bg-linear-to-t before:from-background before:to-transparent lg:bottom-0 lg:pb-4"
           onSubmit={(event) => {
             event.preventDefault()
             void submit()
           }}
         >
-          <div className="mx-auto flex max-w-190 items-end gap-2 rounded-xl border bg-card py-2 pr-2 pl-4 transition-colors focus-within:border-ring dark:shadow-[0_14px_32px_-18px_rgb(0_0_0/75%)]">
+          <div className="mx-auto flex max-w-190 items-end gap-2 rounded-xl border border-input bg-field py-1.5 pr-1.5 pl-4 shadow-[0_1px_2px_rgb(0_0_0/4%),0_10px_28px_-14px_rgb(0_0_0/18%)] transition-[border-color,box-shadow] duration-140 focus-within:border-ring focus-within:ring-3 focus-within:ring-primary-soft dark:shadow-[0_14px_32px_-18px_rgb(0_0_0/75%)]">
             <label htmlFor={`${id}-message`} className="sr-only">
               Message the assistant
             </label>
@@ -267,7 +287,7 @@ export function AssistantView() {
               maxLength={MAX_MESSAGE}
               disabled={!configured}
               placeholder="e.g. Dinner 1200, split with Rohan"
-              className="field-sizing-content max-h-40 min-h-10 flex-1 resize-none border-0 bg-transparent py-2 leading-normal outline-none placeholder:text-faint disabled:opacity-50"
+              className="field-sizing-content max-h-40 min-h-9 flex-1 resize-none border-0 bg-transparent py-1.75 text-[0.9375rem] leading-normal outline-none placeholder:text-faint disabled:opacity-50"
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
                 // Enter sends, Shift+Enter adds a line.
@@ -281,11 +301,21 @@ export function AssistantView() {
               type="submit"
               size="icon-lg"
               aria-label="Send"
+              className="rounded-lg"
               disabled={!configured || pending || !draft.trim()}
             >
-              <ArrowUp className="size-4.5" strokeWidth={2.4} />
+              {pending ? <Spinner /> : <ArrowUp className="size-4.5" strokeWidth={2.4} />}
             </Button>
           </div>
+          <p className="mx-auto mt-2 flex max-w-190 items-center justify-between gap-3 px-1 text-2xs text-faint max-sm:hidden">
+            <span className="flex items-center gap-1">
+              <kbd className="kbd">↵</kbd> to send
+              <span className="mx-1 text-dim">·</span>
+              <kbd className="kbd">Shift</kbd>
+              <kbd className="kbd">↵</kbd> for a new line
+            </span>
+            <span>Asks before deleting anything</span>
+          </p>
         </form>
         <div ref={endRef} />
       </div>
