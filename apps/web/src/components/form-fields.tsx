@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
 
-import { CATEGORY_STYLE } from '#/components/category'
 import { Button } from '#/components/ui/button'
 import { Calendar } from '#/components/ui/calendar'
 import {
@@ -20,13 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { categoryLabel, formatDate } from '@settlr/shared/format'
-import {
-  CATEGORIES,
-  CURRENCIES,
-  type Category,
-  type Currency,
-} from '@settlr/shared/schemas'
+import { formatDate } from '@settlr/shared/format'
+import { CURRENCIES, type Currency } from '@settlr/shared/schemas'
 import { cn } from '#/lib/utils'
 
 // Form controls shared by the expense, payment and filter forms.
@@ -80,7 +74,6 @@ export function SelectField<T extends string>({
 }
 
 const currencyOptions = CURRENCIES.map((c) => ({ value: c, label: c }))
-const categoryOptions = CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) }))
 
 export function CurrencySelect(props: {
   id?: string
@@ -89,52 +82,6 @@ export function CurrencySelect(props: {
   className?: string
 }) {
   return <SelectField {...props} options={currencyOptions} />
-}
-
-export function CategorySelect(props: {
-  id?: string
-  value: Category
-  onChange: (category: Category) => void
-  className?: string
-}) {
-  return <SelectField {...props} options={categoryOptions} />
-}
-
-/** The categories as pill toggles; the selected one takes the accent. */
-export function CategoryChips({
-  value,
-  onChange,
-}: {
-  value: Category
-  onChange: (category: Category) => void
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {CATEGORIES.map((category) => {
-        const Icon = CATEGORY_STYLE[category].icon
-        const selected = category === value
-        return (
-          <button
-            key={category}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => onChange(category)}
-            className={cn(
-              // Gr8r's filter chips: a bordered pill button, and the accent
-              // chip (accent wash and line) when chosen.
-              'flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors duration-140 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:h-6.5 sm:px-2 [&_svg]:size-3.5',
-              selected
-                ? 'border-highlight-border bg-primary-soft text-foreground'
-                : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground',
-            )}
-          >
-            <Icon />
-            {categoryLabel(category)}
-          </button>
-        )
-      })}
-    </div>
-  )
 }
 
 /** A money input with the currency code shown inside it. */
@@ -192,11 +139,16 @@ export function DatePicker({
   value,
   onChange,
   className,
+  variant = 'field',
+  'aria-label': ariaLabel,
 }: {
   id?: string
   value: string
   onChange: (value: string) => void
   className?: string
+  /** `chip` is the expense dialog's compact property chip (Gr8r's form chips). */
+  variant?: 'field' | 'chip'
+  'aria-label'?: string
 }) {
   const [open, setOpen] = useState(false)
   const selected = value ? fromIsoDate(value) : undefined
@@ -209,8 +161,12 @@ export function DatePicker({
             id={id}
             type="button"
             variant="outline"
+            size={variant === 'chip' ? 'sm' : 'default'}
+            aria-label={ariaLabel}
             className={cn(
-              'w-full justify-start bg-field px-[calc(--spacing(3)-1px)] font-normal dark:bg-field',
+              variant === 'chip'
+                ? 'h-7.5 gap-1.5 px-2 font-medium sm:h-6.5 sm:px-2'
+                : 'w-full justify-start bg-field px-[calc(--spacing(3)-1px)] font-normal dark:bg-field',
               className,
             )}
           />

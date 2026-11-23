@@ -148,15 +148,17 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `SignedAmount`, `BalanceText`, `PersonAvatar`), `form-fields.tsx`
   (`SelectField`, `CurrencySelect`, `CategorySelect`, `AmountInput`,
   `DatePicker`), `receipts.tsx` (`ReceiptField` upload control,
-  `ReceiptLink`), `edit-dialog.tsx` (edit a row in a dialog),
+  `ReceiptLink`), `edit-dialog.tsx` (edit a payment row in a dialog),
   `expense-list.tsx` (`ExpenseSection`, `ExpenseTable`, `ExpenseRow`,
   `RowActions`, `YourShare`: the expense list every section uses),
   `expense-page.tsx` (`ExpensePage`, the frame every expense page shares:
   stats strip, list and side cards; `PageIcon`), `form-dialog.tsx`
-  (`FormDialog`: a header button that opens a form, e.g. Add expense) and
+  (`FormDialog`: a header button that opens a form, e.g. Settle up) and
   `expense-filters.tsx` (`ExpenseFilters`, the shared search/category/
   who-paid/sort bar, and `useListSearch` for its URL),
-  `group-expense-form.tsx` (add/edit a group expense), `notifications.tsx`
+  `expense-dialog.tsx` (`ExpenseDialog`: adding or editing any expense,
+  personal, friend or group, in one Gr8r-style modal with a balance
+  preview; `RowActions` opens it with `edit={{ dialog }}`), `notifications.tsx`
   (rows shared by the bell dropdown and the page), `month-nav.tsx`,
   `confirm-action.tsx` (destructive actions behind an alert dialog),
   `account-menu.tsx` (account dropdown with the theme switch and sign-out),
@@ -298,7 +300,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   cards, whose top lines up with the list's card, not its filter toolbar:
   `SplitLayout` offsets the aside when the content has the
   `data-slot="expense-toolbar"` bar). Their forms open from header buttons
-  (`FormDialog`), not side cards, and other views of the same thing (a
+  in a dialog (`ExpenseDialog` for expenses, `FormDialog` for the rest), not side cards, and other views of the same thing (a
   group's Insights) are header buttons too, not tab rows. Every
   `ExpenseTable` has the same columns at the same widths: Description,
   Date, two middle columns (`columns={['Paid by', 'Split']}`, or

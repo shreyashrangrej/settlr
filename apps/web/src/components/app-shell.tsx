@@ -431,9 +431,7 @@ function Breadcrumbs() {
           </>
         ),
       })
-      if (parts[2] === 'expenses' && parts[3] === 'new') crumbs.push({ label: 'New expense' })
-      else if (parts[2] === 'expenses' && parts[4] === 'edit') crumbs.push({ label: 'Edit expense' })
-      else if (parts[2] && SUBPAGES[parts[2]]) crumbs.push({ label: SUBPAGES[parts[2]] })
+      if (parts[2] && SUBPAGES[parts[2]]) crumbs.push({ label: SUBPAGES[parts[2]] })
     } else if (parts[0] === 'groups' && parts[1] === 'new') {
       crumbs.push({ label: 'New group' })
     } else if (inFriend) {

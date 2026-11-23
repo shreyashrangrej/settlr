@@ -5,6 +5,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { Receipt } from 'lucide-react'
 
 import { CategoryIcon } from '#/components/category'
+import { ExpenseDialog } from '#/components/expense-dialog'
 import { ExpenseFilters, useListSearch } from '#/components/expense-filters'
 import {
   ExpenseRow,
@@ -110,7 +111,11 @@ function GroupExpenseRow({ group, expense }: { group: Group; expense: GroupExpen
       actions={
         <RowActions
           name={expense.description}
-          edit={{ href: `/groups/${group.id}/expenses/${expense.id}/edit` }}
+          edit={{
+            dialog: (state) => (
+              <ExpenseDialog target={{ kind: 'group', group, expense }} {...state} />
+            ),
+          }}
           deleteDescription="Balances will be updated. This can’t be undone."
           onDelete={async () => Boolean(await run({ expenseId: expense.id }))}
         />

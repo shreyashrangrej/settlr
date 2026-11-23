@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 
 import { groupColor, labelTint } from '#/components/category'
+import { ExpenseDialog } from '#/components/expense-dialog'
 import { ExpensePage, PageIcon } from '#/components/expense-page'
 import { RecentPayments, RecordPaymentDialog } from '#/components/group-payments'
 import { PersonAvatar, SignedAmount } from '#/components/ledger'
@@ -49,10 +50,7 @@ import { cn } from '#/lib/utils'
  */
 export function GroupLayoutView({ children }: { children: React.ReactNode }) {
   const group = useGroup()
-  // The add/edit expense form has its own split panel (and shows what the
-  // expense does to your balance), so it gets the full width.
   const pathname = usePathname()
-  const isForm = pathname.includes('/expenses/')
   const onInsights = pathname.endsWith('/insights')
 
   // Deleted while open (here or in another tab).
@@ -125,24 +123,17 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
                 </Button>
               }
             />
-            <Link
-              href={`/groups/${group.id}/expenses/new`}
-              className={cn(buttonVariants(), 'no-underline')}
-            >
+            <ExpenseDialog target={{ kind: 'group', group }} trigger={<Button />}>
               <Plus />
               Add expense
-            </Link>
+            </ExpenseDialog>
           </>
         }
       />
 
-      {isForm ? (
-        children
-      ) : (
-        <ExpensePage stats={<GroupStats group={group} />} aside={<Balances group={group} />}>
-          {children}
-        </ExpensePage>
-      )}
+      <ExpensePage stats={<GroupStats group={group} />} aside={<Balances group={group} />}>
+        {children}
+      </ExpensePage>
     </>
   )
 }

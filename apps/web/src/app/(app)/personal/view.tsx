@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
@@ -14,23 +13,12 @@ import {
   ExpenseTable,
   RowActions,
 } from '#/components/expense-list'
-import {
-  AmountInput,
-  CategorySelect,
-  CurrencySelect,
-  DatePicker,
-} from '#/components/form-fields'
 import { ExpensePage, PageIcon } from '#/components/expense-page'
-import { FormDialog } from '#/components/form-dialog'
+import { ExpenseDialog, type PersonalExpense } from '#/components/expense-dialog'
 import { useAction } from '#/components/ledger'
 import { MonthNav } from '#/components/month-nav'
 import { PageHeader } from '#/components/page-header'
-import {
-  ReceiptField,
-  ReceiptLink,
-  existingReceipt,
-  type ReceiptValue,
-} from '#/components/receipts'
+import { ReceiptLink } from '#/components/receipts'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import { Button, buttonVariants } from '#/components/ui/button'
 import {
@@ -40,27 +28,13 @@ import {
   CardHeader,
   CardTitle,
 } from '#/components/ui/card'
-import { Field, FieldError, FieldGroup, FieldLabel } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
 import { Progress, ProgressLabel, ProgressValue } from '#/components/ui/progress'
-import { Spinner } from '#/components/ui/spinner'
-import {
-  categoryLabel,
-  formatMoney,
-  formatMonth,
-  parseAmountToCents,
-  todayIsoDate,
-} from '@settlr/shared/format'
-import { readPreferences } from '#/lib/preferences'
+import { categoryLabel, formatMoney, formatMonth } from '@settlr/shared/format'
 import {
   isFiltered,
-  personalExpenseInput,
   personalSearchDefaults,
-  type Category,
   type ExpenseFilter,
-  type PersonalExpenseInput,
   type PersonalSearch,
-  type Currency,
 } from '@settlr/shared/schemas'
 import type { PersonalMonth } from '#/lib/types'
 import { cn } from '#/lib/utils'
@@ -104,18 +78,10 @@ export function PersonalView({
               <PiggyBank />
               Monthly budget
             </Link>
-            <FormDialog
-              trigger={<Button />}
-              label={
-                <>
-                  <Plus />
-                  Add expense
-                </>
-              }
-              title="Add a personal expense"
-            >
-              {(close) => <ExpenseForm month={month} onSaved={close} />}
-            </FormDialog>
+            <ExpenseDialog target={{ kind: 'personal', month }} trigger={<Button />}>
+              <Plus />
+              Add expense
+            </ExpenseDialog>
           </>
         }
       />
@@ -219,7 +185,6 @@ function ByCategory({ data }: { data: PersonalMonth }) {
   )
 }
 
-type PersonalExpense = PersonalMonth['items'][number]
 
 /** The month's expenses that match `filter`, in its order. */
 function filterExpenses(items: Array<PersonalExpense>, filter: ExpenseFilter) {
@@ -261,138 +226,11 @@ function PersonalExpenseRow({ expense }: { expense: PersonalExpense }) {
         <RowActions
           name={expense.description}
           edit={{
-            title: 'Edit expense',
-            form: (close) => <ExpenseForm expense={expense} onSaved={close} />,
+            dialog: (state) => <ExpenseDialog target={{ kind: 'personal', expense }} {...state} />,
           }}
           onDelete={async () => Boolean(await run({ expenseId: expense.id }))}
         />
       }
     />
-  )
-}
-
-/**
- * Adds a personal expense, or with `expense`, edits it. `month` is the month
- * on screen, so a new expense saved to another month can say where it went.
- */
-function ExpenseForm({
-  expense,
-  month,
-  onSaved,
-}: {
-  expense?: PersonalExpense
-  month?: string
-  onSaved?: () => void
-}) {
-  const id = useId()
-  const addExpense = useConvexMutation(api.personal.add)
-  const updateExpense = useConvexMutation(api.personal.update)
-  const [savedTo, setSavedTo] = useState<string | null>(null)
-  const { run, pending, error, setError } = useAction(
-    async (input: PersonalExpenseInput, receipt: ReceiptValue) =>
-      expense
-        ? updateExpense({ expenseId: expense.id, ...input, receiptId: receipt?.id ?? null })
-        : addExpense({ ...input, receiptId: receipt?.id }),
-    { success: expense ? 'Expense updated' : 'Expense added' },
-  )
-  const [description, setDescription] = useState(expense?.description ?? '')
-  const [amount, setAmount] = useState(
-    expense ? (expense.amountCents / 100).toFixed(2) : '',
-  )
-  const [currency, setCurrency] = useState<Currency>(expense?.currency ?? 'USD')
-  const [category, setCategory] = useState<Category>(expense?.category ?? 'food')
-  const [date, setDate] = useState(expense?.date ?? todayIsoDate)
-  const [receipt, setReceipt] = useState<ReceiptValue>(() => existingReceipt(expense?.receiptId))
-
-  // Browser preferences only exist after hydration.
-  useEffect(() => {
-    if (!expense) setCurrency(readPreferences().defaultCurrency)
-  }, [expense])
-
-  async function onSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    const amountCents = parseAmountToCents(amount)
-    if (amountCents === null) {
-      setError('Enter an amount like 12.50')
-      return
-    }
-    const parsed = personalExpenseInput.safeParse({
-      description,
-      amountCents,
-      currency,
-      category,
-      date,
-    })
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Check the form')
-      return
-    }
-    if (!(await run(parsed.data, receipt))) return
-    if (expense) {
-      onSaved?.()
-      return
-    }
-    // Done, unless it went to another month than the one on screen: then
-    // say where, so it doesn't look lost.
-    const expenseMonth = parsed.data.date.slice(0, 7)
-    if (expenseMonth === month) {
-      onSaved?.()
-      return
-    }
-    setDescription('')
-    setAmount('')
-    setReceipt(null)
-    setSavedTo(formatMonth(expenseMonth))
-  }
-
-  return (
-    <form noValidate onSubmit={onSubmit}>
-      <FieldGroup className="gap-4">
-        <Field>
-          <FieldLabel htmlFor={`${id}-description`}>Description</FieldLabel>
-          <Input
-            id={`${id}-description`}
-            value={description}
-            maxLength={80}
-            placeholder="Groceries"
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </Field>
-        <div className="grid grid-cols-[1fr_6.5rem] gap-3">
-          <Field>
-            <FieldLabel htmlFor={`${id}-amount`}>Amount</FieldLabel>
-            <AmountInput id={`${id}-amount`} value={amount} onChange={setAmount} currency={currency} />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-currency`}>Currency</FieldLabel>
-            <CurrencySelect id={`${id}-currency`} value={currency} onChange={setCurrency} />
-          </Field>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field>
-            <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
-            <CategorySelect id={`${id}-category`} value={category} onChange={setCategory} />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-date`}>Date</FieldLabel>
-            <DatePicker id={`${id}-date`} value={date} onChange={setDate} />
-          </Field>
-        </div>
-        <Field>
-          <FieldLabel htmlFor={`${id}-receipt`}>Receipt</FieldLabel>
-          <ReceiptField id={`${id}-receipt`} value={receipt} onChange={setReceipt} />
-        </Field>
-        {error && <FieldError>{error}</FieldError>}
-        {savedTo && (
-          <p className="text-sm text-positive" role="status">
-            Saved to {savedTo}.
-          </p>
-        )}
-        <Button type="submit" disabled={pending}>
-          {pending && <Spinner />}
-          {expense ? 'Save changes' : 'Add expense'}
-        </Button>
-      </FieldGroup>
-    </form>
   )
 }

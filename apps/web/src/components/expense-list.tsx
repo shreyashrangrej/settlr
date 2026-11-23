@@ -330,7 +330,8 @@ export function YourShare({ cents }: { cents: React.ReactNode }) {
 
 /**
  * A row's "⋯" menu (Gr8r's row options) with Edit and Delete. `edit` is a
- * page to go to, or a form to open in a dialog; deleting asks first.
+ * page to go to, a form to open in a dialog, or a whole dialog of its own
+ * (`dialog`, given its open state: the expense dialog); deleting asks first.
  */
 export function RowActions({
   name,
@@ -346,6 +347,9 @@ export function RowActions({
         title: string
         description?: React.ReactNode
         form: (close: () => void) => React.ReactNode
+      }
+    | {
+        dialog: (state: { open: boolean; onOpenChange: (open: boolean) => void }) => React.ReactNode
       }
   deleteDescription?: string
   onDelete: () => Promise<boolean>
@@ -383,7 +387,8 @@ export function RowActions({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {!('href' in edit) && (
+      {'dialog' in edit && edit.dialog({ open: editing, onOpenChange: setEditing })}
+      {'form' in edit && (
         <EditDialog
           open={editing}
           onOpenChange={setEditing}

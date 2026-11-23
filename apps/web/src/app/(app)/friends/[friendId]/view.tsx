@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
@@ -18,7 +18,6 @@ import {
 } from '#/components/expense-list'
 import {
   AmountInput,
-  CategorySelect,
   CurrencySelect,
   DatePicker,
   SelectField,
@@ -29,16 +28,12 @@ import {
   PersonAvatar,
   useAction,
 } from '#/components/ledger'
+import { ExpenseDialog, useFriendCurrency } from '#/components/expense-dialog'
 import { ExpensePage } from '#/components/expense-page'
 import { FormDialog } from '#/components/form-dialog'
 import { useAppRouter } from '#/components/navigation-progress'
 import { PageHeader } from '#/components/page-header'
-import {
-  ReceiptField,
-  ReceiptLink,
-  existingReceipt,
-  type ReceiptValue,
-} from '#/components/receipts'
+import { ReceiptLink } from '#/components/receipts'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import { Button } from '#/components/ui/button'
 import {
@@ -71,16 +66,12 @@ import {
   parseAmountToCents,
   todayIsoDate,
 } from '@settlr/shared/format'
-import { readPreferences } from '#/lib/preferences'
 import {
   LIST_STEP,
-  friendExpenseInput,
   friendPaymentInput,
   friendSearchDefaults,
   isFiltered,
-  type Category,
   type Currency,
-  type FriendExpenseInput,
   type FriendPaymentInput,
   type FriendSearch,
 } from '@settlr/shared/schemas'
@@ -156,18 +147,10 @@ export function FriendView({ friendId, search }: { friendId: string; search: Fri
             >
               {(close) => <PaymentForm friend={friend} onSaved={close} />}
             </FormDialog>
-            <FormDialog
-              trigger={<Button />}
-              label={
-                <>
-                  <Plus />
-                  Add expense
-                </>
-              }
-              title={`Add an expense with ${friend.name}`}
-            >
-              {(close) => <ExpenseForm friend={friend} onSaved={close} />}
-            </FormDialog>
+            <ExpenseDialog target={{ kind: 'friend', friend }} trigger={<Button />}>
+              <Plus />
+              Add expense
+            </ExpenseDialog>
           </>
         }
       />
@@ -367,19 +350,22 @@ function EntryRow({ entry, friend }: { entry: FriendEntry; friend: Friend }) {
       actions={
         <RowActions
           name={title}
-          edit={{
-            title: entry.kind === 'expense' ? 'Edit expense' : 'Edit payment',
-            description:
-              friend.status === 'linked'
-                ? `${friendName} sees this ${entry.kind} too, and will be told about the change.`
-                : undefined,
-            form: (close) =>
-              entry.kind === 'expense' ? (
-                <ExpenseForm friend={friend} entry={entry} onSaved={close} />
-              ) : (
-                <PaymentForm friend={friend} entry={entry} onSaved={close} />
-              ),
-          }}
+          edit={
+            entry.kind === 'expense'
+              ? {
+                  dialog: (state) => (
+                    <ExpenseDialog target={{ kind: 'friend', friend, expense: entry }} {...state} />
+                  ),
+                }
+              : {
+                  title: 'Edit payment',
+                  description:
+                    friend.status === 'linked'
+                      ? `${friendName} sees this payment too, and will be told about the change.`
+                      : undefined,
+                  form: (close) => <PaymentForm friend={friend} entry={entry} onSaved={close} />,
+                }
+          }
           deleteDescription="Balances will be updated. This can’t be undone."
           onDelete={async () => Boolean(await run({ entryId: entry.id }))}
         />
@@ -388,154 +374,7 @@ function EntryRow({ entry, friend }: { entry: FriendEntry; friend: Friend }) {
   )
 }
 
-type ExpenseEntry = Extract<FriendEntry, { kind: 'expense' }>
 type PaymentEntry = Extract<FriendEntry, { kind: 'payment' }>
-
-// Starts from `initial` (an edited entry's currency), else a currency this
-// friend already has a balance in, then the one picked in Settings (read
-// after hydration).
-function useDefaultCurrency(friend: Friend, initial?: Currency) {
-  const fromBalance = Object.keys(friend.balances)[0] as Currency | undefined
-  const [currency, setCurrency] = useState<Currency>(initial ?? fromBalance ?? 'USD')
-  useEffect(() => {
-    if (!initial && !fromBalance) setCurrency(readPreferences().defaultCurrency)
-  }, [initial, fromBalance])
-  return [currency, setCurrency] as const
-}
-
-/** Adds a shared expense, or with `entry`, edits it. */
-function ExpenseForm({
-  friend,
-  entry,
-  onSaved,
-}: {
-  friend: Friend
-  entry?: ExpenseEntry
-  onSaved?: () => void
-}) {
-  const id = useId()
-  const addExpense = useConvexMutation(api.friends.addExpense)
-  const updateExpense = useConvexMutation(api.friends.updateExpense)
-  const { run, pending, error, setError } = useAction(
-    async (input: FriendExpenseInput, receipt: ReceiptValue) =>
-      entry
-        ? updateExpense({ entryId: entry.id, ...input, receiptId: receipt?.id ?? null })
-        : addExpense({ friendId: friend.id, ...input, receiptId: receipt?.id }),
-    { success: entry ? 'Expense updated' : 'Expense added' },
-  )
-  const [description, setDescription] = useState(entry?.description ?? '')
-  const [amount, setAmount] = useState(entry ? (entry.amountCents / 100).toFixed(2) : '')
-  const [currency, setCurrency] = useDefaultCurrency(friend, entry?.currency)
-  const [category, setCategory] = useState<Category>(entry?.category ?? 'food')
-  const [date, setDate] = useState(entry?.date ?? todayIsoDate)
-  const [paidBy, setPaidBy] = useState<'me' | 'friend'>(entry?.paidBy ?? 'me')
-  const [split, setSplit] = useState<'equal' | 'full'>(entry?.split ?? 'equal')
-  const [receipt, setReceipt] = useState<ReceiptValue>(() => existingReceipt(entry?.receiptId))
-  const other = paidBy === 'me' ? friend.name : 'You'
-
-  async function onSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    const amountCents = parseAmountToCents(amount)
-    if (amountCents === null) {
-      setError('Enter an amount like 12.50')
-      return
-    }
-    const parsed = friendExpenseInput.safeParse({
-      description,
-      amountCents,
-      currency,
-      category,
-      paidBy,
-      split,
-      date,
-    })
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Check the form')
-      return
-    }
-    if (!(await run(parsed.data, receipt))) return
-    // A dialog closes once saved (edits always, adds from the header).
-    if (onSaved) {
-      onSaved()
-      return
-    }
-    setDescription('')
-    setAmount('')
-    setReceipt(null)
-  }
-
-  return (
-    <form noValidate onSubmit={onSubmit}>
-      <FieldGroup className="gap-4">
-        <Field>
-          <FieldLabel htmlFor={`${id}-description`}>Description</FieldLabel>
-          <Input
-            id={`${id}-description`}
-            value={description}
-            maxLength={80}
-            placeholder="Dinner"
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </Field>
-        <div className="grid grid-cols-[1fr_6.5rem] gap-3">
-          <Field>
-            <FieldLabel htmlFor={`${id}-amount`}>Amount</FieldLabel>
-            <AmountInput id={`${id}-amount`} value={amount} onChange={setAmount} currency={currency} />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-currency`}>Currency</FieldLabel>
-            <CurrencySelect id={`${id}-currency`} value={currency} onChange={setCurrency} />
-          </Field>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field>
-            <FieldLabel htmlFor={`${id}-paid-by`}>Paid by</FieldLabel>
-            <SelectField
-              id={`${id}-paid-by`}
-              value={paidBy}
-              onChange={setPaidBy}
-              options={[
-                { value: 'me', label: 'You' },
-                { value: 'friend', label: friend.name },
-              ]}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-split`}>Split</FieldLabel>
-            <SelectField
-              id={`${id}-split`}
-              value={split}
-              onChange={setSplit}
-              options={[
-                { value: 'equal', label: 'Equally' },
-                { value: 'full', label: `${other} owe${other === 'You' ? '' : 's'} all` },
-              ]}
-            />
-          </Field>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field>
-            <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
-            <CategorySelect id={`${id}-category`} value={category} onChange={setCategory} />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-date`}>Date</FieldLabel>
-            <DatePicker id={`${id}-date`} value={date} onChange={setDate} />
-          </Field>
-        </div>
-        <Field>
-          <FieldLabel htmlFor={`${id}-receipt`}>Receipt</FieldLabel>
-          <ReceiptField id={`${id}-receipt`} value={receipt} onChange={setReceipt} />
-        </Field>
-        {error && <FieldError>{error}</FieldError>}
-        <Button type="submit" disabled={pending}>
-          {pending && <Spinner />}
-          {entry ? 'Save changes' : 'Add expense'}
-        </Button>
-      </FieldGroup>
-    </form>
-  )
-}
 
 /**
  * Records a settle-up payment, or with `entry`, edits it. A new payment
@@ -560,7 +399,7 @@ function PaymentForm({
         : addPayment({ friendId: friend.id, ...input }),
     { success: entry ? 'Payment updated' : 'Payment recorded' },
   )
-  const [currency, setCurrency] = useDefaultCurrency(friend, entry?.currency)
+  const [currency, setCurrency] = useFriendCurrency(friend, entry?.currency)
   const outstanding = friend.balances[currency] ?? 0
   // Whoever owes pays; default to clearing the whole balance.
   const [paidBy, setPaidBy] = useState<'me' | 'friend'>(
