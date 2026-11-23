@@ -1,12 +1,15 @@
-// Appearance: light/dark theme, accent colour and motion, all stored per
-// browser. Until the viewer picks a theme it follows the system setting,
+// Appearance: light/dark theme, accent colour, frame and motion, all stored
+// per browser. Until the viewer picks a theme it follows the system setting,
 // live. The `.dark` class on <html> drives both the CSS tokens in styles.css
 // and Tailwind's `dark:` variant; `data-accent` swaps the accent (Gr8r
-// Studio's choices) and `data-motion="reduce"` turns animations off.
+// Studio's choices), `data-frame="plain"` makes the app frame match the page
+// instead of taking the accent, and `data-motion="reduce"` turns animations
+// off.
 
 export const THEME_STORAGE_KEY = 'settlr:theme'
 export const ACCENT_STORAGE_KEY = 'settlr:accent'
 export const MOTION_STORAGE_KEY = 'settlr:motion'
+export const FRAME_STORAGE_KEY = 'settlr:frame'
 
 export type Theme = 'light' | 'dark'
 export type ThemeChoice = Theme | 'system'
@@ -26,6 +29,8 @@ export const ACCENTS = [
 
 export type Accent = (typeof ACCENTS)[number]['value']
 export type Motion = 'system' | 'reduce'
+/** The app frame (sidebar, top bar and rim): the accent tint, or the page's colour. */
+export type Frame = 'tint' | 'plain'
 
 const DEFAULT_ACCENT: Accent = 'indigo'
 
@@ -51,6 +56,7 @@ export const themeInitScript = `(function () {
   var accent = read('${ACCENT_STORAGE_KEY}');
   if (accent && accent !== '${DEFAULT_ACCENT}') root.setAttribute('data-accent', accent);
   if (read('${MOTION_STORAGE_KEY}') === 'reduce') root.setAttribute('data-motion', 'reduce');
+  if (read('${FRAME_STORAGE_KEY}') === 'plain') root.setAttribute('data-frame', 'plain');
 })();`
 
 function read(key: string) {
@@ -123,6 +129,18 @@ export function applyAccent(accent: Accent) {
   withViewTransition(() => {
     if (accent === DEFAULT_ACCENT) delete document.documentElement.dataset.accent
     else document.documentElement.dataset.accent = accent
+  })
+}
+
+export function readFrame(): Frame {
+  return read(FRAME_STORAGE_KEY) === 'plain' ? 'plain' : 'tint'
+}
+
+export function applyFrame(frame: Frame) {
+  write(FRAME_STORAGE_KEY, frame === 'plain' ? 'plain' : null)
+  withViewTransition(() => {
+    if (frame === 'plain') document.documentElement.dataset.frame = 'plain'
+    else delete document.documentElement.dataset.frame
   })
 }
 

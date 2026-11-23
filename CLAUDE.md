@@ -197,8 +197,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `sunken`, `field`, `divider`, `faint`, `dim`, `highlight`,
   `primary-soft`, `contrast`, `segment`, `track`, `positive`, `warning`;
   `--accent` comes from `--acc-l`/`--acc-d`, swapped by `data-accent` on
-  `<html>`: Gr8r's accents, picked in Settings → Appearance with the theme
-  and motion, all in `src/lib/theme.ts`),
+  `<html>`: Gr8r's accents, picked in Settings → Appearance with the theme,
+  the frame (`data-frame="plain"` makes `frame-art` match the page instead
+  of taking the accent) and motion, all in `src/lib/theme.ts`),
   Gr8r's type scale (it overrides Tailwind's: `text-sm` is 13.5px, `text-ui`
   12.5px, `text-base` 14.5px, `text-2xl` 23px), its radii, the floating
   surfaces (`popover-panel`, `modal-panel`, `modal-scrim`), the

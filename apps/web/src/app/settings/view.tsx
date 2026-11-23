@@ -33,12 +33,15 @@ import { readPreferences, writePreferences } from '#/lib/preferences'
 import {
   ACCENTS,
   applyAccent,
+  applyFrame,
   applyMotion,
   applyTheme,
   readAccent,
+  readFrame,
   readMotion,
   readThemeChoice,
   type Accent,
+  type Frame,
   type Motion,
   type ThemeChoice,
 } from '#/lib/theme'
@@ -108,12 +111,14 @@ const THEMES = [
 ] as const
 
 /**
- * Gr8r's appearance settings: theme, accent colour and motion. Each applies
- * as soon as it's picked (no Save), and is remembered in this browser.
+ * Gr8r's appearance settings: theme, accent colour, the app frame and
+ * motion. Each applies as soon as it's picked (no Save), and is remembered
+ * in this browser.
  */
 function AppearanceCard() {
   const [theme, setTheme] = useState<ThemeChoice>(readThemeChoice)
   const [accent, setAccent] = useState<Accent>(readAccent)
+  const [frame, setFrame] = useState<Frame>(readFrame)
   const [motion, setMotion] = useState<Motion>(readMotion)
 
   return (
@@ -181,6 +186,28 @@ function AppearanceCard() {
               )
             })}
           </div>
+        </Field>
+
+        <Field orientation="horizontal" className="flex-wrap justify-between gap-y-2">
+          <FieldContent className="min-w-56">
+            <FieldTitle>Frame</FieldTitle>
+            <FieldDescription>
+              The sidebar, top bar and rim on wide screens: tinted with your accent, or the
+              same as the page.
+            </FieldDescription>
+          </FieldContent>
+          <Tabs
+            value={frame}
+            onValueChange={(value: Frame) => {
+              setFrame(value)
+              applyFrame(value)
+            }}
+          >
+            <TabsList aria-label="Frame">
+              <TabsTrigger value="tint">Tinted</TabsTrigger>
+              <TabsTrigger value="plain">Match page</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </Field>
 
         <Field orientation="horizontal" className="flex-wrap justify-between gap-y-2">

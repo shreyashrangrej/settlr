@@ -95,7 +95,9 @@
   --ease: cubic-bezier(0.23, 1, 0.32, 1);
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --dur: 140ms;
-  /* How much accent the app frame (`frame-art`) takes. */
+  /* The app frame (`frame-art`): the colour it starts from, and how much
+     accent it takes. */
+  --frame-base: var(--bg-sidebar);
   --frame-tint: 9%;
 
   /* shadcn's variable names, for component styles that read them directly
@@ -154,6 +156,13 @@
   --shadow-pop: 0 16px 40px -10px rgb(0 0 0 / 60%), 0 0 0 1px var(--border-strong);
   --shadow-color: 0 0% 0%;
   --frame-tint: 12%;
+}
+
+/* Settings → Appearance → Frame → Match page: the frame takes the page
+   panel's own background, with no accent, so it matches what's inside. */
+:root[data-frame='plain'] {
+  --frame-base: var(--bg);
+  --frame-tint: 0%;
 }
 
 /* Gr8r's accent choices (Settings → Appearance), light and dark. */
@@ -400,9 +409,10 @@
 /* The app frame (the sidebar, top bar and rim around the page panel, from
    `lg`): a solid, deep shade of the accent, so it follows the accent picked
    in Settings. The sidebar and top bar are transparent over it.
-   `--frame-tint` sets how much accent it takes, per theme. */
+   `--frame-tint` sets how much accent it takes, per theme, and
+   `data-frame="plain"` (Settings) swaps it for the page's background. */
 @utility frame-art {
-  background-color: color-mix(in oklab, var(--accent) var(--frame-tint), var(--bg-sidebar));
+  background-color: color-mix(in oklab, var(--accent) var(--frame-tint), var(--frame-base));
 }
 
 /* A list whose items rise in one after another when they mount (Gr8r's
