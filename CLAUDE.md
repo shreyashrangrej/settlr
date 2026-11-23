@@ -310,7 +310,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   columns on the card's 14px gutter), any filter bar sits above the card
   (`ExpenseSection` does both), and row actions are one "⋯" menu
   (`RowActions`). Tables are `table-fixed`: the short columns get fixed
-  widths (`w-28` date, `w-32` amount, `w-12` actions) and the first column
+  widths (`w-28` date, `w-32 sm:w-40` amount, so "Your share" fits under it, `w-12` actions) and the first column
   takes the rest, with an icon tile (e.g. `CategoryIcon`) or avatar and a
   faint second line (see the group, personal and budget tables). Rows
   have no hover fill. Collections of things (friends,

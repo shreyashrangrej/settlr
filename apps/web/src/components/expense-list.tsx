@@ -196,7 +196,9 @@ export function ExpenseTable({
                 {column.label}
               </TableHead>
             ))}
-            <TableHead className="w-32 text-right">{amount}</TableHead>
+            {/* Wide enough from `sm` for "Your share" and a six-figure amount
+                (about 140px of text). */}
+            <TableHead className="w-32 text-right sm:w-40">{amount}</TableHead>
             {actions && (
               <TableHead className="w-12">
                 <span className="sr-only">Actions</span>
@@ -324,8 +326,16 @@ export function ExpenseRow({
  * The amount cell's second line on shared expenses: what it cost you. Rows
  * leave it out when the share is the whole amount.
  */
-export function YourShare({ cents }: { cents: React.ReactNode }) {
-  return <span className="text-xs font-normal text-faint">Your share {cents}</span>
+export function YourShare({ cents }: { cents: string }) {
+  // "Share" on phones, where the amount column stays narrow so the
+  // description keeps its room; "Your share" from `sm`, where the column
+  // is wide enough for it (see the Amount column in `ExpenseTable`).
+  return (
+    <span className="text-xs font-normal text-faint" title={`Your share ${cents}`}>
+      <span className="sm:hidden">Share</span>
+      <span className="max-sm:hidden">Your share</span> {cents}
+    </span>
+  )
 }
 
 /**
