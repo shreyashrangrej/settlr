@@ -164,9 +164,10 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   an icon rail with Ctrl/⌘+B and remembered in the `settlr_sidebar` cookie
   that the root layout reads, so it renders at the right width; from `lg`
   the sidebar colour rims the window and the top bar and page sit in a
-  rounded inset panel, with the page scrolling in its own area under the
-  top bar (so `sticky` offsets like `top-4` and `scrollIntoView` work
-  against that area, not the window); the top bar, with
+  rounded inset panel that is the page's scroller (so `sticky` offsets
+  like `top-4` and `scrollIntoView` work against it, not the window; on
+  phones the window scrolls); the top bar isn't pinned (it scrolls away
+  with the page) and, with
   no bottom border, has the breadcrumb, bell, "New" menu and account on
   every width;
   below `lg` the sidebar is a drawer and a tab bar runs along the bottom;

@@ -209,7 +209,7 @@ function Balances({ group }: { group: Group }) {
         <Separator />
 
         {/* The dashboard's "Settle" buttons link here. */}
-        <div id="settle-up" className="grid scroll-mt-15 gap-2 lg:scroll-mt-4">
+        <div id="settle-up" className="grid scroll-mt-4 gap-2">
           <div className="flex items-center justify-between gap-2">
             <h3 className="m-0 text-sm font-medium">Settle up</h3>
             <RecordPaymentDialog

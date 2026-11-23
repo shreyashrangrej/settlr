@@ -52,8 +52,9 @@ const sideHeading =
  * The frame around every page. Signed in, it's Gr8r Studio's shell, inset:
  * from `lg` the sidebar's colour runs round the whole window as a rim, and
  * the top bar (breadcrumb, bell, New, account) and page sit in a rounded
- * panel inside it. The page scrolls in its own area under the top bar, so
- * nothing slides beneath the bar and the panel's corners stay put. Below
+ * panel inside it that scrolls on its own, so its corners stay put. The
+ * top bar isn't pinned: it scrolls away with the page, so the whole height
+ * goes to content and nothing slides beneath a bar. Below
  * `lg` the sidebar becomes a drawer the top bar's menu button opens, the
  * panel fills the screen, and a tab bar runs along the bottom. Signed out, or while a new
  * account still has to give its name, it's just the site header.
@@ -108,12 +109,12 @@ export function AppShell({
       </DialogPrimitive.Root>
 
       {/* The inset panel: 8px of rim above, right and below it (the
-          sidebar is the rim on the left), rounded. From `lg` the top bar
-          stays fixed at its top and the area below is the page's scroller;
-          on phones the window scrolls and the top bar sticks. */}
-      <div className="flex min-w-0 flex-1 flex-col bg-background lg:my-2 lg:mr-2 lg:overflow-hidden lg:rounded-xl lg:border lg:shadow-xs">
+          sidebar is the rim on the left), rounded, and the page's scroller
+          from `lg` (the window scrolls on phones). The top bar scrolls with
+          the page. */}
+      <div className="flex min-w-0 flex-1 flex-col bg-background lg:my-2 lg:mr-2 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-xs">
         <TopBar onOpenNav={() => setDrawerOpen(true)} />
-        <div className="flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
+        <div className="flex flex-1 flex-col">
           {/* Gr8r's page: centred, at most 1160px, on the shared 24px
               gutter (16px on phones). */}
           <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-4 lg:pb-12">
@@ -343,7 +344,7 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?
  */
 function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
   return (
-    <header className="sticky top-0 z-40 flex h-11.5 shrink-0 items-center gap-1.5 bg-background pr-3 pl-2 sm:pl-4 lg:static lg:pl-6">
+    <header className="flex h-11.5 shrink-0 items-center gap-1.5 pr-3 pl-2 sm:pl-4 lg:pl-6">
       <Button
         variant="ghost"
         size="icon"
