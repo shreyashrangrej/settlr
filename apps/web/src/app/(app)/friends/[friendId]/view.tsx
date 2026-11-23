@@ -4,7 +4,7 @@ import { useEffect, useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { HandCoins, Receipt, Trash2, UserPlus } from 'lucide-react'
+import { CalendarClock, HandCoins, Plus, Receipt, Scale, Trash2, UserPlus, Users } from 'lucide-react'
 
 import { CategoryIcon, IconTile } from '#/components/category'
 import { ConfirmAction } from '#/components/confirm-action'
@@ -14,6 +14,7 @@ import {
   ExpenseSection,
   ExpenseTable,
   RowActions,
+  YourShare,
   type ExpenseColumn,
 } from '#/components/expense-list'
 import {
@@ -27,19 +28,27 @@ import {
   BalanceText,
   FriendStatusBadge,
   PersonAvatar,
-  SignedAmount,
   useAction,
 } from '#/components/ledger'
+import { ExpensePage } from '#/components/expense-page'
+import { FormDialog } from '#/components/form-dialog'
 import { useAppRouter } from '#/components/navigation-progress'
-import { PageHeader, SplitLayout } from '#/components/page-header'
+import { PageHeader } from '#/components/page-header'
 import {
   ReceiptField,
   ReceiptLink,
   existingReceipt,
   type ReceiptValue,
 } from '#/components/receipts'
+import { StatCard, StatGrid } from '#/components/stat-card'
 import { Button } from '#/components/ui/button'
-import { Card, CardContent } from '#/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
 import {
   Empty,
   EmptyDescription,
@@ -55,9 +64,9 @@ import {
 } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Spinner } from '#/components/ui/spinner'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import {
   categoryLabel,
+  formatDate,
   formatMoney,
   parseAmountToCents,
   todayIsoDate,
@@ -126,9 +135,6 @@ export function FriendView({ friendId, search }: { friendId: string; search: Fri
           <span className="flex flex-wrap items-center gap-2">
             {friend.email}
             <FriendStatusBadge status={friend.status} />
-            {friend.status === 'linked' && (
-              <span>· {friend.name} sees these entries too</span>
-            )}
           </span>
         }
         actions={
@@ -136,46 +142,46 @@ export function FriendView({ friendId, search }: { friendId: string; search: Fri
             {friend.email && (friend.status === null || friend.status === 'declined') && (
               <SendRequest friendId={friend.id} email={friend.email} />
             )}
-            <BalanceText
-              balances={friend.balances}
-              them={friend.name}
-              className="text-right text-lg"
-            />
+            <FormDialog
+              trigger={<Button variant="outline" />}
+              label={
+                <>
+                  <HandCoins />
+                  Settle up
+                </>
+              }
+              title={`Settle up with ${friend.name}`}
+              description="Record a payment between you. It changes the balance, not your spending."
+              defaultOpen={tab === 'payment'}
+            >
+              {(close) => <PaymentForm friend={friend} onSaved={close} />}
+            </FormDialog>
+            <FormDialog
+              trigger={<Button />}
+              label={
+                <>
+                  <Plus />
+                  Add expense
+                </>
+              }
+              title={`Add an expense with ${friend.name}`}
+            >
+              {(close) => <ExpenseForm friend={friend} onSaved={close} />}
+            </FormDialog>
           </>
         }
       />
 
-      <SplitLayout
+      <ExpensePage
+        stats={<FriendStats friend={friend} />}
         aside={
           <>
-            <Card>
-              <CardContent>
-                <Tabs defaultValue={tab}>
-                  <TabsList className="mb-4 w-full">
-                    <TabsTrigger value="expense">
-                      <Receipt />
-                      Add expense
-                    </TabsTrigger>
-                    <TabsTrigger value="payment">
-                      <HandCoins />
-                      Settle up
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="expense">
-                    <ExpenseForm friend={friend} />
-                  </TabsContent>
-                  <TabsContent value="payment">
-                    <PaymentForm friend={friend} />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+            <BalanceCard friend={friend} />
             <RemoveFriend friend={friend} />
           </>
         }
       >
         <ExpenseSection
-          title="Activity"
           filters={
             (ledger.items.length > 0 || isFiltered(filter)) && (
               <ExpenseFilters
@@ -211,8 +217,82 @@ export function FriendView({ friendId, search }: { friendId: string; search: Fri
             ))}
           </ExpenseTable>
         </ExpenseSection>
-      </SplitLayout>
+      </ExpensePage>
     </>
+  )
+}
+
+/** A friend's figures: the balance, whether they're on Settlr, the last activity. */
+function FriendStats({ friend }: { friend: Friend }) {
+  const balances = Object.entries(friend.balances).filter(
+    (entry): entry is [string, number] => Boolean(entry[1]),
+  ) as Array<[Currency, number]>
+  // The largest balance leads; the tone follows it.
+  const [main] = [...balances].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+  return (
+    <StatGrid>
+      <StatCard
+        label="Balance"
+        icon={<Scale />}
+        tone={main ? (main[1] > 0 ? 'positive' : 'negative') : undefined}
+        value={
+          main
+            ? balances
+                .map(([currency, cents]) => formatMoney(Math.abs(cents), currency))
+                .join(' + ')
+            : 'Settled up'
+        }
+        hint={
+          main
+            ? main[1] > 0
+              ? `${friend.name} owes you`
+              : `You owe ${friend.name}`
+            : 'Nobody owes anything'
+        }
+      />
+      <StatCard
+        label="On Settlr"
+        icon={<Users />}
+        value={
+          friend.status === 'linked'
+            ? 'Linked'
+            : friend.status === 'pending'
+              ? 'Request sent'
+              : 'Not linked'
+        }
+        hint={
+          friend.status === 'linked'
+            ? `${friend.name} sees these entries too`
+            : friend.email
+              ? 'Send a request to share the ledger'
+              : 'Add an email to share the ledger'
+        }
+      />
+      <StatCard
+        label="Last activity"
+        icon={<CalendarClock />}
+        value={formatDate(new Date(friend.lastActivityAt).toISOString().slice(0, 10))}
+      />
+    </StatGrid>
+  )
+}
+
+/** The side card: what's owed in each currency. */
+function BalanceCard({ friend }: { friend: Friend }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Balance</CardTitle>
+        <CardDescription>Expenses minus payments, per currency.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <BalanceText
+          balances={friend.balances}
+          them={friend.name}
+          className="justify-items-start text-sm"
+        />
+      </CardContent>
+    </Card>
   )
 }
 
@@ -224,6 +304,10 @@ function EntryRow({ entry, friend }: { entry: FriendEntry; friend: Friend }) {
     toastErrors: true,
   })
   const payer = entry.paidBy === 'me' ? 'You' : friendName
+  // What it cost you: the payer's share is the amount minus what the other
+  // person owes (the effect on the balance); otherwise it's that effect.
+  const shareCents =
+    entry.paidBy === 'me' ? entry.amountCents - entry.effectCents : -entry.effectCents
   const title =
     entry.kind === 'expense'
       ? entry.description
@@ -263,13 +347,8 @@ function EntryRow({ entry, friend }: { entry: FriendEntry; friend: Friend }) {
       amount={
         <>
           <span>{formatMoney(entry.amountCents, entry.currency)}</span>
-          {entry.kind === 'expense' && (
-            // What it did to the balance: + is owed to you.
-            <SignedAmount
-              cents={entry.effectCents}
-              currency={entry.currency}
-              className="text-xs"
-            />
+          {entry.kind === 'expense' && shareCents !== entry.amountCents && (
+            <YourShare cents={formatMoney(shareCents, entry.currency)} />
           )}
         </>
       }
@@ -363,8 +442,9 @@ function ExpenseForm({
       return
     }
     if (!(await run(parsed.data, receipt))) return
-    if (entry) {
-      onSaved?.()
+    // A dialog closes once saved (edits always, adds from the header).
+    if (onSaved) {
+      onSaved()
       return
     }
     setDescription('')
@@ -436,7 +516,7 @@ function ExpenseForm({
           <ReceiptField id={`${id}-receipt`} value={receipt} onChange={setReceipt} />
         </Field>
         {error && <FieldError>{error}</FieldError>}
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button type="submit" disabled={pending}>
           {pending && <Spinner />}
           {entry ? 'Save changes' : 'Add expense'}
         </Button>
@@ -511,8 +591,9 @@ function PaymentForm({
       return
     }
     if (!(await run(parsed.data))) return
-    if (entry) {
-      onSaved?.()
+    // A dialog closes once saved (edits always, adds from the header).
+    if (onSaved) {
+      onSaved()
       return
     }
     setAmount('')
@@ -562,7 +643,7 @@ function PaymentForm({
           </Field>
         </div>
         {error && <FieldError>{error}</FieldError>}
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button type="submit" disabled={pending}>
           {pending && <Spinner />}
           {entry ? 'Save changes' : 'Record payment'}
         </Button>

@@ -52,7 +52,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   (friends, friendEntries, groups, groupExpenses, groupPayments,
   personalExpenses, receipts, budgets, notifications), `friends.ts`, `groups.ts`,
   `personal.ts`, `budgets.ts`, `notifications.ts`, `receipts.ts` (queries
-  and mutations), `assistant.ts` (the `/assistant` chat: an action that
+  and mutations), `expenses.ts` (`month`: every expense you're part of in
+  a month, across groups, friends and personal, for `/expenses` and the
+  dashboard's recent list), `assistant.ts` (the `/assistant` chat: an action that
   calls OpenRouter with tool calling, plus the internal queries its search
   and edit tools read through; the tools, in `lib/assistantTools.ts`, add, find
   and edit expenses and create groups and friends; they write through the
@@ -115,8 +117,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 - `src/app/`: the App Router. `layout.tsx` is the root document (reads the
   auth session, renders `<Providers>` and the `<AppShell>`), `page.tsx` the
   landing hero. `(app)/` is the signed-in area: its layout redirects to `/`
-  when signed out, and the dashboard, friends, groups, personal, budget,
-  notifications and receipt viewer pages live under it. Each page is a
+  when signed out, and the dashboard, all expenses (`expenses/`), friends,
+  groups, personal, budget, notifications and receipt viewer pages live
+  under it. Each page is a
   server `page.tsx` that prefetches data and renders a client `view.tsx`
   beside it; `loading.tsx` is its skeleton. Route groups `(list)`,
   `(detail)` and `(expenses)` only exist to give sibling pages their own
@@ -132,7 +135,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `fetchAuthQuery`, and the per-request `getAuthSession()`) and
   `convex.server.ts` (`prefetchQuery`) and `mcp.server.ts` (MCP token
   exchange, OAuth metadata proxy).
-- `src/lib/`: isomorphic code: `types.ts`,
+- `src/lib/`: isomorphic code: `types.ts`, `dashboard.ts` (the recent
+  expenses args the dashboard's page and view share),
   `search.ts` (`parseSearch`, `searchHref`), `preferences.ts`
   (localStorage; throws on the server), `theme.ts` (light/dark) and
   `utils.ts` (shadcn's `cn`).
@@ -146,7 +150,10 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `DatePicker`), `receipts.tsx` (`ReceiptField` upload control,
   `ReceiptLink`), `edit-dialog.tsx` (edit a row in a dialog),
   `expense-list.tsx` (`ExpenseSection`, `ExpenseTable`, `ExpenseRow`,
-  `RowActions`: the expense list every section uses) and
+  `RowActions`, `YourShare`: the expense list every section uses),
+  `expense-page.tsx` (`ExpensePage`, the frame every expense page shares:
+  stats strip, list and side cards; `PageIcon`), `form-dialog.tsx`
+  (`FormDialog`: a header button that opens a form, e.g. Add expense) and
   `expense-filters.tsx` (`ExpenseFilters`, the shared search/category/
   who-paid/sort bar, and `useListSearch` for its URL),
   `group-expense-form.tsx` (add/edit a group expense), `notifications.tsx`
@@ -268,7 +275,11 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   (`src/components/stat-card.tsx`), lists of records are tables whose extra
   columns appear on wider screens (`hidden md:table-cell`, with the details
   folded into the first cell below that); expense lists get this from
-  `ExpenseTable`/`ExpenseRow`, so build new ones on those. Tables follow
+  `ExpenseTable`/`ExpenseRow`, so build new ones on those. Expense pages
+  (a group, a friend, personal, all expenses) share one shape: `PageHeader`
+  with a `PageIcon` or avatar, outline secondary buttons and a primary "Add
+  expense", then `ExpensePage`; their forms open from header buttons
+  (`FormDialog`), not side cards. Tables follow
   Gr8r's members table: they run edge to edge inside their card (no padded
   `CardContent` around them; `ui/table.tsx` puts the first and last
   columns on the card's 14px gutter), any filter bar sits above the card

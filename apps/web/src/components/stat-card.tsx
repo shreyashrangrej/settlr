@@ -29,34 +29,48 @@ export function StatCard({
   hint,
   icon,
   tone,
+  onClick,
+  title,
 }: {
   label: string
   value: React.ReactNode
   hint?: React.ReactNode
   icon?: React.ReactNode
   tone?: 'positive' | 'negative'
+  /** Makes the figure a button (Gr8r's stats open the list behind them). */
+  onClick?: () => void
+  /** The button's tooltip. */
+  title?: string
 }) {
   const empty = value === '' || value === null || value === undefined
+  const Tag = onClick ? 'button' : 'section'
   return (
-    <section
-      aria-label={label}
-      className="flex min-w-0 flex-col gap-1.5 border-t border-l px-4 py-3.5"
+    <Tag
+      aria-label={onClick ? undefined : label}
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      title={title}
+      className={cn(
+        'flex min-w-0 flex-col gap-1.5 border-t border-l px-4 py-3.5 text-left',
+        onClick &&
+          'cursor-pointer outline-none transition-colors duration-140 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+      )}
     >
       <span className="flex items-center gap-1.5 text-ui text-muted-foreground [&_svg]:size-3.5 [&_svg]:shrink-0">
         {icon}
         <span className="truncate">{label}</span>
       </span>
-      <p
+      <span
         className={cn(
-          'truncate text-[1.375rem] leading-[1.1] font-semibold tracking-[-0.02em] tabular-nums',
+          'block truncate text-[1.375rem] leading-[1.1] font-semibold tracking-[-0.02em] tabular-nums',
           empty && 'text-faint',
           !empty && tone === 'positive' && 'text-positive',
           !empty && tone === 'negative' && 'text-destructive',
         )}
       >
         {empty ? '—' : value}
-      </p>
-      {hint && <p className="truncate text-xs text-faint">{hint}</p>}
-    </section>
+      </span>
+      {hint && <span className="block truncate text-xs text-faint">{hint}</span>}
+    </Tag>
   )
 }

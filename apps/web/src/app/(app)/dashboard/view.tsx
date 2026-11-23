@@ -4,32 +4,58 @@ import { useEffect, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { ChevronRight, Plus, Users, Zap } from 'lucide-react'
+import {
+  ArrowDownLeft,
+  ArrowRight,
+  ArrowUpRight,
+  ChevronRight,
+  CircleCheck,
+  Plus,
+  Scale,
+  Users,
+  UsersRound,
+  Wallet,
+} from 'lucide-react'
 
 import { AddMenu } from '#/components/add-menu'
 import { budgetStatus, type Spending } from '#/components/budget'
 import { CategoryIcon, groupColor, labelTint } from '#/components/category'
-import { ExpenseRow, ExpenseTable } from '#/components/expense-list'
+import {
+  ExpenseRow,
+  ExpenseTable,
+  YourShare,
+  type ExpenseColumn,
+} from '#/components/expense-list'
 import { SelectField } from '#/components/form-fields'
-import { GroupTile } from '#/components/group-tile'
-import { PersonAvatar, sumBalances, useAction } from '#/components/ledger'
+import { PersonAvatar, SignedAmount, sumBalances, useAction } from '#/components/ledger'
 import { PageHeader } from '#/components/page-header'
 import { useSession } from '#/components/providers'
+import { StatCard, StatGrid } from '#/components/stat-card'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Skeleton } from '#/components/ui/skeleton'
 import { Spinner } from '#/components/ui/spinner'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '#/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import {
   categoryLabel,
   formatLongDate,
   formatMoney,
   formatMonth,
+  formatWholeMoney,
   parseAmountToCents,
   plural,
 } from '@settlr/shared/format'
 import { addExpenseInput, type Currency } from '@settlr/shared/schemas'
-import type { Friend, GroupSummary, PersonalMonth } from '#/lib/types'
+import type { Friend, GroupSummary } from '#/lib/types'
+import { RECENT_ARGS } from '#/lib/dashboard'
 import { cn } from '#/lib/utils'
 import { api } from '@settlr/backend/convex/_generated/api'
 
@@ -37,6 +63,8 @@ const PREVIEW = 5
 const MAX_BALANCES = 8
 
 const card = 'flex min-w-0 flex-col rounded-xl border bg-card'
+// A card whose rows run edge to edge (Gr8r's panel): no padding of its own.
+const panel = cn(card, 'overflow-hidden')
 const cardTitle = 'm-0 text-sm font-semibold'
 const cardLink =
   'text-xs font-medium text-muted-foreground no-underline hover:text-foreground'
@@ -109,9 +137,6 @@ export function DashboardView({ month, today }: { month: string; today: string }
   const greeting = useGreeting()
   const { data: friends } = useSuspenseQuery(convexQuery(api.friends.list, {}))
   const { data: groups } = useSuspenseQuery(convexQuery(api.groups.list, {}))
-  const { data: personal } = useSuspenseQuery(
-    convexQuery(api.personal.month, { month }),
-  )
   const { data: budgets } = useSuspenseQuery(convexQuery(api.budgets.list, {}))
   const { data: spending } = useSuspenseQuery(
     convexQuery(api.budgets.monthSpending, { month }),
@@ -142,62 +167,67 @@ export function DashboardView({ month, today }: { month: string; today: string }
   return (
     <>
       <PageHeader
-        eyebrow={formatLongDate(today)}
         title={firstName ? `${greeting}, ${firstName}` : greeting}
+        description={`${formatLongDate(today)} · Here’s where you stand.`}
         actions={
-          // Narrow screens have Add in the tab bar.
-          <AddMenu trigger={<Button size="lg" className="max-lg:hidden" />}>
-            <Plus strokeWidth={2.4} />
-            Add expense
-          </AddMenu>
+          <>
+            <Link
+              href="/groups/new"
+              className={cn(buttonVariants({ variant: 'outline' }), 'no-underline max-sm:hidden')}
+            >
+              <UsersRound />
+              New group
+            </Link>
+            <AddMenu trigger={<Button />}>
+              <Plus />
+              Add expense
+            </AddMenu>
+          </>
         }
       />
 
+      <DashboardStats
+        className="mb-4"
+        main={main}
+        balances={balances}
+        owed={owed}
+        owe={owe}
+        month={month}
+        spending={spending}
+        budgets={budgets}
+        onShow={showBalances}
+      />
+
       {/*
-        Wide screens: two independent columns, so a card is only as tall as
-        its content. Narrow screens: one column, where the column wrappers
-        drop out (`contents`) and `order` puts the cards in reading order
-        (what you owe and the balances before the forms and charts).
+        Gr8r's home grid: a wide column of lists beside a narrower one of
+        tools, from `xl`. Below that it's one column, where the column
+        wrappers drop out (`contents`) and `order` puts the panels in
+        reading order (balances, then this month's share and budget).
       */}
-      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-start">
+      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] xl:items-start">
         <div className="contents xl:flex xl:flex-col xl:gap-4">
-          <NetBalance
-            className="max-xl:order-1"
-            main={main}
-            others={currencies.filter((c) => c !== main)}
-            balances={balances}
-            owed={owed}
-            owe={owe}
-            onShow={showBalances}
-          />
           <Balances
-            className="max-xl:order-3"
+            className="max-xl:order-1"
             balances={balances}
             filter={filter}
             onFilter={setFilter}
           />
-          <YourGroups className="max-xl:order-7" groups={groups} />
+          <RecentExpenses className="max-xl:order-6" month={month} />
+          <GroupsTable className="max-xl:order-7" groups={groups} />
         </div>
         <div className="contents xl:flex xl:flex-col xl:gap-4">
-          <QuickSplit className="max-xl:order-4" groups={groups} today={today} />
-          <ClearWhatYouOwe
-            className="max-xl:order-2"
-            balances={balances}
-            onShowAll={() => showBalances('owe')}
-          />
+          {/* This month's share and budget lead the column, then what to
+              settle and the quick split. */}
+          <ShareDonut className="max-xl:order-2" month={month} spending={spending[0]} />
           <BudgetSummary
-            className="max-xl:order-5"
+            className="max-xl:order-3"
             month={month}
             budgets={budgets}
             spending={spending}
           />
-          <YourShare className="max-xl:order-6" month={month} spending={spending[0]} />
+          <ToSettle className="max-xl:order-4" balances={balances} />
+          <QuickSplit className="max-xl:order-5" groups={groups} today={today} />
         </div>
-        <RecentSpending
-          className="max-xl:order-8 xl:col-span-2"
-          month={month}
-          items={personal.items}
-        />
       </div>
     </>
   )
@@ -233,197 +263,104 @@ function BalanceAvatar({
   )
 }
 
-/** "+₹4,820.00" with the decimals at half size. */
-function HeroFigure({ cents, currency }: { cents: number; currency: Currency }) {
-  const text = formatMoney(Math.abs(cents), currency)
-  const dot = text.lastIndexOf('.')
+/**
+ * Gr8r's panel header: the title on the left, then its controls (a
+ * segmented filter, a link) on the right.
+ */
+function PanelHeader({
+  id,
+  title,
+  children,
+}: {
+  id: string
+  title: React.ReactNode
+  children?: React.ReactNode
+}) {
   return (
-    <p className="text-4xl leading-none font-semibold tracking-[-0.03em] tabular-nums sm:text-5xl">
-      {cents > 0 ? '+' : cents < 0 ? '−' : ''}
-      {dot === -1 ? text : text.slice(0, dot)}
-      {dot !== -1 && (
-        <span className="text-2xl text-dim sm:text-3xl">{text.slice(dot)}</span>
-      )}
-    </p>
+    <div className="flex min-h-12 flex-wrap items-center gap-2 px-3.5 pt-3 pb-2.5">
+      <h2 id={id} className={cardTitle}>
+        {title}
+      </h2>
+      {children && <div className="ml-auto flex items-center gap-1">{children}</div>}
+    </div>
   )
 }
 
 /**
- * Where you stand: the net figure, a bar of owed against owe, and a tile for
- * each direction with its totals and who's in it. A tile filters the
- * balances list to that direction.
+ * The strip across the top (Gr8r's stats): where you stand overall, each
+ * direction (a click filters the balances list) and what this month cost
+ * you against your budget.
  */
-function NetBalance({
+function DashboardStats({
   main,
-  others,
   balances,
   owed,
   owe,
+  month,
+  spending,
+  budgets,
   onShow,
   className,
 }: {
   main: Currency
-  others: Array<Currency>
   balances: Array<Balance>
   owed: Record<string, number>
   owe: Record<string, number>
+  month: string
+  spending: Array<Spending>
+  budgets: Array<{ currency: Currency; amountCents: number }>
   onShow: (filter: Filter) => void
   className?: string
 }) {
   const owedCents = owed[main] ?? 0
   const oweCents = owe[main] ?? 0
-  const total = owedCents + oweCents
-  const owedShare = total ? Math.round((owedCents / total) * 100) : 0
-  const open = balances.length
+  const net = owedCents - oweCents
+  // People and groups, not currencies: a friend in two currencies is one.
+  const count = (owedToYou: boolean) =>
+    new Set(balances.filter((b) => (owedToYou ? b.cents > 0 : b.cents < 0)).map((b) => b.href)).size
+  const owedCount = count(true)
+  const oweCount = count(false)
+  const spent = spending[0]
+  const budget = spent && budgets.find((b) => b.currency === spent.currency)
 
   return (
-    <section
-      aria-labelledby="net-h"
-      className={cn(card, 'relative gap-4 overflow-hidden p-5', className)}
-    >
-      <div className="relative flex flex-wrap items-center justify-between gap-3">
-        <h2 id="net-h" className="m-0 text-sm font-medium tracking-normal text-muted-foreground">
-          Net balance
-        </h2>
-        <span className="rounded-sm bg-primary/8 px-1.5 py-0.5 text-xs font-medium text-primary dark:bg-primary/16">
-          {open === 0 ? 'All settled up' : `${plural(open, 'open balance')}`}
-        </span>
-      </div>
-      <div className="relative grid gap-2">
-        <HeroFigure cents={owedCents - oweCents} currency={main} />
-        {others.length > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {others.map((c, i) => {
-              const net = (owed[c] ?? 0) - (owe[c] ?? 0)
-              return (
-                <span key={c}>
-                  {i > 0 && ' · '}
-                  <span className={net >= 0 ? 'text-positive' : 'text-destructive'}>
-                    {net > 0 ? '+' : net < 0 ? '−' : ''}
-                    {formatMoney(Math.abs(net), c)}
-                  </span>
-                </span>
-              )
-            })}
-          </p>
-        )}
-      </div>
-      <div className="relative grid gap-3">
-        {/* What you're owed against what you owe, in the main currency. */}
-        <div
-          role="img"
-          aria-label={
-            total
-              ? `${owedShare}% of your open balances are owed to you, ${100 - owedShare}% you owe`
-              : 'No open balances'
-          }
-          className="flex h-2.5 gap-1 overflow-hidden rounded-full"
-        >
-          {total === 0 && <span className="flex-1 rounded-full bg-track" />}
-          {owedCents > 0 && (
-            <span className="rounded-full bg-positive" style={{ flexGrow: owedCents }} />
-          )}
-          {oweCents > 0 && (
-            <span className="rounded-full bg-destructive" style={{ flexGrow: oweCents }} />
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-2.5">
-          <DirectionTile
-            direction="owed"
-            balances={balances}
-            totals={owed}
-            main={main}
-            onShow={onShow}
-          />
-          <DirectionTile
-            direction="owe"
-            balances={balances}
-            totals={owe}
-            main={main}
-            onShow={onShow}
-          />
-        </div>
-      </div>
-    </section>
-  )
-}
-
-/** One direction's total (per currency) and who's in it, as a filter button. */
-function DirectionTile({
-  direction,
-  balances,
-  totals,
-  main,
-  onShow,
-}: {
-  direction: 'owed' | 'owe'
-  balances: Array<Balance>
-  totals: Record<string, number>
-  main: Currency
-  onShow: (filter: Filter) => void
-}) {
-  const owedToYou = direction === 'owed'
-  const rows = balances.filter((b) => (owedToYou ? b.cents > 0 : b.cents < 0))
-  // A friend with balances in two currencies is one person.
-  const people = [...new Map(rows.map((b) => [b.href, b])).values()]
-  const mainCents = totals[main] ?? 0
-  const rest = Object.entries(totals).filter(([c, cents]) => c !== main && cents)
-  const label = owedToYou ? 'Owed to you' : 'You owe'
-
-  return (
-    <button
-      type="button"
-      disabled={people.length === 0}
-      onClick={() => onShow(direction)}
-      title={people.length ? `Show ${plural(people.length, 'balance')}` : undefined}
-      className="grid min-w-0 content-start gap-1 rounded-lg bg-field px-3 py-2.5 text-left outline-none enabled:hover:bg-tile focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-    >
-      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <span
-          aria-hidden="true"
-          className={cn('size-[7px] rounded-full', owedToYou ? 'bg-positive' : 'bg-destructive')}
-        />
-        {label}
-      </span>
-      <span
-        className={cn(
-          'truncate text-base font-medium tabular-nums',
-          mainCents === 0
-            ? 'text-muted-foreground'
-            : owedToYou
-              ? 'text-positive'
-              : 'text-destructive',
-        )}
-      >
-        {formatMoney(mainCents, main)}
-      </span>
-      {rest.length > 0 && (
-        <span className="truncate text-xs text-muted-foreground tabular-nums">
-          {rest.map(([c, cents]) => `+ ${formatMoney(cents, c as Currency)}`).join(' ')}
-        </span>
-      )}
-      <span className="mt-1.5 flex min-h-7 items-center">
-        {people.length === 0 ? (
-          <span className="text-xs text-muted-foreground">Nobody</span>
-        ) : (
-          <>
-            {people.slice(0, 4).map((b, i) => (
-              <BalanceAvatar
-                key={b.key}
-                balance={b}
-                size="sm"
-                className={cn('ring-2 ring-field', i > 0 && '-ml-2')}
-              />
-            ))}
-            {people.length > 4 && (
-              <span className="-ml-2 grid size-7 place-items-center rounded-full bg-muted text-3xs font-medium text-muted-foreground ring-2 ring-card">
-                +{people.length - 4}
-              </span>
-            )}
-          </>
-        )}
-      </span>
-    </button>
+    <StatGrid className={className}>
+      <StatCard
+        label="Net balance"
+        icon={<Scale />}
+        tone={net > 0 ? 'positive' : net < 0 ? 'negative' : undefined}
+        value={`${net > 0 ? '+' : net < 0 ? '−' : ''}${formatMoney(Math.abs(net), main)}`}
+        hint={balances.length === 0 ? 'All settled up' : plural(balances.length, 'open balance')}
+      />
+      <StatCard
+        label="Owed to you"
+        icon={<ArrowDownLeft />}
+        tone="positive"
+        value={owedCents ? formatMoney(owedCents, main) : ''}
+        hint={owedCount ? `From ${plural(owedCount, 'person or group', 'people and groups')}` : 'Nobody owes you'}
+        onClick={owedCount ? () => onShow('owed') : undefined}
+        title={owedCount ? 'Show who owes you' : undefined}
+      />
+      <StatCard
+        label="You owe"
+        icon={<ArrowUpRight />}
+        tone="negative"
+        value={oweCents ? formatMoney(oweCents, main) : ''}
+        hint={oweCount ? `To ${plural(oweCount, 'person or group', 'people and groups')}` : 'You don’t owe anyone'}
+        onClick={oweCount ? () => onShow('owe') : undefined}
+        title={oweCount ? 'Show who you owe' : undefined}
+      />
+      <StatCard
+        label={`Your share in ${formatMonth(month).split(' ')[0]}`}
+        icon={<Wallet />}
+        value={spent ? formatMoney(spent.total, spent.currency) : ''}
+        hint={
+          budget
+            ? `${budgetStatus(spent.total, budget.amountCents).label} · ${formatMoney(budget.amountCents, budget.currency)} budget`
+            : 'Personal, friends and groups'
+        }
+      />
+    </StatGrid>
   )
 }
 
@@ -464,7 +401,7 @@ function QuickSplit({
         </p>
         <Link
           href="/groups/new"
-          className={cn(buttonVariants({ size: 'lg' }), 'mt-auto no-underline')}
+          className={cn(buttonVariants(), 'mt-auto no-underline')}
         >
           <Plus strokeWidth={2.4} />
           New group
@@ -614,7 +551,7 @@ function QuickSplit({
             {formatMoney(share, selected.currency)}
           </span>
         </span>
-        <Button type="submit" size="lg" className="min-w-0 shrink" disabled={pending || !group}>
+        <Button type="submit" className="min-w-0 shrink" disabled={pending || !group}>
           {pending && <Spinner />}
           <span className="truncate">Add to {selected.name}</span>
         </Button>
@@ -624,8 +561,8 @@ function QuickSplit({
 }
 
 /**
- * Everyone you have an open balance with. A row opens the friend or group;
- * rows you owe also get a Settle button that goes straight to paying it.
+ * Everyone you have an open balance with, filtered by direction. A row
+ * opens the friend or group; rows you owe also get a Settle button.
  */
 function Balances({
   balances,
@@ -643,27 +580,32 @@ function Balances({
     (b) => filter === 'all' || (filter === 'owed' ? b.cents > 0 : b.cents < 0),
   )
   const shown = showAll ? matching : matching.slice(0, MAX_BALANCES)
+  const owedCount = balances.filter((b) => b.cents > 0).length
 
   return (
     <section
       id="balances"
       aria-labelledby="bal-h"
-      className={cn(card, 'scroll-mt-20 gap-2.5 p-3.5', className)}
+      className={cn(panel, 'scroll-mt-20', className)}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="bal-h" className={cardTitle}>
-          Balances
-        </h2>
+      <PanelHeader id="bal-h" title="Balances">
         <Tabs value={filter} onValueChange={(value) => onFilter(value as Filter)}>
           <TabsList aria-label="Filter balances">
-            <TabsTrigger value="all">All · {balances.length}</TabsTrigger>
-            <TabsTrigger value="owed">Owed to you</TabsTrigger>
-            <TabsTrigger value="owe">You owe</TabsTrigger>
+            <TabsTrigger value="all">
+              All <span className="text-faint tabular-nums">{balances.length}</span>
+            </TabsTrigger>
+            <TabsTrigger value="owed">
+              Owed to you <span className="text-faint tabular-nums">{owedCount}</span>
+            </TabsTrigger>
+            <TabsTrigger value="owe">
+              You owe{' '}
+              <span className="text-faint tabular-nums">{balances.length - owedCount}</span>
+            </TabsTrigger>
           </TabsList>
         </Tabs>
-      </div>
+      </PanelHeader>
       {shown.length === 0 ? (
-        <p className="border-t border-divider px-3.5 py-8 text-center text-muted-foreground">
+        <p className="border-t border-divider px-3.5 py-8 text-center text-sm text-muted-foreground">
           {balances.length === 0
             ? 'You’re all settled up. Balances with friends and groups show up here.'
             : filter === 'owed'
@@ -671,66 +613,69 @@ function Balances({
               : 'You don’t owe anyone right now.'}
         </p>
       ) : (
-        <ul className="grid">
+        <ul className="grid border-t border-divider">
           {shown.map((b) => (
             <li
               key={b.key}
               // The name's link covers the whole row (its ::after); the
-              // Settle button sits above it. Hovering the row highlights the
-              // name and chevron rather than filling the row.
-              className="group/row relative flex items-center gap-3.5 border-t border-divider py-3"
+              // Settle button sits above it.
+              className="group/row relative flex min-h-13 items-center gap-2.5 border-b border-divider px-3.5 py-2 transition-colors duration-140 last:border-b-0 hover:bg-muted"
             >
-              <BalanceAvatar balance={b} size="lg" />
-              <div className="grid min-w-0 flex-1 gap-0.5">
+              <BalanceAvatar balance={b} />
+              <div className="grid min-w-0 flex-1">
                 <Link
                   href={b.href}
-                  className="truncate text-sm font-medium no-underline outline-none group-hover/row:text-primary after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
+                  className="truncate text-sm font-medium no-underline outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
                 >
                   {b.name}
                 </Link>
-                <span className="truncate text-xs text-muted-foreground">{b.sub}</span>
+                <span className="truncate text-xs text-faint">{b.sub}</span>
               </div>
-              <div className="grid justify-items-end gap-0.5">
-                <span className="text-xs text-muted-foreground">
-                  {b.cents > 0 ? 'owed to you' : 'you owe'}
-                </span>
+              <div className="grid justify-items-end">
                 <span
                   className={cn(
                     'text-sm font-medium tabular-nums',
                     b.cents > 0 ? 'text-positive' : 'text-destructive',
                   )}
                 >
+                  {b.cents > 0 ? '+' : '−'}
                   {formatMoney(Math.abs(b.cents), b.currency)}
                 </span>
+                <span className="text-xs text-faint">
+                  {b.cents > 0 ? 'owed to you' : 'you owe'}
+                </span>
               </div>
-              {b.cents < 0 ? (
-                <Link
-                  href={b.settleHref}
-                  className={cn(
-                    buttonVariants({ variant: 'contrast' }),
-                    'relative z-10 hidden min-w-21 no-underline sm:inline-flex',
-                  )}
-                >
-                  Settle
-                </Link>
-              ) : (
-                <ChevronRight
-                  aria-hidden="true"
-                  className="hidden size-4 shrink-0 text-muted-foreground transition-transform group-hover/row:translate-x-0.5 group-hover/row:text-foreground sm:block sm:w-21"
-                />
-              )}
+              <span className="hidden w-17 justify-end sm:flex">
+                {b.cents < 0 ? (
+                  <Link
+                    href={b.settleHref}
+                    className={cn(
+                      buttonVariants({ variant: 'contrast', size: 'sm' }),
+                      'relative z-10 no-underline',
+                    )}
+                  >
+                    Settle
+                  </Link>
+                ) : (
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="size-4 text-dim transition-transform group-hover/row:translate-x-0.5 group-hover/row:text-foreground"
+                  />
+                )}
+              </span>
             </li>
           ))}
         </ul>
       )}
       {matching.length > MAX_BALANCES && (
-        <Button
-          variant="ghost"
-          className="self-start text-muted-foreground"
+        <button
+          type="button"
           onClick={() => setShowAll((value) => !value)}
+          className="flex h-9 items-center gap-1.5 border-t border-divider px-3.5 text-left text-ui text-muted-foreground transition-colors duration-140 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
-          {showAll ? 'Show fewer' : `Show all ${matching.length}`}
-        </Button>
+          {showAll ? 'Show fewer' : `View all ${matching.length}`}
+          <ArrowRight className="size-3.5" />
+        </button>
       )}
     </section>
   )
@@ -738,71 +683,65 @@ function Balances({
 
 /**
  * What you owe, one payment per person or group, each with a button to
- * settle it. On narrow screens it's left out when there's nothing to clear.
+ * settle it (Gr8r's "upcoming deadlines" panel). On narrow screens it's
+ * left out when there's nothing to settle.
  */
-function ClearWhatYouOwe({
+function ToSettle({
   balances,
-  onShowAll,
   className,
 }: {
   balances: Array<Balance>
-  onShowAll: () => void
   className?: string
 }) {
   const owing = balances.filter((b) => b.cents < 0)
   return (
     <section
       aria-labelledby="settle-h"
-      className={cn(
-        'flex flex-col gap-3.5 rounded-xl border border-highlight-border bg-highlight p-3.5',
-        owing.length === 0 && 'max-xl:hidden',
-        className,
-      )}
+      className={cn(panel, owing.length === 0 && 'max-xl:hidden', className)}
     >
-      <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
-          <Zap className="size-4.5" strokeWidth={2.2} />
-        </span>
-        <div className="grid gap-0.5">
-          <h2 id="settle-h" className={cardTitle}>
-            {owing.length === 0 ? 'Nothing to clear' : 'Clear what you owe'}
-          </h2>
-          <p className="text-xs leading-normal text-muted-foreground">
-            {owing.length === 0
-              ? 'You don’t owe anyone. When you do, it shows up here.'
-              : `${plural(owing.length, 'payment')} ${owing.length === 1 ? 'settles' : 'settle'} everything you owe. Record each one once you’ve paid.`}
+      <PanelHeader
+        id="settle-h"
+        title={
+          <>
+            To settle{' '}
+            {owing.length > 0 && (
+              <span className="font-normal text-faint tabular-nums">{owing.length}</span>
+            )}
+          </>
+        }
+      />
+      {owing.length === 0 ? (
+        <div className="grid justify-items-center gap-1 border-t border-divider px-3.5 py-7 text-center">
+          <CircleCheck className="size-5.5 text-dim" aria-hidden="true" />
+          <p className="text-sm font-semibold">Nothing to settle</p>
+          <p className="max-w-60 text-ui text-muted-foreground">
+            You don’t owe anyone. When you do, it shows up here.
           </p>
         </div>
-      </div>
-      {owing.slice(0, PREVIEW).map((b) => (
-        <div
-          key={b.key}
-          className="flex items-center gap-3 rounded-lg bg-background/55 px-3 py-2.5"
-        >
-          <BalanceAvatar balance={b} />
-          <span className="grid min-w-0 flex-1">
-            <span className="truncate font-medium">{b.name}</span>
-            <span className="truncate text-xs text-destructive tabular-nums">
-              {formatMoney(Math.abs(b.cents), b.currency)}
-            </span>
-          </span>
-          <Link
-            href={b.settleHref}
-            aria-label={`Settle ${formatMoney(Math.abs(b.cents), b.currency)} with ${b.name}`}
-            className={cn(buttonVariants({ variant: 'contrast' }), 'no-underline')}
-          >
-            Settle
-          </Link>
-        </div>
-      ))}
-      {owing.length > PREVIEW && (
-        <button
-          type="button"
-          onClick={onShowAll}
-          className="self-start text-xs font-medium text-muted-foreground hover:text-foreground"
-        >
-          See all {owing.length} in Balances
-        </button>
+      ) : (
+        <ul className="grid border-t border-divider pb-1">
+          {owing.slice(0, PREVIEW).map((b) => (
+            <li key={b.key} className="flex items-center gap-2.5 px-3.5 py-2">
+              <BalanceAvatar balance={b} size="sm" />
+              <span className="min-w-0 flex-1 truncate text-sm">{b.name}</span>
+              <span className="text-sm font-medium text-destructive tabular-nums">
+                {formatMoney(Math.abs(b.cents), b.currency)}
+              </span>
+              <Link
+                href={b.settleHref}
+                aria-label={`Settle ${formatMoney(Math.abs(b.cents), b.currency)} with ${b.name}`}
+                className={cn(buttonVariants({ variant: 'contrast', size: 'sm' }), 'no-underline')}
+              >
+                Settle
+              </Link>
+            </li>
+          ))}
+          {owing.length > PREVIEW && (
+            <li className="px-3.5 pt-1 pb-1.5 pl-11 text-xs text-faint">
+              +{owing.length - PREVIEW} more in Balances
+            </li>
+          )}
+        </ul>
       )}
     </section>
   )
@@ -887,7 +826,62 @@ function BudgetSummary({
   )
 }
 
-function YourGroups({
+/**
+ * This month's latest expenses from everywhere (the All expenses list),
+ * as a flush table, with "View all" going to the full page.
+ */
+function RecentExpenses({ month, className }: { month: string; className?: string }) {
+  const { data } = useSuspenseQuery(
+    convexQuery(api.expenses.month, { month, ...RECENT_ARGS }),
+  )
+  return (
+    <section aria-labelledby="recent-h" className={cn(panel, className)}>
+      <PanelHeader id="recent-h" title="Recent expenses">
+        <Link href="/expenses" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'no-underline')}>
+          View all
+        </Link>
+      </PanelHeader>
+      {data.items.length === 0 ? (
+        <p className="border-t border-divider px-3.5 py-8 text-center text-sm text-muted-foreground">
+          No expenses in {formatMonth(month)} yet.
+        </p>
+      ) : (
+        <ExpenseTable first="Expense" columns={RECENT_COLUMNS} actions={false}>
+          {data.items.map((item) => (
+            <ExpenseRow
+              key={item.key}
+              icon={<CategoryIcon category={item.category} />}
+              title={item.description}
+              href={
+                item.source === 'group'
+                  ? `/groups/${item.where?.id}`
+                  : item.source === 'friend'
+                    ? `/friends/${item.where?.id}`
+                    : '/personal'
+              }
+              subtitle={categoryLabel(item.category)}
+              date={item.date}
+              cells={[item.source === 'personal' ? 'Personal' : (item.where?.name ?? '')]}
+              amount={
+                <>
+                  <span>{formatMoney(item.amountCents, item.currency)}</span>
+                  {item.shareCents !== item.amountCents && (
+                    <YourShare cents={formatMoney(item.shareCents, item.currency)} />
+                  )}
+                </>
+              }
+            />
+          ))}
+        </ExpenseTable>
+      )}
+    </section>
+  )
+}
+
+const RECENT_COLUMNS: Array<ExpenseColumn> = [{ label: 'Where', width: 'w-36', from: 'md' }]
+
+/** Your groups as a table (Gr8r's project progress): spending and where you stand. */
+function GroupsTable({
   groups,
   className,
 }: {
@@ -895,17 +889,14 @@ function YourGroups({
   className?: string
 }) {
   return (
-    <section aria-labelledby="groups-h" className={cn(card, 'gap-3.5 p-3.5', className)}>
-      <div className="flex min-h-9 items-center justify-between gap-2">
-        <h2 id="groups-h" className={cardTitle}>
-          Your groups
-        </h2>
-        <Link href="/groups" className={cardLink}>
-          View all
+    <section aria-labelledby="groups-h" className={cn(panel, className)}>
+      <PanelHeader id="groups-h" title="Your groups">
+        <Link href="/groups" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'no-underline')}>
+          All groups
         </Link>
-      </div>
+      </PanelHeader>
       {groups.length === 0 ? (
-        <p className="py-6 text-center text-muted-foreground">
+        <p className="border-t border-divider px-3.5 py-8 text-center text-sm text-muted-foreground">
           No groups yet.{' '}
           <Link href="/groups/new" className="text-foreground">
             Start one
@@ -913,11 +904,57 @@ function YourGroups({
           for a trip or a flat.
         </p>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(190px,100%),1fr))] gap-3">
-          {groups.slice(0, 6).map((group) => (
-            <GroupTile key={group.id} group={group} />
-          ))}
-        </div>
+        <Table className="table-fixed">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Group</TableHead>
+              <TableHead className="hidden w-24 md:table-cell">Members</TableHead>
+              <TableHead className="hidden w-32 text-right sm:table-cell">Spent</TableHead>
+              <TableHead className="w-32 text-right">Your balance</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {groups.slice(0, 6).map((group) => (
+              <TableRow key={group.id}>
+                <TableCell className="font-medium">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span
+                      aria-hidden="true"
+                      className="grid size-7 shrink-0 place-items-center rounded-md [&_svg]:size-3.5"
+                      style={labelTint(groupColor(group.id))}
+                    >
+                      <Users />
+                    </span>
+                    <span className="grid min-w-0">
+                      <Link
+                        href={`/groups/${group.id}`}
+                        className="truncate text-foreground no-underline hover:text-primary"
+                      >
+                        {group.name}
+                      </Link>
+                      <span className="truncate text-xs font-normal text-faint">
+                        {plural(group.expenseCount, 'expense')} · {group.currency}
+                      </span>
+                    </span>
+                  </span>
+                </TableCell>
+                <TableCell className="hidden text-muted-foreground tabular-nums md:table-cell">
+                  {group.memberCount}
+                </TableCell>
+                <TableCell className="hidden text-right text-muted-foreground tabular-nums sm:table-cell">
+                  {formatWholeMoney(group.totalCents, group.currency)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {group.myNetCents === 0 ? (
+                    <span className="text-faint">Square</span>
+                  ) : (
+                    <SignedAmount cents={group.myNetCents} currency={group.currency} />
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </section>
   )
@@ -930,7 +967,7 @@ const SOURCES = [
 ] as const
 
 /** A donut of this month's spending by where it happened. */
-function YourShare({
+function ShareDonut({
   month,
   spending,
   className,
@@ -1016,47 +1053,6 @@ function YourShare({
             ))}
           </ul>
         </div>
-      )}
-    </section>
-  )
-}
-
-function RecentSpending({
-  month,
-  items,
-  className,
-}: {
-  month: string
-  items: PersonalMonth['items']
-  className?: string
-}) {
-  return (
-    <section aria-labelledby="act-h" className={cn(card, 'overflow-hidden', className)}>
-      <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 pt-3 pb-2.5">
-        <h2 id="act-h" className={cardTitle}>
-          Recent personal spending
-        </h2>
-        <Link href="/personal" className={cardLink}>
-          View all
-        </Link>
-      </div>
-      {items.length === 0 ? (
-        <p className="border-t border-divider px-3.5 py-8 text-center text-muted-foreground">
-          No personal expenses in {formatMonth(month)} yet.
-        </p>
-      ) : (
-        <ExpenseTable first="Expense" actions={false}>
-          {items.slice(0, PREVIEW).map((expense) => (
-            <ExpenseRow
-              key={expense.id}
-              icon={<CategoryIcon category={expense.category} />}
-              title={expense.description}
-              subtitle={categoryLabel(expense.category)}
-              date={expense.date}
-              amount={formatMoney(expense.amountCents, expense.currency)}
-            />
-          ))}
-        </ExpenseTable>
       )}
     </section>
   )

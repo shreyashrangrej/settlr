@@ -11,6 +11,7 @@ import {
   ExpenseSection,
   ExpenseTable,
   RowActions,
+  YourShare,
   type ExpenseColumn,
 } from '#/components/expense-list'
 import { useAction } from '#/components/ledger'
@@ -93,6 +94,7 @@ function GroupExpenseRow({ group, expense }: { group: Group; expense: GroupExpen
   const payer =
     expense.paidBy === group.meMemberId ? 'You' : memberName(group.members, expense.paidBy)
   const split = splitCount === group.members.length ? 'Everyone' : `${splitCount} people`
+  const share = myShare(expense, group)
 
   return (
     <ExpenseRow
@@ -102,7 +104,14 @@ function GroupExpenseRow({ group, expense }: { group: Group; expense: GroupExpen
       subtitle={categoryLabel(expense.category)}
       date={expense.date}
       cells={[{ value: payer, folded: `${payer} paid` }, split]}
-      amount={formatMoney(expense.amountCents, group.currency)}
+      amount={
+        <>
+          <span>{formatMoney(expense.amountCents, group.currency)}</span>
+          {share !== null && share !== expense.amountCents && (
+            <YourShare cents={formatMoney(share, group.currency)} />
+          )}
+        </>
+      }
       actions={
         <RowActions
           name={expense.description}
@@ -113,4 +122,19 @@ function GroupExpenseRow({ group, expense }: { group: Group; expense: GroupExpen
       }
     />
   )
+}
+
+/**
+ * Your share of a group expense, or null when you're not in its split. The
+ * same equal split as the backend (`shares` in convex/lib/ledger.ts):
+ * leftover cents go to the first participants in member order.
+ */
+function myShare(expense: GroupExpense, group: Group) {
+  const order = group.members.map((m) => m.id)
+  const participants = [...expense.splitAmong].sort((a, b) => order.indexOf(a) - order.indexOf(b))
+  const i = participants.indexOf(group.meMemberId)
+  if (i === -1) return null
+  const base = Math.floor(expense.amountCents / participants.length)
+  const remainder = expense.amountCents - base * participants.length
+  return base + (i < remainder ? 1 : 0)
 }

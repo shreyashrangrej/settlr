@@ -106,6 +106,24 @@ export const personalSearchDefaults = { ...monthSearchDefaults, ...expenseFilter
 export const personalSearchSchema = monthSearchSchema.extend(expenseFilterFields)
 export type PersonalSearch = z.infer<typeof personalSearchSchema>
 
+// All expenses (/expenses): one month across groups, friends and personal,
+// with the same filters plus where the expense lives (`source`), and the
+// "show more" length. Payers differ per source, so there's no `paidBy`.
+export const EXPENSE_SOURCES = ['group', 'friend', 'personal'] as const
+export type ExpenseSource = (typeof EXPENSE_SOURCES)[number]
+export const allExpensesSearchDefaults = {
+  ...monthSearchDefaults,
+  ...expenseFilterDefaults,
+  source: 'all',
+  limit: LIST_STEP,
+} as const
+export const allExpensesSearchSchema = monthSearchSchema.extend({
+  ...expenseFilterFields,
+  source: z.enum(['all', ...EXPENSE_SOURCES]).default('all').catch('all'),
+  limit,
+})
+export type AllExpensesSearch = z.infer<typeof allExpensesSearchSchema>
+
 // --- Connecting an MCP client (/connect) -----------------------------------
 // The OAuth parameters the page reads; it passes the whole query on as is.
 

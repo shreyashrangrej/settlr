@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   PiggyBank,
+  ReceiptText,
   Sparkles,
   User,
   Users,
@@ -40,6 +41,15 @@ export const APP_SECTIONS: ReadonlyArray<{
     exact: false,
     mobile: false,
     place: 'top',
+  },
+  {
+    to: '/expenses',
+    label: 'All expenses',
+    short: 'Expenses',
+    icon: ReceiptText,
+    exact: false,
+    mobile: false,
+    place: 'money',
   },
   { to: '/groups', label: 'Groups', short: 'Groups', icon: Users, exact: false, mobile: true, place: 'money' },
   { to: '/friends', label: 'Friends', short: 'Friends', icon: User, exact: false, mobile: true, place: 'money' },

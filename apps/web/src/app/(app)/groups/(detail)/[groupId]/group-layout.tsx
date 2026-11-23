@@ -2,12 +2,25 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowRight, ChartColumn, HandCoins, Pencil, Plus, Receipt } from 'lucide-react'
+import {
+  ArrowRight,
+  ChartColumn,
+  HandCoins,
+  Pencil,
+  Plus,
+  Receipt,
+  Scale,
+  Users,
+  Wallet,
+} from 'lucide-react'
 
+import { groupColor, labelTint } from '#/components/category'
+import { ExpensePage, PageIcon } from '#/components/expense-page'
 import { RecentPayments, RecordPaymentDialog } from '#/components/group-payments'
 import { PersonAvatar, SignedAmount } from '#/components/ledger'
 import { NavLink } from '#/components/nav-link'
-import { PageHeader, SplitLayout } from '#/components/page-header'
+import { PageHeader } from '#/components/page-header'
+import { StatCard, StatGrid } from '#/components/stat-card'
 import { useGroup } from '#/components/use-group'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -25,7 +38,7 @@ import {
   EmptyTitle,
 } from '#/components/ui/empty'
 import { Separator } from '#/components/ui/separator'
-import { formatMoney, memberName } from '@settlr/shared/format'
+import { formatMoney, memberName, plural } from '@settlr/shared/format'
 import type { Group } from '#/lib/types'
 import { cn } from '#/lib/utils'
 
@@ -59,10 +72,17 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
     <>
       <PageHeader
         back={{ fallback: '/groups', label: 'Back' }}
+        media={
+          <PageIcon style={labelTint(groupColor(group.id))}>
+            <Users />
+          </PageIcon>
+        }
         title={
           <span className="flex items-center gap-3">
             {group.name}
-            <Badge variant="secondary">{group.currency}</Badge>
+            <Badge variant="secondary" className="font-normal">
+              {group.currency}
+            </Badge>
             {!group.isOwner && <Badge variant="outline">Shared with you</Badge>}
           </span>
         }
@@ -72,15 +92,24 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
             {group.isOwner && (
               <Link
                 href={`/groups/${group.id}/edit`}
-                className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline')}
+                className={cn(buttonVariants({ variant: 'outline' }), 'no-underline')}
               >
                 <Pencil />
                 Edit group
               </Link>
             )}
+            <RecordPaymentDialog
+              group={group}
+              trigger={
+                <Button variant="outline">
+                  <HandCoins />
+                  Settle up
+                </Button>
+              }
+            />
             <Link
               href={`/groups/${group.id}/expenses/new`}
-              className={cn(buttonVariants({ size: 'lg' }), 'no-underline')}
+              className={cn(buttonVariants(), 'no-underline')}
             >
               <Plus />
               Add expense
@@ -92,7 +121,7 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
       {isForm ? (
         children
       ) : (
-        <SplitLayout aside={<Balances group={group} />}>
+        <ExpensePage stats={<GroupStats group={group} />} aside={<Balances group={group} />}>
           <nav aria-label="Group sections" className="flex gap-0.5 overflow-x-auto border-b [scrollbar-width:none]">
             <NavLink href={`/groups/${group.id}`} exact className={tabLink}>
               <Receipt />
@@ -104,9 +133,50 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
             </NavLink>
           </nav>
           {children}
-        </SplitLayout>
+        </ExpensePage>
       )}
     </>
+  )
+}
+
+/** The group's figures: spending, where you stand, how many expenses and people. */
+function GroupStats({ group }: { group: Group }) {
+  const me = group.members.find((m) => m.id === group.meMemberId)
+  const net = me?.netCents ?? 0
+  return (
+    <StatGrid>
+      <StatCard
+        label="Total spent"
+        icon={<Wallet />}
+        value={formatMoney(group.totalCents, group.currency)}
+      />
+      <StatCard
+        label="Your balance"
+        icon={<Scale />}
+        tone={net > 0 ? 'positive' : net < 0 ? 'negative' : undefined}
+        value={net === 0 ? 'Square' : `${net > 0 ? '+' : '−'}${formatMoney(Math.abs(net), group.currency)}`}
+        hint={net > 0 ? 'You’re owed' : net < 0 ? 'You owe' : 'Nobody owes you'}
+      />
+      <StatCard
+        label="Expenses"
+        icon={<Receipt />}
+        value={group.expenseCount || ''}
+        hint={
+          group.expenseCount > 0 &&
+          `Avg ${formatMoney(Math.round(group.totalCents / group.expenseCount), group.currency)}`
+        }
+      />
+      <StatCard
+        label="Members"
+        icon={<Users />}
+        value={group.members.length}
+        hint={
+          group.totalCents > 0
+            ? `${formatMoney(Math.round(group.totalCents / group.members.length), group.currency)} each`
+            : plural(group.members.length, 'person', 'people')
+        }
+      />
+    </StatGrid>
   )
 }
 

@@ -213,6 +213,7 @@ function isSplitCell(
 export function ExpenseRow({
   icon,
   title,
+  href,
   receipt,
   subtitle,
   date,
@@ -222,6 +223,8 @@ export function ExpenseRow({
 }: {
   icon: React.ReactNode
   title: string
+  /** Makes the title a link, e.g. to where the expense lives. */
+  href?: string
   /** A `ReceiptLink`, beside the title. */
   receipt?: React.ReactNode
   subtitle: React.ReactNode
@@ -247,9 +250,19 @@ export function ExpenseRow({
           {icon}
           <span className="grid min-w-0">
             <span className="flex items-center gap-1">
-              <span className="truncate" title={title}>
-                {title}
-              </span>
+              {href ? (
+                <Link
+                  href={href}
+                  title={title}
+                  className="truncate text-foreground no-underline hover:text-primary"
+                >
+                  {title}
+                </Link>
+              ) : (
+                <span className="truncate" title={title}>
+                  {title}
+                </span>
+              )}
               {receipt}
             </span>
             <span className="truncate text-xs font-normal text-faint">
@@ -291,6 +304,14 @@ export function ExpenseRow({
       )}
     </TableRow>
   )
+}
+
+/**
+ * The amount cell's second line on shared expenses: what it cost you. Rows
+ * leave it out when the share is the whole amount.
+ */
+export function YourShare({ cents }: { cents: React.ReactNode }) {
+  return <span className="text-xs font-normal text-faint">Your share {cents}</span>
 }
 
 /**

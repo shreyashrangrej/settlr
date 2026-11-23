@@ -42,7 +42,8 @@ const sortOptions = [
 type SortValue = (typeof sortOptions)[number]['value']
 
 // The selects share a phone-wide row and take their own width from `sm`.
-const select = 'min-w-0 flex-1 sm:w-auto sm:flex-none'
+export const toolbarSelect = 'min-w-0 flex-1 sm:w-auto sm:flex-none'
+const select = toolbarSelect
 
 /** The filters, with `P` the `paidBy` values the list knows. */
 type Filter<P extends string> = Omit<ExpenseFilter, 'paidBy'> & { paidBy: P | '' }
@@ -51,12 +52,15 @@ export function ExpenseFilters<P extends string>({
   value,
   onChange,
   payers,
+  extra,
   placeholder = 'Search expenses',
 }: {
   value: Filter<P>
   onChange: (patch: Partial<Filter<P>>) => void
   /** Who can have paid, as `paidBy` values; leave out where it's always you. */
   payers?: Array<Option<P>>
+  /** More filters (a `SelectField` with `size="sm"` and `toolbarSelect`), after the category. */
+  extra?: React.ReactNode
   placeholder?: string
 }) {
   return (
@@ -92,6 +96,7 @@ export function ExpenseFilters<P extends string>({
         onChange={(category) => onChange({ category })}
         options={categoryOptions}
       />
+      {extra}
       {payers && (
         <SelectField<P | typeof ANYONE>
           aria-label="Paid by"

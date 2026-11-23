@@ -1,5 +1,5 @@
-import { PersonalSkeleton } from '#/components/skeletons'
+import { ExpensePageSkeleton } from '#/components/skeletons'
 
 export default function Loading() {
-  return <PersonalSkeleton />
+  return <ExpensePageSkeleton />
 }

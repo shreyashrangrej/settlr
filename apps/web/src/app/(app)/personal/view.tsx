@@ -4,7 +4,7 @@ import { useEffect, useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { PiggyBank, Receipt, Tag, TrendingUp, Wallet } from 'lucide-react'
+import { PiggyBank, Plus, Receipt, Tag, TrendingUp, Wallet } from 'lucide-react'
 
 import { CategoryIcon } from '#/components/category'
 import { ExpenseFilters, useListSearch } from '#/components/expense-filters'
@@ -20,9 +20,11 @@ import {
   CurrencySelect,
   DatePicker,
 } from '#/components/form-fields'
+import { ExpensePage, PageIcon } from '#/components/expense-page'
+import { FormDialog } from '#/components/form-dialog'
 import { useAction } from '#/components/ledger'
 import { MonthNav } from '#/components/month-nav'
-import { PageHeader, SplitLayout } from '#/components/page-header'
+import { PageHeader } from '#/components/page-header'
 import {
   ReceiptField,
   ReceiptLink,
@@ -84,32 +86,40 @@ export function PersonalView({
   return (
     <>
       <PageHeader
+        media={
+          <PageIcon>
+            <Wallet />
+          </PageIcon>
+        }
         title="Personal expenses"
         description="Spending that’s just yours, not split with anyone."
         actions={
           <>
+            <MonthNav to="/personal" month={month} thisMonth={thisMonth} />
             <Link
               href={month === thisMonth ? '/budget' : `/budget?month=${month}`}
-              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline')}
+              className={cn(buttonVariants({ variant: 'outline' }), 'no-underline')}
             >
               <PiggyBank />
               Monthly budget
             </Link>
-            <MonthNav to="/personal" month={month} thisMonth={thisMonth} />
+            <FormDialog
+              trigger={<Button />}
+              label={
+                <>
+                  <Plus />
+                  Add expense
+                </>
+              }
+              title="Add a personal expense"
+            >
+              {(close) => <ExpenseForm month={month} onSaved={close} />}
+            </FormDialog>
           </>
         }
       />
 
-      <SplitLayout
-        aside={
-          <>
-            <AddExpense month={month} />
-            <ByCategory data={data} />
-          </>
-        }
-      >
-        <MonthStats data={data} />
-
+      <ExpensePage stats={<MonthStats data={data} />} aside={<ByCategory data={data} />}>
         <ExpenseSection
           filters={
             data.items.length > 0 && <ExpenseFilters value={search} onChange={update} />
@@ -137,7 +147,7 @@ export function PersonalView({
             ))}
           </ExpenseTable>
         </ExpenseSection>
-      </SplitLayout>
+      </ExpensePage>
     </>
   )
 }
@@ -253,22 +263,6 @@ function PersonalExpenseRow({ expense }: { expense: PersonalExpense }) {
   )
 }
 
-function AddExpense({ month }: { month: string }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wallet className="size-4 text-primary" aria-hidden="true" />
-          Add an expense
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ExpenseForm month={month} />
-      </CardContent>
-    </Card>
-  )
-}
-
 /**
  * Adds a personal expense, or with `expense`, edits it. `month` is the month
  * on screen, so a new expense saved to another month can say where it went.
@@ -330,12 +324,17 @@ function ExpenseForm({
       onSaved?.()
       return
     }
+    // Done, unless it went to another month than the one on screen: then
+    // say where, so it doesn't look lost.
+    const expenseMonth = parsed.data.date.slice(0, 7)
+    if (expenseMonth === month) {
+      onSaved?.()
+      return
+    }
     setDescription('')
     setAmount('')
     setReceipt(null)
-    // Say where it went if it's not in the month on screen.
-    const expenseMonth = parsed.data.date.slice(0, 7)
-    setSavedTo(expenseMonth === month ? null : formatMonth(expenseMonth))
+    setSavedTo(formatMonth(expenseMonth))
   }
 
   return (
@@ -381,7 +380,7 @@ function ExpenseForm({
             Saved to {savedTo}.
           </p>
         )}
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button type="submit" disabled={pending}>
           {pending && <Spinner />}
           {expense ? 'Save changes' : 'Add expense'}
         </Button>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { Prefetched } from '#/components/prefetched'
 import { currentMonth, todayIsoDate } from '@settlr/shared/format'
+import { RECENT_ARGS } from '#/lib/dashboard'
 import { prefetchQuery } from '#/server/convex.server'
 import { api } from '@settlr/backend/convex/_generated/api'
 import { DashboardView } from './view'
@@ -16,7 +17,7 @@ export default async function DashboardPage() {
   const queries = await Promise.all([
     prefetchQuery(api.friends.list, {}),
     prefetchQuery(api.groups.list, {}),
-    prefetchQuery(api.personal.month, { month }),
+    prefetchQuery(api.expenses.month, { month, ...RECENT_ARGS }),
     prefetchQuery(api.budgets.list, {}),
     prefetchQuery(api.budgets.monthSpending, { month }),
   ])

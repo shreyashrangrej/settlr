@@ -61,7 +61,7 @@ export function FriendsView() {
 | Route | Rendering | Why |
 | --- | --- | --- |
 | `/` (landing hero) | server | Marketing page and sign-in form. Signed-in visitors are redirected to `/dashboard` |
-| `/dashboard`, `/friends`, `/personal`, `/budget` | server | Queries are prefetched with the visitor's token, so the first HTML is complete |
+| `/dashboard`, `/friends`, `/personal`, `/budget`, `/expenses` | server | Queries are prefetched with the visitor's token, so the first HTML is complete |
 | `/groups/[groupId]` (and its expense pages), `/friends/[friendId]` | server | Shareable, filterable URLs render fully on the server |
 | `/receipts/[source]/[expenseId]` | server | The receipt's URL and its expense are prefetched; images show inline, PDFs in the browser's viewer |
 | `/groups/[groupId]/insights`, `/notifications` | data on the server, UI in the browser | The UI uses the viewer's locale, time zone and clock, so it renders in `<ClientOnly>` |
@@ -148,6 +148,13 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
   Cards are `rounded-xl border bg-card` with `p-3.5`, 16px apart, and
   card titles `text-sm font-semibold`. Don't override control heights
   (`h-7.5` from `sm`, `h-8.5` below).
+- Every expense page (a group, a friend, personal, `/expenses`) has the
+  same frame: `PageHeader` with a `PageIcon` (or avatar), secondary
+  buttons and a primary **Add expense**; then `ExpensePage`
+  (`components/expense-page.tsx`): the stats strip, the list (filter
+  toolbar and `ExpenseTable`) and the side cards. Forms that used to sit in
+  a side card open from header buttons in a `FormDialog`. Amounts on shared
+  expenses show **your share** under them (`YourShare`).
 - Confirm destructive actions with `ConfirmAction`, and report success with
   `useAction(fn, { success: '...' })`, which shows a toast.
 

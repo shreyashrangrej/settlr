@@ -12,6 +12,7 @@ import type * as assistant from "../assistant.js";
 import type * as auth from "../auth.js";
 import type * as budgets from "../budgets.js";
 import type * as email from "../email.js";
+import type * as expenses from "../expenses.js";
 import type * as friends from "../friends.js";
 import type * as groups from "../groups.js";
 import type * as http from "../http.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   budgets: typeof budgets;
   email: typeof email;
+  expenses: typeof expenses;
   friends: typeof friends;
   groups: typeof groups;
   http: typeof http;

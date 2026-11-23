@@ -1,9 +1,8 @@
 'use client'
 
-import { ChartColumn, Clock, Receipt, Users, Wallet } from 'lucide-react'
+import { ChartColumn } from 'lucide-react'
 
 import { PersonAvatar } from '#/components/ledger'
-import { StatCard, StatGrid } from '#/components/stat-card'
 import { useGroup } from '#/components/use-group'
 import {
   Card,
@@ -65,27 +64,6 @@ export function InsightsView() {
 
   return (
     <div className="grid gap-4">
-      <StatGrid>
-        <StatCard label="Total spent" icon={<Wallet />} value={format(group.totalCents)} />
-        <StatCard
-          label="Expenses"
-          icon={<Receipt />}
-          value={group.expenseCount}
-          hint={`Avg ${format(Math.round(group.totalCents / group.expenseCount))}`}
-        />
-        <StatCard
-          label="Per member"
-          icon={<Users />}
-          value={format(Math.round(group.totalCents / group.members.length))}
-          hint={`${group.members.length} members`}
-        />
-        <StatCard
-          label="Last expense"
-          icon={<Clock />}
-          value={group.lastExpenseAt ? relativeTime(group.lastExpenseAt, locale) : ''}
-        />
-      </StatGrid>
-
       <div className="grid grid-cols-[repeat(auto-fill,minmax(22rem,1fr))] items-start gap-4">
 
       <BarCard
@@ -188,20 +166,4 @@ function BarCard({
       </CardContent>
     </Card>
   )
-}
-
-function relativeTime(epochMs: number, locale: string) {
-  const seconds = (epochMs - Date.now()) / 1000
-  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
-    ['year', 31_536_000],
-    ['month', 2_592_000],
-    ['day', 86_400],
-    ['hour', 3_600],
-    ['minute', 60],
-  ]
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
-  for (const [unit, size] of units) {
-    if (Math.abs(seconds) >= size) return rtf.format(Math.round(seconds / size), unit)
-  }
-  return rtf.format(Math.round(seconds), 'second')
 }
