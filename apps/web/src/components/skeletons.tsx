@@ -245,7 +245,7 @@ export function BudgetSkeleton() {
 export function AssistantSkeleton() {
   return (
     <Status>
-      <div className="flex min-h-[calc(100svh-11.125rem)] flex-col lg:min-h-[calc(100svh-9.125rem)]">
+      <div className="flex min-h-[calc(100svh-10.625rem)] flex-col lg:min-h-[calc(100svh-8rem)]">
         <div className="flex min-h-10 items-center gap-2.5">
           <Skeleton className="size-8 rounded-lg" />
           <Skeleton className="h-5 w-24" />

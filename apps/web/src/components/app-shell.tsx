@@ -49,10 +49,12 @@ const sideHeading =
   'flex h-6 items-center px-2 text-2xs font-semibold tracking-[0.06em] text-faint uppercase'
 
 /**
- * The frame around every page. Signed in, it's Gr8r Studio's shell: the
- * sidebar beside a column of top bar (breadcrumb, bell, New, account) and
- * page. Below `lg` the sidebar becomes a drawer the top bar's menu button
- * opens, and a tab bar runs along the bottom. Signed out, or while a new
+ * The frame around every page. Signed in, it's Gr8r Studio's shell, inset:
+ * from `lg` the sidebar's colour runs round the whole window as a rim, and
+ * the top bar (breadcrumb, bell, New, account) and page sit in a rounded
+ * panel inside it that scrolls on its own, so its corners stay put. Below
+ * `lg` the sidebar becomes a drawer the top bar's menu button opens, the
+ * panel fills the screen, and a tab bar runs along the bottom. Signed out, or while a new
  * account still has to give its name, it's just the site header.
  * `sidebarCollapsed` is the viewer's choice, read from a cookie on the
  * server so the first render already has the right width.
@@ -83,11 +85,11 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-svh items-stretch">
+    <div className="flex min-h-svh items-stretch bg-background lg:h-svh lg:bg-sidebar">
       <aside
         data-collapsed={collapsed || undefined}
         className={cn(
-          'sticky top-0 hidden h-svh shrink-0 border-r bg-sidebar select-none lg:block',
+          'sticky top-0 hidden h-svh shrink-0 bg-sidebar select-none lg:block',
           collapsed ? 'w-13' : 'w-63',
         )}
       >
@@ -104,11 +106,14 @@ export function AppShell({
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* The inset panel: 8px of rim above, right and below it (the
+          sidebar is the rim on the left), rounded, and the page's scroller
+          from `lg`. */}
+      <div className="flex min-w-0 flex-1 flex-col bg-background lg:my-2 lg:mr-2 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-xs">
         <TopBar onOpenNav={() => setDrawerOpen(true)} />
         {/* Gr8r's page: centred, at most 1160px, on the shared 24px gutter
             (16px on phones). */}
-        <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-5 pb-28 sm:px-6 lg:pt-7 lg:pb-18">
+        <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-4 lg:pb-12">
           {children}
         </main>
       </div>
@@ -334,7 +339,7 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?
  */
 function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
   return (
-    <header className="sticky top-0 z-40 flex h-11.5 shrink-0 items-center gap-1.5 border-b bg-background pr-3 pl-2 sm:pl-4 lg:pl-6">
+    <header className="sticky top-0 z-40 flex h-11.5 shrink-0 items-center gap-1.5 bg-background pr-3 pl-2 sm:pl-4 lg:pl-6">
       <Button
         variant="ghost"
         size="icon"
