@@ -88,7 +88,9 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-svh items-stretch bg-background lg:h-svh lg:bg-sidebar">
+    // From `lg` the frame (sidebar, top bar and rim) is painted with
+    // `frame-art`: soft accent glows over the sidebar colour (styles.css).
+    <div className="flex min-h-svh items-stretch bg-background lg:h-svh lg:frame-art lg:bg-sidebar">
       <aside
         data-collapsed={collapsed || undefined}
         // The width snaps rather than slides: sliding it would reflow the
@@ -96,7 +98,7 @@ export function AppShell({
         // its column count half-way). The rows keep their icons where they
         // are (left-aligned, not centred), so only the labels go.
         className={cn(
-          'sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-sidebar select-none lg:block',
+          'sticky top-0 hidden h-svh shrink-0 overflow-hidden select-none lg:block',
           collapsed ? 'w-13' : 'w-63',
         )}
       >
@@ -122,7 +124,7 @@ export function AppShell({
         {/* The scrollbar's gutter is always reserved, so moving between a
             page that scrolls and one that doesn't (or a skeleton and its
             page) doesn't shift everything sideways by its width. */}
-        <div className="flex min-w-0 flex-1 flex-col bg-background lg:mr-2 lg:mb-2 lg:min-h-0 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-xs lg:[scrollbar-gutter:stable]">
+        <div className="flex min-w-0 flex-1 flex-col bg-background lg:mr-2 lg:mb-2 lg:min-h-0 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-t-[color-mix(in_srgb,var(--accent)_28%,var(--border))] lg:shadow-[0_1px_2px_rgb(0_0_0/6%),0_18px_48px_-24px_color-mix(in_srgb,var(--accent)_45%,transparent)] lg:[scrollbar-gutter:stable]">
           {/* Gr8r's page: centred, at most 1160px, on the shared 24px
               gutter (16px on phones). */}
           <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-5 lg:pb-12">
@@ -359,7 +361,7 @@ function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
   return (
     // On phones it sticks to the top of the window over the page, with a
     // hairline under it; from `lg` it's part of the frame, above the panel.
-    <header className="sticky top-0 z-40 flex h-11.5 shrink-0 items-center gap-1.5 border-b bg-background pr-3 pl-2 sm:pl-4 lg:static lg:border-b-0 lg:bg-sidebar lg:pr-2.5 lg:pl-6">
+    <header className="sticky top-0 z-40 flex h-11.5 shrink-0 items-center gap-1.5 border-b bg-background pr-3 pl-2 sm:pl-4 lg:static lg:border-b-0 lg:bg-transparent lg:pr-2.5 lg:pl-6">
       <Button
         variant="ghost"
         size="icon"

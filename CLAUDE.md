@@ -167,7 +167,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   an icon rail with Ctrl/⌘+B and remembered in the `settlr_sidebar` cookie
   that the root layout reads, so it renders at the right width; from `lg`
   the sidebar and the top bar form one frame in the sidebar colour (which
-  also rims the right and bottom of the window), and the page sits in a
+  also rims the right and bottom of the window), painted with `frame-art`
+  (slow accent-coloured aurora glows and a dot grid under the top bar, so
+  it follows the chosen accent), and the page sits in a
   rounded inset panel below the bar that is the page's scroller (so
   `sticky` offsets like `top-4` and `scrollIntoView` work against it, not
   the window; on phones the window scrolls and the top bar sticks, so
@@ -199,7 +201,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   Gr8r's type scale (it overrides Tailwind's: `text-sm` is 13.5px, `text-ui`
   12.5px, `text-base` 14.5px, `text-2xl` 23px), its radii, the floating
   surfaces (`popover-panel`, `modal-panel`, `modal-scrim`), the
-  `skeleton-shimmer`, `kbd` and `stagger` utilities, Gr8r's motion
+  `skeleton-shimmer`, `kbd`, `stagger` and `frame-art` utilities, Gr8r's motion
   (`animate-rise-in`, `animate-fade-in`, `animate-grow-x`, `animate-pop`,
   `ease-out-quint`, `ease-spring`; reduced motion, from the system or
   `data-motion="reduce"`, cuts them all to 1ms), and the landing hero's CSS. Use
