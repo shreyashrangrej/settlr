@@ -146,7 +146,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 - `src/components/`: app components. `page-header.tsx` (`PageHeader`,
   `SplitLayout`), `ledger.tsx` (`useAction` for mutations with toasts,
   `SignedAmount`, `BalanceText`, `PersonAvatar`), `form-fields.tsx`
-  (`SelectField`, `CurrencySelect`, `CategorySelect`, `AmountInput`,
+  (`SelectField`, `CurrencySelect`, `AmountInput`,
   `DatePicker`), `receipts.tsx` (`ReceiptField` upload control,
   `ReceiptLink`), `edit-dialog.tsx` (edit a payment row in a dialog),
   `expense-list.tsx` (`ExpenseSection`, `ExpenseTable`, `ExpenseRow`,
