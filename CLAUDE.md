@@ -179,17 +179,24 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `providers.tsx` (Convex + TanStack Query clients, `useSession()`),
   `prefetched.tsx` (`<Prefetched>`), `client-only.tsx` (`<ClientOnly>`),
   `nav-link.tsx` (`<NavLink>`, sets `data-status="active"`),
-  `navigation-progress.tsx` (top bar, `useAppRouter()`).
+  `navigation-progress.tsx` (top bar, `useAppRouter()`),
+  `route-transition.tsx` (the page rises in on every pathname change).
 - `src/styles.css`: design tokens from `design/DESIGN.md`, which is Gr8r
   Studio's design system (`--bg`, `--surface`, `--accent`, `--owed`,
   `--owe`, the label hues `--green` ... `--gray`, ...), mapped to shadcn
   color names in `@theme inline` plus the design's own (`tile`, `raised`,
   `sunken`, `field`, `divider`, `faint`, `dim`, `highlight`,
-  `primary-soft`, `contrast`, `segment`, `track`, `positive`, `warning`),
+  `primary-soft`, `contrast`, `segment`, `track`, `positive`, `warning`;
+  `--accent` comes from `--acc-l`/`--acc-d`, swapped by `data-accent` on
+  `<html>`: Gr8r's accents, picked in Settings → Appearance with the theme
+  and motion, all in `src/lib/theme.ts`),
   Gr8r's type scale (it overrides Tailwind's: `text-sm` is 13.5px, `text-ui`
   12.5px, `text-base` 14.5px, `text-2xl` 23px), its radii, the floating
   surfaces (`popover-panel`, `modal-panel`, `modal-scrim`), the
-  `skeleton-shimmer` and `kbd` utilities, and the landing hero's CSS. Use
+  `skeleton-shimmer`, `kbd` and `stagger` utilities, Gr8r's motion
+  (`animate-rise-in`, `animate-fade-in`, `animate-grow-x`, `animate-pop`,
+  `ease-out-quint`, `ease-spring`; reduced motion, from the system or
+  `data-motion="reduce"`, cuts them all to 1ms), and the landing hero's CSS. Use
   the tokens, not hex values; category, group and avatar colours are the
   label hues, drawn with `labelTint`/`avatarTint` from `category.tsx`.
 - Auth on the web side: `src/lib/auth-client.ts` (browser client and the

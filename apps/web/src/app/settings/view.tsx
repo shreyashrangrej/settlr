@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
-import { Copy } from 'lucide-react'
+import { Check, Copy, Monitor, Moon, Sun } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { ConfirmAction } from '#/components/confirm-action'
@@ -20,9 +20,29 @@ import {
   CardHeader,
   CardTitle,
 } from '#/components/ui/card'
-import { Field, FieldDescription, FieldLabel } from '#/components/ui/field'
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from '#/components/ui/field'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '#/components/ui/input-group'
+import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { readPreferences, writePreferences } from '#/lib/preferences'
+import {
+  ACCENTS,
+  applyAccent,
+  applyMotion,
+  applyTheme,
+  readAccent,
+  readMotion,
+  readThemeChoice,
+  type Accent,
+  type Motion,
+  type ThemeChoice,
+} from '#/lib/theme'
+import { cn } from '#/lib/utils'
 import type { Currency } from '@settlr/shared/schemas'
 import { api } from '@settlr/backend/convex/_generated/api'
 
@@ -42,7 +62,8 @@ export function SettingsView() {
         title="Settings"
         description="Stored in this browser only."
       />
-      <Card>
+      <AppearanceCard />
+      <Card className="mt-[18px]">
         <form
           onSubmit={(event) => {
             event.preventDefault()
@@ -77,6 +98,111 @@ export function SettingsView() {
       </Card>
       <AiAssistantsCard />
     </div>
+  )
+}
+
+const THEMES = [
+  { value: 'system', label: 'System', icon: Monitor },
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+] as const
+
+/**
+ * Gr8r's appearance settings: theme, accent colour and motion. Each applies
+ * as soon as it's picked (no Save), and is remembered in this browser.
+ */
+function AppearanceCard() {
+  const [theme, setTheme] = useState<ThemeChoice>(readThemeChoice)
+  const [accent, setAccent] = useState<Accent>(readAccent)
+  const [motion, setMotion] = useState<Motion>(readMotion)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Appearance</CardTitle>
+        <CardDescription>Applies right away, in this browser.</CardDescription>
+      </CardHeader>
+      <CardContent className="mt-4 grid gap-5">
+        <Field orientation="horizontal" className="flex-wrap justify-between gap-y-2">
+          <FieldContent className="min-w-56">
+            <FieldTitle>Theme</FieldTitle>
+            <FieldDescription>System follows your device’s light or dark setting.</FieldDescription>
+          </FieldContent>
+          <Tabs
+            value={theme}
+            onValueChange={(value: ThemeChoice) => {
+              setTheme(value)
+              applyTheme(value)
+            }}
+          >
+            <TabsList aria-label="Theme">
+              {THEMES.map(({ value, label, icon: Icon }) => (
+                <TabsTrigger key={value} value={value}>
+                  <Icon />
+                  {label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </Field>
+
+        <Field orientation="horizontal" className="flex-wrap justify-between gap-y-2">
+          <FieldContent className="min-w-56">
+            <FieldTitle id="accent-label">Accent colour</FieldTitle>
+            <FieldDescription>Used for primary buttons, links, focus rings and selection.</FieldDescription>
+          </FieldContent>
+          <div role="radiogroup" aria-labelledby="accent-label" className="flex flex-wrap gap-2 p-1">
+            {ACCENTS.map((option) => {
+              const selected = option.value === accent
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={option.label}
+                  title={option.label}
+                  onClick={() => {
+                    setAccent(option.value)
+                    applyAccent(option.value)
+                  }}
+                  // Gr8r's swatch: a 26px dot in the accent (its dark value
+                  // in dark mode), ringed when picked, growing on hover.
+                  className={cn(
+                    'grid size-6.5 cursor-pointer place-items-center rounded-full bg-(--swatch) text-on-fill shadow-[0_0_0_1px_rgb(0_0_0/8%)] outline-none transition-[scale,box-shadow] duration-200 ease-out-quint hover:scale-108 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-95 dark:bg-(--swatch-dark)',
+                    selected && 'shadow-[0_0_0_2px_var(--surface),0_0_0_4px_var(--swatch)] dark:shadow-[0_0_0_2px_var(--surface),0_0_0_4px_var(--swatch-dark)]',
+                  )}
+                  style={
+                    { '--swatch': option.light, '--swatch-dark': option.dark } as React.CSSProperties
+                  }
+                >
+                  {selected && <Check className="size-3.5 animate-pop" strokeWidth={2.5} />}
+                </button>
+              )
+            })}
+          </div>
+        </Field>
+
+        <Field orientation="horizontal" className="flex-wrap justify-between gap-y-2">
+          <FieldContent className="min-w-56">
+            <FieldTitle>Motion</FieldTitle>
+            <FieldDescription>Reduce turns off page, list and dialog animations.</FieldDescription>
+          </FieldContent>
+          <Tabs
+            value={motion}
+            onValueChange={(value: Motion) => {
+              setMotion(value)
+              applyMotion(value)
+            }}
+          >
+            <TabsList aria-label="Motion">
+              <TabsTrigger value="system">Follow system</TabsTrigger>
+              <TabsTrigger value="reduce">Reduce</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </Field>
+      </CardContent>
+    </Card>
   )
 }
 

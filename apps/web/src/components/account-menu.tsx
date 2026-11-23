@@ -62,7 +62,7 @@ export function AccountMenu({
               type="button"
               aria-label="Account menu"
               title={label}
-              className="grid h-9 w-full place-items-center rounded-lg outline-none transition-colors duration-140 hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-raised"
+              className="flex h-9 w-full items-center rounded-lg pl-1.25 outline-none transition-colors duration-140 hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-raised"
             />
           }
         >

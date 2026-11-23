@@ -128,7 +128,23 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
 - The theme is the `.dark` class on `<html>`, set before paint: the
   viewer's saved choice, or else the system setting (followed live).
   Theme-dependent markup must render the same on the server, for example
-  both icons with one hidden by `dark:hidden`.
+  both icons with one hidden by `dark:hidden`. The same script
+  (`themeInitScript` in `src/lib/theme.ts`) sets `data-accent` (Gr8r's
+  accents: blue, violet, teal, rose, graphite; none means indigo), which
+  swaps `--acc-l`/`--acc-d` and so `--accent` (`primary`), and
+  `data-motion="reduce"`. Settings → Appearance changes them; theme and
+  accent changes cross-fade through a view transition.
+- Motion follows Gr8r's `motion.css`, as Tailwind utilities from
+  `styles.css`: `animate-rise-in`, `animate-fade-in`, `animate-grow-x` (a
+  bar growing from `origin-left`) and `animate-pop` (springs in) run when
+  an element mounts, and `stagger` on a list makes its items rise in one
+  after another (table bodies have it). `RouteTransition` in the app shell
+  plays the page's rise-in on every pathname change, since Next.js keeps a
+  page mounted when only its params change. Use `ease-out-quint` (Gr8r's
+  `--ease`) or `ease-spring`, and keep it short (140ms for colours, about
+  200 to 360ms for movement). Reduced motion (the system setting or
+  `data-motion`) cuts every animation and transition to 1ms in
+  `styles.css`; JavaScript animations check `prefersReducedMotion()`.
 - The look is [Gr8r Studio](https://github.com/gr8rstudio/gr8r-studio)'s
   design system, written up in `design/DESIGN.md`: warm paper neutrals in
   light and warm charcoal in dark, an indigo `primary`, Geist and Geist

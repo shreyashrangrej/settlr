@@ -795,7 +795,7 @@ function BudgetSummary({
             >
               <span
                 className={cn(
-                  'rounded-full',
+                  'origin-left animate-grow-x rounded-full',
                   status.tone === 'over'
                     ? 'bg-destructive'
                     : status.tone === 'warn'

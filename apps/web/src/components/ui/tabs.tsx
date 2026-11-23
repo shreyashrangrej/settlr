@@ -23,7 +23,7 @@ function Tabs({
 }
 
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-fit items-center justify-center gap-0.5 rounded-lg p-0.5 text-muted-foreground group-data-horizontal/tabs:h-8 sm:group-data-horizontal/tabs:h-6.5 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
+  "group/tabs-list relative isolate inline-flex w-fit items-center justify-center gap-0.5 rounded-lg p-0.5 text-muted-foreground group-data-horizontal/tabs:h-8 sm:group-data-horizontal/tabs:h-6.5 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
   {
     variants: {
       variant: {
@@ -40,6 +40,7 @@ const tabsListVariants = cva(
 function TabsList({
   className,
   variant = "default",
+  children,
   ...props
 }: TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>) {
   return (
@@ -48,7 +49,24 @@ function TabsList({
       data-variant={variant}
       className={cn(tabsListVariants({ variant }), className)}
       {...props}
-    />
+    >
+      {children}
+      {/* The active tab's fill (or underline) is one element that slides
+          to the tab you pick, rather than each tab drawing its own. Base UI
+          measures the active tab into the --active-tab-* variables; it
+          renders before hydration so a server-rendered page doesn't show
+          the tabs without it. */}
+      <TabsPrimitive.Indicator
+        data-slot="tabs-indicator"
+        renderBeforeHydration
+        className={cn(
+          "absolute top-0 left-0 -z-1 translate-x-(--active-tab-left) translate-y-(--active-tab-top) transition-[translate,width,height] duration-250 ease-out-quint",
+          variant === "line"
+            ? "top-auto bottom-[-1px] h-0.5 w-[calc(var(--active-tab-width)-1rem)] translate-x-[calc(var(--active-tab-left)+0.5rem)] translate-y-0 rounded-full bg-foreground group-data-vertical/tabs:hidden"
+            : "h-(--active-tab-height) w-(--active-tab-width) rounded-md bg-segment shadow-[0_1px_2px_rgb(0_0_0/8%),0_0_0_1px_var(--border)]"
+        )}
+      />
+    </TabsPrimitive.List>
   )
 }
 
@@ -57,10 +75,8 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "relative inline-flex h-full flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-transparent px-2.5 py-0 text-sm font-medium whitespace-nowrap text-muted-foreground transition-[color,background-color,box-shadow] duration-140 hover:text-foreground sm:px-[9px] sm:text-xs group-data-[variant=line]/tabs-list:rounded-none group-data-[variant=line]/tabs-list:px-2.5 group-data-[variant=line]/tabs-list:sm:text-ui group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-1 has-data-[icon=inline-start]:pl-1 aria-disabled:pointer-events-none aria-disabled:opacity-50 group-data-[variant=default]/tabs-list:data-active:shadow-[0_1px_2px_rgb(0_0_0/8%),0_0_0_1px_var(--border)] group-data-[variant=line]/tabs-list:data-active:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
-        "data-active:bg-segment data-active:text-foreground data-active:hover:bg-segment",
-        "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-2 group-data-horizontal/tabs:after:-bottom-px group-data-horizontal/tabs:after:h-0.5 group-data-horizontal/tabs:after:rounded-full group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
+        "relative inline-flex h-full flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-transparent px-2.5 py-0 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors duration-140 hover:text-foreground sm:px-[9px] sm:text-xs group-data-[variant=line]/tabs-list:rounded-none group-data-[variant=line]/tabs-list:px-2.5 group-data-[variant=line]/tabs-list:sm:text-ui group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-1 has-data-[icon=inline-start]:pl-1 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "data-active:text-foreground",
         className
       )}
       {...props}

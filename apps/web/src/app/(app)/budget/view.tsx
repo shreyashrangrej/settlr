@@ -148,7 +148,7 @@ export function BudgetView({
                             <span className="flex items-center gap-2.5">
                               <span className="h-1 flex-1 overflow-hidden rounded-full bg-track">
                                 <span
-                                  className="block h-full rounded-full bg-primary"
+                                  className="block h-full origin-left animate-grow-x rounded-full bg-primary"
                                   style={{ width: `${share}%` }}
                                 />
                               </span>

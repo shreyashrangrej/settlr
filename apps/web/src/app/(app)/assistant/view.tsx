@@ -182,7 +182,8 @@ export function AssistantView() {
         </header>
 
         <div role="log" aria-label="Conversation" className="flex-1 py-7">
-          <div className="mx-auto flex max-w-190 flex-col gap-5.5">
+          {/* Each message rises in as it arrives. */}
+          <div className="mx-auto flex max-w-190 flex-col gap-5.5 *:animate-rise-in">
             {!configured && (
               <Alert>
                 <Sparkles />
@@ -198,14 +199,14 @@ export function AssistantView() {
                 <h2 className="m-0 text-center text-xl font-semibold">
                   What should I do?
                 </h2>
-                <ul className="grid gap-2.5 sm:grid-cols-2">
+                <ul className="stagger grid gap-2.5 sm:grid-cols-2">
                   {STARTERS.map((starter) => (
                     <li key={starter.label}>
                       <button
                         type="button"
                         disabled={!configured}
                         onClick={() => fillExample(starter.example)}
-                        className="flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left outline-none enabled:hover:border-input enabled:hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:opacity-50"
+                        className="flex w-full items-center gap-3 rounded-xl border bg-card p-3.5 text-left outline-none transition-[background-color,border-color,translate] duration-200 ease-out-quint enabled:hover:-translate-y-0.5 enabled:hover:border-input enabled:hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:opacity-50"
                       >
                         <span
                           aria-hidden="true"

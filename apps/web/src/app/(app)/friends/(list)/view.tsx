@@ -99,14 +99,14 @@ export function FriendsView() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-4">
+          <ul className="stagger grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-4">
             {friends.map((friend) => (
               <li key={friend.id}>
                 <Link
                   href={`/friends/${friend.id}`}
-                  className="block h-full rounded-xl no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  className="block h-full rounded-xl no-underline outline-none transition-[translate] duration-200 ease-out-quint hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 >
-                  <Card size="sm" className="h-full transition-shadow hover:border-primary/50">
+                  <Card size="sm" className="h-full transition-[border-color] duration-200 hover:border-primary/50">
                     <CardHeader>
                       <div className="flex min-w-0 items-center gap-3">
                         <PersonAvatar name={friend.name} size="lg" />

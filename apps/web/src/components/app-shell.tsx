@@ -25,6 +25,7 @@ import { LogoMark } from '#/components/brand'
 import { groupColor, labelTint } from '#/components/category'
 import { NavLink } from '#/components/nav-link'
 import { NotificationBell } from '#/components/notification-bell'
+import { RouteTransition } from '#/components/route-transition'
 import { useSession } from '#/components/providers'
 import { SiteHeader } from '#/components/site-header'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -90,8 +91,10 @@ export function AppShell({
     <div className="flex min-h-svh items-stretch bg-background lg:h-svh lg:bg-sidebar">
       <aside
         data-collapsed={collapsed || undefined}
+        // Collapsing slides the width; the rows keep their icons where
+        // they are (left-aligned, not centred), so only the labels go.
         className={cn(
-          'sticky top-0 hidden h-svh shrink-0 bg-sidebar select-none lg:block',
+          'sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-sidebar transition-[width] duration-220 ease-out-quint select-none lg:block',
           collapsed ? 'w-13' : 'w-63',
         )}
       >
@@ -118,7 +121,7 @@ export function AppShell({
           {/* Gr8r's page: centred, at most 1160px, on the shared 24px
               gutter (16px on phones). */}
           <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-5 lg:pb-12">
-            {children}
+            <RouteTransition>{children}</RouteTransition>
           </main>
         </div>
       </div>
@@ -159,7 +162,8 @@ function useCollapsed(initial: boolean) {
 function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?: () => void }) {
   const { data: unread = 0 } = useQuery(convexQuery(api.notifications.unreadCount, {}))
   const { data: groups } = useQuery(convexQuery(api.groups.list, {}))
-  const item = cn(sideItem, collapsed && 'justify-center px-0')
+  // 10px of padding puts a 16px icon in the middle of the 52px rail.
+  const item = cn(sideItem, collapsed && 'px-2.5')
   const toggleLabel = collapsed ? 'Expand sidebar (Ctrl+B)' : 'Collapse sidebar (Ctrl+B)'
   const label = (text: string) => <span className={cn('truncate', collapsed && 'sr-only')}>{text}</span>
   const sectionLink = (section: (typeof APP_SECTIONS)[number]) => (
@@ -177,7 +181,7 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?
 
   return (
     <div className="flex h-full flex-col">
-      <div className={cn('flex items-center gap-0.5 px-2 pt-2 pb-1', collapsed && 'justify-center')}>
+      <div className="flex items-center gap-0.5 px-2 pt-2 pb-1">
         <Link
           href="/dashboard"
           aria-label="Settlr, dashboard"
@@ -225,10 +229,14 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?
             (collapsed ? (
               <span
                 aria-hidden="true"
-                className="absolute top-1.5 right-3 size-1.5 rounded-full bg-primary"
+                className="absolute top-1.5 right-3 size-1.5 animate-pop rounded-full bg-primary"
               />
             ) : (
-              <span className="ml-auto grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-2xs font-semibold text-primary-foreground tabular-nums">
+              // Keyed by the count, so it pops again when one comes in.
+              <span
+                key={unread}
+                className="ml-auto grid h-4 min-w-4 animate-pop place-items-center rounded-full bg-primary px-1 text-2xs font-semibold text-primary-foreground tabular-nums"
+              >
                 {unread > 99 ? '99+' : unread}
               </span>
             ))}
@@ -296,7 +304,7 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?
           {/* Loads in the browser; hold the space so the list doesn't jump in. */}
           {!groups &&
             [0, 1, 2].map((i) => (
-              <div key={i} className={cn('flex h-7.5 items-center gap-2.25 px-2', collapsed && 'justify-center px-0')}>
+              <div key={i} className={cn('flex h-7.5 items-center gap-2.25 px-2', collapsed && 'px-2.5')}>
                 <Skeleton className="size-4.5 rounded-md" />
                 {!collapsed && <Skeleton className="h-3 flex-1 rounded" />}
               </div>
@@ -474,7 +482,7 @@ function Breadcrumbs() {
 }
 
 const tab =
-  'relative flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-lg py-1.25 text-2xs text-faint no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:text-foreground [&_svg]:size-4.75'
+  'relative flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-lg py-1.25 text-2xs text-faint no-underline outline-none transition-colors duration-140 active:[&_svg]:scale-90 [&_svg]:transition-[scale] [&_svg]:duration-140 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:text-foreground [&_svg]:size-4.75'
 
 /**
  * Narrow screens: Gr8r's flat bottom bar of sections, with More opening the

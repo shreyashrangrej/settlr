@@ -31,7 +31,7 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "modal-scrim fixed inset-0 isolate z-50 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "modal-scrim fixed inset-0 isolate z-50 duration-200 data-closed:duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
@@ -53,7 +53,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-[10svh] left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 max-h-[80svh] gap-3.5 overflow-y-auto rounded-2xl modal-panel p-4 text-sm text-popover-foreground duration-200 ease-out-quint outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-97 data-open:slide-in-from-bottom-2 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-98",
+          "fixed top-[10svh] left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 max-h-[80svh] gap-3.5 overflow-y-auto rounded-2xl modal-panel p-4 text-sm text-popover-foreground duration-250 ease-out-quint outline-none data-closed:duration-150 sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-97 data-open:slide-in-from-bottom-2 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-98",
           className
         )}
         {...props}

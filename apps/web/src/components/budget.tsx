@@ -229,7 +229,7 @@ function BudgetProgress({
         className="h-1.5 overflow-hidden rounded-full bg-track"
       >
         <div
-          className={cn('h-full rounded-full transition-[width] duration-500', barTone[status.tone])}
+          className={cn('h-full origin-left animate-grow-x rounded-full transition-[width] duration-500 ease-out-quint', barTone[status.tone])}
           style={{ width: `${Math.min(status.ratio, 1) * 100}%` }}
         />
       </div>

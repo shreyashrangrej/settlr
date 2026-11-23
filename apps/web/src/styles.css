@@ -40,7 +40,12 @@
   --faint: #6b6760;
   --dim: #8c8880;
   --text-inv: #ffffff;
-  --accent: #4b5bd6;
+  /* The accent is swappable (Settings → Appearance sets `data-accent` on
+     <html>): each choice gives a light and a dark value, and the theme picks
+     one. Indigo, the default, has no attribute. */
+  --acc-l: #4b5bd6;
+  --acc-d: #8e9af3;
+  --accent: var(--acc-l);
   --accent-contrast: #ffffff;
   --accent-soft: color-mix(in srgb, var(--accent) 10%, transparent);
   --accent-line: color-mix(in srgb, var(--accent) 38%, transparent);
@@ -84,7 +89,12 @@
   --mono:
     var(--font-geist-mono), 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --shadow-color: 30 10% 10%;
+  /* Gr8r's motion: `ease` for most things (fast start, long settle),
+     `spring` for things that pop (it overshoots a little), and `dur` for
+     hover and colour changes. */
   --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur: 140ms;
 
   /* shadcn's variable names, for component styles that read them directly
      (e.g. the toaster). They follow the tokens above in both themes. */
@@ -119,7 +129,7 @@
   --faint: #9a968f;
   --dim: #6f6c66;
   --text-inv: #151514;
-  --accent: #8e9af3;
+  --accent: var(--acc-d);
   --accent-contrast: #12131c;
   --owed: #5cba86;
   --owe: #e57d70;
@@ -141,6 +151,32 @@
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
   --shadow-pop: 0 16px 40px -10px rgb(0 0 0 / 60%), 0 0 0 1px var(--border-strong);
   --shadow-color: 0 0% 0%;
+}
+
+/* Gr8r's accent choices (Settings → Appearance), light and dark. */
+:root[data-accent='blue'] {
+  --acc-l: #2f6cd4;
+  --acc-d: #74a7f0;
+}
+
+:root[data-accent='violet'] {
+  --acc-l: #7348cc;
+  --acc-d: #ae93f0;
+}
+
+:root[data-accent='teal'] {
+  --acc-l: #1a7f7a;
+  --acc-d: #5cc4ba;
+}
+
+:root[data-accent='rose'] {
+  --acc-l: #b93d68;
+  --acc-d: #ec8dae;
+}
+
+:root[data-accent='graphite'] {
+  --acc-l: #34332f;
+  --acc-d: #d9d6cf;
 }
 
 /* shadcn/ui color names mapped onto the tokens above, so Tailwind utilities
@@ -225,9 +261,17 @@
   --radius-3xl: 1rem;
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: var(--spring);
   --animate-skeleton: skeleton 1.3s ease-in-out infinite;
   --animate-pop-in: pop-in 0.16s var(--ease) both;
   --animate-modal-in: modal-in 0.26s var(--ease) both;
+  /* Gr8r's one-shot flow animations: content rising into place (a page,
+     a new row), a bar growing from its start, and a pop for things that
+     appear (a check, a count). They run when the element mounts. */
+  --animate-rise-in: rise-in 0.36s var(--ease) both;
+  --animate-fade-in: fade-in 0.2s var(--ease) both;
+  --animate-grow-x: grow-x 0.8s 0.12s var(--ease) both;
+  --animate-pop: pop 0.42s var(--spring) both;
   /* Gr8r's shimmer: a lighter band sweeping across the placeholder. */
   @keyframes skeleton {
     from {
@@ -247,6 +291,33 @@
     from {
       opacity: 0;
       transform: translateY(8px) scale(0.97);
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+  }
+  @keyframes pop {
+    0% {
+      transform: scale(0.55);
+    }
+    55% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
     }
   }
 }
@@ -296,6 +367,37 @@
   font-family: var(--mono);
   font-size: 11px;
   line-height: 1;
+}
+
+/* A list whose items rise in one after another when they mount (Gr8r's
+   route stagger): 30ms apart, capped so a long list doesn't keep the last
+   rows waiting. Items added later (a new expense, "Show more") rise in on
+   their own. */
+@utility stagger {
+  & > * {
+    animation: rise-in 0.36s var(--ease) both;
+  }
+  & > :nth-child(2) {
+    animation-delay: 30ms;
+  }
+  & > :nth-child(3) {
+    animation-delay: 60ms;
+  }
+  & > :nth-child(4) {
+    animation-delay: 90ms;
+  }
+  & > :nth-child(5) {
+    animation-delay: 120ms;
+  }
+  & > :nth-child(6) {
+    animation-delay: 150ms;
+  }
+  & > :nth-child(7) {
+    animation-delay: 180ms;
+  }
+  & > :nth-child(n + 8) {
+    animation-delay: 210ms;
+  }
 }
 
 /* Element defaults live in the base layer so Tailwind utilities on shadcn
@@ -395,6 +497,48 @@
      attribute, and `stroke-*` utilities still win over this layer. */
   :where(svg.lucide[stroke-width='2']) {
     stroke-width: 1.8;
+  }
+
+  /* Changing the theme or accent cross-fades the page (see
+     `withViewTransition` in src/lib/theme.ts) instead of snapping. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.22s;
+    animation-timing-function: var(--ease);
+  }
+
+  /* Less motion, when the system asks for it or the viewer picked it in
+     Settings (`data-motion="reduce"` on <html>): animations and
+     transitions finish at once, so things still appear and change state,
+     just without moving. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after,
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation-duration: 1ms !important;
+      animation-delay: 0s !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      transition-delay: 0s !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  :root[data-motion='reduce'] *,
+  :root[data-motion='reduce'] ::before,
+  :root[data-motion='reduce'] ::after,
+  :root[data-motion='reduce']::view-transition-group(*),
+  :root[data-motion='reduce']::view-transition-old(*),
+  :root[data-motion='reduce']::view-transition-new(*) {
+    animation-duration: 1ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
   }
 }
 

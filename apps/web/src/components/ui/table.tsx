@@ -36,7 +36,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
-      className={cn("[&>tr:last-child]:border-b-0", className)}
+      className={cn("stagger [&>tr:last-child]:border-b-0", className)}
       {...props}
     />
   )

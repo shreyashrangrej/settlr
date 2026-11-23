@@ -70,7 +70,7 @@ export function NotificationBell() {
           // The count is in the button's label; the dot just flags it.
           <span
             aria-hidden="true"
-            className="absolute top-1.5 right-1.75 size-[7px] rounded-full bg-primary ring-2 ring-background"
+            className="absolute top-1.5 right-1.75 size-[7px] animate-pop rounded-full bg-primary ring-2 ring-background"
           />
         )}
       </PopoverTrigger>

@@ -43,7 +43,7 @@ Light and dark are both full palettes (dark is redefined, not inverted). With no
 | `muted` | `#57544e` | `#b5b2ab` | Descriptions, labels, idle nav text (Gr8r's text-2) |
 | `faint` | `#6b6760` | `#9a968f` | Hints, metadata, section headings (text-3) |
 | `dim` | `#8c8880` | `#6f6c66` | Idle icons, separators (text-4) |
-| `accent` (`primary`) | `#4b5bd6` | `#8e9af3` | Primary buttons, links, focus, selection, unread dots |
+| `accent` (`primary`) | `#4b5bd6` | `#8e9af3` | Primary buttons, links, focus, selection, unread dots. Swappable in Settings → Appearance: Gr8r's indigo (default), blue, violet, teal, rose, graphite |
 | `accent-soft` (`primary-soft`) | accent at 10% | accent at 10% | Focus rings, the signed-in user's avatar |
 | `accent-line` / `accent-surface` | accent 38% / 5% | same | Highlight cards |
 | `owed` (`positive`) | `#25754b` | `#5cba86` | Money owed **to** the user |
@@ -73,7 +73,7 @@ T3 Code's mobile palette: dark screen `#0A0A0A`, cards `#111111`, grouped cards 
 - Web controls: 30 px tall from `sm` (34 px below), small 26 px, extra-small 22 px, large 36 px; on touch screens every button has a 44 × 44 px hit area.
 - Web spacing (4 px scale): pages centred at up to 1160 px with a 24 px gutter (16 px on phones), 16 px between the top bar and the page header (12 px on phones) and 20 px under it, 16 px between cards, 14 px inside them. Sidebar 252 px (52 px collapsed) with 30 px rows; top bar 46 px; table rows 40 px with a 34 px header.
 - Shadows: none on cards; a 1 px soft shadow under outline buttons and the current sidebar item; a long soft drop that carries its own hairline under menus, popovers, dialogs and toasts.
-- Motion: 140 ms colour transitions, `cubic-bezier(0.23, 1, 0.32, 1)` easing, popovers rise 4 px and scale from 97%, dialogs rise 8 px, buttons press to 97%.
+- Motion: 140 ms colour transitions, `cubic-bezier(0.23, 1, 0.32, 1)` easing, popovers rise 4 px and scale from 97%, dialogs rise 8 px, buttons press to 97%. Gr8r's flow animations: pages rise 8 px into place on navigation (360 ms), list rows and cards rise in 30 ms apart, bars grow from the left, checks and counts pop on a spring (`cubic-bezier(0.34, 1.56, 0.64, 1)`), cards lift 2 px on hover, the segmented control's fill slides between options, and the sidebar's width slides when it collapses. All of it stops under reduced motion (system or Settings → Appearance).
 - Android: buttons and chips are pills (48 px / 40 px tall), fields 16 px radius and 54 px tall, cards 20 px, 16 px screen gutter and 16 px between sections.
 
 ## Components

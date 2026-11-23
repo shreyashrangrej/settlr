@@ -12,7 +12,7 @@ export function GroupTile({ group, className }: { group: GroupSummary; className
     <Link
       href={`/groups/${group.id}`}
       className={cn(
-        'flex flex-col gap-3 rounded-xl border bg-card p-3.5 no-underline outline-none transition-[background-color,border-color] duration-140 hover:border-input hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+        'flex flex-col gap-3 rounded-xl border bg-card p-3.5 no-underline outline-none transition-[background-color,border-color,translate] duration-200 ease-out-quint hover:-translate-y-0.5 hover:border-input hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
         className,
       )}
     >
