@@ -164,8 +164,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   an icon rail with Ctrl/⌘+B and remembered in the `settlr_sidebar` cookie
   that the root layout reads, so it renders at the right width; from `lg`
   the sidebar colour rims the window and the top bar and page sit in a
-  rounded inset panel that is the page's scroller (so `sticky` and
-  `scrollIntoView` work against it, not the window); the top bar, with
+  rounded inset panel, with the page scrolling in its own area under the
+  top bar (so `sticky` offsets like `top-4` and `scrollIntoView` work
+  against that area, not the window); the top bar, with
   no bottom border, has the breadcrumb, bell, "New" menu and account on
   every width;
   below `lg` the sidebar is a drawer and a tab bar runs along the bottom;
@@ -268,7 +269,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `buttonVariants(...)` on a `<Link>`. Confirm destructive actions with
   `ConfirmAction`, not `window.confirm`, and report success with
   `useAction(fn, { success: '...' })` (a sonner toast).
-- **Layout**: pages are centred at up to 1160px beside the sidebar
+- **Layout**: pages take the panel's full width beside the sidebar
   (padding `px-4 sm:px-6`, Gr8r's gutter, set by `AppShell`), with 16px
   (`gap-4`) between cards and 20px under the page header. Rows of cards are `flex flex-wrap` with
   `flex-[grow_1_basis]` so they stack on narrow screens. The dashboard is
@@ -297,8 +298,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   get a max width. `SplitLayout` gives a page a main area and a 22rem
   sidebar from 1400px (below that the column beside the app sidebar is too
   narrow, so it stacks). Viewport breakpoints see the whole window, not the
-  content column, which is 252px narrower on `lg` and up (52px with the
-  sidebar collapsed) and at most 1160px wide.
+  content column, which is about 260px narrower on `lg` and up (the 252px
+  sidebar and the rim; about 60px with the sidebar collapsed).
 - **Loading**: give each page a `loading.tsx` rendering its page-shaped
   skeleton from `src/components/skeletons.tsx`. The top bar
   (`navigation-progress.tsx`) starts on link clicks and `useAppRouter()`

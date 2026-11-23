@@ -290,7 +290,7 @@ export function AssistantView() {
       </div>
 
       {hasChanges && (
-        <aside className="rounded-xl border bg-sunken p-3.5 xl:sticky xl:top-17">
+        <aside className="rounded-xl border bg-sunken p-3.5 xl:sticky xl:top-4">
           <Changes messages={messages} decisions={decisions} />
         </aside>
       )}

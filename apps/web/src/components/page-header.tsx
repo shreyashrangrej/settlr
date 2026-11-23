@@ -99,7 +99,7 @@ export function SplitLayout({
   return (
     <div className="grid items-start gap-4 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">{children}</div>
-      <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 min-[1400px]:sticky min-[1400px]:top-17">
+      <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 min-[1400px]:sticky min-[1400px]:top-4">
         {aside}
       </aside>
     </div>

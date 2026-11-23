@@ -138,11 +138,12 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
   12.5px for buttons and tabs, `text-2xl` the 23px page title).
 - The shell is Gr8r's: a 252px sidebar (a 52px rail when collapsed) with
   uppercase section labels, a 46px top bar with the breadcrumb, the bell,
-  **New** and the account menu, and pages centred at up to 1160px. Below
+  **New** and the account menu, and pages at the full width. Below
   `lg` the sidebar is a drawer and a tab bar runs along the bottom. From
   `lg` the shell is inset: the sidebar colour rims the window and the top
-  bar and page sit in a rounded panel that scrolls on its own, so
-  `sticky` offsets and `scrollIntoView` work against that panel.
+  bar and page sit in a rounded panel. The page scrolls in its own area
+  under the top bar, so `sticky` offsets and `scrollIntoView` work
+  against that area.
 - Money is green (`positive`, owed to you) or red (`destructive`, you owe),
   always with a word or a sign, in the UI font with tabular figures
   (`tabular-nums`).
