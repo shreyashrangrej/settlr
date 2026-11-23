@@ -174,23 +174,18 @@ export function AssistantView() {
           page's top padding; on phones the top bar, top padding and tab
           bar). */}
       <div className="flex min-h-[calc(100svh-7.25rem-env(safe-area-inset-bottom))] min-w-0 flex-col max-lg:mb-[calc(env(safe-area-inset-bottom)-3.375rem)] lg:-mb-12 lg:min-h-[calc(100svh-4.75rem)]">
-        <header className="mx-auto flex min-h-10 w-full max-w-190 items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <AssistantMark />
-            <div className="grid min-w-0">
-              <h1 className="m-0 text-base leading-snug font-semibold">Assistant</h1>
-              <p className="truncate text-xs text-muted-foreground">
-                Adds, finds and changes expenses in plain words.
-              </p>
-            </div>
-          </div>
-          {messages.length > 0 && (
+        {/* The breadcrumb names the page and the empty chat introduces it,
+            so there's no visible title; once there's a conversation, the
+            only thing up here is starting a new one. */}
+        <h1 className="sr-only">Assistant</h1>
+        {messages.length > 0 && (
+          <div className="mx-auto flex w-full max-w-190 justify-end">
             <Button variant="outline" onClick={newChat} disabled={pending}>
               <Plus />
               New chat
             </Button>
-          )}
-        </header>
+          </div>
+        )}
 
         <div role="log" aria-label="Conversation" className="flex flex-1 flex-col py-7">
           {/* Each message rises in as it arrives. */}
