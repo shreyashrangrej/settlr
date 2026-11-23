@@ -114,9 +114,9 @@ export function AppShell({
       <div className="flex min-w-0 flex-1 flex-col bg-background lg:my-2 lg:mr-2 lg:overflow-hidden lg:rounded-xl lg:border lg:shadow-xs">
         <TopBar onOpenNav={() => setDrawerOpen(true)} />
         <div className="flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
-          {/* The page takes the panel's full width, on the shared 24px
+          {/* Gr8r's page: centred, at most 1160px, on the shared 24px
               gutter (16px on phones). */}
-          <main className="w-full min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-4 lg:pb-12">
+          <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-4 lg:pb-12">
             {children}
           </main>
         </div>

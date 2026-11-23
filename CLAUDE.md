@@ -269,7 +269,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `buttonVariants(...)` on a `<Link>`. Confirm destructive actions with
   `ConfirmAction`, not `window.confirm`, and report success with
   `useAction(fn, { success: '...' })` (a sonner toast).
-- **Layout**: pages take the panel's full width beside the sidebar
+- **Layout**: pages are centred at up to 1160px beside the sidebar
   (padding `px-4 sm:px-6`, Gr8r's gutter, set by `AppShell`), with 16px
   (`gap-4`) between cards and 20px under the page header. Rows of cards are `flex flex-wrap` with
   `flex-[grow_1_basis]` so they stack on narrow screens. The dashboard is
@@ -299,7 +299,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   sidebar from 1400px (below that the column beside the app sidebar is too
   narrow, so it stacks). Viewport breakpoints see the whole window, not the
   content column, which is about 260px narrower on `lg` and up (the 252px
-  sidebar and the rim; about 60px with the sidebar collapsed).
+  sidebar and the rim; about 60px with the sidebar collapsed) and at most
+  1160px wide.
 - **Loading**: give each page a `loading.tsx` rendering its page-shaped
   skeleton from `src/components/skeletons.tsx`. The top bar
   (`navigation-progress.tsx`) starts on link clicks and `useAppRouter()`

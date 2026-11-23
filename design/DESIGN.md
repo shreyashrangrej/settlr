@@ -71,7 +71,7 @@ T3 Code's mobile palette: dark screen `#0A0A0A`, cards `#111111`, grouped cards 
 
 - Web radii: 4 px (kbd, small icon buttons), 5 px (badges, segments), 6 px (buttons, inputs, menu rows, tiles: `rounded-lg`), 10 px (cards, menus, popovers: `rounded-xl`), 12 px (dialogs: `rounded-2xl`); avatars and counts are round.
 - Web controls: 30 px tall from `sm` (34 px below), small 26 px, extra-small 22 px, large 36 px; on touch screens every button has a 44 × 44 px hit area.
-- Web spacing (4 px scale): pages take the full width of the panel with a 24 px gutter (16 px on phones), 16 px between the top bar and the page header (12 px on phones) and 20 px under it, 16 px between cards, 14 px inside them. Sidebar 252 px (52 px collapsed) with 30 px rows; top bar 46 px; table rows 40 px with a 34 px header.
+- Web spacing (4 px scale): pages centred at up to 1160 px with a 24 px gutter (16 px on phones), 16 px between the top bar and the page header (12 px on phones) and 20 px under it, 16 px between cards, 14 px inside them. Sidebar 252 px (52 px collapsed) with 30 px rows; top bar 46 px; table rows 40 px with a 34 px header.
 - Shadows: none on cards; a 1 px soft shadow under outline buttons and the current sidebar item; a long soft drop that carries its own hairline under menus, popovers, dialogs and toasts.
 - Motion: 140 ms colour transitions, `cubic-bezier(0.23, 1, 0.32, 1)` easing, popovers rise 4 px and scale from 97%, dialogs rise 8 px, buttons press to 97%.
 - Android: buttons and chips are pills (48 px / 40 px tall), fields 16 px radius and 54 px tall, cards 20 px, 16 px screen gutter and 16 px between sections.
