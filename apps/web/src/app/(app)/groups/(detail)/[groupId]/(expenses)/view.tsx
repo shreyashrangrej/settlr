@@ -12,7 +12,6 @@ import {
   ExpenseTable,
   RowActions,
   YourShare,
-  type ExpenseColumn,
 } from '#/components/expense-list'
 import { useAction } from '#/components/ledger'
 import { ReceiptLink } from '#/components/receipts'
@@ -27,10 +26,6 @@ import {
 import type { Group, GroupExpense } from '#/lib/types'
 import { api } from '@settlr/backend/convex/_generated/api'
 
-const columns: Array<ExpenseColumn> = [
-  { label: 'Paid by', width: 'w-32', from: 'md', className: 'text-foreground' },
-  { label: 'Split', width: 'w-28', from: '2xl' },
-]
 
 /**
  * A group's expenses. Filters, sorting and the list length (`search`) live
@@ -78,7 +73,7 @@ export function ExpensesView({ groupId, search }: { groupId: string; search: Exp
       }
       more={page.hasMore && hrefFor({ ...search, limit: search.limit + LIST_STEP })}
     >
-      <ExpenseTable columns={columns}>
+      <ExpenseTable columns={['Paid by', 'Split']}>
         {page.items.map((expense) => (
           <GroupExpenseRow key={expense.id} group={group} expense={expense} />
         ))}

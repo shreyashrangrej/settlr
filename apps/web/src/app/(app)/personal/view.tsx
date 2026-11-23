@@ -36,6 +36,7 @@ import { Button, buttonVariants } from '#/components/ui/button'
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '#/components/ui/card'
@@ -141,7 +142,7 @@ export function PersonalView({
           }
           note={data.truncated && `Showing the first ${data.items.length} expenses of this month.`}
         >
-          <ExpenseTable>
+          <ExpenseTable columns={['Paid by', 'Split']}>
             {items.map((expense) => (
               <PersonalExpenseRow key={expense.id} expense={expense} />
             ))}
@@ -198,6 +199,7 @@ function ByCategory({ data }: { data: PersonalMonth }) {
     <Card>
       <CardHeader>
         <CardTitle>By category</CardTitle>
+        <CardDescription>Your personal spending this month.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
         {data.byCategory.length === 0 ? (
@@ -248,6 +250,12 @@ function PersonalExpenseRow({ expense }: { expense: PersonalExpense }) {
       receipt={expense.receiptId && <ReceiptLink source="personal" expenseId={expense.id} />}
       subtitle={categoryLabel(expense.category)}
       date={expense.date}
+      // The same columns as every expense list; it's always yours, so
+      // nothing folds into the second line on narrow screens.
+      cells={[
+        { value: 'You', folded: null },
+        { value: 'Just you', folded: null },
+      ]}
       amount={formatMoney(expense.amountCents, expense.currency)}
       actions={
         <RowActions

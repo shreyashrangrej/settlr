@@ -285,8 +285,15 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `ExpenseTable`/`ExpenseRow`, so build new ones on those. Expense pages
   (a group, a friend, personal, all expenses) share one shape: `PageHeader`
   with a `PageIcon` or avatar, outline secondary buttons and a primary "Add
-  expense", then `ExpensePage`; their forms open from header buttons
-  (`FormDialog`), not side cards. Tables follow
+  expense", then `ExpensePage` (stats strip, then the list beside the side
+  cards, whose top lines up with the list's card, not its filter toolbar:
+  `SplitLayout` offsets the aside when the content has the
+  `data-slot="expense-toolbar"` bar). Their forms open from header buttons
+  (`FormDialog`), not side cards, and other views of the same thing (a
+  group's Insights) are header buttons too, not tab rows. Every
+  `ExpenseTable` has the same columns at the same widths: Description,
+  Date, two middle columns (`columns={['Paid by', 'Split']}`, or
+  `['Where', 'Paid by']` across sources), Amount and the "⋯" menu. Tables follow
   Gr8r's members table: they run edge to edge inside their card (no padded
   `CardContent` around them; `ui/table.tsx` puts the first and last
   columns on the card's 14px gutter), any filter bar sits above the card

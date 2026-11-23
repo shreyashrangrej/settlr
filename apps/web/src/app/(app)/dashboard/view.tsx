@@ -24,7 +24,6 @@ import {
   ExpenseRow,
   ExpenseTable,
   YourShare,
-  type ExpenseColumn,
 } from '#/components/expense-list'
 import { SelectField } from '#/components/form-fields'
 import { PersonAvatar, SignedAmount, sumBalances, useAction } from '#/components/ledger'
@@ -846,7 +845,7 @@ function RecentExpenses({ month, className }: { month: string; className?: strin
           No expenses in {formatMonth(month)} yet.
         </p>
       ) : (
-        <ExpenseTable first="Expense" columns={RECENT_COLUMNS} actions={false}>
+        <ExpenseTable first="Expense" columns={['Where', 'Paid by']} actions={false}>
           {data.items.map((item) => (
             <ExpenseRow
               key={item.key}
@@ -861,7 +860,10 @@ function RecentExpenses({ month, className }: { month: string; className?: strin
               }
               subtitle={categoryLabel(item.category)}
               date={item.date}
-              cells={[item.source === 'personal' ? 'Personal' : (item.where?.name ?? '')]}
+              cells={[
+                item.source === 'personal' ? 'Personal' : (item.where?.name ?? ''),
+                { value: item.paidBy, folded: `${item.paidBy} paid` },
+              ]}
               amount={
                 <>
                   <span>{formatMoney(item.amountCents, item.currency)}</span>
@@ -878,7 +880,6 @@ function RecentExpenses({ month, className }: { month: string; className?: strin
   )
 }
 
-const RECENT_COLUMNS: Array<ExpenseColumn> = [{ label: 'Where', width: 'w-36', from: 'md' }]
 
 /** Your groups as a table (Gr8r's project progress): spending and where you stand. */
 function GroupsTable({

@@ -2,7 +2,7 @@
 
 import { convexQuery } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Plus, Receipt, User, Users, Wallet } from 'lucide-react'
+import { ArrowUpRight, Ellipsis, Plus, Receipt, User, Users, Wallet } from 'lucide-react'
 
 import { AddMenu } from '#/components/add-menu'
 import { CategoryIcon, groupColor, labelTint } from '#/components/category'
@@ -12,16 +12,22 @@ import {
   ExpenseSection,
   ExpenseTable,
   YourShare,
-  type ExpenseColumn,
 } from '#/components/expense-list'
 import { ExpensePage, PageIcon } from '#/components/expense-page'
 import { SelectField, type Option } from '#/components/form-fields'
 import { PersonAvatar } from '#/components/ledger'
 import { MonthNav } from '#/components/month-nav'
+import { useAppRouter } from '#/components/navigation-progress'
 import { PageHeader } from '#/components/page-header'
 import { ReceiptLink } from '#/components/receipts'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import { Button } from '#/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card'
 import { Progress, ProgressLabel, ProgressValue } from '#/components/ui/progress'
 import { categoryLabel, formatMoney, formatMonth, plural } from '@settlr/shared/format'
@@ -44,10 +50,6 @@ const sourceOptions: Array<Option<AllExpensesSearch['source']>> = [
   { value: 'personal', label: 'Personal' },
 ]
 
-const columns: Array<ExpenseColumn> = [
-  { label: 'Where', width: 'w-40', from: 'md' },
-  { label: 'Paid by', width: 'w-28', from: 'xl' },
-]
 
 /**
  * Every expense you're part of in `month`, across groups, friends and
@@ -146,7 +148,7 @@ export function AllExpensesView({
             data.truncated && 'This month has a lot of expenses; some sources show only their first ones.'
           }
         >
-          <ExpenseTable columns={columns} actions={false}>
+          <ExpenseTable columns={['Where', 'Paid by']}>
             {data.items.map((item) => (
               <AllExpenseRow key={item.key} item={item} month={month} />
             ))}
@@ -215,7 +217,31 @@ function AllExpenseRow({ item, month }: { item: Item; month: string }) {
           )}
         </>
       }
+      actions={<OpenActions name={item.description} href={whereHref(item, month)} where={whereText} />}
     />
+  )
+}
+
+/**
+ * The row's "⋯" menu, in the same column as on the other expense pages.
+ * An expense is changed where it lives, so the menu goes there.
+ */
+function OpenActions({ name, href, where }: { name: string; href: string; where: string }) {
+  const router = useAppRouter()
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" size="icon-sm" aria-label={`Options for ${name}`} title="Options" />}
+      >
+        <Ellipsis />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={() => router.push(href)}>
+          <ArrowUpRight />
+          Open in {where}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

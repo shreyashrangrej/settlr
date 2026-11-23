@@ -75,7 +75,7 @@ export function TableSkeleton({ rows = 6, filters = false }: { rows?: number; fi
   return (
     <div className="grid gap-3">
       {filters && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div data-slot="expense-toolbar" className="flex flex-wrap items-center gap-2">
           <Skeleton className="h-8 w-full rounded-lg sm:h-6.5 sm:w-56" />
           <Skeleton className="h-8 flex-1 rounded-lg sm:h-6.5 sm:w-32 sm:flex-none" />
           <Skeleton className="h-8 flex-1 rounded-lg sm:ml-auto sm:h-6.5 sm:w-28 sm:flex-none" />
@@ -136,9 +136,10 @@ function SideCardSkeleton({ lines = 4, className }: { lines?: number; className?
 
 function Split({ children, aside }: { children: React.ReactNode; aside: React.ReactNode }) {
   return (
-    <div className="grid items-start gap-4 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
+    // The same columns and toolbar offset as SplitLayout.
+    <div className="grid items-start gap-4 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem] min-[1400px]:has-[[data-slot=expense-toolbar]]:[&>aside]:mt-9.5">
       <div className="grid min-w-0 gap-4">{children}</div>
-      <div className="grid gap-4">{aside}</div>
+      <aside className="grid gap-4">{aside}</aside>
     </div>
   )
 }

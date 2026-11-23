@@ -66,6 +66,8 @@ export function ExpenseFilters<P extends string>({
   return (
     <form
       role="search"
+      // SplitLayout lines its side column up with the table below this.
+      data-slot="expense-toolbar"
       className="flex flex-wrap items-center gap-2"
       onSubmit={(event) => {
         event.preventDefault()

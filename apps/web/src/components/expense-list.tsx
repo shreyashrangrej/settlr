@@ -61,13 +61,12 @@ const FOLD: Record<Breakpoint, string> = {
   '2xl': '2xl:hidden',
 }
 
-export type ExpenseColumn = {
+type ExpenseColumn = {
   label: string
   /** A fixed width such as `w-32`; the description takes the rest. */
   width: string
-  /** Shown from this breakpoint, folded into the muted line below it. */
+  /** Shown from this breakpoint, folded into the faint line below it. */
   from: Breakpoint
-  className?: string
 }
 
 const DATE_COLUMN: ExpenseColumn = { label: 'Date', width: 'w-28', from: 'md' }
@@ -155,23 +154,37 @@ function ExpenseEmpty({ icon, title, description, clearHref }: EmptyState) {
 }
 
 /**
- * The table: Description, Date, `columns`, the amount and (with `actions`)
- * a column for the row buttons. Fixed layout, so long descriptions
- * truncate instead of pushing the amounts around.
+ * The two middle columns every expense table has, so the columns sit in the
+ * same place on every page: the third from `md` (who paid, or where it
+ * lives) and the fourth from `xl` (the split, or who paid).
+ */
+function middleColumns([third, fourth]: [string, string]): Array<ExpenseColumn> {
+  return [
+    { label: third, width: 'w-32', from: 'md' },
+    { label: fourth, width: 'w-28', from: 'xl' },
+  ]
+}
+
+/**
+ * The table: Description, Date, the two middle `columns` (their labels),
+ * the amount and (with `actions`) a column for the row's "⋯" menu. Every
+ * expense list uses the same columns at the same widths. Fixed layout, so
+ * long descriptions truncate instead of pushing the amounts around.
  */
 export function ExpenseTable({
-  columns = [],
+  columns: labels,
   first = 'Description',
   amount = 'Amount',
   actions = true,
   children,
 }: {
-  columns?: Array<ExpenseColumn>
+  columns: [string, string]
   first?: string
   amount?: string
   actions?: boolean
   children: React.ReactNode
 }) {
+  const columns = middleColumns(labels)
   return (
     <LayoutContext value={{ columns, actions }}>
       <Table className="table-fixed">
@@ -207,7 +220,7 @@ function isSplitCell(
 }
 
 /**
- * One row. `cells` are the values of the table's `columns`, in order; on
+ * One row. `cells` are the values of the table's two middle columns; on
  * screens too narrow for a column, its value is folded into `subtitle`.
  */
 export function ExpenseRow({
@@ -217,7 +230,7 @@ export function ExpenseRow({
   receipt,
   subtitle,
   date,
-  cells = [],
+  cells,
   amount,
   actions,
 }: {
@@ -229,7 +242,8 @@ export function ExpenseRow({
   receipt?: React.ReactNode
   subtitle: React.ReactNode
   date: string
-  cells?: Array<ExpenseCell>
+  /** The two middle columns' values. */
+  cells: [ExpenseCell, ExpenseCell]
   /** The amount; a second line (e.g. a `SignedAmount`) goes under it. */
   amount: React.ReactNode
   actions?: React.ReactNode
@@ -287,7 +301,7 @@ export function ExpenseRow({
       {layout.columns.map((column, i) => (
         <TableCell
           key={column.label}
-          className={cn(SHOW[column.from], 'truncate text-muted-foreground', column.className)}
+          className={cn(SHOW[column.from], 'truncate text-muted-foreground')}
         >
           {isSplitCell(cells[i]) ? cells[i].value : cells[i]}
         </TableCell>

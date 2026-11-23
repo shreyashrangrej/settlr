@@ -12,7 +12,7 @@ import {
 import { requireUser } from './lib/auth'
 import { flip, linkedCounterpart, mirrorEntry, type NewEntry } from './lib/friendship'
 import * as input from './lib/input'
-import { addToBalance, friendDelta } from './lib/ledger'
+import { addToBalance, friendDelta, myFriendShare } from './lib/ledger'
 import { notify } from './lib/notify'
 import { attachReceipt, deleteReceipt } from './lib/receipts'
 import { category, currency } from './lib/validators'
@@ -74,6 +74,46 @@ export const get = query({
     const { userId } = await requireUser(ctx)
     const friend = await findFriend(ctx, userId, args.friendId)
     return friend ? toFriend(friend) : null
+  },
+})
+
+// The most ledger rows `summary` reads for one friend.
+const MAX_SUMMARY_ENTRIES = 2000
+
+/**
+ * A friend's figures for the top of their page, per currency (largest
+ * first): how many expenses you've shared, what they came to and what your
+ * share was. Payments aren't expenses, so they're left out. Null if the
+ * friend is missing or not yours.
+ */
+export const summary = query({
+  args: { friendId: v.string() },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const friend = await findFriend(ctx, userId, args.friendId)
+    if (!friend) return null
+    const rows = await ctx.db
+      .query('friendEntries')
+      .withIndex('by_friendId_and_date', (q) => q.eq('friendId', friend._id))
+      .take(MAX_SUMMARY_ENTRIES + 1)
+    const totals = new Map<
+      Doc<'friendEntries'>['currency'],
+      { count: number; totalCents: number; shareCents: number }
+    >()
+    for (const e of rows.slice(0, MAX_SUMMARY_ENTRIES)) {
+      if (e.kind !== 'expense') continue
+      const row = totals.get(e.currency) ?? { count: 0, totalCents: 0, shareCents: 0 }
+      row.count += 1
+      row.totalCents += e.amountCents
+      row.shareCents += myFriendShare(e)
+      totals.set(e.currency, row)
+    }
+    return {
+      totals: [...totals]
+        .map(([currency, row]) => ({ currency, ...row }))
+        .sort((a, b) => b.totalCents - a.totalCents),
+      truncated: rows.length > MAX_SUMMARY_ENTRIES,
+    }
   },
 })
 

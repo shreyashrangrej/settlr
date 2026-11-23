@@ -18,7 +18,6 @@ import { groupColor, labelTint } from '#/components/category'
 import { ExpensePage, PageIcon } from '#/components/expense-page'
 import { RecentPayments, RecordPaymentDialog } from '#/components/group-payments'
 import { PersonAvatar, SignedAmount } from '#/components/ledger'
-import { NavLink } from '#/components/nav-link'
 import { PageHeader } from '#/components/page-header'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import { useGroup } from '#/components/use-group'
@@ -42,17 +41,19 @@ import { formatMoney, memberName, plural } from '@settlr/shared/format'
 import type { Group } from '#/lib/types'
 import { cn } from '#/lib/utils'
 
-// Page links styled as Gr8r's underlined tabs (its project view tabs): muted
-// labels on a hairline, the current one in the text colour over a 2px bar.
-const tabLink =
-  "relative inline-flex h-9 items-center gap-1.5 px-2.5 text-ui font-medium text-muted-foreground no-underline transition-colors duration-140 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:text-foreground data-[status=active]:after:absolute data-[status=active]:after:inset-x-2 data-[status=active]:after:-bottom-px data-[status=active]:after:h-0.5 data-[status=active]:after:rounded-full data-[status=active]:after:bg-foreground data-[status=active]:after:content-[''] [&_svg]:size-3.5"
-
-/** A group's header, section tabs and balances around its pages. */
+/**
+ * A group's header, figures and balances around its pages, in the frame
+ * every expense page shares. The expenses list and Insights are two pages;
+ * a header button switches between them (no tab row, so the group lines up
+ * with the friend, personal and all-expenses pages).
+ */
 export function GroupLayoutView({ children }: { children: React.ReactNode }) {
   const group = useGroup()
   // The add/edit expense form has its own split panel (and shows what the
   // expense does to your balance), so it gets the full width.
-  const isForm = usePathname().includes('/expenses/')
+  const pathname = usePathname()
+  const isForm = pathname.includes('/expenses/')
+  const onInsights = pathname.endsWith('/insights')
 
   // Deleted while open (here or in another tab).
   if (!group) {
@@ -89,6 +90,23 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
         description={`${group.members.length} members · ${formatMoney(group.totalCents, group.currency)} spent`}
         actions={
           <>
+            {onInsights ? (
+              <Link
+                href={`/groups/${group.id}`}
+                className={cn(buttonVariants({ variant: 'outline' }), 'no-underline')}
+              >
+                <Receipt />
+                Expenses
+              </Link>
+            ) : (
+              <Link
+                href={`/groups/${group.id}/insights`}
+                className={cn(buttonVariants({ variant: 'outline' }), 'no-underline')}
+              >
+                <ChartColumn />
+                Insights
+              </Link>
+            )}
             {group.isOwner && (
               <Link
                 href={`/groups/${group.id}/edit`}
@@ -122,16 +140,6 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
         children
       ) : (
         <ExpensePage stats={<GroupStats group={group} />} aside={<Balances group={group} />}>
-          <nav aria-label="Group sections" className="flex gap-0.5 overflow-x-auto border-b [scrollbar-width:none]">
-            <NavLink href={`/groups/${group.id}`} exact className={tabLink}>
-              <Receipt />
-              Expenses
-            </NavLink>
-            <NavLink href={`/groups/${group.id}/insights`} className={tabLink}>
-              <ChartColumn />
-              Insights
-            </NavLink>
-          </nav>
           {children}
         </ExpensePage>
       )}

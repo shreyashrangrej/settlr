@@ -26,13 +26,14 @@ export default async function FriendPage({ params, searchParams }: Props) {
   const { friendId } = await params
   const search = parseSearch(friendSearchSchema, await searchParams)
   const { tab: _, ...filter } = search
-  const [friend, ledger] = await Promise.all([
+  const [friend, summary, ledger] = await Promise.all([
     prefetchQuery(api.friends.get, { friendId }),
+    prefetchQuery(api.friends.summary, { friendId }),
     prefetchQuery(api.friends.entries, { friendId, ...filter }),
   ])
   if (!friend.data) notFound()
   return (
-    <Prefetched queries={[friend.entry, ledger.entry]}>
+    <Prefetched queries={[friend.entry, summary.entry, ledger.entry]}>
       <FriendView friendId={friendId} search={search} />
     </Prefetched>
   )

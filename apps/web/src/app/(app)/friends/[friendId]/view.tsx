@@ -4,7 +4,7 @@ import { useEffect, useId, useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { CalendarClock, HandCoins, Plus, Receipt, Scale, Trash2, UserPlus, Users } from 'lucide-react'
+import { CalendarClock, HandCoins, Plus, Receipt, Scale, Trash2, UserPlus, Wallet } from 'lucide-react'
 
 import { CategoryIcon, IconTile } from '#/components/category'
 import { ConfirmAction } from '#/components/confirm-action'
@@ -15,7 +15,6 @@ import {
   ExpenseTable,
   RowActions,
   YourShare,
-  type ExpenseColumn,
 } from '#/components/expense-list'
 import {
   AmountInput,
@@ -63,6 +62,7 @@ import {
   FieldLabel,
 } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
+import { Separator } from '#/components/ui/separator'
 import { Spinner } from '#/components/ui/spinner'
 import {
   categoryLabel,
@@ -85,12 +85,11 @@ import {
   type FriendSearch,
 } from '@settlr/shared/schemas'
 import type { Friend, FriendEntry } from '#/lib/types'
+import type { FunctionReturnType } from 'convex/server'
 import { api } from '@settlr/backend/convex/_generated/api'
 
-const columns: Array<ExpenseColumn> = [
-  { label: 'Paid by', width: 'w-32', from: 'md', className: 'text-foreground' },
-  { label: 'Split', width: 'w-28', from: '2xl' },
-]
+type FriendSummary = FunctionReturnType<typeof api.friends.summary>
+
 
 /**
  * A friend and your one-on-one ledger. The ledger's filters, sorting and
@@ -102,6 +101,7 @@ export function FriendView({ friendId, search }: { friendId: string; search: Fri
   const { data: friend } = useSuspenseQuery(
     convexQuery(api.friends.get, { friendId }),
   )
+  const { data: summary } = useSuspenseQuery(convexQuery(api.friends.summary, { friendId }))
   const { data: ledger } = useSuspenseQuery(
     convexQuery(api.friends.entries, { friendId, ...filter }),
   )
@@ -133,7 +133,7 @@ export function FriendView({ friendId, search }: { friendId: string; search: Fri
         title={friend.name}
         description={
           <span className="flex flex-wrap items-center gap-2">
-            {friend.email}
+            {friend.email ?? 'One-on-one expenses and payments'}
             <FriendStatusBadge status={friend.status} />
           </span>
         }
@@ -173,11 +173,10 @@ export function FriendView({ friendId, search }: { friendId: string; search: Fri
       />
 
       <ExpensePage
-        stats={<FriendStats friend={friend} />}
+        stats={<FriendStats friend={friend} summary={summary} />}
         aside={
           <>
             <BalanceCard friend={friend} />
-            <RemoveFriend friend={friend} />
           </>
         }
       >
@@ -211,7 +210,7 @@ export function FriendView({ friendId, search }: { friendId: string; search: Fri
           }
           more={ledger.hasMore && hrefFor({ ...search, limit: search.limit + LIST_STEP })}
         >
-          <ExpenseTable columns={columns}>
+          <ExpenseTable columns={['Paid by', 'Split']}>
             {ledger.items.map((entry) => (
               <EntryRow key={entry.id} entry={entry} friend={friend} />
             ))}
@@ -222,25 +221,40 @@ export function FriendView({ friendId, search }: { friendId: string; search: Fri
   )
 }
 
-/** A friend's figures: the balance, whether they're on Settlr, the last activity. */
-function FriendStats({ friend }: { friend: Friend }) {
+/**
+ * A friend's figures, in the same order as a group's: what you've shared,
+ * where you stand, how many expenses, and when you last added something.
+ */
+function FriendStats({ friend, summary }: { friend: Friend; summary: FriendSummary }) {
   const balances = Object.entries(friend.balances).filter(
     (entry): entry is [string, number] => Boolean(entry[1]),
   ) as Array<[Currency, number]>
   // The largest balance leads; the tone follows it.
   const [main] = [...balances].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+  const totals = summary?.totals ?? []
+  const count = totals.reduce((n, t) => n + t.count, 0)
+  const lead = totals[0]
   return (
     <StatGrid>
       <StatCard
-        label="Balance"
+        label="Total shared"
+        icon={<Wallet />}
+        value={totals.map((t) => formatMoney(t.totalCents, t.currency)).join(' + ')}
+        hint={lead && `Your share ${formatMoney(lead.shareCents, lead.currency)}`}
+      />
+      <StatCard
+        label="Your balance"
         icon={<Scale />}
         tone={main ? (main[1] > 0 ? 'positive' : 'negative') : undefined}
         value={
           main
             ? balances
-                .map(([currency, cents]) => formatMoney(Math.abs(cents), currency))
-                .join(' + ')
-            : 'Settled up'
+                .map(
+                  ([currency, cents]) =>
+                    `${cents > 0 ? '+' : '−'}${formatMoney(Math.abs(cents), currency)}`,
+                )
+                .join(' ')
+            : 'Square'
         }
         hint={
           main
@@ -251,21 +265,11 @@ function FriendStats({ friend }: { friend: Friend }) {
         }
       />
       <StatCard
-        label="On Settlr"
-        icon={<Users />}
-        value={
-          friend.status === 'linked'
-            ? 'Linked'
-            : friend.status === 'pending'
-              ? 'Request sent'
-              : 'Not linked'
-        }
+        label="Expenses"
+        icon={<Receipt />}
+        value={count || ''}
         hint={
-          friend.status === 'linked'
-            ? `${friend.name} sees these entries too`
-            : friend.email
-              ? 'Send a request to share the ledger'
-              : 'Add an email to share the ledger'
+          lead && count > 0 && `Avg ${formatMoney(Math.round(lead.totalCents / lead.count), lead.currency)}`
         }
       />
       <StatCard
@@ -277,7 +281,10 @@ function FriendStats({ friend }: { friend: Friend }) {
   )
 }
 
-/** The side card: what's owed in each currency. */
+/**
+ * The side card, like a group's Balances card: what's owed in each
+ * currency, and removing the friend below a hairline.
+ */
 function BalanceCard({ friend }: { friend: Friend }) {
   return (
     <Card>
@@ -285,12 +292,14 @@ function BalanceCard({ friend }: { friend: Friend }) {
         <CardTitle>Balance</CardTitle>
         <CardDescription>Expenses minus payments, per currency.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="grid gap-3">
         <BalanceText
           balances={friend.balances}
           them={friend.name}
           className="justify-items-start text-sm"
         />
+        <Separator />
+        <RemoveFriend friend={friend} />
       </CardContent>
     </Card>
   )
@@ -341,8 +350,11 @@ function EntryRow({ entry, friend }: { entry: FriendEntry; friend: Friend }) {
               { value: payer, folded: `${payer} paid` },
               entry.split === 'equal' ? 'Equally' : 'Owed in full',
             ]
-          : // The title already says who paid whom.
-            []
+          : // The title already says who paid whom, so nothing folds.
+            [
+              { value: payer, folded: null },
+              { value: 'Payment', folded: null },
+            ]
       }
       amount={
         <>
@@ -691,7 +703,8 @@ function RemoveFriend({ friend }: { friend: Friend }) {
       trigger={
         <Button
           variant="ghost"
-          className="justify-self-start text-muted-foreground hover:text-destructive"
+          size="sm"
+          className="-ml-2 justify-self-start text-muted-foreground hover:text-destructive"
         >
           <Trash2 />
           Remove friend

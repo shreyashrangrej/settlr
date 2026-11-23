@@ -87,7 +87,10 @@ export function PageHeader({
 /**
  * A two-column page body: main content and a sidebar. They only sit side by
  * side from 1400px, where the column beside the app sidebar has room for
- * both; below that the sidebar stacks under the content.
+ * both; below that the sidebar stacks under the content. When the content
+ * starts with an expense list's filter toolbar (one 26px row, then 12px),
+ * the sidebar starts 38px down, level with the list's card rather than the
+ * toolbar, so every expense page lines up the same way.
  */
 export function SplitLayout({
   children,
@@ -97,7 +100,7 @@ export function SplitLayout({
   aside: React.ReactNode
 }) {
   return (
-    <div className="grid items-start gap-4 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid items-start gap-4 min-[1400px]:grid-cols-[minmax(0,1fr)_22rem] min-[1400px]:has-[[data-slot=expense-toolbar]]:[&>aside]:mt-9.5">
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">{children}</div>
       <aside className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 min-[1400px]:sticky min-[1400px]:top-4">
         {aside}
