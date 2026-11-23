@@ -18,9 +18,11 @@ import {
   type ExpenseFilter,
 } from '@settlr/shared/schemas'
 
-// The filter bar every expense list shares: a text search, the category,
-// who paid (where more than one person can) and the sort. The values live
-// in the URL, so a filtered list is shareable and renders on the server.
+// The filter bar every expense list shares, as Gr8r Studio's list toolbar:
+// a small search box, then the category, who paid (where more than one
+// person can) and the sort as small selects, in one row above the list.
+// The values live in the URL, so a filtered list is shareable and renders
+// on the server.
 
 const categoryOptions = [
   { value: 'all', label: 'All categories' },
@@ -38,6 +40,9 @@ const sortOptions = [
   { value: 'amount:asc', label: 'Smallest first' },
 ] as const
 type SortValue = (typeof sortOptions)[number]['value']
+
+// The selects share a phone-wide row and take their own width from `sm`.
+const select = 'min-w-0 flex-1 sm:w-auto sm:flex-none'
 
 /** The filters, with `P` the `paidBy` values the list knows. */
 type Filter<P extends string> = Omit<ExpenseFilter, 'paidBy'> & { paidBy: P | '' }
@@ -57,23 +62,19 @@ export function ExpenseFilters<P extends string>({
   return (
     <form
       role="search"
-      className={cn(
-        'grid gap-2',
-        payers
-          ? 'sm:grid-cols-3 xl:grid-cols-[minmax(12rem,2fr)_repeat(3,minmax(8rem,1fr))]'
-          : 'sm:grid-cols-2 xl:grid-cols-[minmax(12rem,2fr)_repeat(2,minmax(8rem,1fr))]',
-      )}
+      className="flex flex-wrap items-center gap-2"
       onSubmit={(event) => {
         event.preventDefault()
         const q = new FormData(event.currentTarget).get('q')
         onChange({ q: typeof q === 'string' ? q.trim() : '' })
       }}
     >
-      <InputGroup className={cn(payers ? 'sm:col-span-3' : 'sm:col-span-2', 'xl:col-span-1')}>
-        <InputGroupAddon>
+      <InputGroup className="h-8 w-full sm:h-6.5 sm:w-56">
+        <InputGroupAddon className="pl-2.5 text-dim [&>svg:not([class*='size-'])]:size-3.5">
           <Search />
         </InputGroupAddon>
         <InputGroupInput
+          className="sm:text-ui"
           // Keyed on the URL value so back/forward navigation resets the input.
           key={value.q}
           type="search"
@@ -85,6 +86,8 @@ export function ExpenseFilters<P extends string>({
       </InputGroup>
       <SelectField
         aria-label="Category"
+        size="sm"
+        className={select}
         value={value.category}
         onChange={(category) => onChange({ category })}
         options={categoryOptions}
@@ -92,6 +95,8 @@ export function ExpenseFilters<P extends string>({
       {payers && (
         <SelectField<P | typeof ANYONE>
           aria-label="Paid by"
+          size="sm"
+          className={select}
           value={value.paidBy || ANYONE}
           onChange={(paidBy) => onChange({ paidBy: paidBy === ANYONE ? '' : (paidBy as P) })}
           options={[{ value: ANYONE, label: 'Anyone paid' }, ...payers]}
@@ -99,6 +104,8 @@ export function ExpenseFilters<P extends string>({
       )}
       <SelectField
         aria-label="Sort"
+        size="sm"
+        className={cn(select, 'sm:ml-auto')}
         value={`${value.sort}:${value.order}` as SortValue}
         onChange={(next) => {
           const [sort, order] = next.split(':') as [ExpenseFilter['sort'], ExpenseFilter['order']]

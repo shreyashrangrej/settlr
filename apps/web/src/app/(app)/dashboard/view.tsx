@@ -663,7 +663,7 @@ function Balances({
         </Tabs>
       </div>
       {shown.length === 0 ? (
-        <p className="border-t border-divider py-8 text-center text-muted-foreground">
+        <p className="border-t border-divider px-3.5 py-8 text-center text-muted-foreground">
           {balances.length === 0
             ? 'You’re all settled up. Balances with friends and groups show up here.'
             : filter === 'owed'
@@ -1031,8 +1031,8 @@ function RecentSpending({
   className?: string
 }) {
   return (
-    <section aria-labelledby="act-h" className={cn(card, 'gap-3 p-3.5', className)}>
-      <div className="flex min-h-9 flex-wrap items-center justify-between gap-3">
+    <section aria-labelledby="act-h" className={cn(card, 'overflow-hidden', className)}>
+      <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 pt-3 pb-2.5">
         <h2 id="act-h" className={cardTitle}>
           Recent personal spending
         </h2>
@@ -1041,7 +1041,7 @@ function RecentSpending({
         </Link>
       </div>
       {items.length === 0 ? (
-        <p className="border-t border-divider py-8 text-center text-muted-foreground">
+        <p className="border-t border-divider px-3.5 py-8 text-center text-muted-foreground">
           No personal expenses in {formatMonth(month)} yet.
         </p>
       ) : (

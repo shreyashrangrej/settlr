@@ -2,6 +2,7 @@
 
 import { ChartColumn, Clock, Receipt, Users, Wallet } from 'lucide-react'
 
+import { PersonAvatar } from '#/components/ledger'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import { useGroup } from '#/components/use-group'
 import {
@@ -121,11 +122,12 @@ function MemberShares({
   format: (cents: number) => string
 }) {
   return (
-    <Card>
-      <CardHeader>
+    <Card className="gap-0 pb-0">
+      <CardHeader className="pb-2.5">
         <CardTitle>Paid vs. share</CardTitle>
       </CardHeader>
-      <CardContent>
+      {/* The table runs edge to edge (see ui/table.tsx). */}
+      <CardContent className="px-0">
         <Table className="table-fixed">
           <TableHeader>
             <TableRow>
@@ -137,11 +139,16 @@ function MemberShares({
           <TableBody>
             {group.members.map((m) => (
               <TableRow key={m.id}>
-                <TableCell className="truncate font-medium">
-                  {m.name}
-                  {m.id === group.meMemberId && (
-                    <span className="text-muted-foreground"> (you)</span>
-                  )}
+                <TableCell className="font-medium">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <PersonAvatar name={m.name} me={m.id === group.meMemberId} />
+                    <span className="truncate">
+                      {m.name}
+                      {m.id === group.meMemberId && (
+                        <span className="font-normal text-faint"> (you)</span>
+                      )}
+                    </span>
+                  </span>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{format(m.paidCents)}</TableCell>
                 <TableCell className="text-right tabular-nums">{format(m.owedCents)}</TableCell>

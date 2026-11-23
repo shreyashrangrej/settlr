@@ -89,14 +89,15 @@ export function BudgetView({
           ))}
         </StatGrid>
 
-        <Card>
-          <CardHeader>
+        <Card className="gap-0 pb-0">
+          <CardHeader className="pb-2.5">
             <CardTitle>Where it went</CardTitle>
             <CardDescription>
               Your share of each expense; settle-up payments don’t count.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          {/* The table runs edge to edge (see ui/table.tsx). */}
+          <CardContent className="px-0">
             {spending.length === 0 ? (
               <Empty className="py-10">
                 <EmptyHeader>
@@ -127,7 +128,7 @@ export function BudgetView({
                       return (
                         <TableRow key={`${row.currency}:${source.key}`}>
                           <TableCell className="font-medium">
-                            <span className="flex items-center gap-3">
+                            <span className="flex items-center gap-2.5">
                               <IconTile className="text-primary">{source.icon}</IconTile>
                               <span className="grid min-w-0">
                                 <Link
@@ -136,7 +137,7 @@ export function BudgetView({
                                 >
                                   {source.label}
                                 </Link>
-                                <span className="truncate text-xs font-normal text-muted-foreground">
+                                <span className="truncate text-xs font-normal text-faint">
                                   {row.currency}
                                   <span className="md:hidden"> · {share}% of spending</span>
                                 </span>
@@ -145,7 +146,7 @@ export function BudgetView({
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
                             <span className="flex items-center gap-2.5">
-                              <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-track">
+                              <span className="h-1 flex-1 overflow-hidden rounded-full bg-track">
                                 <span
                                   className="block h-full rounded-full bg-primary"
                                   style={{ width: `${share}%` }}

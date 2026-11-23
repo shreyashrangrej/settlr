@@ -58,22 +58,41 @@ function StatRowSkeleton({ count = 4 }: { count?: number }) {
   )
 }
 
-/** A list card; `filters` adds the expense lists' filter bar above it. */
+/**
+ * A list: `filters` adds the expense lists' toolbar above the card; inside,
+ * the header row and rows run edge to edge like the real table.
+ */
 export function TableSkeleton({ rows = 6, filters = false }: { rows?: number; filters?: boolean }) {
   return (
-    <Panel className="gap-0">
-      {filters && <Skeleton className="mb-4 h-8.5 w-full rounded-lg sm:h-7.5" />}
-      <Skeleton className="mb-3 h-4 w-full max-w-md" />
-      {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="flex items-center gap-4 border-t border-divider py-3.5">
-          <Skeleton className="size-8.5 rounded-lg" />
-          <Skeleton className="h-4 flex-1" />
-          <Skeleton className="hidden h-4 w-24 md:block" />
-          <Skeleton className="hidden h-4 w-24 md:block" />
-          <Skeleton className="h-4 w-20" />
+    <div className="grid gap-3">
+      {filters && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-8 w-full rounded-lg sm:h-6.5 sm:w-56" />
+          <Skeleton className="h-8 flex-1 rounded-lg sm:h-6.5 sm:w-32 sm:flex-none" />
+          <Skeleton className="h-8 flex-1 rounded-lg sm:ml-auto sm:h-6.5 sm:w-28 sm:flex-none" />
         </div>
-      ))}
-    </Panel>
+      )}
+      <div className="overflow-hidden rounded-xl border bg-card">
+        <div className="flex h-9 items-center border-b border-divider px-3.5">
+          <Skeleton className="h-3 w-24" />
+        </div>
+        {Array.from({ length: rows }, (_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 border-b border-divider px-3.5 py-2.25 last:border-b-0"
+          >
+            <Skeleton className="size-7 rounded-md" />
+            <span className="grid flex-1 gap-1.5">
+              <Skeleton className="h-3.5 w-2/5" />
+              <Skeleton className="h-3 w-1/4" />
+            </span>
+            <Skeleton className="hidden h-3.5 w-20 md:block" />
+            <Skeleton className="hidden h-3.5 w-20 md:block" />
+            <Skeleton className="h-3.5 w-16" />
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 

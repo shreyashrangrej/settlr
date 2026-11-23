@@ -268,11 +268,16 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   (`src/components/stat-card.tsx`), lists of records are tables whose extra
   columns appear on wider screens (`hidden md:table-cell`, with the details
   folded into the first cell below that); expense lists get this from
-  `ExpenseTable`/`ExpenseRow`, so build new ones on those. Tables are `table-fixed`: the
-  short columns get fixed widths (`w-28` date, `w-32` amount, `w-20`
-  actions) and the first column takes the rest, with an icon tile (e.g.
-  `CategoryIcon`) and a muted second line (see the group, personal and
-  budget tables). Rows have no hover fill. Collections of things (friends,
+  `ExpenseTable`/`ExpenseRow`, so build new ones on those. Tables follow
+  Gr8r's members table: they run edge to edge inside their card (no padded
+  `CardContent` around them; `ui/table.tsx` puts the first and last
+  columns on the card's 14px gutter), any filter bar sits above the card
+  (`ExpenseSection` does both), and row actions are one "⋯" menu
+  (`RowActions`). Tables are `table-fixed`: the short columns get fixed
+  widths (`w-28` date, `w-32` amount, `w-12` actions) and the first column
+  takes the rest, with an icon tile (e.g. `CategoryIcon`) or avatar and a
+  faint second line (see the group, personal and budget tables). Rows
+  have no hover fill. Collections of things (friends,
   groups) are card grids with `repeat(auto-fill,minmax(…,1fr))`, and forms
   get a max width. `SplitLayout` gives a page a main area and a 22rem
   sidebar from 1400px (below that the column beside the app sidebar is too

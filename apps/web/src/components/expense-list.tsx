@@ -1,13 +1,21 @@
 'use client'
 
-import { createContext, use } from 'react'
+import { createContext, use, useState } from 'react'
 import Link from 'next/link'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Ellipsis, Pencil, Trash2 } from 'lucide-react'
 
 import { ConfirmAction } from '#/components/confirm-action'
 import { EditDialog } from '#/components/edit-dialog'
+import { useAppRouter } from '#/components/navigation-progress'
 import { Button, buttonVariants } from '#/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
+import { Card, CardHeader, CardTitle } from '#/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
 import {
   Empty,
   EmptyContent,
@@ -28,12 +36,13 @@ import { formatDate } from '@settlr/shared/format'
 import { cn } from '#/lib/utils'
 
 // The expense list every section shares (a group's expenses, a friend's
-// ledger, personal spending, the dashboard's preview): a card with the
-// filters, a fixed-layout table and a "show more" link. Rows have the same
-// shape everywhere: an icon tile and the description with a muted line
-// under it, the date, the section's own columns, the amount and the
-// edit/delete buttons. Columns hidden on narrow screens fold into the
-// muted line instead.
+// ledger, personal spending, the dashboard's preview), laid out like Gr8r
+// Studio's members table: the filter bar above a card, the table edge to
+// edge inside it, and a "show more" link. Rows have the same shape
+// everywhere: an icon tile and the description with a faint line under
+// it, the date, the section's own columns, the amount and a "⋯" menu with
+// Edit and Delete. Columns hidden on narrow screens fold into the faint
+// line instead.
 
 /** The viewport width from which a column has its own cell. */
 type Breakpoint = 'md' | 'lg' | 'xl' | '2xl'
@@ -67,9 +76,9 @@ type TableLayout = { columns: Array<ExpenseColumn>; actions: boolean }
 const LayoutContext = createContext<TableLayout>({ columns: [], actions: false })
 
 /**
- * A card with an expense list: `filters` above it, then the rows (an
- * `ExpenseTable`) or `empty` when there are none. `more` is the "show
- * more" link's href, `note` a line under the card.
+ * An expense list: `filters` above a card holding the rows (an
+ * `ExpenseTable`, flush to its edges) or `empty` when there are none.
+ * `more` is the "show more" link's href, `note` a line under the card.
  */
 export function ExpenseSection({
   title,
@@ -89,17 +98,17 @@ export function ExpenseSection({
 }) {
   return (
     <>
-      <Card>
-        {title && (
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-          </CardHeader>
-        )}
-        <CardContent className="grid gap-4">
-          {filters}
+      <div className="grid gap-3">
+        {filters}
+        <Card className="gap-0 py-0">
+          {title && (
+            <CardHeader className="border-b border-divider pt-3 pb-2.5">
+              <CardTitle>{title}</CardTitle>
+            </CardHeader>
+          )}
           {empty ? <ExpenseEmpty {...empty} /> : children}
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
       {more && (
         <Link
           href={more}
@@ -124,7 +133,7 @@ export type EmptyState = {
 
 function ExpenseEmpty({ icon, title, description, clearHref }: EmptyState) {
   return (
-    <Empty className="py-10">
+    <Empty className="py-12">
       <EmptyHeader>
         <EmptyMedia variant="icon">{icon}</EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>
@@ -170,16 +179,13 @@ export function ExpenseTable({
           <TableRow>
             <TableHead>{first}</TableHead>
             {[DATE_COLUMN, ...columns].map((column) => (
-              <TableHead
-                key={column.label}
-                className={cn(SHOW[column.from], column.width, column.className)}
-              >
+              <TableHead key={column.label} className={cn(SHOW[column.from], column.width)}>
                 {column.label}
               </TableHead>
             ))}
             <TableHead className="w-32 text-right">{amount}</TableHead>
             {actions && (
-              <TableHead className="w-20">
+              <TableHead className="w-12">
                 <span className="sr-only">Actions</span>
               </TableHead>
             )}
@@ -237,7 +243,7 @@ export function ExpenseRow({
   return (
     <TableRow>
       <TableCell className="font-medium">
-        <span className="flex items-center gap-3">
+        <span className="flex items-center gap-2.5">
           {icon}
           <span className="grid min-w-0">
             <span className="flex items-center gap-1">
@@ -246,7 +252,7 @@ export function ExpenseRow({
               </span>
               {receipt}
             </span>
-            <span className="truncate text-xs font-normal text-muted-foreground">
+            <span className="truncate text-xs font-normal text-faint">
               {subtitle}
               {folded.map(
                 ({ from, value }, i) =>
@@ -279,8 +285,8 @@ export function ExpenseRow({
         </span>
       </TableCell>
       {layout.actions && (
-        <TableCell>
-          <span className="flex justify-end gap-1">{actions}</span>
+        <TableCell className="pl-0">
+          <span className="flex justify-end">{actions}</span>
         </TableCell>
       )}
     </TableRow>
@@ -288,8 +294,8 @@ export function ExpenseRow({
 }
 
 /**
- * A row's edit and delete buttons. `edit` is a page to go to, or a form to
- * open in a dialog; deleting asks first.
+ * A row's "⋯" menu (Gr8r's row options) with Edit and Delete. `edit` is a
+ * page to go to, or a form to open in a dialog; deleting asks first.
  */
 export function RowActions({
   name,
@@ -297,7 +303,7 @@ export function RowActions({
   deleteDescription = 'This can’t be undone.',
   onDelete,
 }: {
-  /** What the row is called, for the buttons' labels. */
+  /** What the row is called, for the menu's label and the dialogs. */
   name: string
   edit:
     | { href: string }
@@ -309,40 +315,55 @@ export function RowActions({
   deleteDescription?: string
   onDelete: () => Promise<boolean>
 }) {
+  const router = useAppRouter()
+  const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
   return (
     <>
-      {'href' in edit ? (
-        <Link
-          href={edit.href}
-          aria-label={`Edit ${name}`}
-          title="Edit"
-          className={cn(
-            buttonVariants({ variant: 'ghost', size: 'icon-sm' }),
-            'text-muted-foreground hover:text-foreground',
-          )}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Options for ${name}`}
+              title="Options"
+            />
+          }
         >
-          <Pencil />
-        </Link>
-      ) : (
-        <EditDialog label={`Edit ${name}`} title={edit.title} description={edit.description}>
+          <Ellipsis />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-36">
+          <DropdownMenuItem
+            onClick={() => ('href' in edit ? router.push(edit.href) : setEditing(true))}
+          >
+            <Pencil />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
+            <Trash2 />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {!('href' in edit) && (
+        <EditDialog
+          open={editing}
+          onOpenChange={setEditing}
+          title={edit.title}
+          description={edit.description}
+        >
           {edit.form}
         </EditDialog>
       )}
       <ConfirmAction
+        open={deleting}
+        onOpenChange={setDeleting}
         title={`Delete “${name}”?`}
         description={deleteDescription}
         onConfirm={onDelete}
-        trigger={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={`Delete ${name}`}
-            title="Delete"
-            className="text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 />
-          </Button>
-        }
       />
     </>
   )

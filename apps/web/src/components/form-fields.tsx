@@ -39,6 +39,7 @@ export function SelectField<T extends string>({
   value,
   onChange,
   options,
+  size,
   className,
   'aria-label': ariaLabel,
 }: {
@@ -46,6 +47,8 @@ export function SelectField<T extends string>({
   value: T
   onChange: (value: T) => void
   options: Array<Option<T>>
+  /** `sm` is the toolbar size (26px from `sm`). */
+  size?: 'default' | 'sm'
   className?: string
   'aria-label'?: string
 }) {
@@ -57,7 +60,12 @@ export function SelectField<T extends string>({
         if (next !== null) onChange(next as T)
       }}
     >
-      <SelectTrigger id={id} aria-label={ariaLabel} className={cn('w-full', className)}>
+      <SelectTrigger
+        id={id}
+        size={size}
+        aria-label={ariaLabel}
+        className={cn('w-full', className)}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

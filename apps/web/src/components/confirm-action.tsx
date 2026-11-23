@@ -17,23 +17,32 @@ import { Spinner } from '#/components/ui/spinner'
 
 /**
  * A destructive action behind a confirmation dialog. `trigger` is the
- * element that opens it (a Base UI `render` element, e.g. a Button).
- * `onConfirm` resolves to true when it worked; the dialog then closes.
+ * element that opens it (a Base UI `render` element, e.g. a Button); or
+ * leave it out and pass `open`/`onOpenChange` to open it from elsewhere (a
+ * row's menu). `onConfirm` resolves to true when it worked; the dialog then
+ * closes.
  */
 export function ConfirmAction({
   trigger,
+  open: controlledOpen,
+  onOpenChange,
   title,
   description,
   confirmLabel = 'Delete',
   onConfirm,
 }: {
-  trigger: React.ReactElement
+  trigger?: React.ReactElement
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   title: string
   description: React.ReactNode
   confirmLabel?: string
   onConfirm: () => Promise<boolean>
 }) {
-  const [open, setOpen] = useState(false)
+  const [ownOpen, setOwnOpen] = useState(false)
+  const controlled = controlledOpen !== undefined
+  const open = controlled ? controlledOpen : ownOpen
+  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setOwnOpen(next))
   const [pending, setPending] = useState(false)
 
   async function confirm() {
@@ -47,7 +56,7 @@ export function ConfirmAction({
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger render={trigger} />
+      {trigger && <AlertDialogTrigger render={trigger} />}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
