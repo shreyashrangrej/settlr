@@ -95,8 +95,10 @@
   --ease: cubic-bezier(0.23, 1, 0.32, 1);
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --dur: 140ms;
-  /* How strong the frame's artwork is (`frame-art`). */
-  --art: 0.75;
+  /* The app frame (`frame-art`): how much accent it takes, and how strong
+     its grain is. */
+  --frame-tint: 9%;
+  --frame-grain: 0.3;
 
   /* shadcn's variable names, for component styles that read them directly
      (e.g. the toaster). They follow the tokens above in both themes. */
@@ -153,7 +155,8 @@
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
   --shadow-pop: 0 16px 40px -10px rgb(0 0 0 / 60%), 0 0 0 1px var(--border-strong);
   --shadow-color: 0 0% 0%;
-  --art: 1;
+  --frame-tint: 12%;
+  --frame-grain: 0.16;
 }
 
 /* Gr8r's accent choices (Settings → Appearance), light and dark. */
@@ -397,61 +400,16 @@
   line-height: 1;
 }
 
-/* The app frame's artwork (the sidebar, top bar and rim around the page
-   panel, from `lg`): an aurora of soft glows in the accent colour (so it
-   follows the accent picked in Settings), with touches of rose and violet, drifting
-   slowly; and a fine dot grid that fades out below the top bar. Both are
-   pseudo-elements behind the frame's contents, so the sidebar and bar
-   stay transparent over them; the drift is a transform, which the GPU
-   composites without repainting. `--art` sets the strength: quieter on
-   paper (light), fuller on charcoal (dark). */
+/* The app frame (the sidebar, top bar and rim around the page panel, from
+   `lg`): a solid, deep shade of the accent, so it follows the accent picked
+   in Settings, with a fine film grain over it (SVG fractal noise, blended
+   soft-light) for a printed feel. The sidebar and top bar are transparent
+   over it. `--frame-tint` and `--frame-grain` set the strength per theme. */
 @utility frame-art {
   position: relative;
   isolation: isolate;
   overflow: clip;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: -4%;
-    z-index: -1;
-    pointer-events: none;
-    /* Placed where the frame shows: wide glows along the top bar (accent
-       on the right, rose in the middle), and down the sidebar (accent at
-       its head, a softer accent mid-way and violet at its foot). */
-    background:
-      radial-gradient(
-        52rem 13rem at 88% 2%,
-        color-mix(in oklab, var(--accent) calc(62% * var(--art)), transparent),
-        transparent 72%
-      ),
-      radial-gradient(
-        40rem 11rem at 50% 0%,
-        color-mix(in oklab, var(--rose) calc(38% * var(--art)), transparent),
-        transparent 72%
-      ),
-      radial-gradient(
-        22rem 26rem at 4% 8%,
-        color-mix(in oklab, var(--accent) calc(42% * var(--art)), transparent),
-        transparent 70%
-      ),
-      radial-gradient(
-        26rem 30rem at 2% 98%,
-        color-mix(in oklab, var(--violet) calc(48% * var(--art)), transparent),
-        transparent 70%
-      ),
-      radial-gradient(
-        18rem 22rem at 10% 58%,
-        color-mix(in oklab, var(--accent) calc(18% * var(--art)), transparent),
-        transparent 70%
-      ),
-      radial-gradient(
-        30rem 14rem at 96% 100%,
-        color-mix(in oklab, var(--accent) calc(40% * var(--art)), transparent),
-        transparent 72%
-      );
-    animation: aurora 28s ease-in-out infinite alternate;
-  }
+  background-color: color-mix(in oklab, var(--accent) var(--frame-tint), var(--bg-sidebar));
 
   &::after {
     content: '';
@@ -459,22 +417,9 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background-image: radial-gradient(
-      circle at 1px 1px,
-      color-mix(in srgb, var(--text) calc(11% * var(--art)), transparent) 1px,
-      transparent 1.5px
-    );
-    background-size: 14px 14px;
-    mask-image: linear-gradient(to bottom, #000 0, transparent 9rem);
-  }
-}
-
-@keyframes aurora {
-  from {
-    transform: translate3d(-1.5%, -1%, 0) scale(1);
-  }
-  to {
-    transform: translate3d(1.5%, 1%, 0) scale(1.04);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: var(--frame-grain);
+    mix-blend-mode: soft-light;
   }
 }
 

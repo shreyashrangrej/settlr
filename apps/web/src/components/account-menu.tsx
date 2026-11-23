@@ -62,7 +62,7 @@ export function AccountMenu({
               type="button"
               aria-label="Account menu"
               title={label}
-              className="flex h-9 w-full items-center rounded-lg pl-1.25 outline-none transition-colors duration-140 hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-raised"
+              className="flex h-9 w-full items-center rounded-lg pl-1.25 outline-none transition-colors duration-140 hover:bg-foreground/6 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-foreground/6"
             />
           }
         >
@@ -74,7 +74,7 @@ export function AccountMenu({
             <button
               type="button"
               aria-label="Account menu"
-              className="flex h-9 min-w-0 flex-1 items-center gap-2.25 rounded-lg px-2 text-left outline-none transition-colors duration-140 hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-raised"
+              className="flex h-9 min-w-0 flex-1 items-center gap-2.25 rounded-lg px-2 text-left outline-none transition-colors duration-140 hover:bg-foreground/6 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-foreground/6"
             />
           }
         >

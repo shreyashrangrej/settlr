@@ -40,11 +40,11 @@ import { api } from '@settlr/backend/convex/_generated/api'
 const SIDEBAR_GROUPS = 6
 
 // Gr8r Studio's sidebar row (`.sitem`): 30px, muted text and dim icons that
-// brighten on hover over a raised fill; the current page is the plain
-// surface lifted by a hairline and a small shadow (light) or the raised
-// fill (dark).
+// brighten on hover over a wash of the text colour (so it sits on the
+// frame's accent tint); the current page is the plain surface lifted by a
+// hairline and a small shadow (light) or a brighter wash (dark).
 const sideItem =
-  'relative flex h-7.5 w-full items-center gap-2.25 rounded-lg px-2 text-left text-sm font-[450] whitespace-nowrap text-muted-foreground no-underline outline-none transition-colors duration-140 hover:bg-raised hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:bg-card data-[status=active]:font-medium data-[status=active]:text-foreground data-[status=active]:shadow-[0_1px_2px_rgb(0_0_0/5%),0_0_0_1px_var(--border)] dark:data-[status=active]:bg-raised dark:data-[status=active]:shadow-none [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-dim hover:[&>svg]:text-muted-foreground data-[status=active]:[&>svg]:text-muted-foreground'
+  'relative flex h-7.5 w-full items-center gap-2.25 rounded-lg px-2 text-left text-sm font-[450] whitespace-nowrap text-muted-foreground no-underline outline-none transition-colors duration-140 hover:bg-foreground/6 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[status=active]:bg-card data-[status=active]:font-medium data-[status=active]:text-foreground data-[status=active]:shadow-[0_1px_2px_rgb(0_0_0/5%),0_0_0_1px_var(--border)] dark:data-[status=active]:bg-foreground/10 dark:data-[status=active]:shadow-none [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-dim hover:[&>svg]:text-muted-foreground data-[status=active]:[&>svg]:text-muted-foreground'
 // Gr8r's sidebar group heading (`.sgroup-h`): 11px, uppercase, tracked.
 const sideHeading =
   'flex h-6 items-center px-2 text-2xs font-semibold tracking-[0.06em] text-faint uppercase'
@@ -88,9 +88,9 @@ export function AppShell({
   }
 
   return (
-    // From `lg` the frame (sidebar, top bar and rim) is painted with
-    // `frame-art`: soft accent glows over the sidebar colour (styles.css).
-    <div className="flex min-h-svh items-stretch bg-background lg:h-svh lg:frame-art lg:bg-sidebar">
+    // From `lg` the frame (sidebar, top bar and rim) is `frame-art`: a deep
+    // shade of the accent with a fine grain (styles.css).
+    <div className="flex min-h-svh items-stretch bg-background lg:h-svh lg:frame-art">
       <aside
         data-collapsed={collapsed || undefined}
         // The width snaps rather than slides: sliding it would reflow the
@@ -124,7 +124,7 @@ export function AppShell({
         {/* The scrollbar's gutter is always reserved, so moving between a
             page that scrolls and one that doesn't (or a skeleton and its
             page) doesn't shift everything sideways by its width. */}
-        <div className="flex min-w-0 flex-1 flex-col bg-background lg:mr-2 lg:mb-2 lg:min-h-0 lg:overflow-y-auto lg:rounded-xl lg:border lg:border-t-[color-mix(in_srgb,var(--accent)_28%,var(--border))] lg:shadow-[0_1px_2px_rgb(0_0_0/6%),0_18px_48px_-24px_color-mix(in_srgb,var(--accent)_45%,transparent)] lg:[scrollbar-gutter:stable]">
+        <div className="flex min-w-0 flex-1 flex-col bg-background lg:mr-2 lg:mb-2 lg:min-h-0 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-xs lg:[scrollbar-gutter:stable]">
           {/* Gr8r's page: centred, at most 1160px, on the shared 24px
               gutter (16px on phones). */}
           <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-5 lg:pb-12">
@@ -193,7 +193,7 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?
           href="/dashboard"
           aria-label="Settlr, dashboard"
           className={cn(
-            'flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.25 no-underline outline-none transition-colors duration-140 hover:bg-raised focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+            'flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.25 no-underline outline-none transition-colors duration-140 hover:bg-foreground/6 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
             !collapsed && 'flex-1',
           )}
         >
