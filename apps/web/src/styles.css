@@ -372,10 +372,12 @@
 /* A list whose items rise in one after another when they mount (Gr8r's
    route stagger): 30ms apart, capped so a long list doesn't keep the last
    rows waiting. Items added later (a new expense, "Show more") rise in on
-   their own. */
+   their own. `--stagger-animation` swaps the keyframes: table bodies use
+   `fade-in`, since rows rising from below would poke out of the table's
+   scroll container and flash a scrollbar in it. */
 @utility stagger {
   & > * {
-    animation: rise-in 0.36s var(--ease) both;
+    animation: var(--stagger-animation, rise-in) 0.36s var(--ease) both;
   }
   & > :nth-child(2) {
     animation-delay: 30ms;

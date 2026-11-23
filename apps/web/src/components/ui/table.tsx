@@ -11,7 +11,9 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      // Scrolls sideways only: nothing inside should ever make it scroll
+      // (and show a scrollbar) vertically.
+      className="relative w-full overflow-x-auto overflow-y-hidden"
     >
       <table
         data-slot="table"
@@ -36,7 +38,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
-      className={cn("stagger [&>tr:last-child]:border-b-0", className)}
+      className={cn("stagger [--stagger-animation:fade-in] [&>tr:last-child]:border-b-0", className)}
       {...props}
     />
   )
