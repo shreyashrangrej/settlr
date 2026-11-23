@@ -139,8 +139,12 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
   bar growing from `origin-left`) and `animate-pop` (springs in) run when
   an element mounts, and `stagger` on a list makes its items rise in one
   after another (table bodies have it). `RouteTransition` in the app shell
-  plays the page's rise-in on every pathname change, since Next.js keeps a
-  page mounted when only its params change. Use `ease-out-quint` (Gr8r's
+  plays the page's rise-in when the page changes (the first two path
+  segments, so a group's sub-pages, which share its header, don't replay
+  it), since Next.js keeps a page mounted when only its params change.
+  Nothing animates layout: the sidebar's width snaps, and the page panel
+  reserves its scrollbar gutter (`scrollbar-gutter: stable`) so pages that
+  scroll and pages that don't line up. Use `ease-out-quint` (Gr8r's
   `--ease`) or `ease-spring`, and keep it short (140ms for colours, about
   200 to 360ms for movement). Reduced motion (the system setting or
   `data-motion`) cuts every animation and transition to 1ms in

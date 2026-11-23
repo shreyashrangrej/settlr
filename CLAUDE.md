@@ -180,7 +180,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `prefetched.tsx` (`<Prefetched>`), `client-only.tsx` (`<ClientOnly>`),
   `nav-link.tsx` (`<NavLink>`, sets `data-status="active"`),
   `navigation-progress.tsx` (top bar, `useAppRouter()`),
-  `route-transition.tsx` (the page rises in on every pathname change).
+  `route-transition.tsx` (the page rises in when you move to another page;
+  a group's or friend's sub-pages count as one page, so their shared header
+  doesn't jump).
 - `src/styles.css`: design tokens from `design/DESIGN.md`, which is Gr8r
   Studio's design system (`--bg`, `--surface`, `--accent`, `--owed`,
   `--owe`, the label hues `--green` ... `--gray`, ...), mapped to shadcn

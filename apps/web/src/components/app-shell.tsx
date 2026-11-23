@@ -91,10 +91,12 @@ export function AppShell({
     <div className="flex min-h-svh items-stretch bg-background lg:h-svh lg:bg-sidebar">
       <aside
         data-collapsed={collapsed || undefined}
-        // Collapsing slides the width; the rows keep their icons where
-        // they are (left-aligned, not centred), so only the labels go.
+        // The width snaps rather than slides: sliding it would reflow the
+        // page on every frame (text rewrapping, the stats strip changing
+        // its column count half-way). The rows keep their icons where they
+        // are (left-aligned, not centred), so only the labels go.
         className={cn(
-          'sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-sidebar transition-[width] duration-220 ease-out-quint select-none lg:block',
+          'sticky top-0 hidden h-svh shrink-0 overflow-hidden bg-sidebar select-none lg:block',
           collapsed ? 'w-13' : 'w-63',
         )}
       >
@@ -117,7 +119,10 @@ export function AppShell({
             and below it (the sidebar is the frame on the left), rounded,
             and the page's scroller from `lg` (the window scrolls on
             phones). */}
-        <div className="flex min-w-0 flex-1 flex-col bg-background lg:mr-2 lg:mb-2 lg:min-h-0 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-xs">
+        {/* The scrollbar's gutter is always reserved, so moving between a
+            page that scrolls and one that doesn't (or a skeleton and its
+            page) doesn't shift everything sideways by its width. */}
+        <div className="flex min-w-0 flex-1 flex-col bg-background lg:mr-2 lg:mb-2 lg:min-h-0 lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-xs lg:[scrollbar-gutter:stable]">
           {/* Gr8r's page: centred, at most 1160px, on the shared 24px
               gutter (16px on phones). */}
           <main className="mx-auto w-full max-w-290 min-w-0 flex-1 px-4 pt-3 pb-28 sm:px-6 lg:pt-5 lg:pb-12">
