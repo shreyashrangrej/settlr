@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settlr for Android</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="board light" style="width: 1280px; height: 900px; padding: 56px 64px; display: flex; gap: 56px; overflow: hidden">
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <svg width="44" height="44" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="10" style="fill: var(--accent)"></rect><path d="M10 22 22 10" stroke="#fff" stroke-width="2.6" stroke-linecap="round"></path><circle cx="11.5" cy="11.5" r="2.6" fill="#fff"></circle><circle cx="20.5" cy="20.5" r="2.6" fill="#fff"></circle></svg>
+      <span class="disp" style="font-size: 28px; font-weight: 750">settlr</span>
+      <span class="badge b-acc" style="margin-left: 6px">Android redesign</span>
+    </div>
+    <h1 class="disp" style="margin: 44px 0 0; font-size: 92px; line-height: 88px; font-weight: 800; letter-spacing: -.045em">Split costs.<br>Stay friends.</h1>
+    <p style="margin: 24px 0 0; max-width: 560px; font-size: 18px; line-height: 28px; color: var(--muted); font-weight: 500">A thumb-first Settlr. What you do every day sits in the bottom half of the screen, every balance tells you what to do next, and motion shows where things come from and where they go.</p>
+    <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+      <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px">
+        <span class="tile t-violet"><i class="ic i-hand"></i></span>
+        <span class="h">One thumb</span>
+        <span class="sub" style="font-size: 14px; line-height: 20px">Add sits in the middle of the bar. Primary actions live low on the screen; quick tasks open as sheets, not new pages.</span>
+      </div>
+      <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px">
+        <span class="tile t-orange"><span class="disp" style="font-size: 20px; font-weight: 800">₹</span></span>
+        <span class="h">Amount first</span>
+        <span class="sub" style="font-size: 14px; line-height: 20px">Adding opens on a big keypad. Everything else is a chip with a smart default: today, paid by you, split equally.</span>
+      </div>
+      <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px">
+        <span class="tile t-green"><i class="ic i-in"></i></span>
+        <span class="h">Know where you stand</span>
+        <span class="sub" style="font-size: 14px; line-height: 20px">Every balance says it in words (owes you, you owe, settled), with a sign and a colour, plus the next step.</span>
+      </div>
+      <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 8px">
+        <span class="tile t-blue"><i class="ic i-spark"></i></span>
+        <span class="h">Motion that explains</span>
+        <span class="sub" style="font-size: 14px; line-height: 20px">Springs, shared elements and rolling numbers show what changed. All of it stops when Android's Remove animations is on.</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="width: 480px; flex: none; display: flex; flex-direction: column; gap: 16px">
+    <div class="card" style="padding: 24px">
+      <span class="lbl" style="text-transform: uppercase; letter-spacing: .08em">Navigation</span>
+      <div style="margin-top: 14px; border-radius: 20px; background: var(--bg); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; padding: 10px 4px">
+        <span class="nav-i on"><span class="pill"><i class="ic i-home"></i></span>Home</span>
+        <span class="nav-i"><span class="pill"><i class="ic i-users"></i></span>Groups</span>
+        <span class="nav-add" style="width: 52px; height: 52px; border-radius: 18px; transform: none"><i class="ic i-plus"></i></span>
+        <span class="nav-i"><span class="pill"><i class="ic i-user"></i></span>Friends</span>
+        <span class="nav-i"><span class="pill"><i class="ic i-pie"></i></span>Spending</span>
+      </div>
+      <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 20px">
+        <div style="display: flex; gap: 12px"><b style="width: 76px; flex: none">Home</b><span class="mut">Net balance, who to settle with next, the Ask bar, everything you're part of</span></div>
+        <div style="display: flex; gap: 12px"><b style="width: 76px; flex: none">Groups</b><span class="mut">Trips and flats → expenses, balances and the settle-up plan, insights, activity, invite links</span></div>
+        <div style="display: flex; gap: 12px"><b style="width: 76px; flex: none">＋ Add</b><span class="mut">Amount-first expense sheet; settle up and "say it" to the assistant from the same place</span></div>
+        <div style="display: flex; gap: 12px"><b style="width: 76px; flex: none">Friends</b><span class="mut">One-on-one ledgers per currency, friend requests</span></div>
+        <div style="display: flex; gap: 12px"><b style="width: 76px; flex: none">Spending</b><span class="mut">Your share this month, budget, recap, recurring bills, inbox, trash</span></div>
+        <div style="display: flex; gap: 12px"><b style="width: 76px; flex: none">Top bar</b><span class="mut">Bell → notifications, avatar → profile &amp; settings</span></div>
+      </div>
+    </div>
+    <div class="card" style="padding: 24px; flex: 1">
+      <span class="lbl" style="text-transform: uppercase; letter-spacing: .08em">What changes from today's app</span>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 20px">
+        <div style="display: flex; gap: 10px"><i class="ic s i-check" style="color: var(--accent); margin-top: 1px"></i><span>The assistant leaves the tab bar. It's the <b>Ask bar</b> on Home and <b>Say it</b> when adding.</span></div>
+        <div style="display: flex; gap: 10px"><i class="ic s i-check" style="color: var(--accent); margin-top: 1px"></i><span>Personal, Budget and All expenses become one <b>Spending</b> tab.</span></div>
+        <div style="display: flex; gap: 10px"><i class="ic s i-check" style="color: var(--accent); margin-top: 1px"></i><span><b>Add</b> moves to the middle of the bar and opens on the amount.</span></div>
+        <div style="display: flex; gap: 10px"><i class="ic s i-check" style="color: var(--accent); margin-top: 1px"></i><span>A new design language, <b>Tally</b>: violet ink on cool paper, Bricolage numerals, Manrope for text.</span></div>
+        <div style="display: flex; gap: 10px"><i class="ic s i-check" style="color: var(--accent); margin-top: 1px"></i><span>Everything the web gained on 26 Nov: <b>split modes</b>, <b>UPI</b>, reminders and payment confirmations, recurring, trash, inbox, recap, invite links.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

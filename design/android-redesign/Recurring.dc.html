@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recurring</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll">
+    <div class="inset"></div>
+    <div class="topbar">
+      <a class="ibtn" href="Spending.dc.html" aria-label="Back to spending"><i class="ic i-back"></i></a>
+      <span class="tt"></span>
+    </div>
+    <div style="padding: 0 20px">
+      <h1 class="title">Recurring</h1>
+      <p class="sub" style="margin: 6px 0 0; font-size: 14px; line-height: 20px">Rent, subscriptions and other bills Settlr adds for you on each due date.</p>
+    </div>
+
+    <div class="in" style="--i: 1; margin: 18px 16px 0; padding: 18px; border-radius: 26px; background: var(--hero); color: var(--on-hero)">
+      <div style="font-weight: 650; font-size: 13.5px; color: var(--hero-dim)">Due in the next 30 days · your share</div>
+      <div class="disp num" style="font-size: 40px; line-height: 46px; font-weight: 800; letter-spacing: -.04em">₹13,198.50</div>
+      <div style="margin-top: 12px; display: flex; gap: 6px">
+        <span class="gx" style="--i: 0; flex: 12000 1 0; height: 8px; border-radius: 4px; background: var(--on-hero)"></span>
+        <span class="gx" style="--i: 1; flex: 649 1 0; min-width: 8px; height: 8px; border-radius: 4px; background: var(--hero-dim)"></span>
+        <span class="gx" style="--i: 2; flex: 400 1 0; min-width: 8px; height: 8px; border-radius: 4px; background: var(--hero-dim)"></span>
+        <span class="gx" style="--i: 3; flex: 150 1 0; min-width: 8px; height: 8px; border-radius: 4px; background: var(--hero-dim)"></span>
+      </div>
+      <div style="margin-top: 8px; font-size: 12.5px; font-weight: 650; color: var(--hero-dim)">4 bills · rent is the big one, on 1 Dec</div>
+    </div>
+
+    <div class="sec"><h2 class="h">Repeating</h2><span class="lbl">next date</span></div>
+    <div class="card in" style="--i: 2; margin: 0 16px">
+      <div class="row">
+        <span class="tile t-violet"><i class="ic i-bed"></i></span>
+        <span class="grow"><div class="rt">Flat rent</div><div class="rs" style="display: flex; align-items: center; gap: 5px"><i class="ic xs i-repeat"></i>Every month · <a href="Group.dc.html" style="color: var(--accent-ink); font-weight: 700">Flat 4B</a></div></span>
+        <span class="end"><span class="amt">₹36,000</span><span class="lbl">1 Dec</span></span>
+        <button type="button" class="ibtn n" aria-label="Pause Flat rent" style="width: 38px; height: 38px"><i class="ic s i-pause"></i></button>
+      </div>
+      <div class="row">
+        <span class="tile t-rose"><i class="ic i-ticket"></i></span>
+        <span class="grow"><div class="rt">Streaming plan</div><div class="rs" style="display: flex; align-items: center; gap: 5px"><i class="ic xs i-repeat"></i>Every month · Personal</div></span>
+        <span class="end"><span class="amt">₹649</span><span class="lbl">4 Dec</span></span>
+        <button type="button" class="ibtn n" aria-label="Pause Streaming plan" style="width: 38px; height: 38px"><i class="ic s i-pause"></i></button>
+      </div>
+      <div class="row">
+        <span class="tile t-amber"><i class="ic i-zap"></i></span>
+        <span class="grow"><div class="rt">Wi-Fi</div><div class="rs" style="display: flex; align-items: center; gap: 5px"><i class="ic xs i-repeat"></i>Every month · <a href="Group.dc.html" style="color: var(--accent-ink); font-weight: 700">Flat 4B</a></div></span>
+        <span class="end"><span class="amt">₹1,200</span><span class="lbl">8 Dec</span></span>
+        <button type="button" class="ibtn n" aria-label="Pause Wi-Fi" style="width: 38px; height: 38px"><i class="ic s i-pause"></i></button>
+      </div>
+      <div class="row">
+        <span class="tile t-blue"><i class="ic i-ticket"></i></span>
+        <span class="grow"><div class="rt">Music family plan</div><div class="rs" style="display: flex; align-items: center; gap: 5px"><i class="ic xs i-repeat"></i>Every month · <a href="Friend.dc.html" style="color: var(--accent-ink); font-weight: 700">Rohan</a>, split</div></span>
+        <span class="end"><span class="amt">₹299</span><span class="lbl">12 Dec</span></span>
+        <button type="button" class="ibtn n" aria-label="Pause Music family plan" style="width: 38px; height: 38px"><i class="ic s i-pause"></i></button>
+      </div>
+      <div class="row" style="opacity: .72">
+        <span class="tile t-green"><i class="ic i-wallet"></i></span>
+        <span class="grow"><div class="rt" style="display: flex; align-items: center; gap: 6px">Gym membership <span class="badge b-warn">Paused</span></div><div class="rs" style="display: flex; align-items: center; gap: 5px"><i class="ic xs i-repeat"></i>Every year · Personal</div></span>
+        <span class="end"><span class="amt">₹14,000</span><span class="lbl">15 Mar</span></span>
+        <button type="button" class="ibtn" aria-label="Resume Gym membership" style="width: 38px; height: 38px; background: var(--accent); color: var(--on-accent)"><i class="ic s i-play"></i></button>
+      </div>
+    </div>
+
+    <div class="in" style="--i: 3; margin: 14px 16px 0; padding: 14px 16px; border-radius: 20px; background: var(--surface-2); display: flex; gap: 10px; font-size: 13px; line-height: 18px; font-weight: 600; color: var(--muted)">
+      <i class="ic s i-info" style="margin-top: 1px"></i>
+      <span>Pausing skips dates until you resume. Stopping keeps the expenses it already added. To repeat one with a friend or a group, add it there and pick how often.</span>
+    </div>
+    <div style="height: 110px"></div>
+  </div>
+  <button type="button" class="fab" style="border: 0"><i class="ic i-repeat"></i>Repeat something</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Spending</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll" style="bottom: 86px">
+    <div class="inset"></div>
+    <header style="display: flex; align-items: center; gap: 4px; height: 64px; padding: 0 12px 0 20px">
+      <h1 class="title grow">Spending</h1>
+      <a class="ibtn" href="Search.dc.html" aria-label="Search expenses"><i class="ic i-search"></i></a>
+      <button type="button" class="ibtn" aria-label="Export this month as CSV"><i class="ic i-download"></i></button>
+    </header>
+
+    <div class="in" style="--i: 1; padding: 4px 16px 0; display: flex; align-items: center; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 2px; height: 46px; padding: 0 4px; border-radius: 999px; background: var(--surface); box-shadow: var(--shadow)">
+        <button type="button" class="ibtn" aria-label="Previous month" style="width: 38px; height: 38px"><i class="ic s i-chev-l"></i></button>
+        <span style="font-weight: 750; font-size: 15px; padding: 0 4px">November</span>
+        <button type="button" class="ibtn" aria-label="Next month" style="width: 38px; height: 38px; color: var(--dim)"><i class="ic s i-chev-r"></i></button>
+      </div>
+      <div class="seg grow" style="height: 46px"><span class="on">Everything</span><span>Personal</span></div>
+    </div>
+
+    <a class="card in" href="Budget.dc.html" style="--i: 2; margin: 14px 16px 0; padding: 18px; display: flex; align-items: center; gap: 18px">
+      <div role="img" aria-label="73% of budget used" style="width: 104px; height: 104px; flex: none; border-radius: 50%; background: conic-gradient(var(--accent) 0 73%, var(--surface-2) 0 100%); display: flex; align-items: center; justify-content: center">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center"><span class="disp num" style="font-size: 24px; font-weight: 800">73%</span><span class="lbl" style="font-size: 11px">of budget</span></div>
+      </div>
+      <div class="grow">
+        <div class="lbl">Your share this month</div>
+        <div class="disp num" style="font-size: 32px; line-height: 38px; font-weight: 800; letter-spacing: -.035em">₹18,240</div>
+        <div class="sub" style="margin-top: 4px"><b class="pos num">₹6,760 left</b> of ₹25,000</div>
+        <div class="sub">₹1,352 a day for 5 days</div>
+      </div>
+    </a>
+
+    <div class="in" style="--i: 3; margin: 12px 16px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+      <a href="Recap.dc.html" class="card" style="padding: 12px 4px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 750"><span class="tile t-violet" style="width: 38px; height: 38px; border-radius: 13px"><i class="ic s i-chart"></i></span>Recap</a>
+      <a href="Recurring.dc.html" class="card" style="padding: 12px 4px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 750"><span class="tile t-blue" style="width: 38px; height: 38px; border-radius: 13px"><i class="ic s i-repeat"></i></span>Recurring</a>
+      <a href="Inbox.dc.html" class="card" style="position: relative; padding: 12px 4px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 750"><span class="tile t-teal" style="width: 38px; height: 38px; border-radius: 13px"><i class="ic s i-inbox"></i></span>Inbox<span class="badge" style="position: absolute; top: 6px; right: 10px; height: 18px; padding: 0 6px; background: var(--accent); color: var(--on-accent)">3</span></a>
+      <a href="Trash.dc.html" class="card" style="padding: 12px 4px 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 750"><span class="tile t-gray" style="width: 38px; height: 38px; border-radius: 13px"><i class="ic s i-trash"></i></span>Trash</a>
+    </div>
+
+    <div class="card in" style="--i: 3; margin: 12px 16px 0; padding: 16px 18px">
+      <div style="font-weight: 750; font-size: 15px">Where it went</div>
+      <div style="margin-top: 12px; height: 12px; display: flex; gap: 3px">
+        <span class="gx" style="flex: 11420 1 0; border-radius: 6px; background: var(--accent)"></span>
+        <span class="gx" style="--i: 1; flex: 2360 1 0; border-radius: 6px; background: var(--blue-fg)"></span>
+        <span class="gx" style="--i: 2; flex: 4460 1 0; border-radius: 6px; background: var(--amber-fg)"></span>
+      </div>
+      <div style="margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <div><div class="lbl" style="display: flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 2px; background: var(--accent)"></span>Groups</div><div class="amt" style="font-size: 15px">₹11,420</div></div>
+        <div><div class="lbl" style="display: flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 2px; background: var(--blue-fg)"></span>Friends</div><div class="amt" style="font-size: 15px">₹2,360</div></div>
+        <div><div class="lbl" style="display: flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 2px; background: var(--amber-fg)"></span>Personal</div><div class="amt" style="font-size: 15px">₹4,460</div></div>
+      </div>
+    </div>
+
+    <div class="sec"><h2 class="h">By category</h2><span class="lbl">your share</span></div>
+    <div class="card in" style="--i: 4; margin: 0 16px; padding: 6px 0">
+      <div class="row" style="min-height: 58px; padding: 8px 16px"><span class="tile t-orange" style="width: 38px; height: 38px; border-radius: 13px"><i class="ic s i-food"></i></span><span class="grow"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 14.5px"><span>Food</span><span class="num">₹6,480</span></div><div class="bar" style="height: 6px; margin-top: 6px"><span class="gx" style="width: 100%; background: var(--orange-fg)"></span></div></span></div>
+      <div class="row" style="min-height: 58px; padding: 8px 16px"><span class="tile t-violet" style="width: 38px; height: 38px; border-radius: 13px"><i class="ic s i-bed"></i></span><span class="grow"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 14.5px"><span>Lodging</span><span class="num">₹3,600</span></div><div class="bar" style="height: 6px; margin-top: 6px"><span class="gx" style="--i: 1; width: 56%; background: var(--violet-fg)"></span></div></span></div>
+      <div class="row" style="min-height: 58px; padding: 8px 16px"><span class="tile t-blue" style="width: 38px; height: 38px; border-radius: 13px"><i class="ic s i-car"></i></span><span class="grow"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 14.5px"><span>Transport</span><span class="num">₹2,960</span></div><div class="bar" style="height: 6px; margin-top: 6px"><span class="gx" style="--i: 2; width: 46%; background: var(--blue-fg)"></span></div></span></div>
+      <div class="row" style="min-height: 58px; padding: 8px 16px"><span class="tile t-green" style="width: 38px; height: 38px; border-radius: 13px"><i class="ic s i-cart"></i></span><span class="grow"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 14.5px"><span>Groceries</span><span class="num">₹2,310</span></div><div class="bar" style="height: 6px; margin-top: 6px"><span class="gx" style="--i: 3; width: 36%; background: var(--green-fg)"></span></div></span></div>
+      <div class="row" style="min-height: 58px; padding: 8px 16px"><span class="tile t-rose" style="width: 38px; height: 38px; border-radius: 13px"><i class="ic s i-ticket"></i></span><span class="grow"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 14.5px"><span>Entertainment</span><span class="num">₹1,900</span></div><div class="bar" style="height: 6px; margin-top: 6px"><span class="gx" style="--i: 4; width: 29%; background: var(--rose-fg)"></span></div></span></div>
+      <div style="padding: 6px 16px 8px 68px" class="sub">Utilities ₹890 · Other ₹100</div>
+    </div>
+
+    <div class="sec"><h2 class="h">This month</h2><a class="link" href="Search.dc.html">All 41</a></div>
+    <div class="chips in" style="--i: 5; margin-bottom: 10px">
+      <button type="button" class="chip on">Any tag</button>
+      <button type="button" class="chip"><i class="ic i-hash"></i>night-out</button>
+      <button type="button" class="chip"><i class="ic i-hash"></i>work</button>
+      <button type="button" class="chip"><i class="ic i-hash"></i>splitwise</button>
+    </div>
+    <div class="card in" style="--i: 5; margin: 0 16px">
+      <a class="row" href="ExpenseDetail.dc.html">
+        <span class="tile t-rose"><i class="ic i-ticket"></i></span>
+        <span class="grow"><div class="rt">Parasailing</div><div class="rs" style="display: flex; align-items: center; gap: 6px"><span class="badge b-acc" style="height: 20px">Goa Trip</span>Today</div></span>
+        <span class="end"><span class="amt">₹1,500</span><span class="lbl">of ₹4,500</span></span>
+      </a>
+      <a class="row" href="ExpenseDetail.dc.html">
+        <span class="tile t-orange"><i class="ic i-food"></i></span>
+        <span class="grow"><div class="rt">Chai &amp; samosa</div><div class="rs" style="display: flex; align-items: center; gap: 6px"><span class="badge" style="height: 20px; background: var(--amber-bg); color: var(--amber-fg)">Personal</span>Today</div></span>
+        <span class="end"><span class="amt">₹60</span></span>
+      </a>
+      <a class="row" href="ExpenseDetail.dc.html">
+        <span class="tile t-green"><i class="ic i-cart"></i></span>
+        <span class="grow"><div class="rt">Weekend groceries</div><div class="rs" style="display: flex; align-items: center; gap: 6px"><span class="badge" style="height: 20px; background: var(--blue-bg); color: var(--blue-fg)">Rohan</span>3 Nov</div></span>
+        <span class="end"><span class="amt">₹1,720</span><span class="lbl">of ₹3,440</span></span>
+      </a>
+    </div>
+    <div style="height: 28px"></div>
+  </div>
+
+  <nav class="nav" aria-label="Main">
+    <a class="nav-i" href="Home.dc.html"><span class="pill"><i class="ic i-home"></i></span>Home</a>
+    <a class="nav-i" href="Groups.dc.html"><span class="pill"><i class="ic i-users"></i></span>Groups</a>
+    <a class="nav-add" href="AddExpense.dc.html" aria-label="Add expense"><i class="ic i-plus"></i></a>
+    <a class="nav-i" href="Friends.dc.html"><span class="pill"><i class="ic i-user"></i></span>Friends</a>
+    <a class="nav-i on" href="Spending.dc.html" aria-current="page"><span class="pill"><i class="ic i-pie"></i></span>Spending</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

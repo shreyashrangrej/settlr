@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profile and settings</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll">
+    <div class="inset"></div>
+    <div class="topbar"><a class="ibtn" href="Home.dc.html" aria-label="Back"><i class="ic i-back"></i></a></div>
+
+    <div class="in" style="--i: 1; display: flex; align-items: center; gap: 16px; padding: 0 20px">
+      <span class="av lg t-me">AM</span>
+      <div class="grow">
+        <div class="disp" style="font-size: 26px; line-height: 32px; font-weight: 750">Aarav Mehta</div>
+        <div class="sub">aarav@example.com</div>
+      </div>
+      <button type="button" class="ibtn n" aria-label="Edit name"><i class="ic s i-pen"></i></button>
+    </div>
+
+    <div class="lbl" style="padding: 26px 20px 8px">Preferences</div>
+    <div class="card in" style="--i: 2; margin: 0 16px">
+      <div class="row">
+        <span class="tile t-green" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-globe"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Default currency</div><div class="rs">For new friends and personal expenses</div></span>
+        <span style="font-weight: 750; display: flex; align-items: center; gap: 4px">₹ INR<i class="ic s i-chev-r fnt"></i></span>
+      </div>
+      <div class="row" style="flex-wrap: wrap">
+        <span class="tile t-violet" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-palette"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Appearance</div><div class="rs">Follows your phone until you pick one</div></span>
+        <div class="seg" style="width: 100%; margin-left: 54px"><span class="on">System</span><span><i class="ic xs i-sun"></i>Light</span><span><i class="ic xs i-moon"></i>Dark</span></div>
+      </div>
+      <div class="row">
+        <span class="tile t-blue" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-spark"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Reduce motion</div><div class="rs">On when Android's Remove animations is</div></span>
+        <button type="button" class="switch" role="switch" aria-checked="false" aria-label="Reduce motion"></button>
+      </div>
+      <div class="row">
+        <span class="tile t-amber" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-vibrate"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Haptics</div><div class="rs">Ticks on keys, a thud when you settle</div></span>
+        <button type="button" class="switch on" role="switch" aria-checked="true" aria-label="Haptics"></button>
+      </div>
+    </div>
+
+    <div class="lbl" style="padding: 22px 20px 8px">Account · on every device</div>
+    <div class="card in" style="--i: 3; margin: 0 16px">
+      <div class="row">
+        <span class="tile t-orange" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-qr"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Your UPI id</div><div class="rs" style="white-space: normal">aarav@okbank · people who owe you in INR get Pay with UPI</div></span>
+        <i class="ic s i-pen fnt"></i>
+      </div>
+      <div class="row">
+        <span class="tile t-blue" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-mail"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Weekly digest</div><div class="rs" style="white-space: normal">An email on Mondays: what you spent, where balances stand</div></span>
+        <button type="button" class="switch on" role="switch" aria-checked="true" aria-label="Weekly digest"></button>
+      </div>
+      <div class="row">
+        <span class="tile t-teal" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-inbox"></i></span>
+        <a class="grow" href="Inbox.dc.html"><div class="rt" style="font-size: 15px">Receipt inbox</div><div class="rs">a7kq2x@in.settlr.app</div></a>
+        <button type="button" class="btn xs btn-n">New address</button>
+      </div>
+    </div>
+
+    <div class="card in" style="--i: 3; margin: 12px 16px 0">
+      <a class="row" href="Recurring.dc.html" style="min-height: 58px">
+        <span class="tile" style="width: 40px; height: 40px; border-radius: 13px; background: var(--surface-2); color: var(--muted)"><i class="ic s i-repeat"></i></span>
+        <span class="grow rt" style="font-size: 15px">Recurring</span><span class="lbl">5</span><i class="ic s i-chev-r fnt"></i>
+      </a>
+      <a class="row" href="Trash.dc.html" style="min-height: 58px">
+        <span class="tile" style="width: 40px; height: 40px; border-radius: 13px; background: var(--surface-2); color: var(--muted)"><i class="ic s i-trash"></i></span>
+        <span class="grow rt" style="font-size: 15px">Trash</span><span class="lbl">3</span><i class="ic s i-chev-r fnt"></i>
+      </a>
+      <a class="row" href="Import.dc.html" style="min-height: 58px">
+        <span class="tile" style="width: 40px; height: 40px; border-radius: 13px; background: var(--surface-2); color: var(--muted)"><i class="ic s i-file-up"></i></span>
+        <span class="grow rt" style="font-size: 15px">Import from Splitwise</span><i class="ic s i-chev-r fnt"></i>
+      </a>
+    </div>
+
+    <div class="lbl" style="padding: 22px 20px 8px">AI apps</div>
+    <div class="card in" style="--i: 3; margin: 0 16px">
+      <div class="row" style="align-items: flex-start">
+        <span class="tile t-teal" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-plug"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Use Settlr from Claude or ChatGPT</div><div class="rs" style="white-space: normal">Add the Settlr connector URL in your AI app and sign in. It can add, find and edit expenses as you.</div>
+          <button type="button" class="chip ac" style="margin-top: 10px; height: 34px"><i class="ic i-copy"></i>Copy connector URL</button>
+        </span>
+      </div>
+      <div class="row">
+        <span class="tile mono t-gray" style="width: 40px; height: 40px; border-radius: 13px; font-size: 17px">C</span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Claude</div><div class="rs">Connected 3 Nov</div></span>
+        <button type="button" class="btn xs btn-dt">Disconnect</button>
+      </div>
+    </div>
+
+    <div class="card in" style="--i: 4; margin: 16px 16px 0">
+      <a class="row" href="Main.dc.html">
+        <span class="tile" style="width: 40px; height: 40px; border-radius: 13px; background: var(--surface-2); color: var(--muted)"><i class="ic s i-help"></i></span>
+        <span class="grow rt" style="font-size: 15px">Help &amp; docs</span><i class="ic s i-out fnt"></i>
+      </a>
+      <a class="row" href="Welcome.dc.html">
+        <span class="tile" style="width: 40px; height: 40px; border-radius: 13px; background: var(--owe-soft); color: var(--owe)"><i class="ic s i-logout"></i></span>
+        <span class="grow rt neg" style="font-size: 15px">Sign out</span>
+      </a>
+    </div>
+    <p class="sub" style="text-align: center; margin: 18px 0 28px; font-size: 12px">Settlr for Android · 1.0</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

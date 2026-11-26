@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Paid in another currency</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div style="position: absolute; inset: 0"><dc-import name="AddExpense" theme="{{theme}}" hint-size="412px,915px"></dc-import></div>
+  <a class="scrim" href="AddExpense.dc.html" aria-label="Close"></a>
+  <div class="sheet" style="height: 640px; display: flex; flex-direction: column">
+    <div class="grab"></div>
+    <div style="padding: 12px 20px 0">
+      <div class="lbl">Goa Trip is in INR</div>
+      <h2 class="disp" style="margin: 2px 0 0; font-size: 26px; line-height: 32px; font-weight: 750">Paid in another currency</h2>
+    </div>
+
+    <div class="flabel" style="padding: 18px 20px 10px">You paid in</div>
+    <div class="chips">
+      <button type="button" class="chip">₹ INR</button>
+      <button type="button" class="chip">$ USD</button>
+      <button type="button" class="chip">€ EUR</button>
+      <button type="button" class="chip">£ GBP</button>
+      <button type="button" class="chip on"><i class="ic i-check"></i>C$ CAD</button>
+      <button type="button" class="chip">A$ AUD</button>
+    </div>
+
+    <div style="margin: 18px 16px 0; border-radius: 22px; background: var(--surface-2); padding: 6px 0">
+      <div class="row" style="min-height: 60px; padding: 8px 16px">
+        <span class="grow"><div class="lbl">Amount paid</div><div class="disp num" style="font-size: 26px; line-height: 32px; font-weight: 800">C$100.00</div></span>
+        <i class="ic s i-pen fnt"></i>
+      </div>
+      <div class="row" style="min-height: 60px; padding: 8px 16px">
+        <span class="grow"><div class="lbl">Rate on 26 Nov</div><div class="num" style="font-weight: 800; font-size: 17px">1 CAD = ₹62.00</div></span>
+        <button type="button" class="btn xs btn-t"><i class="ic i-globe"></i>Get rate</button>
+      </div>
+    </div>
+    <div class="sub" style="padding: 8px 22px 0; font-size: 12.5px">Get rate fetches the European Central Bank’s rate for the expense’s date. You can type your bank’s rate instead.</div>
+
+    <div style="margin: 18px 16px 0; padding: 16px 18px; border-radius: 22px; background: var(--accent-soft); color: var(--accent-ink); display: flex; align-items: center; gap: 12px">
+      <i class="ic i-swap"></i>
+      <span class="grow" style="font-weight: 700; font-size: 14px; line-height: 19px">This is what gets split in Goa Trip</span>
+      <span class="disp num" style="font-size: 24px; font-weight: 800; color: var(--text)">₹6,200</span>
+    </div>
+
+    <div style="flex: 1"></div>
+    <div style="padding: 0 16px 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <a class="btn btn-n" href="AddExpense.dc.html">Pay in INR</a>
+      <a class="btn btn-p" href="AddExpense.dc.html"><i class="ic i-check"></i>Use C$100</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light', theme: this.props.theme || 'light' };
+  }
+}
+</script>
+</body>
+</html>

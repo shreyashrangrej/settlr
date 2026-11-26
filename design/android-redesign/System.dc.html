@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tally design language</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="board light" style="width: 1280px; height: 1180px; padding: 48px 56px; display: flex; flex-direction: column; gap: 28px; overflow: hidden">
+  <div>
+    <span class="lbl" style="text-transform: uppercase; letter-spacing: .08em">Design language</span>
+    <h1 class="disp" style="margin: 6px 0 0; font-size: 56px; line-height: 60px; font-weight: 800; letter-spacing: -.04em">Tally</h1>
+    <p class="sub" style="margin: 8px 0 0; font-size: 16px; line-height: 24px; max-width: 760px">Violet ink on cool paper. Chunky rounded shapes you can hit with a thumb, Bricolage Grotesque for the figures that matter, Manrope for everything you read. Light and dark are two palettes, not an inversion.</p>
+  </div>
+
+  <div style="display: flex; gap: 28px; flex: 1; min-height: 0">
+    <div style="width: 560px; flex: none; display: flex; flex-direction: column; gap: 14px">
+      <h2 class="h">Colour</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div class="light" style="background: var(--bg); color: var(--text); border-radius: 24px; padding: 16px; box-shadow: inset 0 0 0 1px var(--line); display: flex; flex-direction: column; gap: 10px">
+          <span class="lbl">Light</span>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Ground</span><span class="lbl num">#F4F4F7</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Surface</span><span class="lbl num">#FFFFFF</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--surface-2)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Surface 2</span><span class="lbl num">#ECECF1</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--text)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Ink</span><span class="lbl num">#121218</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--muted)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Muted</span><span class="lbl num">#56566A</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--accent)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Violet</span><span class="lbl num">#5B3DF5</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--accent-soft)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Violet soft</span><span class="lbl num">#ECE8FF</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--owed)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Owed to you</span><span class="lbl num">#0B7F4E</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--owe)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">You owe</span><span class="lbl num">#D33A2C</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--hero)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Hero</span><span class="lbl num">#5B3DF5</span></div>
+        </div>
+        <div class="dark" style="background: var(--bg); color: var(--text); border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+          <span class="lbl">Dark</span>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Ground</span><span class="lbl num">#0E0E13</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--surface)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Surface</span><span class="lbl num">#17171F</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--surface-2)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Surface 2</span><span class="lbl num">#21212B</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--text)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Ink</span><span class="lbl num">#F1F1F6</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--muted)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Muted</span><span class="lbl num">#ABABBE</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--accent)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Lavender</span><span class="lbl num">#B18CFF</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--accent-soft)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Violet soft</span><span class="lbl num">#2A2250</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--owed)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Owed to you</span><span class="lbl num">#4FD597</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--owe)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">You owe</span><span class="lbl num">#FF7D70</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 11px; background: var(--hero)"></span><span class="grow" style="font-weight: 700; font-size: 13.5px">Hero</span><span class="lbl num">#2B2160</span></div>
+        </div>
+      </div>
+
+      <h2 class="h" style="margin-top: 8px">Money says it in words</h2>
+      <div class="card" style="padding: 6px 0">
+        <div class="row" style="min-height: 56px"><span class="tile" style="width: 36px; height: 36px; border-radius: 12px; background: var(--owed-soft); color: var(--owed)"><i class="ic s i-in"></i></span><span class="grow" style="font-weight: 700">Rohan</span><span class="end"><span class="lbl">owes you</span><span class="amt pos">₹2,140</span></span></div>
+        <div class="row" style="min-height: 56px"><span class="tile" style="width: 36px; height: 36px; border-radius: 12px; background: var(--owe-soft); color: var(--owe)"><i class="ic s i-out"></i></span><span class="grow" style="font-weight: 700">Ananya</span><span class="end"><span class="lbl">you owe</span><span class="amt neg">₹1,640</span></span></div>
+        <div class="row" style="min-height: 56px"><span class="tile" style="width: 36px; height: 36px; border-radius: 12px; background: var(--surface-2); color: var(--muted)"><i class="ic s i-check"></i></span><span class="grow" style="font-weight: 700">Kabir</span><span class="badge b-n"><i class="ic xs i-check"></i>settled</span></div>
+      </div>
+      <p class="sub" style="margin: 0">Green is owed to you, red is what you owe, and colour never works alone: every amount carries a word, an arrow or a sign (+/−).</p>
+    </div>
+
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+      <h2 class="h">Type</h2>
+      <div class="card" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: baseline; gap: 16px"><span class="disp num" style="font-size: 58px; line-height: 62px; font-weight: 800; letter-spacing: -.045em; width: 300px">₹4,820</span><span class="sub">Display · Bricolage Grotesque 800 · 58/62 · net balance, amounts on add</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px"><span class="title" style="width: 300px">Goa Trip</span><span class="sub">Title · Bricolage 700 · 32/38 · screen titles</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px"><span class="h" style="width: 300px">Settle next</span><span class="sub">Headline · Manrope 750 · 17/24 · sections</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px"><span class="rt" style="width: 300px">Dinner at Thalassa</span><span class="sub">Row title · Manrope 700 · 15.5/21</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px"><span style="width: 300px; font-size: 15px; font-weight: 500">Split equally between 5 people</span><span class="sub">Body · Manrope 500 · 15/22</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px"><span class="rs" style="width: 300px">Priya paid ₹6,200 · 5 people</span><span class="sub">Supporting · Manrope 500 · 13/18 · muted</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px"><span class="lbl" style="width: 300px">you're owed</span><span class="sub">Label · Manrope 650 · 12/16 · above amounts</span></div>
+        <div style="display: flex; align-items: baseline; gap: 16px"><span class="amt" style="width: 300px">₹1,240 · ₹18,240 · ₹6,200</span><span class="sub">Amounts · Manrope 750, tabular figures · Indian grouping for ₹</span></div>
+      </div>
+
+      <h2 class="h" style="margin-top: 6px">Label hues</h2>
+      <div class="card" style="padding: 16px 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+        <div style="display: flex; align-items: center; gap: 10px"><span class="tile t-orange"><i class="ic i-food"></i></span><span style="font-weight: 700; font-size: 13.5px">Food</span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span class="tile t-green"><i class="ic i-cart"></i></span><span style="font-weight: 700; font-size: 13.5px">Groceries</span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span class="tile t-blue"><i class="ic i-car"></i></span><span style="font-weight: 700; font-size: 13.5px">Transport</span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span class="tile t-violet"><i class="ic i-bed"></i></span><span style="font-weight: 700; font-size: 13.5px">Lodging</span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span class="tile t-amber"><i class="ic i-zap"></i></span><span style="font-weight: 700; font-size: 13.5px">Utilities</span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span class="tile t-rose"><i class="ic i-ticket"></i></span><span style="font-weight: 700; font-size: 13.5px">Entertainment</span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span class="tile t-gray"><i class="ic i-tag"></i></span><span style="font-weight: 700; font-size: 13.5px">Other</span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span class="stack"><span class="av xs t-teal">KS</span><span class="av xs t-red">NJ</span><span class="av xs t-me">AM</span></span><span style="font-weight: 700; font-size: 13.5px">People</span></div>
+      </div>
+
+      <h2 class="h" style="margin-top: 6px">Shape &amp; space</h2>
+      <div class="card" style="padding: 18px; display: flex; align-items: flex-end; gap: 16px">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><span style="width: 76px; height: 40px; border-radius: 999px; background: var(--accent)"></span><span class="lbl">Pill · buttons</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><span style="width: 64px; height: 56px; border-radius: 32px 32px 0 0; background: var(--surface-2)"></span><span class="lbl">32 · sheets</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><span style="width: 64px; height: 56px; border-radius: 24px; background: var(--surface-2)"></span><span class="lbl">24 · cards</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><span style="width: 64px; height: 48px; border-radius: 18px; background: var(--surface-2)"></span><span class="lbl">18 · fields</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><span style="width: 44px; height: 44px; border-radius: 15px; background: var(--surface-2)"></span><span class="lbl">15 · tiles</span></div>
+        <div class="grow sub" style="padding-left: 8px; font-size: 13px; line-height: 19px">4-pt grid · 16 px screen gutter · 48 px minimum touch target · rows 64–72 px · primary buttons 52–58 px tall, always in the bottom third.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

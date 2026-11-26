@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Groups</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll" style="bottom: 86px">
+    <div class="inset"></div>
+    <header style="display: flex; align-items: center; gap: 4px; height: 64px; padding: 0 12px 0 20px">
+      <h1 class="title grow">Groups</h1>
+      <a class="ibtn" href="Search.dc.html" aria-label="Search"><i class="ic i-search"></i></a>
+      <a class="ibtn" href="Import.dc.html" aria-label="Import from Splitwise"><i class="ic i-file-up"></i></a>
+      <a class="ibtn f" href="NewGroup.dc.html" aria-label="New group"><i class="ic i-plus"></i></a>
+    </header>
+
+    <div class="chips in" style="--i: 1; margin-top: 6px">
+      <span class="chip on">All · 3</span>
+      <span class="chip">Owed to you</span>
+      <span class="chip">You owe</span>
+    </div>
+
+    <div style="padding: 16px 16px 0; display: flex; flex-direction: column; gap: 12px">
+      <a class="card in" href="Group.dc.html" style="--i: 2; padding: 16px; display: block">
+        <div style="display: flex; align-items: center; gap: 14px">
+          <span class="tile mono t-orange" style="width: 52px; height: 52px; border-radius: 18px; font-size: 24px">G</span>
+          <div class="grow"><div class="rt" style="font-size: 17px">Goa Trip</div><div class="rs">₹38,600 spent · 14 expenses</div></div>
+          <i class="ic s i-chev-r fnt"></i>
+        </div>
+        <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between">
+          <span class="stack"><span class="av xs t-me">AM</span><span class="av xs t-amber">PS</span><span class="av xs t-blue">RK</span><span class="av xs t-teal">KS</span><span class="av xs t-green">MI</span></span>
+          <span class="badge b-owed" style="height: 30px; padding: 0 12px; font-size: 13.5px"><i class="ic xs i-in"></i>you're owed ₹3,410</span>
+        </div>
+      </a>
+
+      <a class="card in" href="Group.dc.html" style="--i: 3; padding: 16px; display: block">
+        <div style="display: flex; align-items: center; gap: 14px">
+          <span class="tile mono t-teal" style="width: 52px; height: 52px; border-radius: 18px; font-size: 24px">O</span>
+          <div class="grow"><div class="rt" style="font-size: 17px">Office Lunch</div><div class="rs">₹9,240 spent · 11 expenses</div></div>
+          <i class="ic s i-chev-r fnt"></i>
+        </div>
+        <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between">
+          <span class="stack"><span class="av xs t-me">AM</span><span class="av xs t-red">NJ</span><span class="av xs t-orange">TB</span><span class="av xs t-gray">VD</span></span>
+          <span class="badge b-owed" style="height: 30px; padding: 0 12px; font-size: 13.5px"><i class="ic xs i-in"></i>you're owed ₹1,800</span>
+        </div>
+      </a>
+
+      <a class="card in" href="Group.dc.html" style="--i: 4; padding: 16px; display: block">
+        <div style="display: flex; align-items: center; gap: 14px">
+          <span class="tile mono t-green" style="width: 52px; height: 52px; border-radius: 18px; font-size: 24px">F</span>
+          <div class="grow"><div class="rt" style="font-size: 17px">Flat 4B</div><div class="rs">₹54,300 spent · 38 expenses</div></div>
+          <i class="ic s i-chev-r fnt"></i>
+        </div>
+        <div style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between">
+          <span class="stack"><span class="av xs t-me">AM</span><span class="av xs t-violet">IR</span><span class="av xs t-blue">DV</span></span>
+          <span class="badge b-owe" style="height: 30px; padding: 0 12px; font-size: 13.5px"><i class="ic xs i-out"></i>you owe ₹890</span>
+        </div>
+      </a>
+
+      <a class="in" href="NewGroup.dc.html" style="--i: 5; height: 64px; border-radius: 24px; border: 2px dashed var(--surface-3); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 750; color: var(--muted)"><i class="ic s i-plus"></i>Create a group</a>
+
+      <div class="lbl" style="padding: 12px 4px 0; display: flex; align-items: center; gap: 6px"><i class="ic xs i-archive"></i>Archived</div>
+      <a class="in" href="Group.dc.html" style="--i: 6; padding: 12px 14px; border-radius: 22px; background: var(--surface-2); display: flex; align-items: center; gap: 12px">
+        <span class="tile mono t-amber" style="width: 40px; height: 40px; border-radius: 14px; font-size: 18px">B</span>
+        <div class="grow"><div class="rt" style="font-size: 15px">Berlin ’26</div><div class="rs">€2,180 spent · 23 expenses · EUR</div></div>
+        <span class="badge b-n" style="background: var(--surface)"><i class="ic xs i-check"></i>Settled</span>
+      </a>
+    </div>
+    <div style="height: 24px"></div>
+  </div>
+
+  <nav class="nav" aria-label="Main">
+    <a class="nav-i" href="Home.dc.html"><span class="pill"><i class="ic i-home"></i></span>Home</a>
+    <a class="nav-i on" href="Groups.dc.html" aria-current="page"><span class="pill"><i class="ic i-users"></i></span>Groups</a>
+    <a class="nav-add" href="AddExpense.dc.html" aria-label="Add expense"><i class="ic i-plus"></i></a>
+    <a class="nav-i" href="Friends.dc.html"><span class="pill"><i class="ic i-user"></i></span>Friends</a>
+    <a class="nav-i" href="Spending.dc.html"><span class="pill"><i class="ic i-pie"></i></span>Spending</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Invite and share</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div style="position: absolute; inset: 0"><dc-import name="Group" theme="{{theme}}" hint-size="412px,915px"></dc-import></div>
+  <a class="scrim" href="Group.dc.html" aria-label="Close"></a>
+  <div class="sheet" style="padding-bottom: 22px">
+    <div class="grab"></div>
+    <div style="padding: 14px 20px 0; display: flex; align-items: center; justify-content: space-between">
+      <h2 class="disp" style="margin: 0; font-size: 26px; line-height: 32px; font-weight: 750">Invite and share</h2>
+      <a class="ibtn n" href="GroupMenu.dc.html" aria-label="Back to options" style="width: 40px; height: 40px"><i class="ic s i-x"></i></a>
+    </div>
+
+    <div style="margin: 18px 16px 0; padding: 16px; border-radius: 24px; background: var(--surface-2)">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span class="tile t-violet" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-user-plus"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15.5px">Join link</div><div class="rs">Anyone with it signs in and joins</div></span>
+        <button type="button" class="switch on" role="switch" aria-checked="true" aria-label="Join link"></button>
+      </div>
+      <div style="margin-top: 14px; height: 48px; border-radius: 16px; background: var(--surface); display: flex; align-items: center; gap: 8px; padding: 0 6px 0 14px">
+        <i class="ic s i-link fnt"></i>
+        <span class="grow" style="font-weight: 650; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">settlr.app/join/k7Q2-xP9m-4tVa</span>
+        <button type="button" class="ibtn" aria-label="Copy link" style="width: 38px; height: 38px"><i class="ic s i-copy"></i></button>
+      </div>
+      <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button type="button" class="btn sm btn-p"><i class="ic i-share"></i>Share link</button>
+        <button type="button" class="btn sm" style="background: var(--surface); color: var(--text)"><i class="ic i-undo"></i>Make a new link</button>
+      </div>
+      <div class="sub" style="margin-top: 10px; font-size: 12.5px; line-height: 17px">People can join as a member already in the list, keeping that member’s expenses and balance, or as someone new. A new link stops the old one working.</div>
+    </div>
+
+    <div style="margin: 12px 16px 0; padding: 16px; border-radius: 24px; box-shadow: inset 0 0 0 1.5px var(--surface-3)">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span class="tile t-teal" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-eye"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15.5px">Read-only link</div><div class="rs">Balances, the plan and recent expenses</div></span>
+        <button type="button" class="switch" role="switch" aria-checked="false" aria-label="Read-only link"></button>
+      </div>
+      <div class="sub" style="margin-top: 10px; font-size: 12.5px; line-height: 17px">For people who aren’t on Settlr. Anyone can open it without signing in, and nobody can change anything there.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light', theme: this.props.theme || 'light' };
+  }
+}
+</script>
+</body>
+</html>

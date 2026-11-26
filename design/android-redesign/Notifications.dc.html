@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Notifications</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll">
+    <div class="inset"></div>
+    <div class="topbar">
+      <a class="ibtn" href="Home.dc.html" aria-label="Back"><i class="ic i-back"></i></a>
+      <span class="tt"></span>
+      <button type="button" class="chip" style="background: transparent; color: var(--accent-ink); margin-right: 4px"><i class="ic i-check"></i>Mark all read</button>
+    </div>
+    <h1 class="title" style="padding: 0 20px">Notifications</h1>
+
+    <div class="in" style="--i: 1; margin: 18px 16px 0; padding: 16px; border-radius: 24px; background: var(--accent-soft)">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span class="av t-gray">IV</span>
+        <div class="grow"><div class="rt" style="font-size: 15px">Ishaan Verma</div><div class="rs" style="color: var(--accent-ink)">wants to share a ledger with you</div></div>
+      </div>
+      <div class="sub" style="margin-top: 10px; font-size: 13px">Accepting links your ledgers, so you both see the same expenses and payments.</div>
+      <div style="margin-top: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button type="button" class="btn sm btn-p">Accept</button>
+        <button type="button" class="btn sm" style="background: var(--surface); color: var(--text)">Decline</button>
+      </div>
+    </div>
+
+    <div class="dhead" style="margin-top: 10px">Today</div>
+    <div class="card in" style="--i: 2; margin: 0 16px">
+      <div class="row" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-rose">AR</span><span class="tile" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; background: var(--owe-soft); color: var(--owe); box-shadow: 0 0 0 2.5px var(--surface)"><i class="ic xs i-bell-ring" style="width: 12px; height: 12px"></i></span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500"><b>Ananya</b> sent you a reminder</div><div class="rs" style="margin-top: 2px">20 min ago · you owe <b class="neg num">₹1,640</b></div>
+          <a class="btn xs btn-c" href="SettleUp.dc.html" style="margin-top: 10px"><i class="ic i-swap"></i>Settle up</a>
+        </span>
+        <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex: none"></span>
+      </div>
+      <div class="row" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-red">NJ</span><span class="tile" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; background: var(--warn-soft); color: var(--warn); box-shadow: 0 0 0 2.5px var(--surface)"><i class="ic xs i-alert" style="width: 12px; height: 12px"></i></span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500; white-space: normal"><b>Neha</b> recorded paying you <b class="num">₹450</b> in Office Lunch. Did you get it?</div><div class="rs" style="margin-top: 2px">1 hour ago · the balance already counts it</div>
+          <span style="margin-top: 10px; display: flex; gap: 8px"><button type="button" class="btn xs btn-c"><i class="ic i-check"></i>Got it</button><button type="button" class="btn xs btn-n">Didn’t get it</button></span>
+        </span>
+        <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex: none"></span>
+      </div>
+      <a class="row" href="ExpenseDetail.dc.html" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-green">MI</span><span class="tile t-blue" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; box-shadow: 0 0 0 2.5px var(--surface)"><i class="ic xs i-msg" style="width: 12px; height: 12px"></i></span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500"><b>Meera</b> commented in Goa Trip</div><div class="rs" style="margin-top: 2px; white-space: normal">1 hour ago · “Can we split the wine separately next time?”</div></span>
+        <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex: none"></span>
+      </a>
+      <a class="row" href="ExpenseDetail.dc.html" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-teal">KS</span><span class="tile t-rose" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; box-shadow: 0 0 0 2.5px var(--surface)"><i class="ic xs i-ticket" style="width: 12px; height: 12px"></i></span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500"><b>Kabir</b> added <b>Parasailing</b> in Goa Trip</div><div class="rs" style="margin-top: 2px">2 hours ago · your share <b class="neg num">₹1,500</b></div></span>
+        <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex: none"></span>
+      </a>
+      <a class="row" href="ExpenseDetail.dc.html" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-amber">PS</span><span class="tile" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; background: var(--surface-2); color: var(--muted); box-shadow: 0 0 0 2.5px var(--surface)"><i class="ic xs i-pen" style="width: 12px; height: 12px"></i></span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500"><b>Priya</b> edited <b>Villa, 3 nights</b>, now split 5 ways</div><div class="rs" style="margin-top: 2px">5 hours ago · your share <s class="fnt num">₹4,500</s> <b class="neg num">₹3,600</b></div></span>
+        <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex: none"></span>
+      </a>
+    </div>
+
+    <div class="dhead">Yesterday</div>
+    <div class="card in" style="--i: 3; margin: 0 16px">
+      <a class="row" href="ExpenseDetail.dc.html" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-amber">PS</span><span class="tile t-orange" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; box-shadow: 0 0 0 2.5px var(--surface)"><i class="ic xs i-food" style="width: 12px; height: 12px"></i></span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500"><b>Priya</b> added <b>Dinner at Thalassa</b> in Goa Trip</div><div class="rs" style="margin-top: 2px">Wed · your share <b class="neg num">₹1,240</b></div></span>
+        <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex: none"></span>
+      </a>
+      <a class="row" href="Groups.dc.html" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-violet">IR</span><span class="tile" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; background: var(--owed-soft); color: var(--owed); box-shadow: 0 0 0 2.5px var(--surface)"><i class="ic xs i-check" style="width: 12px; height: 12px"></i></span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500"><b>Ira</b> confirmed your payment of <b class="num">₹1,200</b></div><div class="rs" style="margin-top: 2px">Wed · Flat 4B</div></span>
+      </a>
+    </div>
+
+    <div class="dhead">Earlier</div>
+    <div class="card in" style="--i: 4; margin: 0 16px">
+      <a class="row" href="Friend.dc.html" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-blue">RK</span><span class="tile" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; background: var(--owed-soft); color: var(--owed); box-shadow: 0 0 0 2.5px var(--surface)"><i class="ic xs i-in" style="width: 12px; height: 12px"></i></span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500"><b>Rohan</b> recorded a payment to you</div><div class="rs" style="margin-top: 2px">18 Nov · <b class="pos num">₹1,000</b> received</div></span>
+      </a>
+      <a class="row" href="Friend.dc.html" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-rose">AR</span><span class="tile" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-ink); box-shadow: 0 0 0 2.5px var(--surface)"><i class="ic xs i-check" style="width: 12px; height: 12px"></i></span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500"><b>Ananya</b> accepted your friend request</div><div class="rs" style="margin-top: 2px">15 Nov · your ledgers are shared now</div></span>
+      </a>
+      <a class="row" href="Group.dc.html" style="align-items: flex-start">
+        <span style="position: relative; flex: none"><span class="av t-teal">KS</span><span class="tile mono t-orange" style="position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 8px; font-size: 11px; box-shadow: 0 0 0 2.5px var(--surface)">G</span></span>
+        <span class="grow"><div style="font-size: 14.5px; line-height: 20px; font-weight: 500"><b>Kabir</b> joined <b>Goa Trip</b> through your invite link</div><div class="rs" style="margin-top: 2px">10 Nov · now 5 people</div></span>
+      </a>
+    </div>
+    <div style="height: 28px"></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

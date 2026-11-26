@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll" style="bottom: 86px">
+    <div class="inset"></div>
+    <header style="display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 16px 0 20px">
+      <div class="grow">
+        <div class="sub">Thursday, 26 November</div>
+        <div class="disp" style="font-size: 25px; line-height: 31px; font-weight: 750">Evening, Aarav</div>
+      </div>
+      <a class="ibtn f" href="Notifications.dc.html" aria-label="Notifications, 3 unread"><i class="ic i-bell"></i><span class="dot"></span></a>
+      <a class="av t-me" href="Profile.dc.html" aria-label="Profile and settings">AM</a>
+    </header>
+
+    <a class="in" href="Assistant.dc.html" style="--i: 1; margin: 10px 16px 0; height: 54px; border-radius: 999px; background: var(--surface); box-shadow: var(--shadow); display: flex; align-items: center; gap: 12px; padding: 0 7px 0 18px; color: var(--faint)">
+      <i class="ic i-spark" style="color: var(--accent)"></i>
+      <span class="grow" style="font-weight: 600; font-size: 15px">Ask or add… “Chai 40, personal”</span>
+      <span class="ibtn n" style="width: 40px; height: 40px; color: var(--text)"><i class="ic s i-mic"></i></span>
+    </a>
+
+    <section class="in" style="--i: 2; margin: 16px 16px 0; padding: 20px 20px 18px; border-radius: 28px; background: var(--hero); color: var(--on-hero)">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <span style="font-weight: 650; font-size: 14px; color: var(--hero-dim)">Overall, you're owed</span>
+        <span class="badge" style="background: var(--hero-tile); color: var(--on-hero)">5 open balances</span>
+      </div>
+      <div class="disp num" style="margin-top: 4px; font-size: 58px; line-height: 62px; font-weight: 800; letter-spacing: -.045em">₹4,820</div>
+      <div style="font-size: 13px; color: var(--hero-dim); font-weight: 600">plus $42.00 from Sam Carter</div>
+      <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <div style="padding: 12px 14px; border-radius: 18px; background: var(--hero-tile)">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 650; color: var(--hero-dim)"><i class="ic xs i-in"></i>Owed to you</div>
+          <div class="num" style="margin-top: 2px; font-size: 19px; font-weight: 800">₹7,350</div>
+        </div>
+        <div style="padding: 12px 14px; border-radius: 18px; background: var(--hero-tile)">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 650; color: var(--hero-dim)"><i class="ic xs i-out"></i>You owe</div>
+          <div class="num" style="margin-top: 2px; font-size: 19px; font-weight: 800">₹2,530</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="in" style="--i: 3; margin: 12px 16px 0; padding: 14px 16px; border-radius: 24px; background: var(--warn-soft)">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span class="av sm t-red">NJ</span>
+        <div class="grow"><div style="font-weight: 800; font-size: 15px">Did you get paid?</div><div class="sub" style="color: var(--text)">Neha recorded paying you <b class="num">₹450</b> in Office Lunch</div></div>
+      </div>
+      <div style="margin-top: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button type="button" class="btn xs btn-c"><i class="ic i-check"></i>Got it</button>
+        <button type="button" class="btn xs" style="background: var(--surface); color: var(--text)"><i class="ic i-x"></i>Didn’t get it</button>
+      </div>
+    </div>
+
+    <div class="sec"><h2 class="h">Settle next</h2><a class="link" href="Friends.dc.html">Everyone</a></div>
+    <div class="chips in" style="--i: 4; gap: 10px; padding-bottom: 2px">
+      <div style="width: 176px; flex: none; padding: 14px; border-radius: 22px; background: var(--surface); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; gap: 10px"><span class="av sm t-rose">AR</span><span class="rt" style="font-size: 14.5px">Ananya Rao</span></div>
+        <div><div class="lbl">you owe</div><div class="amt neg" style="font-size: 20px; line-height: 26px">₹1,640</div></div>
+        <a class="btn xs btn-c" href="SettleUp.dc.html">Settle up</a>
+      </div>
+      <div style="width: 176px; flex: none; padding: 14px; border-radius: 22px; background: var(--surface); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; gap: 10px"><span class="av sm t-blue">RK</span><span class="rt" style="font-size: 14.5px">Rohan K.</span></div>
+        <div><div class="lbl">owes you</div><div class="amt pos" style="font-size: 20px; line-height: 26px">₹2,140</div></div>
+        <a class="btn xs btn-g" href="Friend.dc.html">Record payment</a>
+      </div>
+      <div style="width: 176px; flex: none; padding: 14px; border-radius: 22px; background: var(--surface); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; gap: 10px"><span class="tile mono t-green" style="width: 32px; height: 32px; border-radius: 11px; font-size: 15px">F</span><span class="rt" style="font-size: 14.5px">Flat 4B</span></div>
+        <div><div class="lbl">you owe Ira</div><div class="amt neg" style="font-size: 20px; line-height: 26px">₹890</div></div>
+        <a class="btn xs btn-c" href="GroupBalances.dc.html">Settle up</a>
+      </div>
+    </div>
+
+    <div class="sec"><h2 class="h">Balances</h2><a class="link" href="Groups.dc.html">See all</a></div>
+    <div class="card in" style="--i: 5; margin: 0 16px">
+      <a class="row" href="Group.dc.html">
+        <span class="tile mono t-orange">G</span>
+        <span class="grow"><div class="rt">Goa Trip</div><div class="rs">Group · 5 people</div></span>
+        <span class="end"><span class="lbl">you're owed</span><span class="amt pos">₹3,410</span></span>
+      </a>
+      <a class="row" href="Friend.dc.html">
+        <span class="av t-blue">RK</span>
+        <span class="grow"><div class="rt">Rohan Kulkarni</div><div class="rs">Friend</div></span>
+        <span class="end"><span class="lbl">owes you</span><span class="amt pos">₹2,140</span></span>
+      </a>
+      <a class="row" href="Group.dc.html">
+        <span class="tile mono t-teal">O</span>
+        <span class="grow"><div class="rt">Office Lunch</div><div class="rs">Group · 4 people</div></span>
+        <span class="end"><span class="lbl">you're owed</span><span class="amt pos">₹1,800</span></span>
+      </a>
+      <a class="row" href="Friend.dc.html">
+        <span class="av t-rose">AR</span>
+        <span class="grow"><div class="rt">Ananya Rao</div><div class="rs">Friend</div></span>
+        <span class="end"><span class="lbl">you owe</span><span class="amt neg">₹1,640</span></span>
+      </a>
+      <a class="row" href="Group.dc.html">
+        <span class="tile mono t-green">F</span>
+        <span class="grow"><div class="rt">Flat 4B</div><div class="rs">Group · 3 people</div></span>
+        <span class="end"><span class="lbl">you owe</span><span class="amt neg">₹890</span></span>
+      </a>
+    </div>
+
+    <a class="card in" href="Spending.dc.html" style="--i: 6; margin: 16px 16px 0; padding: 18px 18px 16px; display: block">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <span style="font-weight: 700; font-size: 15px">Your share in November</span>
+        <span class="amt" style="font-size: 18px">₹18,240</span>
+      </div>
+      <div class="bar" style="margin-top: 12px"><span class="gx" style="width: 73%; background: var(--accent)"></span></div>
+      <div class="sub" style="margin-top: 10px">₹6,760 left of your ₹25,000 budget · ₹1,352 a day</div>
+    </a>
+
+    <div class="sec"><h2 class="h">Upcoming bills</h2><a class="link" href="Recurring.dc.html">Recurring</a></div>
+    <div class="card in" style="--i: 7; margin: 0 16px">
+      <a class="row" href="Recurring.dc.html" style="min-height: 60px">
+        <span class="tile t-violet" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-bed"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Flat rent</div><div class="rs">Flat 4B · Tue, 1 Dec</div></span>
+        <span class="end"><span class="amt">₹36,000</span><span class="lbl">your share ₹12,000</span></span>
+      </a>
+      <a class="row" href="Recurring.dc.html" style="min-height: 60px">
+        <span class="tile t-rose" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-ticket"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Streaming plan</div><div class="rs">Personal · Fri, 4 Dec</div></span>
+        <span class="end"><span class="amt">₹649</span></span>
+      </a>
+    </div>
+
+    <div class="sec"><h2 class="h">Recent</h2><a class="link" href="Search.dc.html">All activity</a></div>
+    <div class="card in" style="--i: 8; margin: 0 16px">
+      <a class="row new" href="ExpenseDetail.dc.html">
+        <span class="tile t-rose"><i class="ic i-ticket"></i></span>
+        <span class="grow"><div class="rt">Parasailing</div><div class="rs">Goa Trip · Kabir paid ₹4,500</div></span>
+        <span class="end"><span class="lbl">you borrowed</span><span class="amt neg">₹1,500</span></span>
+      </a>
+      <a class="row" href="ExpenseDetail.dc.html">
+        <span class="tile t-orange"><i class="ic i-food"></i></span>
+        <span class="grow"><div class="rt">Dinner at Thalassa</div><div class="rs">Goa Trip · Priya paid ₹6,200</div></span>
+        <span class="end"><span class="lbl">you borrowed</span><span class="amt neg">₹1,240</span></span>
+      </a>
+      <a class="row" href="Friend.dc.html">
+        <span class="tile t-green"><i class="ic i-arrow-r"></i></span>
+        <span class="grow"><div class="rt">Rohan paid you</div><div class="rs">Payment · 18 Nov</div></span>
+        <span class="end"><span class="lbl">received</span><span class="amt pos">₹1,000</span></span>
+      </a>
+    </div>
+    <div style="height: 28px"></div>
+  </div>
+
+  <nav class="nav" aria-label="Main">
+    <a class="nav-i on" href="Home.dc.html" aria-current="page"><span class="pill"><i class="ic i-home"></i></span>Home</a>
+    <a class="nav-i" href="Groups.dc.html"><span class="pill"><i class="ic i-users"></i></span>Groups</a>
+    <a class="nav-add" href="AddExpense.dc.html" aria-label="Add expense"><i class="ic i-plus"></i></a>
+    <a class="nav-i" href="Friends.dc.html"><span class="pill"><i class="ic i-user"></i></span>Friends</a>
+    <a class="nav-i" href="Spending.dc.html"><span class="pill"><i class="ic i-pie"></i></span>Spending</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

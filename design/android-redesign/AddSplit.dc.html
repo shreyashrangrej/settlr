@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Split the expense</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div style="position: absolute; inset: 0"><dc-import name="AddExpense" theme="{{theme}}" hint-size="412px,915px"></dc-import></div>
+  <a class="scrim" href="AddExpense.dc.html" aria-label="Close"></a>
+  <div class="sheet" style="height: 812px; display: flex; flex-direction: column">
+    <div class="grab"></div>
+    <div style="padding: 12px 20px 0">
+      <div class="lbl">Dinner at Thalassa · ₹6,200</div>
+      <h2 class="disp" style="margin: 2px 0 0; font-size: 26px; line-height: 32px; font-weight: 750">Who paid, who shares</h2>
+    </div>
+
+    <div class="flabel" style="padding: 16px 20px 10px">Paid by</div>
+    <div class="chips" style="gap: 14px">
+      <sc-for list="{{payers}}" as="p" hint-placeholder-count="5">
+        <button type="button" onClick="{{p.pick}}" aria-pressed="{{p.on}}" style="border: 0; background: transparent; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 60px; color: var(--text)">
+          <span class="av {{p.tone}}" style="width: 50px; height: 50px; font-size: 16px; box-shadow: {{p.ring}}">{{p.initials}}</span>
+          <span style="font-size: 12.5px; font-weight: 700">{{p.short}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="padding: 16px 16px 0">
+      <div class="seg" role="tablist" aria-label="How to split">
+        <sc-for list="{{modes}}" as="m" hint-placeholder-count="5">
+          <button type="button" role="tab" class="{{m.cls}}" aria-selected="{{m.on}}" onClick="{{m.pick}}" style="font-size: 13.5px">{{m.label}}</button>
+        </sc-for>
+      </div>
+      <div class="sub" style="padding: 8px 4px 0; display: flex; align-items: center; justify-content: space-between; gap: 8px"><span>{{hint}}</span><span class="badge b-acc">{{countLabel}}</span></div>
+    </div>
+
+    <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 2px 4px 0">
+      <sc-if value="{{isEqual}}" hint-placeholder-val="{{ true }}">
+        <sc-for list="{{rows}}" as="m" hint-placeholder-count="5">
+          <button type="button" class="row" onClick="{{m.toggle}}" aria-pressed="{{m.on}}" style="width: 100%; border: 0; min-height: 60px; text-align: left; font: inherit; color: inherit">
+            <span class="av sm {{m.tone}}">{{m.initials}}</span>
+            <span class="grow rt" style="font-size: 15px">{{m.name}}</span>
+            <span class="amt" style="opacity: {{m.fade}}">{{m.share}}</span>
+            <span class="cb {{m.cbCls}}"><i class="ic i-check"></i></span>
+          </button>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{isStep}}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{rows}}" as="m" hint-placeholder-count="5">
+          <div class="row" style="min-height: 60px">
+            <span class="av sm {{m.tone}}">{{m.initials}}</span>
+            <span class="grow"><div class="rt" style="font-size: 15px">{{m.name}}</div><div class="rs num" style="font-weight: 700">{{m.share}}</div></span>
+            <button type="button" class="step" onClick="{{m.dec}}" aria-label="Less for {{m.name}}"><i class="ic i-minus"></i></button>
+            <span class="num" style="width: 46px; text-align: center; font-weight: 800; font-size: 16px">{{m.input}}</span>
+            <button type="button" class="step" onClick="{{m.inc}}" aria-label="More for {{m.name}}"><i class="ic i-plus"></i></button>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{isExact}}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{rows}}" as="m" hint-placeholder-count="5">
+          <div class="row" style="min-height: 60px">
+            <span class="av sm {{m.tone}}">{{m.initials}}</span>
+            <span class="grow rt" style="font-size: 15px">{{m.name}}</span>
+            <span style="width: 118px; height: 44px; border-radius: 14px; background: var(--surface-2); display: flex; align-items: center; gap: 4px; padding: 0 12px; font-weight: 750; font-size: 16px">
+              <span class="fnt">₹</span><span class="grow num" style="text-align: right">{{m.input}}</span>
+            </span>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{isItems}}" hint-placeholder-val="{{ false }}">
+        <a href="AddItems.dc.html" style="margin: 6px 12px 8px; padding: 14px; border-radius: 20px; background: var(--accent-soft); color: var(--accent-ink); display: flex; align-items: center; gap: 12px">
+          <span class="tile" style="width: 40px; height: 40px; border-radius: 13px; background: var(--surface); color: var(--accent-ink)"><i class="ic s i-list"></i></span>
+          <span class="grow"><div style="font-weight: 800; font-size: 15px">5 lines · tax &amp; service ₹800</div><div style="font-size: 13px; font-weight: 600">Tick who had each line</div></span>
+          <span style="font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 2px">Edit<i class="ic s i-chev-r"></i></span>
+        </a>
+        <sc-for list="{{rows}}" as="m" hint-placeholder-count="5">
+          <div class="row" style="min-height: 50px; padding: 6px 16px">
+            <span class="av xs {{m.tone}}">{{m.initials}}</span>
+            <span class="grow rt" style="font-size: 14.5px">{{m.name}}</span>
+            <span class="amt" style="font-size: 14.5px">{{m.share}}</span>
+          </div>
+        </sc-for>
+      </sc-if>
+    </div>
+
+    <div style="margin: 6px 16px 0; padding: 12px 16px; border-radius: 20px; background: var(--surface-2); display: flex; align-items: center; gap: 10px">
+      <div class="grow"><div class="lbl">Your balance in Goa Trip</div><div class="num" style="margin-top: 3px; font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 8px"><span class="mut">{{before}}</span><i class="ic xs i-arrow-r fnt"></i><span style="color: {{afterColor}}">{{after}}</span></div></div>
+      <span style="text-align: right; width: 132px; font-size: 12px; line-height: 16px; font-weight: 700; color: {{statusColor}}">{{status}}</span>
+    </div>
+    <div style="padding: 12px 16px 20px"><a class="btn btn-p wide" href="AddExpense.dc.html" style="height: 56px">Done</a></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const people = [
+      { id: 'me', name: 'You', short: 'You', initials: 'AM', tone: 't-me' },
+      { id: 'ps', name: 'Priya Shah', short: 'Priya', initials: 'PS', tone: 't-amber' },
+      { id: 'rk', name: 'Rohan Kulkarni', short: 'Rohan', initials: 'RK', tone: 't-blue' },
+      { id: 'ks', name: 'Kabir Singh', short: 'Kabir', initials: 'KS', tone: 't-teal' },
+      { id: 'mi', name: 'Meera Iyer', short: 'Meera', initials: 'MI', tone: 't-green' },
+    ];
+    const s = this.state || {};
+    const payer = s.payer || 'me';
+    const mode = s.mode || 'equal';
+    const off = s.off || {};
+    const sh = s.sh || { me: 1, ps: 1, rk: 1, ks: 1, mi: 1 };
+    const pc = s.pc || { me: 20, ps: 20, rk: 20, ks: 20, mi: 20 };
+    const ex = { me: 100000, ps: 150000, rk: 120000, ks: 125000, mi: 125000 };
+    const itemsOwed = { me: 99124, ps: 106778, rk: 157105, ks: 157104, mi: 99889 };
+    const cents = 620000;
+    // Largest remainder, ties to the earlier member (packages/shared/src/split.ts).
+    const prop = (total, weights) => {
+      const out = {};
+      const sum = weights.reduce((a, w) => a + Math.max(0, w[1]), 0);
+      if (sum <= 0) return out;
+      const raw = weights.map((w, i) => { const e = (total * Math.max(0, w[1])) / sum; return { id: w[0], i, f: Math.floor(e), r: e - Math.floor(e), w: w[1] }; });
+      let left = total - raw.reduce((a, r) => a + r.f, 0);
+      raw.slice().sort((a, b) => b.r - a.r || a.i - b.i).forEach((r) => { if (left > 0 && (r.r > 0 || r.w > 0)) { r.f += 1; left -= 1; } });
+      raw.forEach((r) => { if (r.f > 0) out[r.id] = r.f; });
+      return out;
+    };
+    const money = (c) => '₹' + (Math.abs(c) / 100).toLocaleString('en-IN', { minimumFractionDigits: Math.abs(c) % 100 ? 2 : 0, maximumFractionDigits: 2 });
+    const signed = (c) => (c > 0 ? '+' : c < 0 ? '−' : '') + money(c);
+    let owed = {};
+    let problem = null;
+    if (mode === 'equal') owed = prop(cents, people.filter((p) => !off[p.id]).map((p) => [p.id, 1]));
+    if (mode === 'shares') owed = prop(cents, people.map((p) => [p.id, sh[p.id] || 0]));
+    if (mode === 'percent') {
+      const total = people.reduce((a, p) => a + (pc[p.id] || 0), 0);
+      if (total === 100) owed = prop(cents, people.map((p) => [p.id, pc[p.id] || 0]));
+      else {
+        people.forEach((p) => { if (pc[p.id] > 0) owed[p.id] = Math.floor((cents * pc[p.id]) / 100); });
+        problem = 'Percentages add up to ' + total + '%, not 100%.';
+      }
+    }
+    if (mode === 'exact') owed = ex;
+    if (mode === 'items') owed = itemsOwed;
+    if (!problem && Object.keys(owed).length === 0) problem = 'Split it with at least one person.';
+    const bump = (key, id, by, min, max) => () => {
+      const st = this.state || {};
+      const cur = { ...(key === 'sh' ? (st.sh || sh) : (st.pc || pc)) };
+      cur[id] = Math.min(max, Math.max(min, (cur[id] || 0) + by));
+      this.setState({ [key]: cur });
+    };
+    const modes = [
+      ['equal', 'Equally', 'Everyone ticked pays the same.'],
+      ['exact', 'Amounts', 'Type what each person owes.'],
+      ['percent', '%', 'Percentages that add up to 100.'],
+      ['shares', 'Shares', 'e.g. 2 for a couple, 1 for one person.'],
+      ['items', 'Items', 'Who had what on the bill.'],
+    ];
+    const chosenCount = people.filter((p) => owed[p.id] > 0).length;
+    const beforeC = 341000;
+    const afterC = beforeC + (payer === 'me' ? cents : 0) - (owed.me || 0);
+    return {
+      themeCls: this.props.theme === 'dark' ? 'dark' : 'light',
+      theme: this.props.theme || 'light',
+      payers: people.map((p) => ({
+        ...p,
+        on: payer === p.id,
+        ring: payer === p.id ? '0 0 0 3px var(--surface), 0 0 0 5.5px var(--accent)' : 'none',
+        pick: () => this.setState({ payer: p.id }),
+      })),
+      modes: modes.map((m) => ({ label: m[1], on: mode === m[0], cls: mode === m[0] ? 'on' : '', pick: () => this.setState({ mode: m[0] }) })),
+      hint: (modes.find((m) => m[0] === mode) || modes[0])[2],
+      isEqual: mode === 'equal',
+      isStep: mode === 'shares' || mode === 'percent',
+      isExact: mode === 'exact',
+      isItems: mode === 'items',
+      rows: people.map((p) => ({
+        ...p,
+        on: !off[p.id],
+        cbCls: off[p.id] ? '' : 'on',
+        fade: off[p.id] ? 0 : 1,
+        share: money(owed[p.id] || 0),
+        input: mode === 'shares' ? String(sh[p.id] || 0) : mode === 'percent' ? (pc[p.id] || 0) + '%' : (ex[p.id] / 100).toLocaleString('en-IN'),
+        dec: mode === 'shares' ? bump('sh', p.id, -1, 0, 9) : bump('pc', p.id, -5, 0, 100),
+        inc: mode === 'shares' ? bump('sh', p.id, 1, 0, 9) : bump('pc', p.id, 5, 0, 100),
+        toggle: () => {
+          const cur = (this.state && this.state.off) || {};
+          const next = { ...cur, [p.id]: !cur[p.id] };
+          if (people.every((q) => next[q.id])) return;
+          this.setState({ off: next });
+        },
+      })),
+      countLabel: chosenCount + (chosenCount === 1 ? ' person' : ' people'),
+      status: problem || (mode === 'equal' ? 'Leftover paise go to the first people in the list' : 'Adds up to ₹6,200'),
+      statusColor: problem ? 'var(--owe)' : mode === 'equal' ? 'var(--muted)' : 'var(--owed)',
+      before: signed(beforeC),
+      after: signed(afterC),
+      afterColor: afterC > 0 ? 'var(--owed)' : afterC < 0 ? 'var(--owe)' : 'var(--muted)',
+    };
+  }
+}
+</script>
+</body>
+</html>

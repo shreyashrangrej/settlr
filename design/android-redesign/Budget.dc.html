@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Budget</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll">
+    <div class="inset"></div>
+    <div class="topbar">
+      <a class="ibtn" href="Spending.dc.html" aria-label="Back to spending"><i class="ic i-back"></i></a>
+      <span class="tt"></span>
+    </div>
+    <div style="padding: 0 20px; display: flex; align-items: center; justify-content: space-between">
+      <h1 class="title">Budget</h1>
+      <div class="seg" style="width: 170px"><span class="on">₹ INR</span><span>$ USD</span></div>
+    </div>
+
+    <div class="card in" style="--i: 1; margin: 18px 16px 0; padding: 18px">
+      <div class="lbl">Every month</div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span class="disp num" style="font-size: 46px; line-height: 54px; font-weight: 800; letter-spacing: -.045em">₹25,000</span>
+        <button type="button" class="ibtn n" aria-label="Change budget" style="width: 36px; height: 36px"><i class="ic s i-pen"></i></button>
+      </div>
+      <p class="sub" style="margin: 6px 0 0; font-size: 13.5px; line-height: 19px">Counts your personal spending and your share of every group and friend expense. Settle-up payments don't count.</p>
+    </div>
+
+    <div class="card in" style="--i: 2; margin: 12px 16px 0; padding: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <span style="font-weight: 750; font-size: 15px">November so far</span>
+        <span class="badge b-owed"><i class="ic xs i-check"></i>₹3,430 under pace</span>
+      </div>
+      <div style="position: relative; margin-top: 16px">
+        <div class="bar" style="height: 14px; border-radius: 7px"><span class="gx" style="width: 73%; border-radius: 7px; background: var(--accent)"></span></div>
+        <span style="position: absolute; left: 86.7%; top: -6px; bottom: -6px; width: 2px; border-radius: 1px; background: var(--text)"></span>
+        <span class="lbl" style="position: absolute; left: 86.7%; top: 22px; transform: translateX(-50%); white-space: nowrap">today</span>
+      </div>
+      <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <div><div class="lbl">Spent</div><div class="amt" style="font-size: 17px">₹18,240</div></div>
+        <div><div class="lbl">Left</div><div class="amt pos" style="font-size: 17px">₹6,760</div></div>
+        <div><div class="lbl">A day, 5 days</div><div class="amt" style="font-size: 17px">₹1,352</div></div>
+      </div>
+    </div>
+
+    <div class="card in" style="--i: 3; margin: 12px 16px 0; padding: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <span style="font-weight: 750; font-size: 15px">Category limits</span>
+        <span class="lbl">optional, within ₹25,000</span>
+      </div>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span class="tile t-orange" style="width: 36px; height: 36px; border-radius: 12px"><i class="ic s i-food"></i></span>
+          <div class="grow"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 14.5px"><span>Food</span><span class="num mut">₹6,480 <span class="fnt">of ₹8,000</span></span></div><div class="bar" style="height: 6px; margin-top: 6px"><span class="gx" style="width: 81%; background: var(--orange-fg)"></span></div></div>
+          <button type="button" class="ibtn" aria-label="Change Food limit" style="width: 34px; height: 34px"><i class="ic xs i-pen"></i></button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span class="tile t-rose" style="width: 36px; height: 36px; border-radius: 12px"><i class="ic s i-ticket"></i></span>
+          <div class="grow"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 14.5px"><span>Entertainment</span><span class="num neg">₹1,900 <span style="font-weight: 600">of ₹1,500</span></span></div><div class="bar" style="height: 6px; margin-top: 6px"><span class="gx" style="--i: 1; width: 100%; background: var(--owe)"></span></div><div class="neg" style="margin-top: 4px; font-size: 12px; font-weight: 700">₹400 over</div></div>
+          <button type="button" class="ibtn" aria-label="Change Entertainment limit" style="width: 34px; height: 34px"><i class="ic xs i-pen"></i></button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span class="tile t-green" style="width: 36px; height: 36px; border-radius: 12px"><i class="ic s i-cart"></i></span>
+          <div class="grow"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 14.5px"><span>Groceries</span><span class="num mut">₹2,310 <span class="fnt">of ₹4,000</span></span></div><div class="bar" style="height: 6px; margin-top: 6px"><span class="gx" style="--i: 2; width: 58%; background: var(--green-fg)"></span></div></div>
+          <button type="button" class="ibtn" aria-label="Change Groceries limit" style="width: 34px; height: 34px"><i class="ic xs i-pen"></i></button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span class="tile t-blue" style="width: 36px; height: 36px; border-radius: 12px"><i class="ic s i-car"></i></span>
+          <div class="grow"><div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 14.5px"><span>Transport</span><span class="num mut">₹2,960</span></div><div class="sub" style="font-size: 12px; margin-top: 2px">No limit</div></div>
+          <button type="button" class="btn xs btn-t">Set limit</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card in" style="--i: 4; margin: 12px 16px 0; padding: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <span style="font-weight: 750; font-size: 15px">Last 6 months</span>
+        <span class="lbl" style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; border-top: 2px dashed var(--muted)"></span>budget</span>
+      </div>
+      <div style="position: relative; margin-top: 16px; height: 150px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; align-items: end">
+        <span style="position: absolute; left: 0; right: 0; bottom: 89.3%; border-top: 2px dashed var(--dim)"></span>
+        <span class="gy" style="--i: 0; height: 76%; border-radius: 8px 8px 4px 4px; background: var(--surface-3)"></span>
+        <span class="gy" style="--i: 1; height: 95.7%; border-radius: 8px 8px 4px 4px; background: var(--owe)"></span>
+        <span class="gy" style="--i: 2; height: 69.5%; border-radius: 8px 8px 4px 4px; background: var(--surface-3)"></span>
+        <span class="gy" style="--i: 3; height: 85.4%; border-radius: 8px 8px 4px 4px; background: var(--surface-3)"></span>
+        <span class="gy" style="--i: 4; height: 87.9%; border-radius: 8px 8px 4px 4px; background: var(--surface-3)"></span>
+        <span class="gy" style="--i: 5; height: 65.1%; border-radius: 8px 8px 4px 4px; background: var(--accent)"></span>
+      </div>
+      <div style="margin-top: 8px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; text-align: center" class="lbl">
+        <span>Jun</span><span class="neg">Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span style="color: var(--text)">Nov</span>
+      </div>
+      <div class="sub" style="margin-top: 12px">July went ₹1,800 over. Every other month stayed under.</div>
+    </div>
+
+    <div style="padding: 18px 16px 28px"><button type="button" class="btn wide btn-dt"><i class="ic i-trash"></i>Remove the INR budget</button></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

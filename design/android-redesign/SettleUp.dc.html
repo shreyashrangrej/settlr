@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settle up with Ananya</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}a{color:inherit}a:hover{color:inherit}
+@keyframes nudge{0%,62%,100%{transform:none}74%{transform:translateX(18px)}86%{transform:translateX(5px)}}
+@keyframes flow{to{background-position:24px 0}}
+@media (prefers-reduced-motion: reduce){.nudge,.flow{animation:none!important}}
+</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div style="position: absolute; inset: 0"><dc-import name="Home" theme="{{theme}}" hint-size="412px,915px"></dc-import></div>
+  <a class="scrim" href="Home.dc.html" aria-label="Close"></a>
+  <div class="sheet" style="height: 790px; display: flex; flex-direction: column">
+    <div class="grab"></div>
+    <div style="padding: 14px 20px 0; display: flex; align-items: center; justify-content: space-between">
+      <h2 class="disp" style="margin: 0; font-size: 26px; line-height: 32px; font-weight: 750">Settle up</h2>
+      <span class="badge b-owe">you owe ₹1,640</span>
+    </div>
+
+    <div style="margin-top: 22px; display: flex; align-items: center; justify-content: center; gap: 14px">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><span class="av t-me" style="width: 60px; height: 60px; font-size: 19px">AM</span><span style="font-size: 13px; font-weight: 700">You</span></div>
+      <div style="width: 96px; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 22px">
+        <span class="flow" style="width: 96px; height: 3px; border-radius: 2px; background-image: linear-gradient(90deg, var(--accent) 50%, transparent 50%); background-size: 12px 3px; animation: flow 0.8s linear infinite"></span>
+        <span class="lbl">pays</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><span class="av t-rose" style="width: 60px; height: 60px; font-size: 19px">AR</span><span style="font-size: 13px; font-weight: 700">Ananya</span></div>
+    </div>
+
+    <div style="margin-top: 18px; display: flex; align-items: center; justify-content: center; gap: 6px">
+      <span class="disp num" style="font-size: 60px; line-height: 66px; font-weight: 800; letter-spacing: -.05em">₹1,640</span>
+      <button type="button" class="ibtn n" aria-label="Change amount" style="width: 36px; height: 36px"><i class="ic s i-pen"></i></button>
+    </div>
+    <div style="margin-top: 12px; display: flex; justify-content: center; gap: 8px">
+      <span class="chip on"><i class="ic i-check"></i>Full balance</span>
+      <span class="chip">Part of it</span>
+    </div>
+
+    <div style="margin: 22px 16px 0; border-radius: 22px; background: var(--surface-2)">
+      <div class="row" style="min-height: 56px; padding: 10px 16px">
+        <i class="ic s i-cal mut"></i><span class="grow" style="font-weight: 650">Today, 26 Nov</span><i class="ic s i-chev-r fnt"></i>
+      </div>
+      <div class="row" style="min-height: 56px; padding: 10px 16px">
+        <i class="ic s i-pen mut"></i><span class="grow" style="font-weight: 650">Paid on UPI</span><span class="lbl">Note</span>
+      </div>
+    </div>
+
+    <div style="margin: 16px 20px 0; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 650" class="num">
+      <span class="mut">Afterwards</span><span class="neg">₹1,640</span><i class="ic xs i-arrow-r fnt"></i><span class="pos" style="display: flex; align-items: center; gap: 4px"><i class="ic xs i-check"></i>all square</span>
+    </div>
+
+    <div style="flex: 1"></div>
+    <div style="margin: 0 16px 12px; padding: 12px 12px 12px 16px; border-radius: 22px; box-shadow: inset 0 0 0 1.5px var(--surface-3); display: flex; align-items: center; gap: 12px">
+      <span class="grow"><div style="font-weight: 750; font-size: 14.5px">Pay first, then record it</div><div class="sub" style="font-size: 12.5px; line-height: 17px">Opens GPay, PhonePe or any UPI app with ₹1,640 filled in</div></span>
+      <button type="button" class="btn sm btn-t"><i class="ic i-phone"></i>Pay with UPI</button>
+    </div>
+    <div style="padding: 0 16px 10px">
+      <a href="Settled.dc.html" aria-label="Record a ₹1,640 payment to Ananya" style="position: relative; height: 66px; border-radius: 999px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center">
+        <span class="nudge" style="position: absolute; left: 5px; top: 5px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; box-shadow: var(--lift); animation: nudge 2.4s var(--ease) 1s infinite"><i class="ic i-arrow-r"></i></span>
+        <span style="font: 800 16px/1 var(--sans); color: var(--accent-ink); padding-left: 40px">Slide to record ₹1,640</span>
+      </a>
+    </div>
+    <div class="sub" style="text-align: center; padding: 0 24px 22px">The balance moves now. Ananya is asked to confirm she got it.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light', theme: this.props.theme || 'light' };
+  }
+}
+</script>
+</body>
+</html>

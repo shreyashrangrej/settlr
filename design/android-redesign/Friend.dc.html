@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rohan Kulkarni</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll">
+    <div class="inset"></div>
+    <div class="topbar">
+      <a class="ibtn" href="Friends.dc.html" aria-label="Back to friends"><i class="ic i-back"></i></a>
+      <span class="tt"></span>
+      <a class="ibtn" href="Search.dc.html" aria-label="Search this ledger"><i class="ic i-search"></i></a>
+      <a class="ibtn" href="Recurring.dc.html" aria-label="Repeating expenses with Rohan"><i class="ic i-repeat"></i></a>
+      <button type="button" class="ibtn" aria-label="Friend options"><i class="ic i-more"></i></button>
+    </div>
+
+    <div class="in" style="--i: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 20px">
+      <span class="av lg t-blue">RK</span>
+      <h1 class="disp" style="margin: 12px 0 0; font-size: 28px; line-height: 34px; font-weight: 750; letter-spacing: -.03em">Rohan Kulkarni</h1>
+      <span class="badge b-acc" style="margin-top: 8px; height: 26px; padding: 0 10px"><i class="ic xs i-verified"></i>Shared ledger · you both see it</span>
+    </div>
+
+    <div class="card in" style="--i: 2; margin: 20px 16px 0; padding: 18px; text-align: center">
+      <div class="lbl" style="display: flex; align-items: center; justify-content: center; gap: 5px"><i class="ic xs i-in pos"></i>Rohan owes you</div>
+      <div class="disp num pos" style="margin-top: 2px; font-size: 46px; line-height: 52px; font-weight: 800; letter-spacing: -.04em">₹2,140</div>
+      <div style="margin-top: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <a class="btn sm btn-c" href="SettleUp.dc.html"><i class="ic i-swap"></i>Settle up</a>
+        <a class="btn sm btn-p" href="AddExpense.dc.html"><i class="ic i-plus"></i>Add expense</a>
+      </div>
+      <button type="button" class="btn sm btn-o wide" style="margin-top: 8px"><i class="ic i-bell-ring"></i>Remind Rohan</button>
+    </div>
+
+    <a class="card in" href="SettleAll.dc.html" style="--i: 3; margin: 12px 16px 0; padding: 14px 16px; display: flex; align-items: center; gap: 12px">
+      <span class="tile t-violet" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-layers"></i></span>
+      <span class="grow"><div class="rt" style="font-size: 15px">Across everything</div><div class="rs">With Goa Trip, Rohan owes you <b class="pos num">₹5,120</b></div></span>
+      <i class="ic s i-chev-r fnt"></i>
+    </a>
+
+    <div class="in" style="--i: 4; margin-top: 10px">
+      <div class="dhead">November</div>
+      <div class="card" style="margin: 0 16px">
+        <a class="row" href="ExpenseDetail.dc.html">
+          <span class="tile t-rose"><i class="ic i-ticket"></i></span>
+          <span class="grow"><div class="rt">Concert tickets</div><div class="rs">22 Nov · you paid ₹3,800 · split</div></span>
+          <span class="end"><span class="lbl">you lent</span><span class="amt pos">₹1,900</span></span>
+        </a>
+        <a class="row" href="ExpenseDetail.dc.html">
+          <span class="tile" style="background: var(--owed-soft); color: var(--owed)"><i class="ic i-in"></i></span>
+          <span class="grow"><div class="rt">Rohan paid you</div><div class="rs">18 Nov · UPI</div></span>
+          <span class="end"><span class="lbl">payment</span><span class="amt">₹1,000</span></span>
+        </a>
+        <a class="row" href="ExpenseDetail.dc.html">
+          <span class="tile t-orange"><i class="ic i-food"></i></span>
+          <span class="grow"><div class="rt">Biryani run</div><div class="rs">12 Nov · Rohan paid ₹960 · split</div></span>
+          <span class="end"><span class="lbl">you borrowed</span><span class="amt neg">₹480</span></span>
+        </a>
+        <a class="row" href="ExpenseDetail.dc.html">
+          <span class="tile t-green"><i class="ic i-cart"></i></span>
+          <span class="grow"><div class="rt">Weekend groceries</div><div class="rs">3 Nov · you paid ₹3,440 · split</div></span>
+          <span class="end"><span class="lbl">you lent</span><span class="amt pos">₹1,720</span></span>
+        </a>
+      </div>
+      <div class="dhead">October</div>
+      <div class="card" style="margin: 0 16px">
+        <a class="row" href="ExpenseDetail.dc.html">
+          <span class="tile" style="background: var(--surface-2); color: var(--muted)"><i class="ic i-out"></i></span>
+          <span class="grow"><div class="rt">You paid Rohan</div><div class="rs">29 Oct · settled up</div></span>
+          <span class="end"><span class="lbl">payment</span><span class="amt">₹2,300</span></span>
+        </a>
+        <a class="row" href="ExpenseDetail.dc.html">
+          <span class="tile t-blue"><i class="ic i-car"></i></span>
+          <span class="grow"><div class="rt">Cab to the airport</div><div class="rs">14 Oct · Rohan paid ₹4,600 · split</div></span>
+          <span class="end"><span class="lbl">you borrowed</span><span class="amt neg">₹2,300</span></span>
+        </a>
+      </div>
+      <div style="height: 28px"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

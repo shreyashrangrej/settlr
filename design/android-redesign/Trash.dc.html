@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trash</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll">
+    <div class="inset"></div>
+    <div class="topbar">
+      <a class="ibtn" href="Spending.dc.html" aria-label="Back to spending"><i class="ic i-back"></i></a>
+      <span class="tt"></span>
+    </div>
+    <div style="padding: 0 20px">
+      <h1 class="title">Trash</h1>
+      <p class="sub" style="margin: 6px 0 0; font-size: 14px; line-height: 20px">Expenses you deleted. They’re kept for 30 days, then deleted with their receipts.</p>
+    </div>
+
+    <div class="card in" style="--i: 1; margin: 18px 16px 0">
+      <sc-for list="{{items}}" as="t" hint-placeholder-count="3">
+        <div class="row" style="align-items: flex-start; padding-top: 14px; padding-bottom: 14px">
+          <span class="tile {{t.tone}}"><i class="ic {{t.icon}}"></i></span>
+          <span class="grow">
+            <div class="rt">{{t.name}}</div>
+            <div class="rs">{{t.where}} · {{t.date}}</div>
+            <div class="rs" style="font-size: 12px; color: var(--faint)">Deleted {{t.deleted}} · gone after {{t.gone}}</div>
+            <div style="margin-top: 10px; display: flex; gap: 8px">
+              <button type="button" class="btn xs btn-t" onClick="{{t.restore}}"><i class="ic i-undo"></i>Restore</button>
+              <button type="button" class="btn xs btn-dt">Delete for good</button>
+            </div>
+          </span>
+          <span class="amt">{{t.amount}}</span>
+        </div>
+      </sc-for>
+      <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 36px 24px; text-align: center">
+          <span class="tile" style="margin: 0 auto; width: 52px; height: 52px; border-radius: 18px; background: var(--surface-2); color: var(--muted)"><i class="ic i-trash"></i></span>
+          <div class="h" style="margin-top: 12px">Trash is empty</div>
+          <div class="sub">Deleted expenses wait here for 30 days in case you need them back.</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div class="sub in" style="--i: 2; padding: 14px 24px 0; text-align: center">Restoring puts the balances back too. An expense can’t come back if its friend or group was deleted, or someone on it left the group. Payments are deleted outright.</div>
+    <div style="height: 120px"></div>
+  </div>
+
+  <sc-if value="{{showSnack}}" hint-placeholder-val="{{ true }}">
+    <div class="snack" role="status" style="position: absolute; left: 16px; right: 16px; bottom: 22px; z-index: 25; animation: rise .45s var(--ease) both">
+      <i class="ic s i-check" style="color: #4FD597"></i>
+      <span class="grow">{{snack}}</span>
+      <button type="button" class="act" onClick="{{undo}}">{{snackAct}}</button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const all = [
+      { id: 'b', name: 'Beach shack lunch', where: 'Goa Trip', date: '26 Nov', deleted: 'today', gone: '26 Dec', amount: '₹1,560', tone: 't-orange', icon: 'i-food' },
+      { id: 'm', name: 'Movie night', where: 'Rohan', date: '19 Nov', deleted: '20 Nov', gone: '20 Dec', amount: '₹1,200', tone: 't-rose', icon: 'i-ticket' },
+      { id: 'g', name: 'Gym day pass', where: 'Personal', date: '8 Nov', deleted: '9 Nov', gone: '9 Dec', amount: '₹300', tone: 't-green', icon: 'i-wallet' },
+    ];
+    const s = this.state || {};
+    const restored = s.restored || {};
+    const last = s.last || null;
+    const items = all.filter((t) => !restored[t.id]).map((t) => ({
+      ...t,
+      restore: () => {
+        const cur = (this.state && this.state.restored) || {};
+        this.setState({ restored: { ...cur, [t.id]: true }, last: t.id });
+      },
+    }));
+    const lastItem = all.find((t) => t.id === last);
+    return {
+      themeCls: this.props.theme === 'dark' ? 'dark' : 'light',
+      items,
+      empty: items.length === 0,
+      showSnack: true,
+      snack: lastItem ? '“' + lastItem.name + '” is back in ' + lastItem.where : 'Expense deleted. It’s in Trash for 30 days.',
+      snackAct: lastItem ? 'Undo' : 'Undo',
+      undo: () => {
+        const st = this.state || {};
+        if (!st.last) return;
+        const cur = { ...(st.restored || {}) };
+        delete cur[st.last];
+        this.setState({ restored: cur, last: null });
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

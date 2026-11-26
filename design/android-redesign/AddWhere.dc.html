@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Where does it go</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div style="position: absolute; inset: 0"><dc-import name="AddExpense" theme="{{theme}}" hint-size="412px,915px"></dc-import></div>
+  <a class="scrim" href="AddExpense.dc.html" aria-label="Close"></a>
+  <div class="sheet" style="height: 770px; display: flex; flex-direction: column">
+    <div class="grab"></div>
+    <h2 class="disp" style="margin: 14px 20px 0; font-size: 26px; line-height: 32px; font-weight: 750">Where does it go?</h2>
+    <div style="padding: 14px 16px 6px">
+      <label class="input" style="height: 50px; border-radius: 999px"><i class="ic s i-search fnt"></i><input aria-label="Search groups and friends" placeholder="Search groups and friends" style="flex: 1; min-width: 0; border: 0; background: transparent; outline: none; font: 600 15px/1 var(--sans); color: var(--text)"></label>
+    </div>
+    <div style="flex: 1; overflow-y: auto; padding-bottom: 20px">
+      <div class="lbl" style="padding: 14px 20px 4px">Just you</div>
+      <a class="row" href="AddExpense.dc.html">
+        <span class="tile t-gray"><i class="ic i-wallet"></i></span>
+        <span class="grow"><div class="rt">Personal</div><div class="rs">Only you · any currency</div></span>
+      </a>
+      <div class="lbl" style="padding: 14px 20px 4px">Groups</div>
+      <a class="row" href="AddExpense.dc.html" style="background: var(--accent-soft); margin: 0 8px; border-radius: 18px; padding: 12px 10px 12px 8px">
+        <span class="tile mono t-orange">G</span>
+        <span class="grow"><div class="rt">Goa Trip</div><div class="rs">5 people · INR</div></span>
+        <span class="cb on"><i class="ic i-check"></i></span>
+      </a>
+      <a class="row" href="AddExpense.dc.html">
+        <span class="tile mono t-teal">O</span>
+        <span class="grow"><div class="rt">Office Lunch</div><div class="rs">4 people · INR</div></span>
+      </a>
+      <a class="row" href="AddExpense.dc.html">
+        <span class="tile mono t-green">F</span>
+        <span class="grow"><div class="rt">Flat 4B</div><div class="rs">3 people · INR</div></span>
+      </a>
+      <a class="row" href="AddExpense.dc.html">
+        <span class="tile mono t-amber">B</span>
+        <span class="grow"><div class="rt">Berlin ’26</div><div class="rs">4 people · EUR, so the amount switches to €</div></span>
+      </a>
+      <div class="lbl" style="padding: 14px 20px 4px">Friends</div>
+      <a class="row" href="AddExpense.dc.html">
+        <span class="av t-blue">RK</span>
+        <span class="grow"><div class="rt">Rohan Kulkarni</div><div class="rs">Split equally or owed in full</div></span>
+      </a>
+      <a class="row" href="AddExpense.dc.html">
+        <span class="av t-rose">AR</span>
+        <span class="grow"><div class="rt">Ananya Rao</div><div class="rs">Split equally or owed in full</div></span>
+      </a>
+      <a class="row" href="AddExpense.dc.html">
+        <span class="av t-orange">SC</span>
+        <span class="grow"><div class="rt">Sam Carter</div><div class="rs">Usually USD</div></span>
+      </a>
+      <a class="row" href="AddFriend.dc.html">
+        <span class="tile" style="background: var(--surface-2); color: var(--accent-ink)"><i class="ic i-user-plus"></i></span>
+        <span class="grow"><div class="rt" style="color: var(--accent-ink)">Someone new</div><div class="rs">Add a friend or start a group</div></span>
+      </a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light', theme: this.props.theme || 'light' };
+  }
+}
+</script>
+</body>
+</html>

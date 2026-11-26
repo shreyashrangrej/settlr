@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Receipt</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr dark" style="background: #050507; color: #F1F1F6">
+  <div class="inset"></div>
+  <div class="topbar" style="position: relative; z-index: 2">
+    <a class="ibtn" href="ExpenseDetail.dc.html" aria-label="Close" style="color: #F1F1F6"><i class="ic i-x"></i></a>
+    <span class="tt" style="color: #F1F1F6">thalassa-bill.jpg</span>
+    <button type="button" class="ibtn" aria-label="Share" style="color: #F1F1F6"><i class="ic i-share"></i></button>
+    <button type="button" class="ibtn" aria-label="Download" style="color: #F1F1F6"><i class="ic i-download"></i></button>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 100px; bottom: 200px; display: flex; align-items: center; justify-content: center">
+    <div role="img" aria-label="Photo of the Thalassa restaurant bill" style="width: 280px; padding: 22px 20px 26px; background: #FBFAF6; color: #2A2925; transform: rotate(-2deg); box-shadow: 0 30px 60px rgba(0,0,0,.6); font-family: 'Manrope', sans-serif; font-size: 11.5px; line-height: 17px; display: flex; flex-direction: column; gap: 2px">
+      <div style="text-align: center; font: 800 18px/22px var(--display); letter-spacing: .08em">THALASSA</div>
+      <div style="text-align: center; color: #77746B">Vagator, Goa · Table 12</div>
+      <div style="text-align: center; color: #77746B; margin-bottom: 8px">25/11/2026 · 21:42</div>
+      <div style="border-top: 1px dashed #C9C6BC; margin: 4px 0"></div>
+      <div style="display: flex; justify-content: space-between"><span>Grilled calamari ×2</span><span class="num">1,180</span></div>
+      <div style="display: flex; justify-content: space-between"><span>Moussaka</span><span class="num">690</span></div>
+      <div style="display: flex; justify-content: space-between"><span>Prawn souvlaki ×2</span><span class="num">1,420</span></div>
+      <div style="display: flex; justify-content: space-between"><span>Greek salad</span><span class="num">460</span></div>
+      <div style="display: flex; justify-content: space-between"><span>Pita &amp; dips</span><span class="num">380</span></div>
+      <div style="display: flex; justify-content: space-between"><span>Drinks</span><span class="num">1,460</span></div>
+      <div style="border-top: 1px dashed #C9C6BC; margin: 6px 0 4px"></div>
+      <div style="display: flex; justify-content: space-between; color: #77746B"><span>Subtotal</span><span class="num">5,590</span></div>
+      <div style="display: flex; justify-content: space-between; color: #77746B"><span>GST 5% + service</span><span class="num">610</span></div>
+      <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; margin-top: 4px"><span>TOTAL</span><span class="num">₹6,200</span></div>
+      <div style="text-align: center; color: #77746B; margin-top: 10px">Efharistó! See you again.</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 50%; bottom: 206px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.1); font-size: 12px; font-weight: 650; color: #C9C9D6">Pinch to zoom · swipe down to close</div>
+
+  <div style="position: absolute; left: 12px; right: 12px; bottom: 20px; padding: 16px; border-radius: 28px; background: #17171F">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <span class="tile t-orange" style="width: 42px; height: 42px; border-radius: 14px"><i class="ic s i-food"></i></span>
+      <div class="grow"><div class="rt" style="font-size: 15px">Dinner at Thalassa</div><div class="rs" style="color: #ABABBE">Goa Trip · Wed, 25 Nov · Priya paid</div></div>
+      <span class="amt">₹6,200</span>
+    </div>
+    <div style="margin-top: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <button type="button" class="btn sm" style="background: #21212B; color: #F1F1F6"><i class="ic i-cam"></i>Replace</button>
+      <button type="button" class="btn sm" style="background: #3A1916; color: #FF7D70"><i class="ic i-trash"></i>Remove</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

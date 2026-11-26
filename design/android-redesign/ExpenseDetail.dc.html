@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dinner at Thalassa</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll" style="bottom: 96px">
+    <div class="inset"></div>
+    <div class="topbar">
+      <a class="ibtn" href="Group.dc.html" aria-label="Back to Goa Trip"><i class="ic i-back"></i></a>
+      <span class="tt"></span>
+      <a class="ibtn" href="AddExpense.dc.html" aria-label="Edit"><i class="ic i-pen"></i></a>
+    </div>
+
+    <div class="in" style="--i: 1; padding: 0 20px; display: flex; flex-direction: column; align-items: center; text-align: center">
+      <span class="tile lg t-orange"><i class="ic xl i-food"></i></span>
+      <h1 class="disp" style="margin: 14px 0 0; font-size: 26px; line-height: 32px; font-weight: 750; letter-spacing: -.025em">Dinner at Thalassa</h1>
+      <div class="disp num" style="margin-top: 2px; font-size: 50px; line-height: 58px; font-weight: 800; letter-spacing: -.045em">₹6,200</div>
+      <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center">
+        <a class="badge b-acc" href="Group.dc.html" style="height: 28px; padding: 0 10px; font-size: 12.5px"><span class="tile mono t-orange" style="width: 18px; height: 18px; border-radius: 6px; font-size: 10px">G</span>Goa Trip</a>
+        <span class="badge b-n" style="height: 28px; padding: 0 10px; font-size: 12.5px"><i class="ic xs i-cal"></i>Wed, 25 Nov</span>
+        <span class="badge b-n" style="height: 28px; padding: 0 10px; font-size: 12.5px"><i class="ic xs i-tag"></i>Food</span>
+        <span class="badge b-n" style="height: 28px; padding: 0 10px; font-size: 12.5px"><i class="ic xs i-hash"></i>night-out</span>
+      </div>
+    </div>
+
+    <div class="card in" style="--i: 2; margin: 22px 16px 0">
+      <div class="row">
+        <span class="av t-amber">PS</span>
+        <span class="grow"><div class="lbl">Paid by</div><div class="rt">Priya Shah</div></span>
+        <span class="amt">₹6,200</span>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-top: 20px"><h2 class="h" style="font-size: 16px">Split equally · 5 people</h2><span class="lbl">₹1,240 each</span></div>
+    <div class="card in" style="--i: 3; margin: 0 16px; padding: 4px 0">
+      <div class="row" style="min-height: 58px; background: var(--owe-soft); margin: 0 6px; border-radius: 18px; padding: 8px 10px">
+        <span class="av sm t-me">AM</span>
+        <span class="grow"><div class="rt" style="font-size: 15px">You</div><div class="rs neg" style="font-weight: 700">you owe Priya</div></span>
+        <span class="amt neg">₹1,240</span>
+      </div>
+      <div class="row" style="min-height: 54px; padding: 8px 16px"><span class="av sm t-amber">PS</span><span class="grow rt" style="font-size: 15px">Priya Shah</span><span class="amt mut">₹1,240</span></div>
+      <div class="row" style="min-height: 54px; padding: 8px 16px"><span class="av sm t-blue">RK</span><span class="grow rt" style="font-size: 15px">Rohan Kulkarni</span><span class="amt mut">₹1,240</span></div>
+      <div class="row" style="min-height: 54px; padding: 8px 16px"><span class="av sm t-teal">KS</span><span class="grow rt" style="font-size: 15px">Kabir Singh</span><span class="amt mut">₹1,240</span></div>
+      <div class="row" style="min-height: 54px; padding: 8px 16px"><span class="av sm t-green">MI</span><span class="grow rt" style="font-size: 15px">Meera Iyer</span><span class="amt mut">₹1,240</span></div>
+    </div>
+
+    <a class="card in" href="Receipt.dc.html" style="--i: 4; margin: 14px 16px 0; padding: 12px; display: flex; align-items: center; gap: 14px">
+      <span style="width: 52px; height: 64px; flex: none; border-radius: 10px; background: #FBFAF6; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); padding: 8px 7px; display: flex; flex-direction: column; gap: 4px">
+        <span style="height: 4px; width: 60%; background: #C9C6BC; border-radius: 2px; align-self: center"></span>
+        <span style="height: 3px; background: #DEDBD2; border-radius: 2px"></span><span style="height: 3px; width: 80%; background: #DEDBD2; border-radius: 2px"></span><span style="height: 3px; background: #DEDBD2; border-radius: 2px"></span><span style="height: 3px; width: 70%; background: #DEDBD2; border-radius: 2px"></span>
+        <span style="height: 4px; width: 50%; background: #B3AFA4; border-radius: 2px; align-self: flex-end; margin-top: auto"></span>
+      </span>
+      <span class="grow"><div class="rt" style="display: flex; align-items: center; gap: 6px"><i class="ic xs i-clip"></i>Receipt</div><div class="rs">thalassa-bill.jpg · 1.2 MB</div></span>
+      <i class="ic s i-chev-r fnt"></i>
+    </a>
+
+    <div class="sec" style="margin-top: 22px"><h2 class="h" style="font-size: 16px; display: flex; align-items: center; gap: 8px"><i class="ic s i-msg"></i>Comments</h2><span class="lbl">Everyone on it is told</span></div>
+    <div class="card in" style="--i: 5; margin: 0 16px 24px; padding: 14px 14px 10px">
+      <div style="display: flex; gap: 10px">
+        <span class="av sm t-green">MI</span>
+        <div class="grow"><div style="font-size: 13px; font-weight: 750">Meera <span class="fnt" style="font-weight: 600">· 1 h</span></div><div style="margin-top: 3px; padding: 10px 12px; border-radius: 4px 16px 16px 16px; background: var(--surface-2); font-size: 14.5px; line-height: 20px; font-weight: 500">Can we split the wine separately next time?</div></div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 12px">
+        <span class="av sm t-amber">PS</span>
+        <div class="grow"><div style="font-size: 13px; font-weight: 750">Priya <span class="fnt" style="font-weight: 600">· 40 min</span></div><div style="margin-top: 3px; padding: 10px 12px; border-radius: 4px 16px 16px 16px; background: var(--surface-2); font-size: 14.5px; line-height: 20px; font-weight: 500">Sure, I’ll use Items for the next bill.</div></div>
+      </div>
+      <label style="margin-top: 12px; height: 48px; border-radius: 24px; background: var(--surface-2); display: flex; align-items: center; gap: 6px; padding: 0 5px 0 16px">
+        <input aria-label="Add a comment" placeholder="Add a comment…" style="flex: 1; min-width: 0; border: 0; background: transparent; outline: none; font: 600 14.5px/1 var(--sans); color: var(--text)">
+        <button type="button" class="ibtn" aria-label="Send comment" style="width: 38px; height: 38px; background: var(--accent); color: var(--on-accent)"><i class="ic s i-send"></i></button>
+      </label>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 22px; background: var(--bg); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; box-shadow: 0 -1px 0 var(--line)">
+    <a class="btn btn-t" href="AddExpense.dc.html"><i class="ic i-pen"></i>Edit</a>
+    <a class="btn btn-dt" href="Trash.dc.html"><i class="ic i-trash"></i>Delete</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

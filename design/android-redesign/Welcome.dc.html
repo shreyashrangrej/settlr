@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Welcome to Settlr</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}a{color:inherit}a:hover{color:inherit}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.bob,.spin{animation:none!important}}
+</style>
+</helmet>
+<div class="scr {{themeCls}}" style="background: var(--hero); color: var(--on-hero); display: flex; flex-direction: column">
+  <div class="inset"></div>
+  <div style="position: relative; height: 470px; flex: none">
+    <span class="spin" style="position: absolute; left: 56px; top: 50px; width: 300px; height: 300px; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,.22); animation: spin 60s linear infinite"></span>
+    <span style="position: absolute; left: 116px; top: 110px; width: 180px; height: 180px; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,.16)"></span>
+    <span style="position: absolute; left: 158px; top: 152px; width: 96px; height: 96px; border-radius: 30px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 16px 40px rgba(0,0,0,.25)">
+      <svg width="58" height="58" viewBox="0 0 32 32" aria-hidden="true"><path d="M10 22 22 10" stroke="#5B3DF5" stroke-width="2.8" stroke-linecap="round"></path><circle cx="11.5" cy="11.5" r="2.8" fill="#5B3DF5"></circle><circle cx="20.5" cy="20.5" r="2.8" fill="#5B3DF5"></circle></svg>
+    </span>
+
+    <div class="bob" style="position: absolute; left: 18px; top: 46px; animation: bob 4s ease-in-out infinite; display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border-radius: 999px; background: #fff; color: #121218; box-shadow: 0 10px 28px rgba(0,0,0,.2)">
+      <span class="av sm" style="background: #FBEFCF; color: #835500">PS</span><span style="font-weight: 700; font-size: 13.5px">Priya paid ₹6,200</span>
+    </div>
+    <div class="bob" style="position: absolute; right: 16px; top: 128px; animation: bob 4.6s ease-in-out .6s infinite; display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border-radius: 999px; background: #fff; color: #121218; box-shadow: 0 10px 28px rgba(0,0,0,.2)">
+      <span class="av sm" style="background: #DFF3E8; color: #0B7F4E"><i class="ic xs i-in"></i></span><span style="font-weight: 700; font-size: 13.5px">you get back <span style="color: #0B7F4E">₹3,410</span></span>
+    </div>
+    <div class="bob" style="position: absolute; left: 30px; top: 306px; animation: bob 5s ease-in-out 1.2s infinite; display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border-radius: 999px; background: #fff; color: #121218; box-shadow: 0 10px 28px rgba(0,0,0,.2)">
+      <span class="av sm" style="background: #DFEAFD; color: #1F57C3">RK</span><span style="font-weight: 700; font-size: 13.5px">₹1,240 each, 5 ways</span>
+    </div>
+    <div class="bob" style="position: absolute; right: 40px; top: 360px; animation: bob 4.2s ease-in-out .3s infinite; display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: rgba(255,255,255,.16); color: var(--on-hero); font-weight: 750; font-size: 13.5px">
+      <i class="ic xs i-check"></i>All square
+    </div>
+  </div>
+
+  <div style="flex: 1; padding: 0 24px; display: flex; flex-direction: column">
+    <h1 class="disp" style="margin: 0; font-size: 50px; line-height: 50px; font-weight: 800; letter-spacing: -.045em">Split costs.<br>Stay friends.</h1>
+    <p style="margin: 14px 0 0; font-size: 16px; line-height: 24px; color: var(--hero-dim); font-weight: 500">Trips, flats and dinners: add what you spent, see who owes whom, and settle up in the fewest payments.</p>
+    <div style="flex: 1"></div>
+    <a class="btn wide" href="Home.dc.html" style="height: 56px; background: #fff; color: #121218">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"></path><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"></path><path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"></path><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"></path></svg>
+      Continue with Google
+    </a>
+    <a class="btn wide" href="SignIn.dc.html" style="margin-top: 10px; height: 56px; background: transparent; color: var(--on-hero); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.35)"><i class="ic i-mail"></i>Continue with email</a>
+    <p style="margin: 14px 0 22px; text-align: center; font-size: 12px; color: var(--hero-dim); font-weight: 500">No passwords. We'll send a 6-digit code.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

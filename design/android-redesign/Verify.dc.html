@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Enter your code</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}" style="display: flex; flex-direction: column">
+  <div class="inset"></div>
+  <div class="topbar"><a class="ibtn" href="SignIn.dc.html" aria-label="Back"><i class="ic i-back"></i></a></div>
+  <div class="in" style="--i: 1; padding: 12px 24px 0">
+    <h1 class="title">Check your inbox</h1>
+    <p class="sub" style="margin: 8px 0 0; font-size: 15px; line-height: 22px">We sent a 6-digit code to <b style="color: var(--text)">aarav@example.com</b>. <a class="link" href="SignIn.dc.html">Change</a></p>
+  </div>
+
+  <div class="in" role="group" aria-label="6-digit code" style="--i: 2; padding: 32px 24px 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px">
+    <span class="disp" style="height: 64px; border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 750">4</span>
+    <span class="disp" style="height: 64px; border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 750">8</span>
+    <span class="disp" style="height: 64px; border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 750">2</span>
+    <span class="disp" style="height: 64px; border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 750">9</span>
+    <span class="disp" style="height: 64px; border-radius: 18px; background: var(--surface); box-shadow: inset 0 0 0 2px var(--accent); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 750"><span class="caret" style="height: 30px"></span></span>
+    <span style="height: 64px; border-radius: 18px; background: var(--surface-2)"></span>
+  </div>
+
+  <div class="in" style="--i: 3; padding: 20px 24px 0; display: flex; align-items: center; gap: 10px">
+    <button type="button" class="chip ac"><i class="ic i-copy"></i>Paste code</button>
+    <span class="sub">Resend in 0:24</span>
+  </div>
+
+  <div style="flex: 1"></div>
+  <div style="padding: 0 24px 24px">
+    <a class="btn btn-p wide" href="HomeEmpty.dc.html" style="height: 56px">Verify and continue</a>
+    <p class="sub" style="text-align: center; margin: 12px 0 0; font-size: 12.5px">The code fills in by itself when you copy it from the email.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

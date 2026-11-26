@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Goa Trip options</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div style="position: absolute; inset: 0"><dc-import name="Group" theme="{{theme}}" hint-size="412px,915px"></dc-import></div>
+  <a class="scrim" href="Group.dc.html" aria-label="Close"></a>
+  <div class="sheet" style="padding-bottom: 18px">
+    <div class="grab"></div>
+    <div style="padding: 14px 20px 6px; display: flex; align-items: center; gap: 12px">
+      <span class="tile mono t-orange" style="width: 40px; height: 40px; border-radius: 14px; font-size: 18px">G</span>
+      <div class="grow"><div class="rt" style="font-size: 17px">Goa Trip</div><div class="rs">You own this group · 5 people · INR</div></div>
+    </div>
+
+    <div style="padding: 4px 4px 0">
+      <a class="row" href="InviteShare.dc.html" style="min-height: 64px">
+        <span class="tile t-violet" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-link"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15.5px">Invite and share</div><div class="rs">Join link is on · read-only link is off</div></span>
+        <i class="ic s i-chev-r fnt"></i>
+      </a>
+      <a class="row" href="Activity.dc.html" style="min-height: 64px">
+        <span class="tile t-blue" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-history"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15.5px">Activity</div><div class="rs">Adds, edits, payments, comments, joins</div></span>
+        <i class="ic s i-chev-r fnt"></i>
+      </a>
+      <button type="button" class="row" style="width: 100%; border: 0; text-align: left; font: inherit; min-height: 64px">
+        <span class="tile t-green" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-piggy"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15.5px">Change budget</div><div class="rs num">₹45,000 for the trip · ₹6,400 left</div></span>
+        <i class="ic s i-pen fnt"></i>
+      </button>
+      <button type="button" class="row" style="width: 100%; border: 0; text-align: left; font: inherit; min-height: 64px">
+        <span class="tile t-teal" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-download"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15.5px">Export CSV</div><div class="rs">Every expense and payment, to share or keep</div></span>
+        <i class="ic s i-share fnt"></i>
+      </button>
+      <a class="row" href="NewGroup.dc.html" style="min-height: 64px">
+        <span class="tile t-gray" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-pen"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15.5px">Edit name and members</div><div class="rs">Up to 20 people</div></span>
+        <i class="ic s i-chev-r fnt"></i>
+      </a>
+      <div class="row" aria-disabled="true" style="min-height: 64px">
+        <span class="tile" style="width: 40px; height: 40px; border-radius: 13px; background: var(--surface-2); color: var(--faint)"><i class="ic s i-archive"></i></span>
+        <span class="grow"><div class="rt fnt" style="font-size: 15.5px">Archive</div><div class="rs">Once everyone is square, move it under Archived</div></span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light', theme: this.props.theme || 'light' };
+  }
+}
+</script>
+</body>
+</html>

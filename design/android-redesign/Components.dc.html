@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Components</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="board light" style="width: 1280px; height: 1180px; padding: 48px 56px; display: flex; flex-direction: column; gap: 24px; overflow: hidden">
+  <div>
+    <span class="lbl" style="text-transform: uppercase; letter-spacing: .08em">Tally</span>
+    <h1 class="disp" style="margin: 6px 0 0; font-size: 44px; line-height: 50px; font-weight: 800; letter-spacing: -.035em">Components</h1>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; flex: 1; min-height: 0; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <span class="h" style="font-size: 15px">Buttons</span>
+        <button type="button" class="btn btn-p wide"><i class="ic i-check"></i>Add expense</button>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <button type="button" class="btn sm btn-t">Tonal</button>
+          <button type="button" class="btn sm btn-n">Neutral</button>
+          <button type="button" class="btn sm btn-o">Outline</button>
+          <button type="button" class="btn sm btn-c">Settle up</button>
+          <button type="button" class="btn sm btn-d"><i class="ic i-trash"></i>Delete</button>
+          <button type="button" class="btn sm btn-dt">Remove</button>
+        </div>
+        <p class="sub" style="margin: 0">Pills. 58 px for the one primary action, 40 px in cards, 34 px inside rows. Press scales to 96% on the snappy spring.</p>
+      </div>
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <span class="h" style="font-size: 15px">Icon buttons &amp; FABs</span>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <button type="button" class="ibtn" aria-label="Back"><i class="ic i-back"></i></button>
+          <button type="button" class="ibtn n" aria-label="Search"><i class="ic i-search"></i></button>
+          <button type="button" class="ibtn f" aria-label="Notifications"><i class="ic i-bell"></i><span class="dot" style="box-shadow: 0 0 0 2.5px var(--surface)"></span></button>
+          <span class="nav-add" style="transform: none; width: 56px; height: 56px; border-radius: 20px"><i class="ic i-plus"></i></span>
+        </div>
+        <span class="fab" style="position: static; align-self: flex-start"><i class="ic i-plus"></i>Add expense</span>
+      </div>
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <span class="h" style="font-size: 15px">Fields</span>
+        <div class="field"><label>Description</label><span class="input">Dinner at Thalassa</span></div>
+        <div class="field"><label>Email</label><span class="input focus">neha@example.com<span class="caret" style="height: 20px; margin-left: -6px"></span></span></div>
+        <div class="field"><label style="color: var(--owe)">Amount</label><span class="input" style="border-color: var(--owe); background: var(--surface)">0</span><span class="sub neg" style="font-weight: 650">Amount must be more than zero</span></div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <span class="h" style="font-size: 15px">Chips</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <span class="chip on">All · 4</span>
+          <span class="chip">You owe</span>
+          <span class="chip ac"><i class="ic i-split"></i>Equally · 5<i class="ic i-chev-d"></i></span>
+          <span class="chip ln">Category<i class="ic i-chev-d"></i></span>
+          <span class="chip ac">Transport<i class="ic i-x"></i></span>
+          <span class="chip" style="padding-left: 6px"><span class="av t-me" style="width: 24px; height: 24px; font-size: 9.5px">AM</span>Paid by you</span>
+        </div>
+      </div>
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <span class="h" style="font-size: 15px">Segmented &amp; toggles</span>
+        <div class="seg"><span class="on">Everything</span><span>Personal</span></div>
+        <div style="display: flex; align-items: center; gap: 14px">
+          <span class="switch on"></span><span class="switch"></span>
+          <span class="cb on"><i class="ic i-check"></i></span><span class="cb"><i class="ic i-check"></i></span>
+          <span class="badge b-owed">owes you</span>
+          <span class="badge b-owe">you owe</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <span class="badge b-acc"><i class="ic xs i-verified"></i>Shared ledger</span>
+          <span class="badge b-warn"><i class="ic xs i-clock"></i>request sent</span>
+          <span class="badge b-n"><i class="ic xs i-check"></i>settled</span>
+        </div>
+      </div>
+      <div class="card" style="padding: 18px 18px 22px; display: flex; flex-direction: column; gap: 12px">
+        <span class="h" style="font-size: 15px">Keypad key</span>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <span class="key">1</span><span class="key" style="transform: scale(.94); background: var(--surface-3)">2</span><span class="key"><i class="ic i-del"></i></span>
+        </div>
+        <p class="sub" style="margin: 0">58 px, 20 px radius. Pressed: 94% and one shade darker, with a light haptic tick.</p>
+      </div>
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <span class="h" style="font-size: 15px">Snackbar &amp; dialog</span>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 8px 12px 16px; border-radius: 18px; background: var(--ink); color: var(--on-ink); font-weight: 650; font-size: 14px"><i class="ic s i-check" style="color: #4FD597"></i><span class="grow">Expense added to Goa Trip</span><span style="font-weight: 800; color: #CDB7FF; padding: 0 8px">View</span></div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 8px 12px 16px; border-radius: 18px; background: var(--ink); color: var(--on-ink); font-weight: 650; font-size: 14px"><i class="ic s i-trash" style="color: #FF9A8F"></i><span class="grow">Deleted. It’s in Trash for 30 days.</span><span style="font-weight: 800; color: #CDB7FF; padding: 0 8px">Undo</span></div>
+        <div style="padding: 20px; border-radius: 28px; background: var(--surface); box-shadow: 0 20px 50px rgba(20,18,40,.16), inset 0 0 0 1px var(--line)">
+          <span class="tile" style="width: 44px; height: 44px; background: var(--owe-soft); color: var(--owe)"><i class="ic i-trash"></i></span>
+          <div class="h" style="margin-top: 12px">Delete “Scooter rentals”?</div>
+          <p class="sub" style="margin: 6px 0 0; font-size: 14px; line-height: 20px">Balances are updated for everyone in Goa Trip. You can restore it from Trash for 30 days.</p>
+          <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><span class="btn sm btn-n">Cancel</span><span class="btn sm btn-d">Delete</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div class="card" style="padding: 8px 0">
+        <div style="padding: 10px 18px 2px" class="h"><span style="font-size: 15px">Rows</span></div>
+        <div class="row"><span class="av t-blue">RK</span><span class="grow"><div class="rt">Rohan Kulkarni</div><div class="rs">Friend</div></span><span class="end"><span class="lbl">owes you</span><span class="amt pos">₹2,140</span></span></div>
+        <div class="row"><span class="tile mono t-orange">G</span><span class="grow"><div class="rt">Goa Trip</div><div class="rs">Group · 5 people</div></span><span class="end"><span class="lbl">you're owed</span><span class="amt pos">₹3,410</span></span></div>
+        <div class="row"><span class="tile t-orange"><i class="ic i-food"></i></span><span class="grow"><div class="rt">Dinner at Thalassa</div><div class="rs">Priya paid ₹6,200</div></span><span class="end"><span class="lbl">you borrowed</span><span class="amt neg">₹1,240</span></span></div>
+        <div class="row"><span class="tile" style="background: var(--owed-soft); color: var(--owed)"><i class="ic i-in"></i></span><span class="grow"><div class="rt">Rohan paid you</div><div class="rs">Payment · UPI</div></span><span class="end"><span class="lbl">payment</span><span class="amt">₹1,000</span></span></div>
+        <div style="position: relative; overflow: hidden; margin-top: 4px">
+          <span style="position: absolute; top: 0; right: 0; bottom: 0; width: 104px; background: var(--accent); color: var(--on-accent); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: 800 12.5px/1 var(--sans)"><i class="ic s i-swap"></i>Settle up</span>
+          <div class="row" style="background: var(--surface); transform: translateX(-104px)"><span class="av t-rose">AR</span><span class="grow"><div class="rt">Ananya Rao</div><div class="rs">Swiped</div></span><span class="end"><span class="lbl">you owe</span><span class="amt neg">₹1,640</span></span></div>
+        </div>
+      </div>
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <span class="h" style="font-size: 15px">Loading &amp; empty</span>
+        <div style="display: flex; align-items: center; gap: 14px"><span class="skel" style="width: 44px; height: 44px; border-radius: 15px"></span><div class="grow" style="display: flex; flex-direction: column; gap: 8px"><span class="skel" style="height: 12px; width: 70%"></span><span class="skel" style="height: 10px; width: 45%"></span></div><span class="skel" style="width: 56px; height: 14px"></span></div>
+        <div style="padding: 18px 10px 6px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px">
+          <span class="tile" style="width: 52px; height: 52px; border-radius: 18px; background: var(--surface-2); color: var(--muted)"><i class="ic i-receipt"></i></span>
+          <span class="h" style="font-size: 15.5px; margin-top: 4px">No expenses yet</span>
+          <span class="sub">Add the first one and we'll split it.</span>
+          <span class="btn xs btn-t" style="margin-top: 6px"><i class="ic i-plus"></i>Add expense</span>
+        </div>
+      </div>
+      <div class="card" style="padding: 0; overflow: hidden">
+        <div style="position: relative; height: 86px">
+          <nav class="nav" aria-label="Example navigation" style="box-shadow: none">
+            <span class="nav-i on"><span class="pill"><i class="ic i-home"></i></span>Home</span>
+            <span class="nav-i"><span class="pill"><i class="ic i-users"></i></span>Groups</span>
+            <span class="nav-add"><i class="ic i-plus"></i></span>
+            <span class="nav-i"><span class="pill"><i class="ic i-user"></i></span>Friends</span>
+            <span class="nav-i"><span class="pill"><i class="ic i-pie"></i></span>Spending</span>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

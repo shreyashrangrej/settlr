@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Import from Splitwise</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}" style="display: flex; flex-direction: column">
+  <div class="inset"></div>
+  <div class="topbar">
+    <a class="ibtn" href="Groups.dc.html" aria-label="Back to groups"><i class="ic i-back"></i></a>
+    <span class="tt"></span>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none">
+    <div style="padding: 0 20px">
+      <h1 class="title">Import from Splitwise</h1>
+      <p class="sub" style="margin: 8px 0 0; font-size: 14px; line-height: 20px">In Splitwise, open the group and export it as a spreadsheet. Then pick the file here.</p>
+    </div>
+
+    <div class="card in" style="--i: 1; margin: 18px 16px 0; padding: 14px; display: flex; align-items: center; gap: 12px">
+      <span class="tile t-green" style="width: 44px; height: 44px"><i class="ic i-file-up"></i></span>
+      <span class="grow"><div class="rt" style="font-size: 15px">lisbon-trip_export.csv</div><div class="rs">64 rows · 3 people · EUR</div></span>
+      <button type="button" class="btn xs btn-n">Change</button>
+    </div>
+
+    <div class="field in" style="--i: 2; padding: 18px 16px 0">
+      <label for="imp-name">Group name</label>
+      <input id="imp-name" class="input" value="Lisbon Trip">
+      <span class="sub" style="font-size: 12.5px">Suggested from the file name</span>
+    </div>
+
+    <div class="in" style="--i: 3; padding: 18px 16px 0">
+      <div class="flabel" style="margin-bottom: 10px">Which one is you?</div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <button type="button" class="chip on" aria-pressed="true" style="padding-left: 6px"><span class="av t-me" style="width: 26px; height: 26px; font-size: 10px">AM</span>Aarav M.</button>
+        <button type="button" class="chip" aria-pressed="false" style="padding-left: 6px"><span class="av t-blue" style="width: 26px; height: 26px; font-size: 10px">DP</span>Dev P.</button>
+        <button type="button" class="chip" aria-pressed="false" style="padding-left: 6px"><span class="av t-rose" style="width: 26px; height: 26px; font-size: 10px">SK</span>Sana K.</button>
+      </div>
+    </div>
+
+    <div class="card in" style="--i: 4; margin: 18px 16px 0; padding: 4px 0">
+      <div class="row" style="min-height: 56px">
+        <span class="tile" style="width: 36px; height: 36px; border-radius: 12px; background: var(--owed-soft); color: var(--owed)"><i class="ic s i-check"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">56 expenses</div><div class="rs">With their exact shares</div></span>
+      </div>
+      <div class="row" style="min-height: 56px">
+        <span class="tile" style="width: 36px; height: 36px; border-radius: 12px; background: var(--owed-soft); color: var(--owed)"><i class="ic s i-check"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">6 payments</div><div class="rs">Come over as payments</div></span>
+      </div>
+      <div class="row" style="min-height: 56px">
+        <span class="tile" style="width: 36px; height: 36px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-ink)"><i class="ic s i-hash"></i></span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Tagged <span class="tagp" style="vertical-align: 2px">#splitwise</span></div><div class="rs">So you can find them later</div></span>
+      </div>
+    </div>
+
+    <div class="in" style="--i: 5; margin: 12px 16px 20px; padding: 14px 16px; border-radius: 22px; background: var(--warn-soft); color: var(--warn)">
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14.5px"><i class="ic s i-alert"></i>2 rows can’t come over</div>
+      <div style="margin-top: 6px; font-size: 13px; line-height: 19px; font-weight: 600">Paid by more than one person:<br>Hotel deposit · 14 Oct · €480.00<br>Car hire · 16 Oct · €212.40</div>
+    </div>
+  </div>
+
+  <div style="padding: 12px 16px 22px; box-shadow: 0 -1px 0 var(--line); background: var(--bg)">
+    <a class="btn btn-p wide" href="Group.dc.html" style="height: 56px"><i class="ic i-file-up"></i>Import 62 rows</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

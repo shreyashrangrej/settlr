@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Split by items</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}" style="display: flex; flex-direction: column">
+  <div class="inset"></div>
+  <div class="topbar">
+    <a class="ibtn" href="AddSplit.dc.html" aria-label="Back to the split"><i class="ic i-back"></i></a>
+    <span class="tt">Who had what</span>
+    <button type="button" class="chip ac" style="height: 40px; margin-right: 6px"><i class="ic i-scan"></i>From receipt</button>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none">
+    <div class="sub" style="padding: 0 20px 12px">Dinner at Thalassa · tap the people who had each line. Tax and service are spread by what each person had.</div>
+
+    <div class="card in" style="--i: 1; margin: 0 16px; padding: 4px 0">
+      <sc-for list="{{items}}" as="it" hint-placeholder-count="5">
+        <div style="padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; border-top: {{it.rule}}">
+          <div style="display: flex; align-items: baseline; gap: 10px">
+            <span class="grow rt" style="font-size: 15px">{{it.name}}</span>
+            <span class="amt">{{it.amount}}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px">
+            <sc-for list="{{it.people}}" as="p" hint-placeholder-count="5">
+              <button type="button" onClick="{{p.toggle}}" aria-pressed="{{p.on}}" aria-label="{{p.label}}" style="border: 0; padding: 0; background: transparent; position: relative; opacity: {{p.alpha}}">
+                <span class="av sm {{p.tone}}" style="width: 36px; height: 36px; font-size: 12px; box-shadow: {{p.ring}}">{{p.initials}}</span>
+              </button>
+            </sc-for>
+            <span class="grow"></span>
+            <span class="lbl num">{{it.each}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <button type="button" class="in" style="--i: 2; margin: 10px 16px 0; width: calc(100% - 32px); height: 52px; border-radius: 18px; border: 2px dashed var(--surface-3); background: transparent; color: var(--muted); font: 750 15px/1 var(--sans); display: flex; align-items: center; justify-content: center; gap: 8px"><i class="ic s i-plus"></i>Add a line</button>
+
+    <div class="card in" style="--i: 3; margin: 12px 16px 0; padding: 14px 16px; display: flex; align-items: center; gap: 12px">
+      <span class="tile t-gray" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-percent"></i></span>
+      <span class="grow"><div class="rt" style="font-size: 15px">Tax, tip &amp; service</div><div class="rs">Negative for a discount</div></span>
+      <span class="amt">₹800</span>
+    </div>
+
+    <div class="sec" style="margin-top: 22px"><h2 class="h" style="font-size: 16px">Each person owes</h2><span class="lbl num">{{totalLabel}}</span></div>
+    <div class="card in" style="--i: 4; margin: 0 16px 16px; padding: 4px 0">
+      <sc-for list="{{owes}}" as="o" hint-placeholder-count="5">
+        <div class="row" style="min-height: 52px; padding: 6px 16px; background: {{o.bg}}">
+          <span class="av xs {{o.tone}}">{{o.initials}}</span>
+          <span class="grow"><div class="rt" style="font-size: 14.5px">{{o.name}}</div><div class="rs" style="font-size: 12px">{{o.detail}}</div></span>
+          <span class="amt">{{o.share}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="padding: 12px 16px 22px; box-shadow: 0 -1px 0 var(--line); background: var(--bg)">
+    <a class="btn btn-p wide" href="AddSplit.dc.html" style="height: 56px"><i class="ic i-check"></i>Use this split · {{totalLabel}}</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const people = [
+      { id: 'me', name: 'You', initials: 'AM', tone: 't-me' },
+      { id: 'ps', name: 'Priya', initials: 'PS', tone: 't-amber' },
+      { id: 'rk', name: 'Rohan', initials: 'RK', tone: 't-blue' },
+      { id: 'ks', name: 'Kabir', initials: 'KS', tone: 't-teal' },
+      { id: 'mi', name: 'Meera', initials: 'MI', tone: 't-green' },
+    ];
+    const order = people.map((p) => p.id);
+    const lines = [
+      { id: 'a', name: 'Grilled prawns', cents: 145000, had: ['me', 'rk', 'ks'] },
+      { id: 'b', name: 'Goan fish curry', cents: 98000, had: ['ps', 'mi'] },
+      { id: 'c', name: 'Pork vindaloo', cents: 89000, had: ['rk', 'ks'] },
+      { id: 'd', name: 'Veg thali × 2', cents: 76000, had: ['me', 'mi'] },
+      { id: 'e', name: 'Wine, one bottle', cents: 132000, had: ['ps', 'rk', 'ks'] },
+    ];
+    const extra = 80000;
+    const s = this.state || {};
+    const had = s.had || {};
+    const whoHad = (l) => had[l.id] || l.had;
+    const prop = (total, weights) => {
+      const out = {};
+      const sum = weights.reduce((a, w) => a + Math.max(0, w[1]), 0);
+      if (sum <= 0) return out;
+      const raw = weights.map((w, i) => { const e = (total * Math.max(0, w[1])) / sum; return { id: w[0], i, f: Math.floor(e), r: e - Math.floor(e), w: w[1] }; });
+      let left = total - raw.reduce((a, r) => a + r.f, 0);
+      raw.slice().sort((a, b) => b.r - a.r || a.i - b.i).forEach((r) => { if (left > 0 && (r.r > 0 || r.w > 0)) { r.f += 1; left -= 1; } });
+      raw.forEach((r) => { if (r.f > 0) out[r.id] = r.f; });
+      return out;
+    };
+    const money = (c) => '₹' + (c / 100).toLocaleString('en-IN', { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
+    const sub = {};
+    lines.forEach((l) => {
+      const ids = order.filter((id) => whoHad(l).indexOf(id) !== -1);
+      const part = prop(l.cents, ids.map((id) => [id, 1]));
+      Object.keys(part).forEach((id) => { sub[id] = (sub[id] || 0) + part[id]; });
+    });
+    const itemsTotal = lines.reduce((a, l) => a + l.cents, 0);
+    const total = itemsTotal + extra;
+    const owed = prop(total, order.filter((id) => sub[id]).map((id) => [id, sub[id]]));
+    const toggle = (lineId, pid) => () => {
+      const st = this.state || {};
+      const cur = { ...(st.had || {}) };
+      const line = lines.find((l) => l.id === lineId);
+      const list = (cur[lineId] || line.had).slice();
+      const at = list.indexOf(pid);
+      if (at === -1) list.push(pid); else if (list.length > 1) list.splice(at, 1); else return;
+      cur[lineId] = list;
+      this.setState({ had: cur });
+    };
+    return {
+      themeCls: this.props.theme === 'dark' ? 'dark' : 'light',
+      items: lines.map((l, i) => {
+        const ids = whoHad(l);
+        return {
+          name: l.name,
+          amount: money(l.cents),
+          rule: i === 0 ? '0' : '1px solid var(--divider)',
+          each: ids.length === 1 ? 'one person' : money(Math.floor(l.cents / ids.length)) + ' each',
+          people: people.map((p) => {
+            const on = ids.indexOf(p.id) !== -1;
+            return {
+              ...p,
+              on,
+              label: p.name + (on ? ' had it' : ' didn’t have it'),
+              alpha: on ? 1 : 0.38,
+              ring: on ? '0 0 0 2.5px var(--surface), 0 0 0 4.5px var(--accent)' : 'none',
+              toggle: toggle(l.id, p.id),
+            };
+          }),
+        };
+      }),
+      owes: people.map((p) => ({
+        ...p,
+        name: p.id === 'me' ? 'You' : p.name,
+        share: money(owed[p.id] || 0),
+        detail: sub[p.id] ? money(sub[p.id]) + ' of items + ' + money((owed[p.id] || 0) - sub[p.id]) + ' tax & service' : 'Had nothing',
+        bg: p.id === 'me' ? 'var(--accent-soft)' : 'transparent',
+      })),
+      totalLabel: money(total),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Friends</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll" style="bottom: 86px">
+    <div class="inset"></div>
+    <header style="display: flex; align-items: center; gap: 4px; height: 64px; padding: 0 12px 0 20px">
+      <h1 class="title grow">Friends</h1>
+      <a class="ibtn" href="Search.dc.html" aria-label="Search"><i class="ic i-search"></i></a>
+      <a class="ibtn f" href="AddFriend.dc.html" aria-label="Add a friend"><i class="ic i-user-plus"></i></a>
+    </header>
+
+    <div class="in" style="--i: 1; margin: 8px 16px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div class="card" style="padding: 14px 16px; border-radius: 22px">
+        <div class="lbl" style="display: flex; align-items: center; gap: 5px"><i class="ic xs i-in pos"></i>Owe you</div>
+        <div class="amt pos" style="font-size: 19px; line-height: 26px; margin-top: 2px">₹2,140</div>
+        <div class="sub num" style="font-weight: 700">+ $42.00</div>
+      </div>
+      <div class="card" style="padding: 14px 16px; border-radius: 22px">
+        <div class="lbl" style="display: flex; align-items: center; gap: 5px"><i class="ic xs i-out neg"></i>You owe</div>
+        <div class="amt neg" style="font-size: 19px; line-height: 26px; margin-top: 2px">₹1,640</div>
+        <div class="sub">to 1 friend</div>
+      </div>
+    </div>
+
+    <div class="in" style="--i: 2; margin: 14px 16px 0; padding: 14px; border-radius: 22px; background: var(--accent-soft); display: flex; align-items: center; gap: 12px">
+      <span class="av t-gray">IV</span>
+      <div class="grow"><div class="rt" style="font-size: 15px">Ishaan Verma</div><div class="rs" style="color: var(--accent-ink); white-space: normal">wants to share a ledger with you</div></div>
+      <a class="btn xs btn-p" href="Notifications.dc.html">Accept</a>
+    </div>
+
+    <div class="sec"><h2 class="h">Open balances</h2><span class="lbl">Swipe to settle</span></div>
+    <div class="card in" style="--i: 3; margin: 0 16px; overflow: hidden">
+      <a class="row" href="Friend.dc.html">
+        <span class="av t-blue">RK</span>
+        <span class="grow"><div class="rt" style="display: flex; align-items: center; gap: 5px">Rohan Kulkarni<i class="ic xs i-verified" style="color: var(--accent)"></i></div><div class="rs">Concert tickets · 4 days ago</div></span>
+        <span class="end"><span class="lbl">owes you</span><span class="amt pos">₹2,140</span></span>
+      </a>
+      <a class="row" href="Friend.dc.html">
+        <span class="av t-orange">SC</span>
+        <span class="grow"><div class="rt">Sam Carter</div><div class="rs">Coffee beans · 2 weeks ago</div></span>
+        <span class="end"><span class="lbl">owes you</span><span class="amt pos">$42.00</span></span>
+      </a>
+      <div style="position: relative; overflow: hidden">
+        <a href="SettleUp.dc.html" style="position: absolute; top: 0; right: 0; bottom: 0; width: 112px; background: var(--accent); color: var(--on-accent); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: 800 13px/1 var(--sans)"><i class="ic i-swap"></i>Settle up</a>
+        <a class="row" href="Friend.dc.html" style="background: var(--surface); transform: translateX(-112px); box-shadow: 8px 0 16px rgba(0,0,0,.08)">
+          <span class="av t-rose">AR</span>
+          <span class="grow"><div class="rt" style="display: flex; align-items: center; gap: 5px">Ananya Rao<i class="ic xs i-verified" style="color: var(--accent)"></i></div><div class="rs">Weekend brunch · 1 week ago</div></span>
+          <span class="end"><span class="lbl">you owe</span><span class="amt neg">₹1,640</span></span>
+        </a>
+      </div>
+    </div>
+
+    <div class="sec"><h2 class="h">Settled up</h2></div>
+    <div class="card in" style="--i: 4; margin: 0 16px">
+      <a class="row" href="Friend.dc.html">
+        <span class="av t-teal">KS</span>
+        <span class="grow"><div class="rt">Kabir Singh</div><div class="rs">Last activity 3 Nov</div></span>
+        <span class="badge b-n"><i class="ic xs i-check"></i>settled</span>
+      </a>
+      <a class="row" href="Friend.dc.html">
+        <span class="av t-green">MI</span>
+        <span class="grow"><div class="rt">Meera Iyer</div><div class="rs">Last activity 28 Oct</div></span>
+        <span class="badge b-n"><i class="ic xs i-check"></i>settled</span>
+      </a>
+      <a class="row" href="Friend.dc.html">
+        <span class="av t-red">NJ</span>
+        <span class="grow"><div class="rt">Neha Joshi</div><div class="rs">No expenses yet</div></span>
+        <span class="badge b-warn"><i class="ic xs i-clock"></i>request sent</span>
+      </a>
+    </div>
+    <div style="height: 28px"></div>
+  </div>
+
+  <nav class="nav" aria-label="Main">
+    <a class="nav-i" href="Home.dc.html"><span class="pill"><i class="ic i-home"></i></span>Home</a>
+    <a class="nav-i" href="Groups.dc.html"><span class="pill"><i class="ic i-users"></i></span>Groups</a>
+    <a class="nav-add" href="AddExpense.dc.html" aria-label="Add expense"><i class="ic i-plus"></i></a>
+    <a class="nav-i on" href="Friends.dc.html" aria-current="page"><span class="pill"><i class="ic i-user"></i></span>Friends</a>
+    <a class="nav-i" href="Spending.dc.html"><span class="pill"><i class="ic i-pie"></i></span>Spending</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

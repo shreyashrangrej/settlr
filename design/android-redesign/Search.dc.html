@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Search expenses</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll">
+    <div class="inset"></div>
+    <div style="display: flex; align-items: center; gap: 4px; padding: 8px 12px 0 8px">
+      <a class="ibtn" href="Spending.dc.html" aria-label="Back"><i class="ic i-back"></i></a>
+      <label class="input focus" style="height: 50px; border-radius: 999px; padding: 0 6px 0 16px; flex: 1">
+        <i class="ic s i-search fnt"></i>
+        <input aria-label="Search expenses" value="taxi" style="flex: 1; min-width: 0; border: 0; background: transparent; outline: none; font: 650 16px/1 var(--sans); color: var(--text)">
+        <button type="button" class="ibtn n" aria-label="Clear" style="width: 34px; height: 34px"><i class="ic xs i-x"></i></button>
+      </label>
+    </div>
+
+    <div class="chips in" style="--i: 1; margin-top: 14px">
+      <span class="chip ln">Any time<i class="ic i-chev-d"></i></span>
+      <span class="chip ac">Transport<i class="ic i-x"></i></span>
+      <span class="chip ln">Where<i class="ic i-chev-d"></i></span>
+      <span class="chip ln">Paid by<i class="ic i-chev-d"></i></span>
+      <span class="chip ln">Newest<i class="ic i-chev-d"></i></span>
+    </div>
+
+    <div class="card in" style="--i: 2; margin: 16px 16px 0; padding: 14px 16px; display: flex; align-items: center; gap: 12px">
+      <span class="tile t-blue" style="width: 40px; height: 40px; border-radius: 13px"><i class="ic s i-car"></i></span>
+      <div class="grow"><div style="font-weight: 750; font-size: 15px">5 taxis · ₹2,700 in INR</div><div class="sub">Your share <b class="num" style="color: var(--text)">₹1,720</b> · plus €4.60 in Berlin ’26</div></div>
+    </div>
+
+    <div class="dhead" style="margin-top: 8px">November</div>
+    <div class="card in" style="--i: 3; margin: 0 16px">
+      <a class="row" href="ExpenseDetail.dc.html">
+        <span class="tile t-blue"><i class="ic i-car"></i></span>
+        <span class="grow"><div class="rt"><mark>Taxi</mark></div><div class="rs" style="display: flex; align-items: center; gap: 6px"><span class="badge b-acc" style="height: 20px">Goa Trip</span>26 Nov · Priya paid</div></span>
+        <span class="end"><span class="amt">₹250</span><span class="lbl">of ₹750</span></span>
+      </a>
+      <a class="row" href="ExpenseDetail.dc.html">
+        <span class="tile t-blue"><i class="ic i-car"></i></span>
+        <span class="grow"><div class="rt"><mark>Taxi</mark> home</div><div class="rs" style="display: flex; align-items: center; gap: 6px"><span class="badge" style="height: 20px; background: var(--blue-bg); color: var(--blue-fg)">Rohan</span>19 Nov · you paid</div></span>
+        <span class="end"><span class="amt">₹240</span><span class="lbl">of ₹480</span></span>
+      </a>
+      <a class="row" href="ExpenseDetail.dc.html">
+        <span class="tile t-blue"><i class="ic i-car"></i></span>
+        <span class="grow"><div class="rt">Airport <mark>taxi</mark></div><div class="rs" style="display: flex; align-items: center; gap: 6px"><span class="badge" style="height: 20px; background: var(--amber-bg); color: var(--amber-fg)">Personal</span>12 Nov</div></span>
+        <span class="end"><span class="amt">₹1,150</span></span>
+      </a>
+    </div>
+
+    <div class="dhead">October</div>
+    <div class="card in" style="--i: 4; margin: 0 16px">
+      <a class="row" href="ExpenseDetail.dc.html">
+        <span class="tile t-blue"><i class="ic i-car"></i></span>
+        <span class="grow"><div class="rt"><mark>Taxi</mark> to the office</div><div class="rs" style="display: flex; align-items: center; gap: 6px"><span class="badge" style="height: 20px; background: var(--teal-bg); color: var(--teal-fg)">Office Lunch</span>28 Oct · Neha paid</div></span>
+        <span class="end"><span class="amt">₹80</span><span class="lbl">of ₹320</span></span>
+      </a>
+      <a class="row" href="ExpenseDetail.dc.html">
+        <span class="tile t-blue"><i class="ic i-car"></i></span>
+        <span class="grow"><div class="rt">Night <mark>taxi</mark></div><div class="rs" style="display: flex; align-items: center; gap: 6px"><span class="badge" style="height: 20px; background: var(--amber-bg); color: var(--amber-fg)">Berlin ’26</span>3 Oct · Sam paid</div></span>
+        <span class="end"><span class="amt">€4.60</span><span class="lbl">of €18.40</span></span>
+      </a>
+    </div>
+
+    <div style="margin: 18px 16px 28px; padding: 14px 16px; border-radius: 20px; background: var(--accent-soft); color: var(--accent-ink); display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 14px">
+      <i class="ic s i-spark"></i><span class="grow">Ask instead: “How much did I spend on taxis this year?”</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

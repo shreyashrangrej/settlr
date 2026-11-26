@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home, first run</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div class="scroll" style="bottom: 86px">
+    <div class="inset"></div>
+    <header style="display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 16px 0 20px">
+      <div class="grow">
+        <div class="sub">Thursday, 26 November</div>
+        <div class="disp" style="font-size: 25px; line-height: 31px; font-weight: 750">Welcome, Aarav</div>
+      </div>
+      <a class="ibtn f" href="Notifications.dc.html" aria-label="Notifications"><i class="ic i-bell"></i></a>
+      <a class="av t-me" href="Profile.dc.html" aria-label="Profile and settings">AM</a>
+    </header>
+
+    <a class="in" href="Assistant.dc.html" style="--i: 1; margin: 10px 16px 0; height: 54px; border-radius: 999px; background: var(--surface); box-shadow: var(--shadow); display: flex; align-items: center; gap: 12px; padding: 0 7px 0 18px; color: var(--faint)">
+      <i class="ic i-spark" style="color: var(--accent)"></i>
+      <span class="grow" style="font-weight: 600; font-size: 15px">Ask or add… “Dinner 1200 with Sam”</span>
+      <span class="ibtn n" style="width: 40px; height: 40px; color: var(--text)"><i class="ic s i-mic"></i></span>
+    </a>
+
+    <section class="in" style="--i: 2; margin: 16px 16px 0; padding: 22px 20px; border-radius: 28px; background: var(--hero); color: var(--on-hero); text-align: center">
+      <span style="width: 56px; height: 56px; margin: 0 auto; border-radius: 50%; background: var(--hero-tile); display: flex; align-items: center; justify-content: center"><i class="ic l i-check"></i></span>
+      <div class="disp" style="margin-top: 12px; font-size: 30px; line-height: 36px; font-weight: 800">You're all square</div>
+      <div style="margin-top: 4px; font-size: 14px; color: var(--hero-dim); font-weight: 600">Nobody owes anybody. Let's change that.</div>
+    </section>
+
+    <div class="sec"><h2 class="h">Get started</h2><span class="lbl">0 of 3</span></div>
+    <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 10px">
+      <a class="card in" href="NewGroup.dc.html" style="--i: 3; padding: 16px; display: flex; align-items: center; gap: 14px">
+        <span class="tile t-violet" style="width: 50px; height: 50px; border-radius: 17px"><i class="ic i-users"></i></span>
+        <span class="grow"><div class="rt">Start a group</div><div class="rs" style="white-space: normal">For a trip, a flat or a dinner. Up to 20 people, no accounts needed.</div></span>
+        <i class="ic s i-chev-r fnt"></i>
+      </a>
+      <a class="card in" href="AddFriend.dc.html" style="--i: 4; padding: 16px; display: flex; align-items: center; gap: 14px">
+        <span class="tile t-blue" style="width: 50px; height: 50px; border-radius: 17px"><i class="ic i-user-plus"></i></span>
+        <span class="grow"><div class="rt">Add a friend</div><div class="rs" style="white-space: normal">Keep a one-on-one ledger. Add their email to share it.</div></span>
+        <i class="ic s i-chev-r fnt"></i>
+      </a>
+      <a class="card in" href="AddExpense.dc.html" style="--i: 5; padding: 16px; display: flex; align-items: center; gap: 14px">
+        <span class="tile t-amber" style="width: 50px; height: 50px; border-radius: 17px"><i class="ic i-wallet"></i></span>
+        <span class="grow"><div class="rt">Log something just for you</div><div class="rs" style="white-space: normal">Personal spending counts toward your monthly budget.</div></span>
+        <i class="ic s i-chev-r fnt"></i>
+      </a>
+    </div>
+    <div style="height: 28px"></div>
+  </div>
+
+  <nav class="nav" aria-label="Main">
+    <a class="nav-i on" href="HomeEmpty.dc.html" aria-current="page"><span class="pill"><i class="ic i-home"></i></span>Home</a>
+    <a class="nav-i" href="Groups.dc.html"><span class="pill"><i class="ic i-users"></i></span>Groups</a>
+    <a class="nav-add" href="AddExpense.dc.html" aria-label="Add expense"><i class="ic i-plus"></i></a>
+    <a class="nav-i" href="Friends.dc.html"><span class="pill"><i class="ic i-user"></i></span>Friends</a>
+    <a class="nav-i" href="Spending.dc.html"><span class="pill"><i class="ic i-pie"></i></span>Spending</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

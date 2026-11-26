@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New group</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}" style="background: var(--surface)">
+  <div class="scroll" style="bottom: 96px">
+    <div class="inset"></div>
+    <div class="topbar">
+      <a class="ibtn" href="Groups.dc.html" aria-label="Close"><i class="ic i-x"></i></a>
+      <span class="tt">New group</span>
+    </div>
+
+    <div class="in" style="--i: 1; padding: 8px 20px 0; display: flex; align-items: center; gap: 14px">
+      <span class="tile lg mono t-violet">P</span>
+      <label class="grow" style="display: flex; flex-direction: column; gap: 4px">
+        <span class="flabel">Name</span>
+        <input value="Pune stay" aria-label="Group name" style="border: 0; border-bottom: 2px solid var(--accent); background: transparent; outline: none; padding: 4px 0 8px; font: 750 26px/32px var(--display); letter-spacing: -.02em; color: var(--text)">
+      </label>
+    </div>
+
+    <div class="flabel" style="padding: 26px 20px 10px">Currency</div>
+    <div class="chips in" style="--i: 2">
+      <span class="chip on"><i class="ic i-check"></i>₹ INR</span>
+      <span class="chip">$ USD</span>
+      <span class="chip">€ EUR</span>
+      <span class="chip">£ GBP</span>
+      <span class="chip">C$ CAD</span>
+      <span class="chip">A$ AUD</span>
+    </div>
+    <div class="sub" style="padding: 8px 20px 0; font-size: 12.5px">Every expense in the group uses it. You can change it until the first expense.</div>
+
+    <div style="padding: 26px 20px 4px; display: flex; justify-content: space-between; align-items: center"><span class="flabel">Members</span><span class="lbl">3 of 20</span></div>
+    <div class="in" style="--i: 3">
+      <div class="row" style="min-height: 58px; padding: 8px 20px"><span class="av sm t-me">AM</span><span class="grow"><div class="rt" style="font-size: 15px">You</div></span><span class="badge b-n">always in</span></div>
+      <div class="row" style="min-height: 58px; padding: 8px 20px"><span class="av sm t-rose">VK</span><span class="grow rt" style="font-size: 15px">Vaishnavi</span><button type="button" class="ibtn" aria-label="Remove Vaishnavi" style="width: 36px; height: 36px; color: var(--faint)"><i class="ic s i-x"></i></button></div>
+      <div class="row" style="min-height: 58px; padding: 8px 20px"><span class="av sm t-gray">IV</span><span class="grow rt" style="font-size: 15px">Ishaan Verma</span><button type="button" class="ibtn" aria-label="Remove Ishaan Verma" style="width: 36px; height: 36px; color: var(--faint)"><i class="ic s i-x"></i></button></div>
+      <div style="padding: 8px 16px 0">
+        <label class="input" style="height: 52px; padding-right: 6px"><i class="ic s i-user-plus fnt"></i><input aria-label="Add a member" placeholder="Add a name" style="flex: 1; min-width: 0; border: 0; background: transparent; outline: none; font: 600 15.5px/1 var(--sans); color: var(--text)"><button type="button" class="ibtn" aria-label="Add" style="width: 40px; height: 40px; background: var(--accent); color: var(--on-accent)"><i class="ic s i-plus"></i></button></label>
+      </div>
+    </div>
+
+    <div class="flabel" style="padding: 22px 20px 10px">From your friends</div>
+    <div class="chips in" style="--i: 4">
+      <span class="chip" style="padding-left: 5px"><span class="av t-blue" style="width: 26px; height: 26px; font-size: 10px">RK</span>Rohan<i class="ic i-plus"></i></span>
+      <span class="chip" style="padding-left: 5px"><span class="av t-rose" style="width: 26px; height: 26px; font-size: 10px">AR</span>Ananya<i class="ic i-plus"></i></span>
+      <span class="chip" style="padding-left: 5px"><span class="av t-teal" style="width: 26px; height: 26px; font-size: 10px">KS</span>Kabir<i class="ic i-plus"></i></span>
+    </div>
+    <p class="sub" style="padding: 14px 20px 20px; margin: 0">Members are just names. They don't need a Settlr account.</p>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 22px; background: var(--surface)">
+    <a class="btn btn-p wide" href="Group.dc.html" style="height: 56px"><i class="ic i-check"></i>Create group</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

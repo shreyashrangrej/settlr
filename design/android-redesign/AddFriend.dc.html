@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add a friend</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div style="position: absolute; inset: 0"><dc-import name="Friends" theme="{{theme}}" hint-size="412px,915px"></dc-import></div>
+  <a class="scrim" href="Friends.dc.html" aria-label="Close"></a>
+  <div class="sheet" style="padding-bottom: 22px">
+    <div class="grab"></div>
+    <div style="padding: 16px 20px 0; display: flex; align-items: center; gap: 14px">
+      <span class="av t-red" style="width: 56px; height: 56px; font-size: 18px">NJ</span>
+      <div class="grow"><h2 class="disp" style="margin: 0; font-size: 26px; line-height: 32px; font-weight: 750">Add a friend</h2><div class="sub">For expenses with just the two of you</div></div>
+    </div>
+    <div style="padding: 20px 20px 0; display: flex; flex-direction: column; gap: 16px">
+      <div class="field">
+        <label for="fname">Name</label>
+        <input id="fname" class="input" value="Neha Joshi">
+      </div>
+      <div class="field">
+        <label for="femail">Email <span style="font-weight: 600; color: var(--faint)">(optional)</span></label>
+        <input id="femail" class="input focus" type="email" value="neha@example.com">
+      </div>
+      <div style="padding: 14px; border-radius: 18px; background: var(--accent-soft); color: var(--accent-ink); display: flex; gap: 10px; font-size: 13.5px; line-height: 19px; font-weight: 600">
+        <i class="ic s i-verified" style="margin-top: 1px"></i>
+        <span>We'll send Neha a friend request. Once it's accepted, you both see the same ledger and get each other's updates.</span>
+      </div>
+    </div>
+    <div style="padding: 20px 16px 0"><a class="btn btn-p wide" href="Friends.dc.html" style="height: 56px"><i class="ic i-user-plus"></i>Add and send request</a></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light', theme: this.props.theme || 'light' };
+  }
+}
+</script>
+</body>
+</html>

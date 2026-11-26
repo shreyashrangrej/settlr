@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Join Goa Trip</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}" style="display: flex; flex-direction: column">
+  <div class="inset"></div>
+  <div class="topbar"><a class="ibtn" href="Groups.dc.html" aria-label="Close"><i class="ic i-x"></i></a></div>
+
+  <div style="flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none">
+    <div class="in" style="--i: 1; padding: 0 20px; display: flex; flex-direction: column; align-items: center; text-align: center">
+      <span class="tile lg mono t-orange">G</span>
+      <div class="sub" style="margin-top: 14px">Aarav invited you to</div>
+      <h1 class="title" style="margin-top: 2px">Goa Trip</h1>
+      <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px">
+        <span class="stack"><span class="av xs t-me">AM</span><span class="av xs t-amber">PS</span><span class="av xs t-blue">RK</span><span class="av xs t-teal">KS</span><span class="av xs t-green">MI</span></span>
+        <span class="sub">5 people · ₹38,600 spent · INR</span>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-top: 28px"><h2 class="h">Which one is you?</h2></div>
+    <div class="card in" role="radiogroup" aria-label="Which one is you?" style="--i: 2; margin: 0 16px; padding: 4px 0">
+      <sc-for list="{{people}}" as="p" hint-placeholder-count="5">
+        <button type="button" class="row" role="radio" aria-checked="{{p.on}}" onClick="{{p.pick}}" disabled="{{p.taken}}" style="width: 100%; border: 0; text-align: left; font: inherit; color: inherit; min-height: 62px; background: {{p.bg}}; opacity: {{p.alpha}}">
+          <span class="av sm {{p.tone}}">{{p.initials}}</span>
+          <span class="grow"><div class="rt" style="font-size: 15px">{{p.name}}</div><div class="rs">{{p.note}}</div></span>
+          <span style="width: 24px; height: 24px; border-radius: 50%; flex: none; box-shadow: {{p.dot}}"></span>
+        </button>
+      </sc-for>
+    </div>
+    <div class="sub in" style="--i: 3; padding: 12px 24px 24px; text-align: center">Joining as someone in the list keeps their expenses and balance. You’ll see the group in your Groups tab.</div>
+  </div>
+
+  <div style="padding: 12px 16px 22px; box-shadow: 0 -1px 0 var(--line); background: var(--bg)">
+    <a class="btn btn-p wide" href="Group.dc.html" style="height: 56px">{{cta}}</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const list = [
+      { id: 'ps', name: 'Priya Shah', initials: 'PS', tone: 't-amber', note: '4 expenses · gets back ₹5,150' },
+      { id: 'rk', name: 'Rohan Kulkarni', initials: 'RK', tone: 't-blue', note: 'Already joined', taken: true },
+      { id: 'ks', name: 'Kabir Singh', initials: 'KS', tone: 't-teal', note: 'Already joined', taken: true },
+      { id: 'mi', name: 'Meera Iyer', initials: 'MI', tone: 't-green', note: '1 expense · owes ₹2,320' },
+      { id: 'new', name: 'I’m someone new', initials: '+', tone: 't-gray', note: 'Join with no expenses yet' },
+    ];
+    const pick = (this.state && this.state.pick) || 'mi';
+    const chosen = list.find((p) => p.id === pick);
+    return {
+      themeCls: this.props.theme === 'dark' ? 'dark' : 'light',
+      people: list.map((p) => ({
+        ...p,
+        taken: !!p.taken,
+        on: p.id === pick,
+        alpha: p.taken ? 0.5 : 1,
+        bg: p.id === pick ? 'var(--accent-soft)' : 'transparent',
+        dot: p.id === pick ? 'inset 0 0 0 7px var(--accent)' : 'inset 0 0 0 2px var(--surface-3)',
+        pick: () => { if (!p.taken) this.setState({ pick: p.id }); },
+      })),
+      cta: chosen && chosen.id !== 'new' ? 'Join as ' + chosen.name.split(' ')[0] : 'Join Goa Trip',
+    };
+  }
+}
+</script>
+</body>
+</html>

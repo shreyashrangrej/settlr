@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settle everything with Rohan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}">
+  <div style="position: absolute; inset: 0"><dc-import name="Friend" theme="{{theme}}" hint-size="412px,915px"></dc-import></div>
+  <a class="scrim" href="Friend.dc.html" aria-label="Close"></a>
+  <div class="sheet" style="height: 660px; display: flex; flex-direction: column">
+    <div class="grab"></div>
+    <div style="padding: 12px 20px 0; display: flex; align-items: center; gap: 12px">
+      <span class="tile t-violet" style="width: 44px; height: 44px"><i class="ic i-layers"></i></span>
+      <div class="grow">
+        <h2 class="disp" style="margin: 0; font-size: 24px; line-height: 30px; font-weight: 750">Across everything</h2>
+        <div class="sub">Your ledger with Rohan plus the groups you share</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin: 18px 16px 0; padding: 4px 0; box-shadow: inset 0 0 0 1.5px var(--surface-2)">
+      <div class="row" style="min-height: 62px">
+        <span class="av sm t-blue">RK</span>
+        <span class="grow"><div class="rt" style="font-size: 15px">One-on-one</div><div class="rs">4 expenses, 2 payments</div></span>
+        <span class="end"><span class="lbl">owes you</span><span class="amt pos">₹2,140</span></span>
+      </div>
+      <div class="row" style="min-height: 62px">
+        <span class="tile mono t-orange" style="width: 32px; height: 32px; border-radius: 11px; font-size: 15px">G</span>
+        <span class="grow"><div class="rt" style="font-size: 15px">Goa Trip</div><div class="rs">From the settle-up plan</div></span>
+        <span class="end"><span class="lbl">pays you</span><span class="amt pos">₹2,980</span></span>
+      </div>
+    </div>
+
+    <div style="margin: 18px 20px 0; text-align: center">
+      <div class="lbl" style="display: flex; align-items: center; justify-content: center; gap: 5px"><i class="ic xs i-in pos"></i>Rohan owes you, in all</div>
+      <div class="disp num pos" style="font-size: 52px; line-height: 58px; font-weight: 800; letter-spacing: -.045em">₹5,120</div>
+    </div>
+
+    <div style="margin: 14px 16px 0; padding: 12px 14px; border-radius: 18px; background: var(--surface-2); display: flex; gap: 10px; font-size: 13px; line-height: 18px; font-weight: 600; color: var(--muted)">
+      <i class="ic s i-info" style="margin-top: 1px"></i>
+      <span>Records a payment in your one-on-one ledger and in Goa Trip, so each one is square. Rohan sees <b style="color: var(--text)">Pay with UPI</b> on his phone, since your UPI id is set.</span>
+    </div>
+
+    <div style="flex: 1"></div>
+    <div style="padding: 0 16px 22px; display: flex; flex-direction: column; gap: 10px">
+      <a class="btn btn-c wide" href="Friend.dc.html" style="height: 56px"><i class="ic i-hand"></i>Rohan paid me ₹5,120</a>
+      <a class="btn btn-o wide" href="Friend.dc.html"><i class="ic i-bell-ring"></i>Remind Rohan instead</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeCls: this.props.theme === 'dark' ? 'dark' : 'light', theme: this.props.theme || 'light' };
+  }
+}
+</script>
+</body>
+</html>

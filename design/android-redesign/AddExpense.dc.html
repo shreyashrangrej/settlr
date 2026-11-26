@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add expense</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="settlr.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>body{margin:0}a{color:inherit}a:hover{color:inherit}</style>
+</helmet>
+<div class="scr {{themeCls}}" style="background: var(--surface); display: flex; flex-direction: column">
+  <div class="inset"></div>
+  <div class="topbar">
+    <a class="ibtn" href="Home.dc.html" aria-label="Close"><i class="ic i-x"></i></a>
+    <span class="tt">New expense</span>
+    <a class="chip ac" href="Assistant.dc.html" style="height: 40px; margin-right: 6px"><i class="ic i-spark"></i>Say it</a>
+  </div>
+
+  <div class="in" style="--i: 1; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 2px">
+    <span class="sub" style="font-weight: 650">In</span>
+    <a class="chip" href="AddWhere.dc.html" style="padding-left: 6px; height: 40px">
+      <span class="tile mono t-orange" style="width: 28px; height: 28px; border-radius: 10px; font-size: 14px">G</span>Goa Trip<i class="ic i-chev-d"></i>
+    </a>
+  </div>
+
+  <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+    <div style="display: flex; align-items: flex-start; gap: 4px">
+      <span class="disp" style="font-size: 34px; line-height: 50px; font-weight: 700; color: var(--faint)">₹</span>
+      <span class="disp num" style="font-size: {{amtSize}}px; line-height: 76px; font-weight: 800; letter-spacing: -.05em">{{shown}}</span>
+      <span class="caret" style="height: 56px; margin-top: 12px"></span>
+    </div>
+    <div class="num" style="font-size: 14px; font-weight: 700; color: var(--owed)">{{shareLine}}</div>
+  </div>
+
+  <div class="in" style="--i: 2; padding: 0 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 10px 0 8px; border-radius: 20px; background: var(--surface-2)">
+      <span class="tile t-orange" style="width: 44px; height: 44px; border-radius: 14px"><i class="ic i-food"></i></span>
+      <span class="grow" style="font-weight: 700; font-size: 16px">Dinner at Thalassa</span>
+      <span class="badge" style="height: 30px; padding: 0 10px; font-size: 12.5px; background: var(--surface); color: var(--text)"><i class="ic xs i-spark" style="color: var(--accent)"></i>Food</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div class="chips" style="padding: 0">
+        <span class="chip"><i class="ic i-cal"></i>Today</span>
+        <a class="chip" href="AddSplit.dc.html" style="padding-left: 7px"><span class="av t-me" style="width: 24px; height: 24px; font-size: 9.5px">AM</span>Paid by you<i class="ic i-chev-d"></i></a>
+        <a class="chip ac" href="AddSplit.dc.html"><i class="ic i-split"></i>Equally · 5<i class="ic i-chev-d"></i></a>
+      </div>
+      <div class="chips" style="padding: 0">
+        <button type="button" class="chip ac"><i class="ic i-scan"></i>Scan receipt</button>
+        <button type="button" class="chip"><i class="ic i-repeat"></i>Doesn’t repeat</button>
+        <a class="chip" href="AddCurrency.dc.html">₹ INR<i class="ic i-chev-d"></i></a>
+        <button type="button" class="chip"><i class="ic i-hash"></i>Tags</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 16px 16px 0">
+    <sc-for list="{{keys}}" as="k" hint-placeholder-count="12">
+      <button type="button" class="key" onClick="{{k.press}}" aria-label="{{k.aria}}"><sc-if value="{{k.isNum}}" hint-placeholder-val="{{ true }}">{{k.label}}</sc-if><sc-if value="{{k.isDel}}" hint-placeholder-val="{{ false }}"><i class="ic i-del"></i></sc-if></button>
+    </sc-for>
+  </div>
+
+  <div style="padding: 14px 16px 22px">
+    <a class="btn btn-p wide" href="Group.dc.html" style="height: 58px; font-size: 17px"><i class="ic i-check"></i>Add expense</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":412,"height":915}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const v = (this.state && this.state.v) || '6200';
+    const press = (k) => () => {
+      let cur = (this.state && this.state.v) || '6200';
+      if (k === 'del') {
+        cur = cur.length > 1 ? cur.slice(0, -1) : '0';
+      } else if (k === '.') {
+        if (cur.indexOf('.') === -1) cur = cur + '.';
+      } else {
+        const dec = cur.split('.')[1];
+        if (dec !== undefined && dec.length >= 2) return;
+        if (cur.indexOf('.') === -1 && cur.length >= 7) return;
+        cur = cur === '0' ? k : cur + k;
+      }
+      this.setState({ v: cur });
+    };
+    const parts = v.split('.');
+    let shown = Number(parts[0] || '0').toLocaleString('en-IN');
+    if (parts.length > 1) shown += '.' + parts[1];
+    const cents = Math.round((parseFloat(v) || 0) * 100);
+    const n = 5;
+    const base = Math.floor(cents / n);
+    const yours = base + (cents - base * n > 0 ? 1 : 0);
+    const money = (c) => '₹' + (c / 100).toLocaleString('en-IN', { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
+    const shareLine = cents > 0 ? money(base) + ' each · you get back ' + money(cents - yours) : 'Type an amount';
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'].map((k) => ({
+      label: k,
+      isDel: k === 'del',
+      isNum: k !== 'del',
+      aria: k === 'del' ? 'Delete' : k === '.' ? 'Decimal point' : k,
+      press: press(k),
+    }));
+    return {
+      themeCls: this.props.theme === 'dark' ? 'dark' : 'light',
+      shown,
+      shareLine,
+      amtSize: shown.length > 8 ? 50 : 68,
+      keys,
+    };
+  }
+}
+</script>
+</body>
+</html>
