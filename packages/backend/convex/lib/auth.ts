@@ -12,7 +12,9 @@ export async function requireUser(ctx: QueryCtx) {
   if (!identity) throw new ConvexError('Sign in to continue.')
   return {
     userId: identity.tokenIdentifier,
-    name: identity.name?.trim() || 'You',
+    // Right after an email sign-up the token may not carry the new name
+    // yet; never show other people the word "You" for someone else.
+    name: identity.name?.trim() || identity.email?.split('@')[0] || 'Someone',
     email: identity.email?.trim().toLowerCase() ?? '',
   }
 }

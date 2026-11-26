@@ -153,6 +153,7 @@ export const remove = mutation({
           date: expense.date,
           receiptId: expense.receiptId,
           tags: expense.tags,
+          recurringId: expense.recurringId,
         },
       },
     })

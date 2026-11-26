@@ -32,7 +32,15 @@ export function ImportView() {
     try {
       const result = parseSplitwise(await file.text())
       setParsed(result)
-      setName(file.name.replace(/\.csv$/i, '').replace(/[_-]+/g, ' ').slice(0, 60))
+      // Splitwise names exports like "Flat_4B_2026-11-26_export.csv".
+      setName(
+        file.name
+          .replace(/\.csv$/i, '')
+          .replace(/[_\s-]*(\d{4}-\d{2}-\d{2}[_\s-]*)?export$/i, '')
+          .replace(/_+/g, ' ')
+          .trim()
+          .slice(0, 60),
+      )
     } catch (err) {
       setReadError(err instanceof Error ? err.message : 'Couldn’t read that file.')
     }

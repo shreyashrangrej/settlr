@@ -88,6 +88,18 @@ export function computeSplit(
       order.filter((id) => (inputs[id] ?? 0) > 0).map((id) => [id, inputs[id]]),
     )
   }
+  if (mode === 'percent') {
+    // Until they add up to 100%, show each percentage of the total as is
+    // (not scaled up to fill it); `splitProblem` reports the gap.
+    const bps = order.reduce((acc, id) => acc + (inputs[id] ?? 0), 0)
+    if (bps !== 10_000) {
+      return new Map(
+        order
+          .filter((id) => (inputs[id] ?? 0) > 0)
+          .map((id) => [id, Math.floor((total * inputs[id]) / 10_000)]),
+      )
+    }
+  }
   return proportional(
     total,
     order.filter((id) => (inputs[id] ?? 0) > 0).map((id) => [id, inputs[id]]),

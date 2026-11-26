@@ -853,6 +853,7 @@ export const removeExpense = mutation({
           split: expense.split,
           original: expense.original,
           tags: expense.tags,
+          recurringId: expense.recurringId,
         },
       },
     })

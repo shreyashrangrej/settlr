@@ -341,6 +341,7 @@ export default defineSchema({
           date: v.string(),
           receiptId: v.optional(v.id('receipts')),
           tags,
+          recurringId: v.optional(v.id('recurring')),
         }),
       }),
       v.object({
@@ -357,6 +358,7 @@ export default defineSchema({
           split: v.optional(groupSplit),
           original: v.optional(original),
           tags,
+          recurringId: v.optional(v.id('recurring')),
         }),
       }),
       v.object({
@@ -373,6 +375,7 @@ export default defineSchema({
           date: v.string(),
           receiptId: v.optional(v.id('receipts')),
           tags,
+          recurringId: v.optional(v.id('recurring')),
         }),
       }),
     ),

@@ -67,7 +67,7 @@ export function SettingsView() {
       <PageHeader
         back={{ fallback: '/', label: 'Back' }}
         title="Settings"
-        description="Stored in this browser only."
+        description="Defaults are kept in this browser; account settings follow you on every device."
       />
       <AppearanceCard />
       <Card className="mt-[18px]">

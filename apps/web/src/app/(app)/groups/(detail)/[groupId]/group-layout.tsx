@@ -335,7 +335,11 @@ function BudgetCard({ group }: { group: Group }) {
         <CardDescription>{formatMoney(budget, group.currency)} for the group.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-2 text-sm">
-        <Progress value={pct} aria-label="Budget used" />
+        <Progress
+          value={pct}
+          aria-label="Budget used"
+          className={cn(left < 0 && '[&_[data-slot=progress-indicator]]:bg-destructive')}
+        />
         <p className={cn('m-0', left < 0 ? 'text-destructive' : 'text-muted-foreground')}>
           {left >= 0
             ? `${formatMoney(left, group.currency)} left (${pct}% used)`

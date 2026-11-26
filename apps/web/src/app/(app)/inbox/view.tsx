@@ -81,7 +81,10 @@ export function InboxView() {
             </EmptyHeader>
           </Empty>
         ) : (
-          items.map((item) => <Draft key={item.id} item={item} />)
+          // Remount once the email has been read, so the form starts from the draft.
+          items.map((item) => (
+            <Draft key={`${item.id}:${item.draft ? 'read' : 'reading'}`} item={item} />
+          ))
         )}
       </div>
     </>

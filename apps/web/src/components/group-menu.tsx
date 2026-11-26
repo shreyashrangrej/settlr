@@ -160,7 +160,7 @@ export function GroupMenu({ group }: { group: Group }) {
           <DialogHeader>
             <DialogTitle>Group budget</DialogTitle>
             <DialogDescription>
-              A spending limit for the whole group, like a trip budget. Insights shows how much is left.
+              A spending limit for the whole group, like a trip budget. The group page shows how much is left.
             </DialogDescription>
           </DialogHeader>
           <BudgetForm group={group} onDone={() => setDialog(null)} />

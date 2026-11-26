@@ -5,15 +5,16 @@ import { Hash } from 'lucide-react'
 import { Input } from '#/components/ui/input'
 import { cn } from '#/lib/utils'
 
-// Tags on an expense ("goa-trip", "work"): typed as words separated by
-// commas or spaces. Convex cleans them the same way (convex/lib/input.ts).
+// Tags on an expense ("goa-trip", "work"): typed separated by commas, and
+// cleaned the same way Convex does (convex/lib/input.ts): lowercase, no
+// leading #, spaces inside a tag become hyphens ("Goa Trip" → goa-trip).
 
 export function parseTags(text: string) {
   return [
     ...new Set(
       text
-        .split(/[,\s]+/)
-        .map((t) => t.trim().toLowerCase().replace(/^#/, ''))
+        .split(',')
+        .map((t) => t.trim().toLowerCase().replace(/^#/, '').replace(/\s+/g, '-'))
         .filter(Boolean),
     ),
   ].slice(0, 5)

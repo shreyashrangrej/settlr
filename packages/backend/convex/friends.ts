@@ -726,6 +726,7 @@ export const removeEntry = mutation({
           date: entry.date,
           receiptId: entry.receiptId,
           tags: entry.tags,
+          recurringId: entry.recurringId,
         },
       },
     })
