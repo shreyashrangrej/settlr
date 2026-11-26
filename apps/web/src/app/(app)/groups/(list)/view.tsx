@@ -3,7 +3,7 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { Plus, Users } from 'lucide-react'
+import { FileUp, Plus, Users } from 'lucide-react'
 
 import { GroupTile } from '#/components/group-tile'
 import { PageHeader } from '#/components/page-header'
@@ -16,6 +16,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '#/components/ui/empty'
+import type { GroupSummary } from '#/lib/types'
 import { cn } from '#/lib/utils'
 import { api } from '@settlr/backend/convex/_generated/api'
 
@@ -39,7 +40,18 @@ export function GroupsView() {
       <PageHeader
         title="Groups"
         description="Trips, flats and dinners: shared tabs and who owes whom."
-        actions={<NewGroupLink />}
+        actions={
+          <>
+            <Link
+              href="/groups/import"
+              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'no-underline')}
+            >
+              <FileUp />
+              Import from Splitwise
+            </Link>
+            <NewGroupLink />
+          </>
+        }
       />
 
       {groups.length === 0 ? (
@@ -58,17 +70,30 @@ export function GroupsView() {
           </EmptyContent>
         </Empty>
       ) : (
-        <ul className="stagger grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">
-          {groups.map((group) => (
-            <li key={group.id}>
-              <GroupTile
-                group={group}
-                className="h-full rounded-xl border-border bg-card p-3.5"
-              />
-            </li>
-          ))}
-        </ul>
+        <div className="grid gap-6">
+          <GroupGrid groups={groups.filter((g) => !g.archived)} />
+          {groups.some((g) => g.archived) && (
+            <section className="grid gap-3">
+              <h2 className="m-0 text-2xs font-medium tracking-wide text-muted-foreground uppercase">
+                Archived
+              </h2>
+              <GroupGrid groups={groups.filter((g) => g.archived)} />
+            </section>
+          )}
+        </div>
       )}
     </>
+  )
+}
+
+function GroupGrid({ groups }: { groups: Array<GroupSummary> }) {
+  return (
+    <ul className="stagger grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">
+      {groups.map((group) => (
+        <li key={group.id}>
+          <GroupTile group={group} className="h-full rounded-xl border-border bg-card p-3.5" />
+        </li>
+      ))}
+    </ul>
   )
 }

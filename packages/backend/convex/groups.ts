@@ -264,6 +264,8 @@ export const expenses = query({
         paidBy: e.paidBy,
         splitAmong: e.splitAmong,
         splitMode: e.split?.mode ?? ('equal' as const),
+        // How it was split, as typed (the edit dialog starts from it).
+        split: e.split ?? null,
         owed: Object.fromEntries(shares(e, group.members.map((m) => m.id))),
         original: e.original ?? null,
         tags: e.tags ?? [],

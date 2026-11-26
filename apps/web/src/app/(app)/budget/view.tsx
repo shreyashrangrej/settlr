@@ -1,5 +1,6 @@
 'use client'
 
+import { CategoryBudgets } from '#/components/category-budgets'
 import { convexQuery } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import Link from 'next/link'
@@ -68,13 +69,16 @@ export function BudgetView({
 
       <SplitLayout
         aside={
-          <BudgetCard
-            month={month}
-            today={today}
-            budgets={budgets}
-            spending={spending}
-            defaultCurrency={spending[0]?.currency}
-          />
+          <>
+            <BudgetCard
+              month={month}
+              today={today}
+              budgets={budgets}
+              spending={spending}
+              defaultCurrency={spending[0]?.currency}
+            />
+            <CategoryBudgets budgets={budgets} spending={spending} />
+          </>
         }
       >
         <StatGrid>

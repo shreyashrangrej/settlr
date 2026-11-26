@@ -29,6 +29,7 @@ export default async function AllExpensesPage({ searchParams }: Props) {
     sort: search.sort,
     order: search.order,
     limit: search.limit,
+    tag: search.tag,
   })
   return (
     <Prefetched queries={[expenses.entry]}>

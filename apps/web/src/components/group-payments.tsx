@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowRight, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { ConfirmAction } from '#/components/confirm-action'
 import { AmountInput, DatePicker, SelectField } from '#/components/form-fields'
@@ -168,6 +169,7 @@ export function RecentPayments({ group }: { group: Group }) {
   )
   const removePayment = useConvexMutation(api.groups.removePayment)
   const { run } = useAction(removePayment, { success: 'Payment deleted', toastErrors: true })
+  const answer = useAction(useConvexMutation(api.groups.answerPayment), { toastErrors: true })
   if (payments.length === 0) return null
   const name = (id: string) => (id === group.meMemberId ? 'You' : memberName(group.members, id))
 
@@ -184,7 +186,42 @@ export function RecentPayments({ group }: { group: Group }) {
             >
               <span className="grid min-w-0 flex-1">
                 <span className="truncate">{summary}</span>
-                <span className="text-xs text-muted-foreground">{formatDate(p.date)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(p.date)}
+                  {p.unconfirmed && (
+                    <span className="text-warning">
+                      {' · '}
+                      {p.canConfirm ? 'Did you get it?' : 'Not confirmed yet'}
+                    </span>
+                  )}
+                </span>
+                {p.canConfirm && (
+                  <span className="mt-1.5 flex gap-1.5">
+                    <Button
+                      size="xs"
+                      disabled={answer.pending}
+                      onClick={async () => {
+                        if (await answer.run({ paymentId: p.id, confirm: true })) {
+                          toast.success('Payment confirmed')
+                        }
+                      }}
+                    >
+                      Got it
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      disabled={answer.pending}
+                      onClick={async () => {
+                        if (await answer.run({ paymentId: p.id, confirm: false })) {
+                          toast.success('Payment removed')
+                        }
+                      }}
+                    >
+                      Didn’t get it
+                    </Button>
+                  </span>
+                )}
               </span>
               <span className="font-medium tabular-nums">
                 {formatMoney(p.amountCents, group.currency)}

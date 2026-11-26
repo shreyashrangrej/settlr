@@ -409,7 +409,7 @@ function Breadcrumbs() {
   const pathname = usePathname()
   const parts = pathname.split('/').filter(Boolean)
   const section = sectionFor(pathname)
-  const inGroup = parts[0] === 'groups' && parts[1] !== undefined && parts[1] !== 'new'
+  const inGroup = parts[0] === 'groups' && parts[1] !== undefined && parts[1] !== 'new' && parts[1] !== 'import'
   const inFriend = parts[0] === 'friends' && parts[1] !== undefined
   const { data: groups } = useQuery(convexQuery(api.groups.list, {}))
   const { data: friends } = useQuery(convexQuery(api.friends.list, inFriend ? {} : 'skip'))

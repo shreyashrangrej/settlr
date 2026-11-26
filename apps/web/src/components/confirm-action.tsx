@@ -29,8 +29,11 @@ export function ConfirmAction({
   title,
   description,
   confirmLabel = 'Delete',
+  destructive = true,
   onConfirm,
 }: {
+  /** False for a confirm that isn't a delete (a primary button). */
+  destructive?: boolean
   trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -64,7 +67,11 @@ export function ConfirmAction({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-          <Button variant="destructive" disabled={pending} onClick={confirm}>
+          <Button
+            variant={destructive ? 'destructive' : 'default'}
+            disabled={pending}
+            onClick={confirm}
+          >
             {pending && <Spinner />}
             {confirmLabel}
           </Button>

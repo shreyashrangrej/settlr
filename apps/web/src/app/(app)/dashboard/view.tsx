@@ -28,6 +28,7 @@ import {
 import { SelectField } from '#/components/form-fields'
 import { PersonAvatar, SignedAmount, sumBalances, useAction } from '#/components/ledger'
 import { PageHeader } from '#/components/page-header'
+import { UpcomingBills } from '#/components/upcoming-bills'
 import { useSession } from '#/components/providers'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -212,7 +213,7 @@ export function DashboardView({ month, today }: { month: string; today: string }
             onFilter={setFilter}
           />
           <RecentExpenses className="max-xl:order-6" month={month} />
-          <GroupsTable className="max-xl:order-7" groups={groups} />
+          <GroupsTable className="max-xl:order-7" groups={groups.filter((g) => !g.archived)} />
         </div>
         <div className="contents xl:flex xl:flex-col xl:gap-4">
           {/* This month's share and budget lead the column, then what to
@@ -225,7 +226,12 @@ export function DashboardView({ month, today }: { month: string; today: string }
             spending={spending}
           />
           <ToSettle className="max-xl:order-4" balances={balances} />
-          <QuickSplit className="max-xl:order-5" groups={groups} today={today} />
+          <UpcomingBills className="max-xl:order-5" today={today} />
+          <QuickSplit
+            className="max-xl:order-5"
+            groups={groups.filter((g) => !g.archived)}
+            today={today}
+          />
         </div>
       </div>
     </>

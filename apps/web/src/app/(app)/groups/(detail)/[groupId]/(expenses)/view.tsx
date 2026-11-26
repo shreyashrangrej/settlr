@@ -1,8 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Receipt } from 'lucide-react'
+import { MessageSquare, Receipt } from 'lucide-react'
 
 import { CategoryIcon } from '#/components/category'
 import { ExpenseDialog } from '#/components/expense-dialog'
@@ -14,7 +15,9 @@ import {
   RowActions,
   YourShare,
 } from '#/components/expense-list'
-import { useAction } from '#/components/ledger'
+import { CommentsDialog } from '#/components/comments'
+import { UNDO_DESCRIPTION, useDeleteWithUndo } from '#/components/undo'
+import { DropdownMenuItem } from '#/components/ui/dropdown-menu'
 import { ReceiptLink } from '#/components/receipts'
 import { useGroup } from '#/components/use-group'
 import { categoryLabel, formatMoney, memberName } from '@settlr/shared/format'
@@ -84,20 +87,32 @@ export function ExpensesView({ groupId, search }: { groupId: string; search: Exp
 }
 
 function GroupExpenseRow({ group, expense }: { group: Group; expense: GroupExpense }) {
-  const removeExpense = useConvexMutation(api.groups.removeExpense)
-  const { run } = useAction(removeExpense, { success: 'Deleted', toastErrors: true })
+  const removeExpense = useDeleteWithUndo(useConvexMutation(api.groups.removeExpense))
+  const [commenting, setCommenting] = useState(false)
   const splitCount = expense.splitAmong.length
   const payer =
     expense.paidBy === group.meMemberId ? 'You' : memberName(group.members, expense.paidBy)
-  const split = splitCount === group.members.length ? 'Everyone' : `${splitCount} people`
-  const share = myShare(expense, group)
+  const who = splitCount === group.members.length ? 'Everyone' : `${splitCount} people`
+  const split =
+    expense.splitMode === 'equal'
+      ? who
+      : `${who}, ${SPLIT_LABEL[expense.splitMode]}`
+  const share = expense.owed[group.meMemberId] ?? null
 
   return (
     <ExpenseRow
       icon={<CategoryIcon category={expense.category} />}
       title={expense.description}
       receipt={expense.receiptId && <ReceiptLink source="group" expenseId={expense.id} />}
-      subtitle={categoryLabel(expense.category)}
+      tags={expense.tags}
+      subtitle={
+        <>
+          {categoryLabel(expense.category)}
+          {expense.original &&
+            ` · ${formatMoney(expense.original.amountCents, expense.original.currency)} paid`}
+          {expense.recurring && ' · Repeats'}
+        </>
+      }
       date={expense.date}
       cells={[{ value: payer, folded: `${payer} paid` }, split]}
       amount={
@@ -109,32 +124,38 @@ function GroupExpenseRow({ group, expense }: { group: Group; expense: GroupExpen
         </>
       }
       actions={
-        <RowActions
-          name={expense.description}
-          edit={{
-            dialog: (state) => (
-              <ExpenseDialog target={{ kind: 'group', group, expense }} {...state} />
-            ),
-          }}
-          deleteDescription="Balances will be updated. This can’t be undone."
-          onDelete={async () => Boolean(await run({ expenseId: expense.id }))}
-        />
+        <>
+          <RowActions
+            name={expense.description}
+            edit={{
+              dialog: (state) => (
+                <ExpenseDialog target={{ kind: 'group', group, expense }} {...state} />
+              ),
+            }}
+            deleteDescription={UNDO_DESCRIPTION}
+            onDelete={() => removeExpense({ expenseId: expense.id })}
+            items={
+              <DropdownMenuItem onClick={() => setCommenting(true)}>
+                <MessageSquare />
+                Comments
+              </DropdownMenuItem>
+            }
+          />
+          <CommentsDialog
+            expenseId={expense.id}
+            title={expense.description}
+            open={commenting}
+            onOpenChange={setCommenting}
+          />
+        </>
       }
     />
   )
 }
 
-/**
- * Your share of a group expense, or null when you're not in its split. The
- * same equal split as the backend (`shares` in convex/lib/ledger.ts):
- * leftover cents go to the first participants in member order.
- */
-function myShare(expense: GroupExpense, group: Group) {
-  const order = group.members.map((m) => m.id)
-  const participants = [...expense.splitAmong].sort((a, b) => order.indexOf(a) - order.indexOf(b))
-  const i = participants.indexOf(group.meMemberId)
-  if (i === -1) return null
-  const base = Math.floor(expense.amountCents / participants.length)
-  const remainder = expense.amountCents - base * participants.length
-  return base + (i < remainder ? 1 : 0)
-}
+const SPLIT_LABEL = {
+  exact: 'by amount',
+  percent: 'by %',
+  shares: 'by shares',
+  items: 'by item',
+} as const

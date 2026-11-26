@@ -13,7 +13,7 @@ export function MonthNav({
   month,
   thisMonth,
 }: {
-  to: '/personal' | '/budget' | '/expenses'
+  to: '/personal' | '/budget' | '/expenses' | '/recap'
   month: string
   thisMonth: string
 }) {

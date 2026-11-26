@@ -2,13 +2,15 @@
 
 import { useEffect, useId, useRef, useState } from 'react'
 import { convexQuery, useConvexAction, useConvexMutation } from '@convex-dev/react-query'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
+import { useConvex } from 'convex/react'
 import Link from 'next/link'
 import {
   ArrowRight,
   ArrowUp,
   Check,
   HandCoins,
+  History,
   Pencil,
   Plus,
   Search,
@@ -23,6 +25,12 @@ import { RobotIcon } from '#/components/robot-icon'
 import { useAction } from '#/components/ledger'
 import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert'
 import { Button } from '#/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
 import { Spinner } from '#/components/ui/spinner'
 import { errorMessage } from '#/lib/errors'
 import { categoryLabel, formatDate, formatMoney, plural } from '@settlr/shared/format'
@@ -91,6 +99,9 @@ export function AssistantView() {
   const configured = status.configured
   const id = useId()
   const send = useConvexAction(api.assistant.send)
+  const saveTurn = useConvexMutation(api.chats.append)
+  const convex = useConvex()
+  const [chatId, setChatId] = useState<Id<'assistantChats'> | null>(null)
   const [draft, setDraft] = useState('')
   const [messages, setMessages] = useState<Array<Message>>([])
   const [decisions, setDecisions] = useState<Decisions>({})
@@ -136,6 +147,11 @@ export function AssistantView() {
         ...list,
         { id: nextId.current++, role: 'assistant', content: reply, events, memo },
       ])
+      // Keep the conversation, so it can be reopened from Saved chats.
+      saveTurn({ chatId, user: content, reply, memo, events: JSON.stringify(events) }).then(
+        (id) => setChatId(id),
+        () => {},
+      )
     } catch (err) {
       setMessages((list) => [
         ...list,
@@ -154,7 +170,28 @@ export function AssistantView() {
     setMessages([])
     setDecisions({})
     setDraft('')
+    setChatId(null)
     inputRef.current?.focus()
+  }
+
+  async function openChat(id: Id<'assistantChats'>) {
+    const chat = await convex.query(api.chats.get, { chatId: id })
+    if (!chat) return
+    setChatId(chat.id)
+    setDecisions({})
+    setMessages(
+      chat.messages.map((m): Message =>
+        m.role === 'user'
+          ? { id: nextId.current++, role: 'user', content: m.content }
+          : {
+              id: nextId.current++,
+              role: 'assistant',
+              content: m.content,
+              memo: m.memo,
+              events: JSON.parse(m.events) as Array<ChatEvent>,
+            },
+      ),
+    )
   }
 
   // The changes panel only appears once there's something in it.
@@ -177,17 +214,18 @@ export function AssistantView() {
           bar). */}
       <div className="flex min-h-[calc(100svh-7.25rem-env(safe-area-inset-bottom))] min-w-0 flex-col max-lg:mb-[calc(env(safe-area-inset-bottom)-3.375rem)] lg:-mb-12 lg:min-h-[calc(100svh-4.75rem)]">
         {/* The breadcrumb names the page and the empty chat introduces it,
-            so there's no visible title; once there's a conversation, the
-            only thing up here is starting a new one. */}
+            so there's no visible title; up here are the saved chats and,
+            once there's a conversation, starting a new one. */}
         <h1 className="sr-only">AI Assistant</h1>
-        {messages.length > 0 && (
-          <div className="mx-auto flex w-full max-w-190 justify-end">
+        <div className="mx-auto flex w-full max-w-190 justify-end gap-2">
+          <SavedChats current={chatId} onOpen={(id) => void openChat(id)} disabled={pending} />
+          {messages.length > 0 && (
             <Button variant="outline" onClick={newChat} disabled={pending}>
               <Plus />
               New chat
             </Button>
-          </div>
-        )}
+          )}
+        </div>
 
         <div role="log" aria-label="Conversation" className="flex flex-1 flex-col py-7">
           {/* Each message rises in as it arrives. */}
@@ -877,5 +915,51 @@ function Changes({ messages, decisions }: { messages: Array<Message>; decisions:
         </ol>
       )}
     </div>
+  )
+}
+
+/** A menu of earlier conversations to reopen (or delete). */
+function SavedChats({
+  current,
+  onOpen,
+  disabled,
+}: {
+  current: Id<'assistantChats'> | null
+  onOpen: (id: Id<'assistantChats'>) => void
+  disabled: boolean
+}) {
+  const { data: chats } = useQuery(convexQuery(api.chats.list, {}))
+  const remove = useConvexMutation(api.chats.remove)
+  if (!chats || chats.length === 0) return null
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="outline" disabled={disabled} />}>
+        <History />
+        Saved chats
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-72">
+        {chats.map((chat) => (
+          <DropdownMenuItem
+            key={chat.id}
+            onClick={() => onOpen(chat.id)}
+            className={cn(chat.id === current && 'font-medium')}
+          >
+            <span className="min-w-0 flex-1 truncate">{chat.title}</span>
+            <span
+              role="button"
+              tabIndex={-1}
+              aria-label={`Delete chat ${chat.title}`}
+              className="text-muted-foreground hover:text-destructive"
+              onClick={(event) => {
+                event.stopPropagation()
+                void remove({ chatId: chat.id })
+              }}
+            >
+              <Trash2 className="size-3.5" />
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

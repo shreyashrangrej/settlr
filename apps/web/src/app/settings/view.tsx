@@ -5,6 +5,7 @@ import { convexQuery, useConvexMutation } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import { Check, Copy, Monitor, Moon, Sun } from 'lucide-react'
 import { toast } from 'sonner'
+import type { FunctionReturnType } from 'convex/server'
 
 import { ConfirmAction } from '#/components/confirm-action'
 import { CurrencySelect } from '#/components/form-fields'
@@ -27,6 +28,8 @@ import {
   FieldLabel,
   FieldTitle,
 } from '#/components/ui/field'
+import { Checkbox } from '#/components/ui/checkbox'
+import { Input } from '#/components/ui/input'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '#/components/ui/input-group'
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { readPreferences, writePreferences } from '#/lib/preferences'
@@ -100,6 +103,7 @@ export function SettingsView() {
           </CardFooter>
         </form>
       </Card>
+      <AccountCard />
       <AiAssistantsCard />
     </div>
   )
@@ -316,5 +320,97 @@ function Connections() {
         ))}
       </ul>
     </div>
+  )
+}
+
+/**
+ * Settings kept on your account (not just this browser): the UPI id friends
+ * pay you at, the weekly digest email and your forwarding address for
+ * receipts. Signed in only.
+ */
+function AccountCard() {
+  const signedIn = useSession().user !== null
+  const { data: profile } = useQuery({
+    ...convexQuery(api.profiles.me, {}),
+    enabled: signedIn,
+  })
+  if (!signedIn || !profile) return null
+  return <AccountForm profile={profile} />
+}
+
+function AccountForm({
+  profile,
+}: {
+  profile: FunctionReturnType<typeof api.profiles.me>
+}) {
+  const [upi, setUpi] = useState(profile.upiId ?? '')
+  const [digest, setDigest] = useState(profile.weeklyDigest)
+  const save = useAction(useConvexMutation(api.profiles.update), { success: 'Account saved' })
+  const reset = useAction(useConvexMutation(api.profiles.resetInbox), { toastErrors: true })
+  return (
+    <Card className="mt-[18px]">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          void save.run({ upiId: upi.trim() || null, weeklyDigest: digest })
+        }}
+      >
+        <CardHeader>
+          <CardTitle>Account</CardTitle>
+          <CardDescription>Saved to your account, on every device.</CardDescription>
+        </CardHeader>
+        <CardContent className="mt-4 grid gap-6">
+          <Field>
+            <FieldLabel htmlFor="upi-id">Your UPI id</FieldLabel>
+            <Input
+              id="upi-id"
+              value={upi}
+              placeholder="name@bank"
+              maxLength={100}
+              onChange={(e) => setUpi(e.target.value)}
+              className="sm:w-72"
+            />
+            <FieldDescription>
+              Friends and group members who owe you in INR get a “Pay with UPI” button.
+            </FieldDescription>
+          </Field>
+          <Field orientation="horizontal">
+            <Checkbox id="weekly-digest" checked={digest} onCheckedChange={(c) => setDigest(Boolean(c))} />
+            <FieldLabel htmlFor="weekly-digest" className="font-normal">
+              Email me a weekly digest (Mondays): what I spent and where my balances stand
+            </FieldLabel>
+          </Field>
+          {profile.inboxAvailable && (
+            <Field>
+              <FieldLabel>Receipt inbox</FieldLabel>
+              {profile.inboxAddress ? (
+                <code className="justify-self-start rounded-md bg-field px-2 py-1 text-sm">
+                  {profile.inboxAddress}
+                </code>
+              ) : null}
+              <FieldDescription>
+                Forward receipts and bills here; they show up in Inbox as drafts.
+              </FieldDescription>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="justify-self-start"
+                disabled={reset.pending}
+                onClick={() => void reset.run({})}
+              >
+                {profile.inboxAddress ? 'Make a new address' : 'Create my address'}
+              </Button>
+            </Field>
+          )}
+          {save.error && <p className="text-sm text-destructive">{save.error}</p>}
+        </CardContent>
+        <CardFooter className="mt-6 justify-end">
+          <Button type="submit" size="lg" disabled={save.pending}>
+            Save
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
   )
 }

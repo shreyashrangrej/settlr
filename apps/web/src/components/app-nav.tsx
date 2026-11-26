@@ -1,5 +1,9 @@
 import {
+  ChartPie,
+  Inbox,
   LayoutDashboard,
+  Repeat,
+  Trash2,
   PiggyBank,
   ReceiptText,
   User,
@@ -72,6 +76,18 @@ export const APP_SECTIONS: ReadonlyArray<{
     mobile: false,
     place: 'money',
   },
+  {
+    to: '/recurring',
+    label: 'Recurring',
+    short: 'Recurring',
+    icon: Repeat,
+    exact: false,
+    mobile: false,
+    place: 'money',
+  },
+  { to: '/recap', label: 'Monthly recap', short: 'Recap', icon: ChartPie, exact: false, mobile: false, place: 'money' },
+  { to: '/inbox', label: 'Inbox', short: 'Inbox', icon: Inbox, exact: false, mobile: false, place: 'money' },
+  { to: '/trash', label: 'Trash', short: 'Trash', icon: Trash2, exact: false, mobile: false, place: 'money' },
 ]
 
 /** The section a path belongs to, for the breadcrumb's first step. */

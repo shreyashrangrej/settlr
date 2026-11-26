@@ -2,8 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useConvexMutation } from '@convex-dev/react-query'
+import { toast } from 'sonner'
 import {
   ArrowRight,
+  BellRing,
   ChartColumn,
   HandCoins,
   Pencil,
@@ -17,8 +20,11 @@ import {
 import { groupColor, labelTint } from '#/components/category'
 import { ExpenseDialog } from '#/components/expense-dialog'
 import { ExpensePage, PageIcon } from '#/components/expense-page'
+import { GroupMenu } from '#/components/group-menu'
 import { RecentPayments, RecordPaymentDialog } from '#/components/group-payments'
-import { PersonAvatar, SignedAmount } from '#/components/ledger'
+import { PersonAvatar, SignedAmount, useAction } from '#/components/ledger'
+import { UpiPay } from '#/components/upi'
+import { Progress } from '#/components/ui/progress'
 import { PageHeader } from '#/components/page-header'
 import { StatCard, StatGrid } from '#/components/stat-card'
 import { useGroup } from '#/components/use-group'
@@ -41,6 +47,7 @@ import { Separator } from '#/components/ui/separator'
 import { formatMoney, memberName, plural } from '@settlr/shared/format'
 import type { Group } from '#/lib/types'
 import { cn } from '#/lib/utils'
+import { api } from '@settlr/backend/convex/_generated/api'
 
 /**
  * A group's header, figures and balances around its pages, in the frame
@@ -83,6 +90,7 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
               {group.currency}
             </Badge>
             {!group.isOwner && <Badge variant="outline">Shared with you</Badge>}
+            {group.archived && <Badge variant="outline">Archived</Badge>}
           </span>
         }
         description={`${group.members.length} members · ${formatMoney(group.totalCents, group.currency)} spent`}
@@ -105,6 +113,7 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
                 Insights
               </Link>
             )}
+            <GroupMenu group={group} />
             {group.isOwner && (
               <Link
                 href={`/groups/${group.id}/edit`}
@@ -131,7 +140,15 @@ export function GroupLayoutView({ children }: { children: React.ReactNode }) {
         }
       />
 
-      <ExpensePage stats={<GroupStats group={group} />} aside={<Balances group={group} />}>
+      <ExpensePage
+        stats={<GroupStats group={group} />}
+        aside={
+          <>
+            <Balances group={group} />
+            {group.budgetCents !== null && <BudgetCard group={group} />}
+          </>
+        }
+      >
         {children}
       </ExpensePage>
     </>
@@ -182,6 +199,8 @@ function GroupStats({ group }: { group: Group }) {
 function Balances({ group }: { group: Group }) {
   const name = (id: string) =>
     id === group.meMemberId ? 'You' : memberName(group.members, id)
+  const upiOf = (id: string) => group.members.find((m) => m.id === id)?.upiId ?? null
+  const isLinked = (id: string) => group.members.find((m) => m.id === id)?.linked ?? false
 
   return (
     <Card>
@@ -245,6 +264,20 @@ function Balances({ group }: { group: Group }) {
                       {formatMoney(s.amountCents, group.currency)}
                     </span>
                   </span>
+                  {s.from === group.meMemberId &&
+                    group.currency === 'INR' &&
+                    upiOf(s.to) && (
+                      <UpiPay
+                        size="sm"
+                        upiId={upiOf(s.to)!}
+                        name={name(s.to)}
+                        amountCents={s.amountCents}
+                        note={`Settlr: ${group.name}`}
+                      />
+                    )}
+                  {s.to === group.meMemberId && isLinked(s.from) && (
+                    <RemindMember group={group} memberId={s.from} name={name(s.from)} />
+                  )}
                   <RecordPaymentDialog
                     group={group}
                     from={s.from}
@@ -267,6 +300,47 @@ function Balances({ group }: { group: Group }) {
         </div>
 
         <RecentPayments group={group} />
+      </CardContent>
+    </Card>
+  )
+}
+
+function RemindMember({ group, memberId, name }: { group: Group; memberId: string; name: string }) {
+  const remind = useAction(useConvexMutation(api.groups.remindMember), { toastErrors: true })
+  return (
+    <Button
+      size="icon-sm"
+      variant="ghost"
+      aria-label={`Remind ${name}`}
+      title={`Remind ${name}`}
+      disabled={remind.pending}
+      onClick={async () => {
+        if (await remind.run({ groupId: group.id, memberId })) toast.success(`${name} was reminded`)
+      }}
+    >
+      <BellRing />
+    </Button>
+  )
+}
+
+/** The group's budget against what it has spent. */
+function BudgetCard({ group }: { group: Group }) {
+  const budget = group.budgetCents ?? 0
+  const left = budget - group.totalCents
+  const pct = budget > 0 ? Math.min(100, Math.round((group.totalCents / budget) * 100)) : 0
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Budget</CardTitle>
+        <CardDescription>{formatMoney(budget, group.currency)} for the group.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-2 text-sm">
+        <Progress value={pct} aria-label="Budget used" />
+        <p className={cn('m-0', left < 0 ? 'text-destructive' : 'text-muted-foreground')}>
+          {left >= 0
+            ? `${formatMoney(left, group.currency)} left (${pct}% used)`
+            : `${formatMoney(-left, group.currency)} over budget`}
+        </p>
       </CardContent>
     </Card>
   )

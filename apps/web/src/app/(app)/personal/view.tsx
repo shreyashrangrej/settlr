@@ -15,7 +15,7 @@ import {
 } from '#/components/expense-list'
 import { ExpensePage, PageIcon } from '#/components/expense-page'
 import { ExpenseDialog, type PersonalExpense } from '#/components/expense-dialog'
-import { useAction } from '#/components/ledger'
+import { useDeleteWithUndo } from '#/components/undo'
 import { MonthNav } from '#/components/month-nav'
 import { PageHeader } from '#/components/page-header'
 import { ReceiptLink } from '#/components/receipts'
@@ -205,15 +205,15 @@ function filterExpenses(items: Array<PersonalExpense>, filter: ExpenseFilter) {
 }
 
 function PersonalExpenseRow({ expense }: { expense: PersonalExpense }) {
-  const removeExpense = useConvexMutation(api.personal.remove)
-  const { run } = useAction(removeExpense, { success: 'Deleted', toastErrors: true })
+  const removeExpense = useDeleteWithUndo(useConvexMutation(api.personal.remove))
 
   return (
     <ExpenseRow
       icon={<CategoryIcon category={expense.category} />}
       title={expense.description}
+      tags={expense.tags}
       receipt={expense.receiptId && <ReceiptLink source="personal" expenseId={expense.id} />}
-      subtitle={categoryLabel(expense.category)}
+      subtitle={`${categoryLabel(expense.category)}${expense.recurring ? ' · Repeats' : ''}`}
       date={expense.date}
       // The same columns as every expense list; it's always yours, so
       // nothing folds into the second line on narrow screens.
@@ -228,7 +228,8 @@ function PersonalExpenseRow({ expense }: { expense: PersonalExpense }) {
           edit={{
             dialog: (state) => <ExpenseDialog target={{ kind: 'personal', expense }} {...state} />,
           }}
-          onDelete={async () => Boolean(await run({ expenseId: expense.id }))}
+          deleteDescription="You can restore it from Trash for 30 days."
+          onDelete={() => removeExpense({ expenseId: expense.id })}
         />
       }
     />

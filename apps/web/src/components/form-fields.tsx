@@ -19,8 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
-import { formatDate } from '@settlr/shared/format'
-import { CURRENCIES, type Currency } from '@settlr/shared/schemas'
+import { categoryLabel, formatDate } from '@settlr/shared/format'
+import { CATEGORIES, CURRENCIES, type Category, type Currency } from '@settlr/shared/schemas'
 import { cn } from '#/lib/utils'
 
 // Form controls shared by the expense, payment and filter forms.
@@ -82,6 +82,18 @@ export function CurrencySelect(props: {
   className?: string
 }) {
   return <SelectField {...props} options={currencyOptions} />
+}
+
+const categoryOptions = CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) }))
+
+/** A plain category select, for compact forms (the Recurring and Inbox pages). */
+export function CategorySelect(props: {
+  id?: string
+  value: Category
+  onChange: (category: Category) => void
+  className?: string
+}) {
+  return <SelectField {...props} options={categoryOptions} />
 }
 
 /** A money input with the currency code shown inside it. */

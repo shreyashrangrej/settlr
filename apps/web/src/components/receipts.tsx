@@ -1,9 +1,11 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { useConvexMutation } from '@convex-dev/react-query'
+import { useConvexAction, useConvexMutation } from '@convex-dev/react-query'
 import Link from 'next/link'
-import { FileText, Paperclip, ReceiptText, X } from 'lucide-react'
+import { FileText, Paperclip, ReceiptText, ScanText, X } from 'lucide-react'
+import { toast } from 'sonner'
+import type { FunctionReturnType } from 'convex/server'
 
 import { Button, buttonVariants } from '#/components/ui/button'
 import { FieldError } from '#/components/ui/field'
@@ -28,7 +30,12 @@ export type ReceiptValue = {
   id: Id<'receipts'>
   name: string | null
   fresh: boolean
+  // A photo (only those can be scanned).
+  image?: boolean
 } | null
+
+/** What scanning a receipt found, for a form to fill in. */
+export type ScannedReceipt = FunctionReturnType<typeof api.scan.receipt>
 
 /** The receipt already on an expense, as a form's starting value. */
 export function existingReceipt(id: Id<'receipts'> | null | undefined): ReceiptValue {
@@ -40,13 +47,33 @@ export function ReceiptField({
   id,
   value,
   onChange,
+  onScan,
 }: {
   id: string
   value: ReceiptValue
   onChange: (value: ReceiptValue) => void
+  /** Offers "Fill from receipt" for a new photo, and hands over what it read. */
+  onScan?: (scanned: ScannedReceipt) => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const scan = useConvexAction(api.scan.receipt)
+
+  async function runScan(receiptId: Id<'receipts'>) {
+    if (!onScan) return
+    setScanning(true)
+    setError(null)
+    try {
+      const scanned = await scan({ receiptId })
+      onScan(scanned)
+      toast.success('Filled in from the receipt. Check it before saving.')
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setScanning(false)
+    }
+  }
   const [error, setError] = useState<string | null>(null)
   const generateUploadUrl = useConvexMutation(api.receipts.generateUploadUrl)
   const createReceipt = useConvexMutation(api.receipts.create)
@@ -84,7 +111,7 @@ export function ReceiptField({
       }
       const { receiptId } = created
       release(value)
-      onChange({ id: receiptId, name: file.name, fresh: true })
+      onChange({ id: receiptId, name: file.name, fresh: true, image: file.type.startsWith('image/') })
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -152,6 +179,18 @@ export function ReceiptField({
             <span className="text-xs text-muted-foreground">A photo or PDF, up to 10 MB.</span>
           </span>
         </button>
+      )}
+      {onScan && value?.fresh && value.image && (
+        <Button
+          type="button"
+          variant="outline"
+          className="justify-self-start"
+          disabled={scanning || pending}
+          onClick={() => void runScan(value.id)}
+        >
+          {scanning ? <Spinner /> : <ScanText />}
+          {scanning ? 'Reading the receipt…' : 'Fill from receipt'}
+        </Button>
       )}
       {error && <FieldError>{error}</FieldError>}
     </div>

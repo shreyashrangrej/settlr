@@ -3,7 +3,18 @@
 import { useConvexMutation } from '@convex-dev/react-query'
 import Link from 'next/link'
 import type { FunctionReturnType } from 'convex/server'
-import { HandCoins, Pencil, Receipt, UserCheck, Users } from 'lucide-react'
+import {
+  BellRing,
+  CircleCheck,
+  CircleX,
+  HandCoins,
+  MessageSquare,
+  Pencil,
+  Receipt,
+  UserCheck,
+  UserPlus,
+  Users,
+} from 'lucide-react'
 
 import { PersonAvatar, useAction } from '#/components/ledger'
 import { useAppRouter } from '#/components/navigation-progress'
@@ -165,6 +176,41 @@ function describe(item: Notification) {
         title: `${item.actorName} accepted your friend request`,
         effect: { text: 'Your ledgers are now shared', tone: null },
         link: friendLink,
+      }
+    case 'reminder':
+      return {
+        icon: <BellRing />,
+        title: `${item.actorName} sent you a reminder${item.groupName ? ` about ${item.groupName}` : ''}`,
+        effect: { text: `You owe ${money(item.amountCents ?? 0)}`, tone: 'negative' as const },
+        link: friendLink ?? groupLink,
+      }
+    case 'payment_confirmed':
+      return {
+        icon: <CircleCheck />,
+        title: `${item.actorName} confirmed your payment of ${money(item.amountCents ?? 0)}`,
+        effect: null,
+        link: friendLink ?? groupLink,
+      }
+    case 'payment_rejected':
+      return {
+        icon: <CircleX />,
+        title: `${item.actorName} says your payment of ${money(item.amountCents ?? 0)} never arrived`,
+        effect: { text: 'It was removed, so the balance is back', tone: null },
+        link: friendLink ?? groupLink,
+      }
+    case 'comment':
+      return {
+        icon: <MessageSquare />,
+        title: `${item.actorName} commented in ${item.groupName ?? 'a group'}`,
+        effect: item.description ? { text: item.description, tone: null } : null,
+        link: groupLink,
+      }
+    case 'group_joined':
+      return {
+        icon: <UserPlus />,
+        title: `${item.actorName} joined ${item.groupName ?? 'your group'}${item.description ? ` ${item.description}` : ''}`,
+        effect: null,
+        link: groupLink,
       }
   }
 }

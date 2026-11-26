@@ -33,6 +33,7 @@ import {
   TableRow,
 } from '#/components/ui/table'
 import { formatDate } from '@settlr/shared/format'
+import { TagList } from '#/components/tag-input'
 import { cn } from '#/lib/utils'
 
 // The expense list every section shares (a group's expenses, a friend's
@@ -235,9 +236,12 @@ export function ExpenseRow({
   cells,
   amount,
   actions,
+  tags,
 }: {
   icon: React.ReactNode
   title: string
+  /** Shown as small chips after the title. */
+  tags?: Array<string>
   /** Makes the title a link, e.g. to where the expense lives. */
   href?: string
   /** A `ReceiptLink`, beside the title. */
@@ -280,6 +284,7 @@ export function ExpenseRow({
                 </span>
               )}
               {receipt}
+              {tags && tags.length > 0 && <TagList tags={tags} className="ml-1 hidden sm:inline-flex" />}
             </span>
             <span className="truncate text-xs font-normal text-faint">
               {subtitle}
@@ -348,7 +353,10 @@ export function RowActions({
   edit,
   deleteDescription = 'This can’t be undone.',
   onDelete,
+  items,
 }: {
+  /** More menu entries above Delete (e.g. Comments). */
+  items?: React.ReactNode
   /** What the row is called, for the menu's label and the dialogs. */
   name: string
   edit:
@@ -390,6 +398,7 @@ export function RowActions({
             <Pencil />
             Edit
           </DropdownMenuItem>
+          {items}
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
             <Trash2 />

@@ -1,5 +1,13 @@
 'use client'
 
+import { useState } from 'react'
+import { useConvex } from 'convex/react'
+import { toast } from 'sonner'
+import { Download } from 'lucide-react'
+import { Spinner } from '#/components/ui/spinner'
+import { downloadCsv } from '#/lib/export'
+import { errorMessage } from '#/lib/errors'
+
 import { convexQuery } from '@convex-dev/react-query'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowUpRight, Ellipsis, Plus, Receipt, User, Users, Wallet } from 'lucide-react'
@@ -74,16 +82,18 @@ export function AllExpensesView({
       sort: search.sort,
       order: search.order,
       limit: search.limit,
+      tag: search.tag,
     }),
   )
   const { hrefFor, update } = useListSearch('/expenses', search, allExpensesSearchDefaults)
-  const filtered = isFiltered(search) || search.source !== 'all'
+  const filtered = isFiltered(search) || search.source !== 'all' || search.tag !== ''
   const total = data.totals.reduce((n, t) => n + t.count, 0)
   const clearHref = hrefFor({
     ...search,
     q: '',
     category: 'all',
     source: 'all',
+    tag: '',
     limit: LIST_STEP,
   })
 
@@ -100,6 +110,7 @@ export function AllExpensesView({
         actions={
           <>
             <MonthNav to="/expenses" month={month} thisMonth={thisMonth} />
+            <ExportButton month={month} />
             <AddMenu trigger={<Button />}>
               <Plus />
               Add expense
@@ -116,14 +127,31 @@ export function AllExpensesView({
                 value={search}
                 onChange={update}
                 extra={
-                  <SelectField
-                    aria-label="Where"
-                    size="sm"
-                    className={toolbarSelect}
-                    value={search.source}
-                    onChange={(source) => update({ source })}
-                    options={sourceOptions}
-                  />
+                  <>
+                    <SelectField
+                      aria-label="Where"
+                      size="sm"
+                      className={toolbarSelect}
+                      value={search.source}
+                      onChange={(source) => update({ source })}
+                      options={sourceOptions}
+                    />
+                    {(data.tags.length > 0 || search.tag) && (
+                      <SelectField
+                        aria-label="Tag"
+                        size="sm"
+                        className={toolbarSelect}
+                        value={search.tag}
+                        onChange={(tag) => update({ tag })}
+                        options={[
+                          { value: '', label: 'Any tag' },
+                          ...[...new Set([...data.tags, ...(search.tag ? [search.tag] : [])])].map(
+                            (t) => ({ value: t, label: `#${t}` }),
+                          ),
+                        ]}
+                      />
+                    )}
+                  </>
                 }
               />
             )
@@ -201,6 +229,7 @@ function AllExpenseRow({ item, month }: { item: Item; month: string }) {
     <ExpenseRow
       icon={<CategoryIcon category={item.category} />}
       title={item.description}
+      tags={item.tags}
       href={whereHref(item, month)}
       receipt={item.hasReceipt && <ReceiptLink source={item.source} expenseId={item.id} />}
       subtitle={categoryLabel(item.category)}
@@ -291,5 +320,36 @@ function ByCategory({ data }: { data: MonthExpenses }) {
         )}
       </CardContent>
     </Card>
+  )
+}
+
+/** Downloads the month (every source, payments too) as a CSV file. */
+function ExportButton({ month }: { month: string }) {
+  const convex = useConvex()
+  const [busy, setBusy] = useState(false)
+  return (
+    <Button
+      variant="outline"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true)
+        try {
+          const last = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0))
+          const { rows, truncated } = await convex.query(api.exports.range, {
+            from: `${month}-01`,
+            to: last.toISOString().slice(0, 10),
+          })
+          downloadCsv(rows, `settlr-${month}.csv`)
+          if (truncated) toast.warning('Only the first 5,000 rows were exported.')
+        } catch (err) {
+          toast.error(errorMessage(err))
+        } finally {
+          setBusy(false)
+        }
+      }}
+    >
+      {busy ? <Spinner /> : <Download />}
+      Export
+    </Button>
   )
 }
