@@ -172,7 +172,10 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   who-paid/sort bar, and `useListSearch` for its URL),
   `expense-dialog.tsx` (`ExpenseDialog`: adding or editing any expense,
   personal, friend or group, in one Gr8r-style modal with a balance
-  preview; `RowActions` opens it with `edit={{ dialog }}`), `notifications.tsx`
+  preview; `RowActions` opens it with `edit={{ dialog }}`; it also holds the
+  group split modes, the friend "by amount" split, another currency with a
+  rate, tags, repeating and "Fill from receipt"), `comments.tsx`
+  (`CommentsDialog`, a group expense's thread from its "⋯" menu), `notifications.tsx`
   (rows shared by the bell dropdown and the page), `month-nav.tsx`,
   `confirm-action.tsx` (destructive actions behind an alert dialog),
   `account-menu.tsx` (account dropdown with the theme switch and sign-out),

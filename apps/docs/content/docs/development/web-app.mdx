@@ -187,10 +187,13 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
   in a dialog, not side cards. Adding or editing an expense, in any of
   them, is one component, `ExpenseDialog` (`components/expense-dialog.tsx`,
   Gr8r's task modal): header with where it lives, the amount and
-  description in one box, category and date chips, who paid and the split
-  (a group's members, or a friend's paid-by and split toggles) with your
-  balance before and after, the receipt, and a footer with Cancel, Save and
-  ⌘/Ctrl+Enter. Give it a `target` (`personal`, `friend` or `group`, plus
+  description in one box, category, date and repeat chips, who paid and
+  the split (a group's split modes and members, or a friend's paid-by and
+  split toggles) with your balance before and after, tags, the receipt
+  (with **Fill from receipt**), and a footer with Cancel, Save and
+  ⌘/Ctrl+Enter. The split math is `@settlr/shared/split`, which Convex
+  re-checks. A group expense's comments open from its row menu in
+  `CommentsDialog` (`components/comments.tsx`). Give it a `target` (`personal`, `friend` or `group`, plus
   the expense to edit) and a `trigger`, or `open`/`onOpenChange` from a
   row's `RowActions` (`edit={{ dialog: (state) => ... }}`). Other forms
   (settle up, payments) use `FormDialog`/`EditDialog`. Amounts on shared
