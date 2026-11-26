@@ -1,85 +1,558 @@
 {
   "v": 3,
-  "createdOnFiles": { "v": 1, "at": "2026-11-26T10:00:00Z" },
-  "title": "Settlr Android Redesign",
-  "launch": { "view": "canvas" },
-  "pages": [],
+  "attachments": {},
   "boards": {
-    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 900, "title": "Cover · Settlr for Android" },
-    "System.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 1180, "title": "Tally · design language" },
-    "Components.dc.html": { "x": 2720, "y": 0, "w": 1280, "h": 1180, "title": "Components" },
-    "Motion.dc.html": { "x": 4080, "y": 0, "w": 1280, "h": 1180, "title": "Motion" },
-
-    "Welcome.dc.html": { "x": 0, "y": 1560, "w": 412, "h": 915, "title": "Welcome", "is_interactive": true },
-    "SignIn.dc.html": { "x": 492, "y": 1560, "w": 412, "h": 915, "title": "Sign in", "is_interactive": true },
-    "Verify.dc.html": { "x": 984, "y": 1560, "w": 412, "h": 915, "title": "Verify code", "is_interactive": true },
-    "Home.dc.html": { "x": 1476, "y": 1560, "w": 412, "h": 915, "title": "Home", "is_interactive": true },
-    "HomeEmpty.dc.html": { "x": 1968, "y": 1560, "w": 412, "h": 915, "title": "Home · first run", "is_interactive": true },
-    "Notifications.dc.html": { "x": 2460, "y": 1560, "w": 412, "h": 915, "title": "Notifications", "is_interactive": true },
-    "Search.dc.html": { "x": 2952, "y": 1560, "w": 412, "h": 915, "title": "Search", "is_interactive": true },
-    "Profile.dc.html": { "x": 3444, "y": 1560, "w": 412, "h": 915, "title": "Profile & settings", "is_interactive": true },
-
-    "Groups.dc.html": { "x": 0, "y": 2855, "w": 412, "h": 915, "title": "Groups", "is_interactive": true },
-    "Group.dc.html": { "x": 492, "y": 2855, "w": 412, "h": 915, "title": "Group", "is_interactive": true },
-    "GroupBalances.dc.html": { "x": 984, "y": 2855, "w": 412, "h": 915, "title": "Group · balances & plan", "is_interactive": true },
-    "GroupInsights.dc.html": { "x": 1476, "y": 2855, "w": 412, "h": 915, "title": "Group · insights", "is_interactive": true },
-    "NewGroup.dc.html": { "x": 1968, "y": 2855, "w": 412, "h": 915, "title": "New group", "is_interactive": true },
-    "ExpenseDetail.dc.html": { "x": 2460, "y": 2855, "w": 412, "h": 915, "title": "Expense", "is_interactive": true },
-    "Receipt.dc.html": { "x": 2952, "y": 2855, "w": 412, "h": 915, "title": "Receipt viewer", "is_interactive": true },
-    "GroupMenu.dc.html": { "x": 3444, "y": 2855, "w": 412, "h": 915, "title": "Group · options", "is_interactive": true },
-    "InviteShare.dc.html": { "x": 3936, "y": 2855, "w": 412, "h": 915, "title": "Group · invite & share", "is_interactive": true },
-    "Activity.dc.html": { "x": 4428, "y": 2855, "w": 412, "h": 915, "title": "Group · activity", "is_interactive": true },
-    "Join.dc.html": { "x": 4920, "y": 2855, "w": 412, "h": 915, "title": "Join from a link", "is_interactive": true },
-    "Import.dc.html": { "x": 5412, "y": 2855, "w": 412, "h": 915, "title": "Import from Splitwise", "is_interactive": true },
-
-    "AddExpense.dc.html": { "x": 0, "y": 4150, "w": 412, "h": 915, "title": "Add expense · amount first", "is_interactive": true },
-    "AddWhere.dc.html": { "x": 492, "y": 4150, "w": 412, "h": 915, "title": "Add expense · where", "is_interactive": true },
-    "AddSplit.dc.html": { "x": 984, "y": 4150, "w": 412, "h": 915, "title": "Add expense · split", "is_interactive": true },
-    "AddItems.dc.html": { "x": 1476, "y": 4150, "w": 412, "h": 915, "title": "Add expense · split by items", "is_interactive": true },
-    "AddCurrency.dc.html": { "x": 1968, "y": 4150, "w": 412, "h": 915, "title": "Add expense · another currency", "is_interactive": true },
-    "SettleUp.dc.html": { "x": 2460, "y": 4150, "w": 412, "h": 915, "title": "Settle up", "is_interactive": true },
-    "Settled.dc.html": { "x": 2952, "y": 4150, "w": 412, "h": 915, "title": "Settled", "is_interactive": true },
-    "SettleAll.dc.html": { "x": 3444, "y": 4150, "w": 412, "h": 915, "title": "Settle everything with a friend", "is_interactive": true },
-
-    "Friends.dc.html": { "x": 0, "y": 5445, "w": 412, "h": 915, "title": "Friends", "is_interactive": true },
-    "Friend.dc.html": { "x": 492, "y": 5445, "w": 412, "h": 915, "title": "Friend ledger", "is_interactive": true },
-    "AddFriend.dc.html": { "x": 984, "y": 5445, "w": 412, "h": 915, "title": "Add friend", "is_interactive": true },
-    "Spending.dc.html": { "x": 1476, "y": 5445, "w": 412, "h": 915, "title": "Spending", "is_interactive": true },
-    "Budget.dc.html": { "x": 1968, "y": 5445, "w": 412, "h": 915, "title": "Budget", "is_interactive": true },
-    "Assistant.dc.html": { "x": 2460, "y": 5445, "w": 412, "h": 915, "title": "Assistant", "is_interactive": true },
-    "Recurring.dc.html": { "x": 2952, "y": 5445, "w": 412, "h": 915, "title": "Recurring", "is_interactive": true },
-    "Recap.dc.html": { "x": 3444, "y": 5445, "w": 412, "h": 915, "title": "Monthly recap", "is_interactive": true },
-    "Inbox.dc.html": { "x": 3936, "y": 5445, "w": 412, "h": 915, "title": "Receipt inbox", "is_interactive": true },
-    "Trash.dc.html": { "x": 4428, "y": 5445, "w": 412, "h": 915, "title": "Trash & undo", "is_interactive": true },
-
-    "DarkHome.dc.html": { "x": 0, "y": 6740, "w": 412, "h": 915, "title": "Home · dark", "is_interactive": true },
-    "DarkGroup.dc.html": { "x": 492, "y": 6740, "w": 412, "h": 915, "title": "Group · dark", "is_interactive": true },
-    "DarkAddExpense.dc.html": { "x": 984, "y": 6740, "w": 412, "h": 915, "title": "Add expense · dark", "is_interactive": true },
-    "DarkFriend.dc.html": { "x": 1476, "y": 6740, "w": 412, "h": 915, "title": "Friend · dark", "is_interactive": true },
-    "DarkSpending.dc.html": { "x": 1968, "y": 6740, "w": 412, "h": 915, "title": "Spending · dark", "is_interactive": true },
-    "DarkAssistant.dc.html": { "x": 2460, "y": 6740, "w": 412, "h": 915, "title": "Assistant · dark", "is_interactive": true }
+    "Activity.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Group · activity",
+      "w": 412,
+      "x": 4428,
+      "y": 2855
+    },
+    "AddCurrency.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Add expense · another currency",
+      "w": 412,
+      "x": 1968,
+      "y": 4150
+    },
+    "AddExpense.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Add expense · amount first",
+      "w": 412,
+      "x": 0,
+      "y": 4150
+    },
+    "AddFriend.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Add friend",
+      "w": 412,
+      "x": 984,
+      "y": 5445
+    },
+    "AddItems.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Add expense · split by items",
+      "w": 412,
+      "x": 1476,
+      "y": 4150
+    },
+    "AddSplit.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Add expense · split",
+      "w": 412,
+      "x": 984,
+      "y": 4150
+    },
+    "AddWhere.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Add expense · where",
+      "w": 412,
+      "x": 492,
+      "y": 4150
+    },
+    "Assistant.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Assistant",
+      "w": 412,
+      "x": 2460,
+      "y": 5445
+    },
+    "Budget.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Budget",
+      "w": 412,
+      "x": 1968,
+      "y": 5445
+    },
+    "Components.dc.html": {
+      "h": 1180,
+      "title": "Components",
+      "w": 1280,
+      "x": 2720,
+      "y": 0
+    },
+    "DarkAddExpense.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Add expense · dark",
+      "w": 412,
+      "x": 984,
+      "y": 6740
+    },
+    "DarkAssistant.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Assistant · dark",
+      "w": 412,
+      "x": 2460,
+      "y": 6740
+    },
+    "DarkFriend.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Friend · dark",
+      "w": 412,
+      "x": 1476,
+      "y": 6740
+    },
+    "DarkGroup.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Group · dark",
+      "w": 412,
+      "x": 492,
+      "y": 6740
+    },
+    "DarkHome.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Home · dark",
+      "w": 412,
+      "x": 0,
+      "y": 6740
+    },
+    "DarkSpending.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Spending · dark",
+      "w": 412,
+      "x": 1968,
+      "y": 6740
+    },
+    "ExpenseDetail.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Expense",
+      "w": 412,
+      "x": 2460,
+      "y": 2855
+    },
+    "Friend.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Friend ledger",
+      "w": 412,
+      "x": 492,
+      "y": 5445
+    },
+    "Friends.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Friends",
+      "w": 412,
+      "x": 0,
+      "y": 5445
+    },
+    "Group.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Group",
+      "w": 412,
+      "x": 492,
+      "y": 2855
+    },
+    "GroupBalances.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Group · balances & plan",
+      "w": 412,
+      "x": 984,
+      "y": 2855
+    },
+    "GroupInsights.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Group · insights",
+      "w": 412,
+      "x": 1476,
+      "y": 2855
+    },
+    "GroupMenu.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Group · options",
+      "w": 412,
+      "x": 3444,
+      "y": 2855
+    },
+    "Groups.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Groups",
+      "w": 412,
+      "x": 0,
+      "y": 2855
+    },
+    "Home.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Home",
+      "w": 412,
+      "x": 1476,
+      "y": 1560
+    },
+    "HomeEmpty.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Home · first run",
+      "w": 412,
+      "x": 1968,
+      "y": 1560
+    },
+    "Import.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Import from Splitwise",
+      "w": 412,
+      "x": 5412,
+      "y": 2855
+    },
+    "Inbox.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Receipt inbox",
+      "w": 412,
+      "x": 3936,
+      "y": 5445
+    },
+    "InviteShare.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Group · invite & share",
+      "w": 412,
+      "x": 3936,
+      "y": 2855
+    },
+    "Join.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Join from a link",
+      "w": 412,
+      "x": 4920,
+      "y": 2855
+    },
+    "Main.dc.html": {
+      "h": 900,
+      "title": "Cover · Settlr for Android",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Motion.dc.html": {
+      "h": 1180,
+      "title": "Motion",
+      "w": 1280,
+      "x": 4080,
+      "y": 0
+    },
+    "NewGroup.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "New group",
+      "w": 412,
+      "x": 1968,
+      "y": 2855
+    },
+    "Notifications.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Notifications",
+      "w": 412,
+      "x": 2460,
+      "y": 1560
+    },
+    "Profile.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Profile & settings",
+      "w": 412,
+      "x": 3444,
+      "y": 1560
+    },
+    "Recap.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Monthly recap",
+      "w": 412,
+      "x": 3444,
+      "y": 5445
+    },
+    "Receipt.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Receipt viewer",
+      "w": 412,
+      "x": 2952,
+      "y": 2855
+    },
+    "Recurring.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Recurring",
+      "w": 412,
+      "x": 2952,
+      "y": 5445
+    },
+    "Search.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Search",
+      "w": 412,
+      "x": 2952,
+      "y": 1560
+    },
+    "SettleAll.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Settle everything with a friend",
+      "w": 412,
+      "x": 3444,
+      "y": 4150
+    },
+    "SettleUp.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Settle up",
+      "w": 412,
+      "x": 2460,
+      "y": 4150
+    },
+    "Settled.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Settled",
+      "w": 412,
+      "x": 2952,
+      "y": 4150
+    },
+    "SignIn.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Sign in",
+      "w": 412,
+      "x": 492,
+      "y": 1560
+    },
+    "Spending.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Spending",
+      "w": 412,
+      "x": 1476,
+      "y": 5445
+    },
+    "System.dc.html": {
+      "h": 1180,
+      "title": "Tally · design language",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "Trash.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Trash & undo",
+      "w": 412,
+      "x": 4428,
+      "y": 5445
+    },
+    "Verify.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Verify code",
+      "w": 412,
+      "x": 984,
+      "y": 1560
+    },
+    "Welcome.dc.html": {
+      "h": 915,
+      "is_interactive": true,
+      "title": "Welcome",
+      "w": 412,
+      "x": 0,
+      "y": 1560
+    }
   },
-  "order": [
-    "Main.dc.html", "System.dc.html", "Components.dc.html", "Motion.dc.html",
-    "Welcome.dc.html", "SignIn.dc.html", "Verify.dc.html", "Home.dc.html", "HomeEmpty.dc.html", "Notifications.dc.html", "Search.dc.html", "Profile.dc.html",
-    "Groups.dc.html", "Group.dc.html", "GroupBalances.dc.html", "GroupInsights.dc.html", "NewGroup.dc.html", "ExpenseDetail.dc.html", "Receipt.dc.html", "GroupMenu.dc.html", "InviteShare.dc.html", "Activity.dc.html", "Join.dc.html", "Import.dc.html",
-    "AddExpense.dc.html", "AddWhere.dc.html", "AddSplit.dc.html", "AddItems.dc.html", "AddCurrency.dc.html", "SettleUp.dc.html", "Settled.dc.html", "SettleAll.dc.html",
-    "Friends.dc.html", "Friend.dc.html", "AddFriend.dc.html", "Spending.dc.html", "Budget.dc.html", "Assistant.dc.html", "Recurring.dc.html", "Recap.dc.html", "Inbox.dc.html", "Trash.dc.html",
-    "DarkHome.dc.html", "DarkGroup.dc.html", "DarkAddExpense.dc.html", "DarkFriend.dc.html", "DarkSpending.dc.html", "DarkAssistant.dc.html"
+  "createdOnFiles": {
+    "at": "2026-11-26T10:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "noteOrder": [
+    "t0",
+    "t1",
+    "t2",
+    "t3",
+    "t4",
+    "t5",
+    "m1",
+    "m2",
+    "m3",
+    "m4",
+    "m5",
+    "m6"
   ],
   "notes": {
-    "t0": { "x": 0, "y": -300, "text": "Settlr for Android · the Tally design language", "kind": "title1", "maxW": 5360 },
-    "t1": { "x": 0, "y": 1310, "text": "Getting in & Home", "kind": "title1", "maxW": 3856 },
-    "t2": { "x": 0, "y": 2605, "text": "Groups", "kind": "title1", "maxW": 5824 },
-    "t3": { "x": 0, "y": 3900, "text": "Add an expense & settle up", "kind": "title1", "maxW": 3856 },
-    "t4": { "x": 0, "y": 5195, "text": "Friends, spending, money tools & the assistant", "kind": "title1", "maxW": 4840 },
-    "t5": { "x": 0, "y": 6490, "text": "Dark theme", "kind": "title1", "maxW": 2872 },
-    "m1": { "x": 3936, "y": 1560, "w": 380, "fill": "purple", "size": "m", "text": "Motion · Home\n\n• Balance figures roll digit by digit when a live update lands (Convex pushes it, no refresh).\n• Cards rise in 45 ms apart on first open, never on a tab re-select.\n• Bell → Notifications and avatar → Profile push on a shared X axis (300 ms).\n• Predictive back: the screen shrinks to 90% and rounds its corners as you drag.\n• Got it on a payment card: the card shrinks into the hero and the balance rolls." },
-    "m2": { "x": 5904, "y": 2855, "w": 380, "fill": "purple", "size": "m", "text": "Motion · Groups\n\n• Group card → group: the monogram tile and name morph into the header (shared element on the smooth spring).\n• The header collapses into the top bar as you scroll; the balance docks under the title.\n• Newly synced expenses slide in and flash the accent wash once.\n• Balance bars grow out of the zero line, 30 ms apart.\n• ⋯ opens options as a sheet; Invite and share slides in over it on the shared X axis.\n• A new comment drops into the thread with a light tick." },
-    "m3": { "x": 3936, "y": 4150, "w": 380, "fill": "purple", "size": "m", "text": "Motion · Add & settle\n\n• + morphs into the add sheet (container transform from the button, 420 ms).\n• Keys press to 94% with a light haptic tick; each digit springs the amount up a notch.\n• Split modes: the segment pill slides; shares roll as steppers change.\n• Items: tapping a face on a line rolls every total below.\n• Pay with UPI hands off to the UPI app; coming back lands on Slide to record.\n• Slide to record: the thumb follows your finger with rubber-banding. Release past 80% → a firm haptic, the check pops, rings ripple out and the balance rolls to ₹0." },
-    "m4": { "x": 4920, "y": 5445, "w": 380, "fill": "purple", "size": "m", "text": "Motion · Friends & spending\n\n• Swipe a person left to reveal Settle up; past the threshold it snaps with a tick.\n• The budget ring sweeps to its value; category bars grow from the left.\n• Changing month slides the page along X in the direction you went.\n• Assistant cards assemble field by field; an edit strikes through the old value and slides the new one in.\n• Delete: the row collapses and the Undo snackbar rises. Undo or Restore springs the row back into place." },
-    "m5": { "x": 2952, "y": 6740, "w": 380, "fill": "gray", "size": "m", "text": "Dark theme\n\nThe same screens with the theme tweak set to dark (every screen has it under Tweaks). Dark is its own palette, not an inversion: violet-black surfaces, the brand lavender as the accent, and money colours lifted for contrast." },
-    "m6": { "x": 5440, "y": 0, "w": 440, "fill": "teal", "size": "m", "text": "Synced with main · 26 Nov\n\nEverything the web app gained is now on Android:\n• Split by amounts, %, shares or items; another currency with a rate\n• Repeat, tags and Scan receipt when adding\n• Pay with UPI, reminders, Did you get paid?, Across everything\n• Group options: invite and read-only links, activity, comments, budget, export, archive\n• Recurring, Monthly recap, Inbox, Trash with Undo, Splitwise import, saved chats\n\nNew boards sit in the Groups, Add and Friends rows, beside the screens they come from." }
+    "m1": {
+      "fill": "purple",
+      "size": 24,
+      "text": "Motion · Home\n\n• Balance figures roll digit by digit when a live update lands (Convex pushes it, no refresh).\n• Cards rise in 45 ms apart on first open, never on a tab re-select.\n• Bell → Notifications and avatar → Profile push on a shared X axis (300 ms).\n• Predictive back: the screen shrinks to 90% and rounds its corners as you drag.\n• Got it on a payment card: the card shrinks into the hero and the balance rolls.",
+      "w": 380,
+      "x": 3936,
+      "y": 1560
+    },
+    "m2": {
+      "fill": "purple",
+      "size": 24,
+      "text": "Motion · Groups\n\n• Group card → group: the monogram tile and name morph into the header (shared element on the smooth spring).\n• The header collapses into the top bar as you scroll; the balance docks under the title.\n• Newly synced expenses slide in and flash the accent wash once.\n• Balance bars grow out of the zero line, 30 ms apart.\n• ⋯ opens options as a sheet; Invite and share slides in over it on the shared X axis.\n• A new comment drops into the thread with a light tick.",
+      "w": 380,
+      "x": 5904,
+      "y": 2855
+    },
+    "m3": {
+      "fill": "purple",
+      "size": 24,
+      "text": "Motion · Add & settle\n\n• + morphs into the add sheet (container transform from the button, 420 ms).\n• Keys press to 94% with a light haptic tick; each digit springs the amount up a notch.\n• Split modes: the segment pill slides; shares roll as steppers change.\n• Items: tapping a face on a line rolls every total below.\n• Pay with UPI hands off to the UPI app; coming back lands on Slide to record.\n• Slide to record: the thumb follows your finger with rubber-banding. Release past 80% → a firm haptic, the check pops, rings ripple out and the balance rolls to ₹0.",
+      "w": 380,
+      "x": 3936,
+      "y": 4150
+    },
+    "m4": {
+      "fill": "purple",
+      "size": 24,
+      "text": "Motion · Friends & spending\n\n• Swipe a person left to reveal Settle up; past the threshold it snaps with a tick.\n• The budget ring sweeps to its value; category bars grow from the left.\n• Changing month slides the page along X in the direction you went.\n• Assistant cards assemble field by field; an edit strikes through the old value and slides the new one in.\n• Delete: the row collapses and the Undo snackbar rises. Undo or Restore springs the row back into place.",
+      "w": 380,
+      "x": 4920,
+      "y": 5445
+    },
+    "m5": {
+      "fill": "gray",
+      "size": 24,
+      "text": "Dark theme\n\nThe same screens with the theme tweak set to dark (every screen has it under Tweaks). Dark is its own palette, not an inversion: violet-black surfaces, the brand lavender as the accent, and money colours lifted for contrast.",
+      "w": 380,
+      "x": 2952,
+      "y": 6740
+    },
+    "m6": {
+      "fill": "teal",
+      "size": 24,
+      "text": "Synced with main · 26 Nov\n\nEverything the web app gained is now on Android:\n• Split by amounts, %, shares or items; another currency with a rate\n• Repeat, tags and Scan receipt when adding\n• Pay with UPI, reminders, Did you get paid?, Across everything\n• Group options: invite and read-only links, activity, comments, budget, export, archive\n• Recurring, Monthly recap, Inbox, Trash with Undo, Splitwise import, saved chats\n\nNew boards sit in the Groups, Add and Friends rows, beside the screens they come from.",
+      "w": 440,
+      "x": 5440,
+      "y": 0
+    },
+    "t0": {
+      "kind": "title1",
+      "maxW": 5360,
+      "text": "Settlr for Android · the Tally design language",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "t1": {
+      "kind": "title1",
+      "maxW": 3856,
+      "text": "Getting in & Home",
+      "w": 240,
+      "x": 0,
+      "y": 1310
+    },
+    "t2": {
+      "kind": "title1",
+      "maxW": 5824,
+      "text": "Groups",
+      "w": 240,
+      "x": 0,
+      "y": 2605
+    },
+    "t3": {
+      "kind": "title1",
+      "maxW": 3856,
+      "text": "Add an expense & settle up",
+      "w": 240,
+      "x": 0,
+      "y": 3900
+    },
+    "t4": {
+      "kind": "title1",
+      "maxW": 4840,
+      "text": "Friends, spending, money tools & the assistant",
+      "w": 240,
+      "x": 0,
+      "y": 5195
+    },
+    "t5": {
+      "kind": "title1",
+      "maxW": 2872,
+      "text": "Dark theme",
+      "w": 240,
+      "x": 0,
+      "y": 6490
+    }
   },
-  "designSystems": []
+  "order": [
+    "Main.dc.html",
+    "System.dc.html",
+    "Components.dc.html",
+    "Motion.dc.html",
+    "Welcome.dc.html",
+    "SignIn.dc.html",
+    "Verify.dc.html",
+    "Home.dc.html",
+    "HomeEmpty.dc.html",
+    "Notifications.dc.html",
+    "Search.dc.html",
+    "Profile.dc.html",
+    "Groups.dc.html",
+    "Group.dc.html",
+    "GroupBalances.dc.html",
+    "GroupInsights.dc.html",
+    "NewGroup.dc.html",
+    "ExpenseDetail.dc.html",
+    "Receipt.dc.html",
+    "GroupMenu.dc.html",
+    "InviteShare.dc.html",
+    "Activity.dc.html",
+    "Join.dc.html",
+    "Import.dc.html",
+    "AddExpense.dc.html",
+    "AddWhere.dc.html",
+    "AddSplit.dc.html",
+    "AddItems.dc.html",
+    "AddCurrency.dc.html",
+    "SettleUp.dc.html",
+    "Settled.dc.html",
+    "SettleAll.dc.html",
+    "Friends.dc.html",
+    "Friend.dc.html",
+    "AddFriend.dc.html",
+    "Spending.dc.html",
+    "Budget.dc.html",
+    "Assistant.dc.html",
+    "Recurring.dc.html",
+    "Recap.dc.html",
+    "Inbox.dc.html",
+    "Trash.dc.html",
+    "DarkHome.dc.html",
+    "DarkGroup.dc.html",
+    "DarkAddExpense.dc.html",
+    "DarkFriend.dc.html",
+    "DarkSpending.dc.html",
+    "DarkAssistant.dc.html"
+  ],
+  "pages": [],
+  "title": "Settlr Android Redesign"
 }
