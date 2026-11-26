@@ -1,161 +1,186 @@
-// Design tokens from design/DESIGN.md: T3 Code's design system. Dark is the
-// reference theme; light is T3's light appearance. Use these, not hex
-// values, except for the fixed group, category and avatar fills.
+// Tally, the Android design language (design/android-redesign/settlr.css):
+// violet ink on cool paper, Bricolage Grotesque for the figures that matter
+// and Manrope for everything you read. Light and dark are two palettes, not
+// an inversion. Use these tokens, not hex values.
+
+export type Hue = 'green' | 'amber' | 'red' | 'blue' | 'violet' | 'teal' | 'rose' | 'orange' | 'gray'
 
 export type Colors = {
   bg: string
-  bgSidebar: string
   surface: string
   surface2: string
-  field: string
-  border: string
-  borderStrong: string
+  surface3: string
+  line: string
   divider: string
   text: string
-  text2: string
   muted: string
   faint: string
   dim: string
   accent: string
   /** Text and icons on an `accent` fill. */
   onAccent: string
-  accentTint: string
-  accentSurface: string
-  accentBorder: string
-  /** Money owed to the user. */
+  accentSoft: string
+  accentInk: string
+  /** Money owed to you. */
   owed: string
-  /** Money the user owes. */
+  owedSoft: string
+  /** Money you owe. */
   owe: string
-  /** Text on an `owe` fill (destructive confirm). */
+  oweSoft: string
   onOwe: string
-  dangerBorder: string
-  dangerFill: string
-  /** The light "Settle" button. */
-  contrast: string
-  contrastText: string
-  segment: string
-  skeleton: string
-  /** Text on the fixed group and category colour fills. */
-  onFill: string
-}
-
-// T3 Code's mobile palette (apps/mobile in github.com/pingdotgg/t3code):
-// a near-black screen, #111 cards, hairline borders, a blue primary, and
-// T3's danger red; owed-to-you is the web app's emerald.
-export const dark: Colors = {
-  bg: '#0A0A0A',
-  bgSidebar: '#0A0A0A',
-  surface: '#111111',
-  surface2: '#1A1B1B',
-  field: '#111111',
-  border: '#191919',
-  borderStrong: '#1E1E1E',
-  divider: 'rgba(25,25,25,0.55)',
-  text: '#F5F5F5',
-  text2: '#F5F5F5',
-  muted: '#838383',
-  faint: '#818181',
-  dim: '#5C5C5C',
-  accent: '#346BF1',
-  onAccent: '#FFFFFF',
-  accentTint: 'rgba(52,107,241,0.16)',
-  accentSurface: '#121B34',
-  accentBorder: 'rgba(52,107,241,0.42)',
-  owed: '#34D399',
-  owe: '#FF6467',
-  onOwe: '#0A0A0A',
-  dangerBorder: 'rgba(251,65,74,0.32)',
-  dangerFill: '#301214',
-  contrast: '#F5F5F5',
-  contrastText: '#0A0A0A',
-  segment: '#1A1B1B',
-  skeleton: '#1A1B1B',
-  onFill: '#0C0D10',
+  warn: string
+  warnSoft: string
+  /** Home's balance card. */
+  hero: string
+  onHero: string
+  heroDim: string
+  heroTile: string
+  /** The "contrast" fill: Settle up buttons, the selected chip, snackbars. */
+  ink: string
+  onInk: string
+  scrim: string
+  key: string
+  /** The floating bottom bar. */
+  nav: string
+  navLine: string
+  /** Label hues: tiles for categories, groups and people. */
+  hues: Record<Hue, { bg: string; fg: string }>
 }
 
 export const light: Colors = {
-  bg: '#FCFCFC',
-  bgSidebar: '#FAFAFA',
+  bg: '#F4F4F7',
   surface: '#FFFFFF',
-  surface2: '#F4F4F5',
-  field: '#FFFFFF',
-  border: '#E4E4E7',
-  borderStrong: '#D4D4D8',
-  divider: 'rgba(228,228,231,0.55)',
-  text: '#27272A',
-  text2: '#27272A',
-  muted: '#6F6F79',
-  faint: '#71717B',
-  dim: '#A1A1AA',
-  accent: '#1B4ED8',
+  surface2: '#ECECF1',
+  surface3: '#E0E0E8',
+  line: '#E6E6ED',
+  divider: '#EEEEF3',
+  text: '#121218',
+  muted: '#56566A',
+  faint: '#69697D',
+  dim: '#9C9CAE',
+  accent: '#5B3DF5',
   onAccent: '#FFFFFF',
-  accentTint: 'rgba(27,78,216,0.10)',
-  accentSurface: '#E0E6F7',
-  accentBorder: 'rgba(27,78,216,0.42)',
-  owed: '#007A55',
-  owe: '#C10007',
+  accentSoft: '#ECE8FF',
+  accentInk: '#4A2BE0',
+  owed: '#0B7F4E',
+  owedSoft: '#DFF3E8',
+  owe: '#D33A2C',
+  oweSoft: '#FCE6E2',
   onOwe: '#FFFFFF',
-  dangerBorder: 'rgba(251,44,54,0.32)',
-  dangerFill: '#FCEBEC',
-  contrast: '#27272A',
-  contrastText: '#FCFCFC',
-  segment: '#FFFFFF',
-  skeleton: '#F4F4F5',
-  onFill: '#0C0D10',
+  warn: '#8F5D00',
+  warnSoft: '#FBF0D6',
+  hero: '#5B3DF5',
+  onHero: '#FFFFFF',
+  heroDim: 'rgba(255,255,255,0.8)',
+  heroTile: 'rgba(255,255,255,0.14)',
+  ink: '#121218',
+  onInk: '#FFFFFF',
+  scrim: 'rgba(14,12,28,0.46)',
+  key: '#ECECF1',
+  nav: 'rgba(255,255,255,0.94)',
+  navLine: 'rgba(20,18,40,0.07)',
+  hues: {
+    green: { bg: '#DDF3E6', fg: '#13703F' },
+    amber: { bg: '#FBEFCF', fg: '#835500' },
+    red: { bg: '#FBE2DE', fg: '#B0302A' },
+    blue: { bg: '#DFEAFD', fg: '#1F57C3' },
+    violet: { bg: '#E9E4FE', fg: '#5232D6' },
+    teal: { bg: '#D9F1F0', fg: '#0E6964' },
+    rose: { bg: '#FCE1EB', fg: '#AD2A5C' },
+    orange: { bg: '#FDE6D6', fg: '#AD480D' },
+    gray: { bg: '#E9E9EE', fg: '#4F4F60' },
+  },
 }
 
-/** Fixed fills that look the same in both themes (Tailwind's 400 shades, as on the web). */
-export const groupColors = ['#34D399', '#F472B6', '#FBBF24', '#60A5FA', '#A78BFA', '#FB923C']
-export const avatarFills = ['#60A5FA', '#FBBF24', '#34D399', '#FB7185', '#A78BFA']
+export const dark: Colors = {
+  bg: '#0E0E13',
+  surface: '#17171F',
+  surface2: '#21212B',
+  surface3: '#2C2C38',
+  line: '#262631',
+  divider: '#22222C',
+  text: '#F1F1F6',
+  muted: '#ABABBE',
+  faint: '#8E8EA3',
+  dim: '#5E5E70',
+  accent: '#B18CFF',
+  onAccent: '#140F26',
+  accentSoft: '#2A2250',
+  accentInk: '#CDB7FF',
+  owed: '#4FD597',
+  owedSoft: '#14301F',
+  owe: '#FF7D70',
+  oweSoft: '#3A1916',
+  onOwe: '#1A0C0A',
+  warn: '#E5B04A',
+  warnSoft: '#33270F',
+  hero: '#2B2160',
+  onHero: '#F4F0FF',
+  heroDim: 'rgba(244,240,255,0.74)',
+  heroTile: 'rgba(255,255,255,0.08)',
+  ink: '#F1F1F6',
+  onInk: '#0E0E13',
+  scrim: 'rgba(0,0,0,0.62)',
+  key: '#1E1E27',
+  nav: 'rgba(33,33,43,0.96)',
+  navLine: 'rgba(255,255,255,0.08)',
+  hues: {
+    green: { bg: '#183526', fg: '#7FDCA6' },
+    amber: { bg: '#3A2E12', fg: '#F2C46B' },
+    red: { bg: '#3E1C1A', fg: '#FF9A8F' },
+    blue: { bg: '#1A2A47', fg: '#8DB4FF' },
+    violet: { bg: '#28214D', fg: '#B9ABFF' },
+    teal: { bg: '#133836', fg: '#74D8D1' },
+    rose: { bg: '#3E1A2A', fg: '#FF92B9' },
+    orange: { bg: '#3E2414', fg: '#FFAA73' },
+    gray: { bg: '#26262F', fg: '#B9B9C8' },
+  },
+}
 
-/** T3 Code's mobile shapes: pill buttons and chips, 16px fields, 20px grouped cards. */
+/** Pills for buttons and chips, 32 sheets, 24 cards, 18 fields, 15 tiles. */
 export const radius = {
-  /** Progress bars. */
-  bar: 2,
-  chip: 999,
-  /** Buttons. */
-  button: 999,
-  /** Inputs and other fields. */
-  control: 16,
-  /** Icon tiles in rows. */
-  icon: 10,
-  fab: 999,
-  tile: 16,
-  card: 20,
+  pill: 999,
+  sheet: 32,
+  hero: 28,
+  card: 24,
+  field: 18,
+  tile: 15,
 } as const
 
-export const space = {
-  /** Side gutter of every screen (T3's px-4). */
-  gutter: 16,
-  /** Between cards and sections. */
-  gap: 16,
-} as const
-
-/** T3 Code's mobile type scale: size and line height per role. */
-export const textRoles = {
-  micro: { size: 11, lineHeight: 14 },
-  caption: { size: 12, lineHeight: 16 },
-  label: { size: 13, lineHeight: 17 },
-  footnote: { size: 14, lineHeight: 19 },
-  body: { size: 16, lineHeight: 23 },
-  headline: { size: 18, lineHeight: 23 },
-  title: { size: 21, lineHeight: 28 },
-  largeTitle: { size: 26, lineHeight: 32 },
-  display: { size: 30, lineHeight: 36 },
-} as const
+/** 16px screen gutter; sections sit 26px apart. */
+export const space = { gutter: 16 } as const
 
 /**
- * DM Sans, T3 Code's mobile typeface. Android ignores `fontWeight` for
- * custom fonts, so each weight is its own family (the names `useFonts`
- * registers in `src/app/_layout.tsx`).
+ * Manrope for text and Bricolage Grotesque for display figures. Android
+ * ignores `fontWeight` for custom fonts, so every weight is its own family
+ * (the names `useFonts` registers in `src/app/_layout.tsx`).
  */
 export const fonts = {
   sans: {
-    400: 'DMSans_400Regular',
-    500: 'DMSans_500Medium',
-    600: 'DMSans_600SemiBold',
-    700: 'DMSans_700Bold',
+    500: 'Manrope_500Medium',
+    600: 'Manrope_600SemiBold',
+    700: 'Manrope_700Bold',
+    800: 'Manrope_800ExtraBold',
+  },
+  display: {
+    500: 'BricolageGrotesque_600SemiBold',
+    600: 'BricolageGrotesque_600SemiBold',
+    700: 'BricolageGrotesque_700Bold',
+    800: 'BricolageGrotesque_800ExtraBold',
   },
 } as const
 
 export type FontWeight = keyof typeof fonts.sans
+
+/** The card shadow from the mocks (light only; dark cards sit flat). */
+export function cardShadow(isDark: boolean) {
+  return isDark
+    ? {}
+    : {
+        shadowColor: '#141228',
+        shadowOpacity: 0.07,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 2,
+      }
+}

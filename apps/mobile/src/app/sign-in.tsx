@@ -1,21 +1,24 @@
 import { emailOtpRequest } from '@settlr/shared/schemas'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { StyleSheet, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { AuthScreen, AuthTitle, FormError } from '@/components/auth-screen'
-import { Brand } from '@/components/brand'
 import { Button } from '@/components/button'
-import { GoogleIcon } from '@/components/icons'
-import { Text } from '@/components/text'
+import { Field } from '@/components/controls'
+import { GoogleIcon, Icons } from '@/components/icons'
+import { TopBar } from '@/components/screen'
+import { Rise } from '@/components/surfaces'
+import { Label, Sub, Title } from '@/components/text'
+import { Tile } from '@/components/tiles'
 import { errorMessage, sendEmailOtp, signInWithGoogle } from '@/lib/auth-client'
-import { fonts, radius, useColors } from '@/theme'
+import { useColors } from '@/theme'
 
 export default function SignInScreen() {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   const router = useRouter()
   const [email, setEmail] = useState('')
-  const [focused, setFocused] = useState(false)
   const [pending, setPending] = useState<'send' | 'google' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,78 +54,74 @@ export default function SignInScreen() {
   }
 
   return (
-    <AuthScreen top={<Brand />}>
-      <AuthTitle title="Sign in" subtitle="We'll email you a 6-digit code." />
-
-      <View style={styles.field}>
-        <Text nativeID="email-label" size={13} weight={500} color="muted">
-          Email
-        </Text>
-        <TextInput
-          accessibilityLabelledBy="email-label"
-          value={email}
-          onChangeText={setEmail}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onSubmitEditing={requestCode}
-          placeholder="you@example.com"
-          placeholderTextColor={colors.faint}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="email"
-          textContentType="emailAddress"
-          returnKeyType="send"
-          editable={pending === null}
-          selectionColor={colors.accent}
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.surface,
-              borderColor: error ? colors.owe : focused ? colors.accent : colors.borderStrong,
-              color: colors.text,
-            },
-          ]}
-        />
-      </View>
-
-      {error ? <FormError>{error}</FormError> : null}
-
-      <Button onPress={requestCode} loading={pending === 'send'} disabled={pending === 'google'}>
-        Send code
-      </Button>
-
-      <View style={styles.divider}>
-        <View style={[styles.line, { backgroundColor: colors.divider }]} />
-        <Text size={13} color="faint">
-          or
-        </Text>
-        <View style={[styles.line, { backgroundColor: colors.divider }]} />
-      </View>
-
-      <Button
-        variant="outline"
-        icon={<GoogleIcon color={colors.text} />}
-        onPress={google}
-        loading={pending === 'google'}
-        disabled={pending === 'send'}
+    <KeyboardAvoidingView behavior="padding" style={[styles.flex, { backgroundColor: colors.bg }]}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 4, paddingBottom: insets.bottom + 24 }]}
       >
-        Continue with Google
-      </Button>
-    </AuthScreen>
+        <TopBar onBack={() => (router.canGoBack() ? router.back() : router.replace('/welcome'))} />
+        <Rise index={1} style={styles.intro}>
+          <Tile size={52} radius={18} bg={colors.accentSoft} fg={colors.accentInk} icon={Icons.mail} iconSize={24} />
+          <Title style={{ marginTop: 20 }}>What's your email?</Title>
+          <Sub size={15} lineHeight={22} style={{ marginTop: 8 }}>
+            We'll send you a 6-digit code. New to Settlr? The same code creates your account.
+          </Sub>
+        </Rise>
+        <Rise index={2} style={styles.field}>
+          <Field
+            label="Email"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text)
+              if (error) setError(null)
+            }}
+            onSubmitEditing={requestCode}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            returnKeyType="send"
+            autoFocus
+            editable={pending === null}
+            error={error}
+            hint="Friends can find you by this address to share a ledger."
+            inputStyle={{ fontSize: 17 }}
+          />
+        </Rise>
+        <View style={styles.flex} />
+        <View style={styles.actions}>
+          <Button wide icon={undefined} iconRight={Icons.arrowR} onPress={requestCode} loading={pending === 'send'} disabled={pending === 'google'} style={{ height: 56 }}>
+            Send code
+          </Button>
+          <View style={styles.or}>
+            <View style={[styles.line, { backgroundColor: colors.line }]} />
+            <Label>or</Label>
+            <View style={[styles.line, { backgroundColor: colors.line }]} />
+          </View>
+          <Button
+            wide
+            variant="outline"
+            icon={() => <GoogleIcon />}
+            onPress={google}
+            loading={pending === 'google'}
+            disabled={pending === 'send'}
+          >
+            Continue with Google
+          </Button>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
-  field: { gap: 8, marginTop: 14 },
-  input: {
-    height: 54,
-    paddingHorizontal: 16,
-    borderRadius: radius.control,
-    borderWidth: 1,
-    fontSize: 16,
-    fontFamily: fonts.sans[400],
-  },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 14, marginVertical: 8 },
+  flex: { flex: 1 },
+  content: { flexGrow: 1 },
+  intro: { paddingHorizontal: 24, paddingTop: 12 },
+  field: { paddingHorizontal: 24, paddingTop: 28 },
+  actions: { paddingHorizontal: 24, gap: 12, paddingTop: 24 },
+  or: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   line: { flex: 1, height: 1 },
 })

@@ -1,15 +1,40 @@
 ---
 title: Mobile app
-description: The Android app in apps/mobile, built with Expo and Expo Router.
+description: The Android app in apps/mobile, built with Expo and Expo Router in the Tally design language.
 icon: Smartphone
 ---
 
 `apps/mobile` (package `mobile`) is the Android app: **Expo** (SDK 58) with
-**Expo Router**, in TypeScript. It's built phase by phase; screens that
-aren't built yet show a placeholder. It reuses `@settlr/shared` (schemas,
-money and date formatting) and the Convex `api` types from
+**Expo Router**, in TypeScript. It reuses `@settlr/shared` (schemas, split
+math, money and date formatting) and the Convex `api` types from
 `@settlr/backend/convex/_generated/api`, and talks to the same Convex
 deployment as the web app, so changes on one show up live on the other.
+iOS comes later.
+
+## What's in it
+
+The design is the Android redesign in `design/android-redesign/` (the
+**Tally** design language: violet ink on cool paper, Bricolage Grotesque
+for figures, Manrope for text). The bottom bar has **Home**, **Groups**,
+a violet **+** in the middle, **Friends** and **Spending**.
+
+| Screen | Route | What it does |
+| --- | --- | --- |
+| Welcome, Sign in, Verify | `welcome`, `sign-in`, `verify` | Google, or an email code |
+| Home | `(tabs)/index` | Asks a new account its name; the Ask bar (opens the assistant), the overall balance, Settle next, balances, this month's share against the budget, upcoming bills, recent expenses |
+| Groups, a group, its balances | `(tabs)/groups`, `groups/[groupId]`, `groups/[groupId]/balances` | Group cards and archived groups; a group's expenses by day, your balance, trip budget, members, archive and delete; members' balances, the settle-up plan with Record and reminders, recent payments to confirm |
+| New group | `groups/new` | Name, currency, members (from friends too) |
+| Friends, a friend, Add friend | `(tabs)/friends`, `friends/[friendId]`, `friends/new` | Totals, friend requests, open and settled friends; the ledger by month, Settle up, Remind, Across everything, payment confirmations |
+| Add expense | `add` | Amount first on a keypad; where it goes (personal, a friend, a group), description with a guessed category, date, who paid and how it's split (equally, amounts, %, shares for groups; equally, in full or an amount with a friend), currency. Also edits (`?edit=<id>`) |
+| Settle up, Settled | `settle`, `settled` | A sheet with who pays whom, full balance or part, date, note, Pay with UPI, and Slide to record; then the check and the balance before and after |
+| Expense | `expense` | One expense of any kind: paid by, the split, the receipt, comments (groups), Edit, and Delete with Undo |
+| Spending, Budget | `(tabs)/spending`, `budget` | The month (Everything or Personal), the budget ring, where it went, by category, tags, the month's list; the monthly budget and category limits per currency |
+| Notifications, Profile, Assistant | `notifications`, `profile`, `assistant` | Requests and notifications (read on leaving); name, default currency, appearance, reduce motion, haptics, UPI id, weekly digest, the MCP connector URL, sign out; the chat |
+
+Not built yet (they're in the mockups): scanning receipts, splitting by
+items, another currency with a rate, recurring expenses, the monthly recap,
+the receipt inbox, the trash list, invite links, group insights and
+activity, Splitwise import and saved chats. The web app has all of them.
 
 ## Run it on your phone
 
@@ -17,8 +42,8 @@ deployment as the web app, so changes on one show up live on the other.
   <Step>
     ### Install Expo Go
 
-    Install **Expo Go** from the Play Store. While the app is being built,
-    it runs inside Expo Go, so you don't need Android Studio or an Expo account.
+    Install **Expo Go** from the Play Store. The app runs inside it, so you
+    don't need Android Studio or an Expo account.
   </Step>
   <Step>
     ### Add `apps/mobile/.env.local`
@@ -46,20 +71,21 @@ deployment as the web app, so changes on one show up live on the other.
     ```
 
     Scan the QR code with Expo Go. The phone and the computer must be on the
-    same Wi-Fi; otherwise run `pnpm dev:mobile --tunnel`.
+    same Wi-Fi; otherwise (or from a remote machine) run
+    `pnpm dev:mobile --tunnel`.
   </Step>
 </Steps>
 
 ## Sign in
 
-Signed-out people see `sign-in.tsx` (email, or Continue with Google) and
-`verify.tsx` (the 6-digit code). `src/app/_layout.tsx` reads the session
-with `authClient.useSession()` and guards the routes with
-`Stack.Protected`: signing in or out flips the guards and the router
-moves to the tabs or to sign-in by itself, so screens don't navigate after
-it. The session is kept in secure storage, so the app opens signed in.
-[Authentication](/docs/development/auth#the-android-app) covers how it
-works on the server.
+Signed-out people start on `welcome.tsx` (Continue with Google, or with
+email), then `sign-in.tsx` (the email) and `verify.tsx` (the 6-digit code).
+`src/app/_layout.tsx` reads the session with `authClient.useSession()` and
+guards the routes with `Stack.Protected`: signing in or out flips the
+guards and the router moves to the tabs or to Welcome by itself, so screens
+don't navigate after it. The session is kept in secure storage, so the app
+opens signed in. [Authentication](/docs/development/auth#the-android-app)
+covers how it works on the server.
 
 To sign in from Expo Go, the deployment's `TRUSTED_ORIGINS` must include
 `exp://` (the dev deployment's does). Without a real inbox, request a code
@@ -67,47 +93,62 @@ for `delivered@resend.dev` and read it with
 `pnpm exec convex data --component betterAuth verification` in
 `packages/backend`.
 
-## Checks
+## Checks and tests
 
 ```bash
 pnpm --filter mobile typecheck        # also part of pnpm typecheck
+pnpm --filter mobile test             # unit tests, also part of pnpm test
+pnpm --filter mobile e2e              # browser tests, also part of pnpm test:e2e
 pnpm --filter mobile export:android   # bundles the app the way a release build does
 ```
 
-`pnpm build` doesn't build the mobile app. Release APKs are built on GitHub
-Actions.
+`export:android` compiles to Hermes bytecode with an x86 binary; on an ARM
+machine add `--no-bytecode` to check the bundle. `pnpm build` doesn't build
+the mobile app. Release APKs are built on GitHub Actions.
+[Testing](/docs/development/testing#the-android-app) explains the tests.
 
 ## Layout
 
 | Path | Contents |
 | --- | --- |
-| `src/app/` | Expo Router routes. `_layout.tsx` loads the fonts, wraps everything in the Convex and Better Auth provider and guards the signed-in routes; `(tabs)/` holds the five tabs, `sign-in.tsx` and `verify.tsx` the signed-out screens |
-| `src/components/` | `Text` (DM Sans, coloured from the theme), `Button`, `Screen` (a tab's page), `AuthScreen` (the signed-out frame), `TabBar`, `Brand`, `icons` (Lucide, from `lucide-react-native`), and the temporary account button on Home |
-| `src/theme/` | Tokens from `design/DESIGN.md` (T3 Code's mobile palette, radii and type roles) for dark and light (`tokens.ts`), and `useColors()` |
-| `src/lib/` | The Convex client (`convex.ts`) and Better Auth (`auth-client.ts`: the client and the sign-in actions) |
+| `src/app/` | Expo Router routes (the table above). `_layout.tsx` loads the fonts and saved settings, wraps everything in the Convex and Better Auth provider, guards the signed-in routes, and renders the snackbar and confirm dialog hosts |
+| `src/components/` | `text` (`Text`, `Title`, `Headline`, `Sub`, `Label`), `button` (`Button`, `IconButton`, `usePressScale`), `controls` (`Chip`, `ChipRow`, `Segmented`, `Switch`, `Checkbox`, `Field`, `StepButton`), `surfaces` (`Card`, `Row`, `Rows`, `RowEnd`, `Section`, `DayHeading`, `Rise`, `Bar`, `Skeleton`, `Empty`), `tiles` (`Avatar`, `AvatarStack`, `Tile`, `GroupTile`, `CategoryTile`, `Badge`), `overlay` (`Sheet`, `toast()`, `confirm()`), `screen` (`Screen`, `TabHeader`, `TopBar`), `tab-bar`, `keypad`, `slider` (Slide to record), `ring`, `ledger` (expense and balance rows shared by screens), `icons` (Lucide) |
+| `src/theme/` | The Tally tokens for light and dark (`tokens.ts`: colours, label hues, radii, fonts), `useColors()`, `useIsDark()`, `useReduceMotion()` |
+| `src/lib/` | Plain logic with unit tests beside it: `balances.ts` (Home's sums), `expense-form.ts` (Add expense's splits and what it sends), `keypad.ts`, `format.ts`, `category.ts` (the guessed category), `prefs.ts` (settings kept on the phone); plus `convex.ts`, `auth-client.ts`, `me.ts`, `actions.ts` (`useRun`, `errorText`), `haptics.ts` |
 
 Imports use the `@/` alias for `apps/mobile/src`.
 
 ## Conventions
 
-- **Design**: the look is T3 Code's mobile design system (see
-  `design/DESIGN.md`): pill buttons, 16px fields, 20px cards, a 16px
-  gutter. The Android mockups in `design/screens/android/` are the layout
-  reference. The app follows the phone's light or dark setting
-  (`useColors()`); dark is the reference theme. Style with `StyleSheet`
-  and theme tokens, not hex values (the fixed group and avatar fills
-  excepted).
-- **Text**: use `<Text>` from `@/components/text`, not React Native's.
-  Android ignores `fontWeight` for custom fonts, so `Text` picks the DM Sans
-  family for each weight (`weight={600}`); `tabular` turns on tabular
-  figures for amounts. Sizes follow T3's roles in `textRoles` (16 for body;
-  11, 12, 13, 14, 18, 21, 26, 30), and semibold is for headings only.
-- **Tabs**: the bottom bar is `TabBar`, a flat bar with a 3 px accent
-  line over the active tab. A new tab needs a route in `src/app/(tabs)/`
-  and an entry in `TABS` in `tab-bar.tsx`.
+- **Design**: follow `design/android-redesign/` (open the boards in the
+  canvas, or read the `.dc.html` files and `settlr.css`). Style with
+  `StyleSheet` and the tokens from `useColors()`, never hex values; a
+  category, group or person gets its label hue from `CATEGORY_HUE` or
+  `toneFor(id)`. Cards are 24px, sheets 32px, fields 18px, tiles 15px,
+  buttons and chips pills; primary actions sit at the bottom.
+- **Money** says it in words: every amount carries "owes you", "you owe",
+  "you lent", a sign or an arrow, in green (`owed`) or red (`owe`).
+  Format with `money()` and `signedMoney()` from `@/lib/format` (whole
+  amounts drop `.00`; rupees group the Indian way).
+- **Text**: use `Text` from `@/components/text`, not React Native's.
+  Android ignores `fontWeight` for custom fonts, so `Text` picks the
+  Manrope (or, with `display`, Bricolage Grotesque) family per weight
+  (500, 600, 700, 800); `tabular` turns on tabular figures for amounts.
+- **Settings on the phone** (appearance, default currency, haptics, reduce
+  motion, where the last expense went) are in `src/lib/prefs.ts`, saved in
+  secure storage. Account settings (UPI id, digest) go through
+  `api.profiles`.
+- **Motion** uses React Native's `Animated` (Expo Go has no Reanimated
+  here): cards rise in (`Rise`), sheets slide up, presses scale. All of it
+  stops with Android's Remove animations or Profile's Reduce motion
+  (`useReduceMotion()`).
+- **Feedback**: `useRun()` runs a mutation and shows failures in the
+  snackbar; `toast()` shows a message (with an action such as Undo);
+  `confirm()` asks before something destructive.
 - **Packages**: add them with `npx expo install <pkg>` in `apps/mobile`,
   which picks the version that matches the Expo SDK. The app has to keep
   running in Expo Go, so only use native modules that Expo Go includes.
+  `react-native-web` and `react-dom` are there for the browser tests.
 - **Metro** is configured for the pnpm workspace automatically; there's no
   `metro.config.js`. After adding a workspace package, restart with
   `pnpm dev:mobile --clear`.

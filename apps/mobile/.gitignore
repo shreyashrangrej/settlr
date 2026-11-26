@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Browser tests (e2e/): the web build they serve
+dist-e2e/

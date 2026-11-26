@@ -44,6 +44,16 @@
         "CI",
         "E2E_DEV"
       ]
+    },
+    "mobile#e2e": {
+      "cache": false,
+      "passThroughEnv": [
+        "CI",
+        "E2E_DEV"
+      ],
+      "dependsOn": [
+        "web#e2e"
+      ]
     }
   }
 }

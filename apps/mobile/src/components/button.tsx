@@ -1,79 +1,198 @@
-import type { ReactNode } from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, View, type ViewStyle } from 'react-native'
+import { useRef, type ReactNode } from 'react'
+import {
+  ActivityIndicator,
+  Animated,
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native'
 
+import type { IconComponent } from '@/components/icons'
 import { Text } from '@/components/text'
-import { radius, useColors } from '@/theme'
+import { tick } from '@/lib/haptics'
+import { useColors, useReduceMotion } from '@/theme'
 
-type Variant = 'primary' | 'outline' | 'contrast' | 'ghost'
+export type Variant = 'primary' | 'tonal' | 'neutral' | 'outline' | 'contrast' | 'danger' | 'dangerTonal' | 'green'
 
-/** T3 Code's mobile buttons: pills, 48px tall (`size="lg"`) or 40px, medium weight. */
+const HEIGHT = { xl: 58, lg: 52, md: 40, sm: 34 } as const
+const FONT = { xl: 17, lg: 16, md: 14, sm: 13.5 } as const
+const PAD = { xl: 22, lg: 22, md: 16, sm: 14 } as const
+
+/** Pressing scales to `to` on a quick spring, unless motion is reduced. */
+export function usePressScale(to = 0.96) {
+  const scale = useRef(new Animated.Value(1)).current
+  const reduce = useReduceMotion()
+  const animate = (value: number) => {
+    if (reduce) return
+    Animated.spring(scale, { toValue: value, useNativeDriver: true, speed: 50, bounciness: 6 }).start()
+  }
+  return {
+    style: { transform: [{ scale }] },
+    onPressIn: () => animate(to),
+    onPressOut: () => animate(1),
+  }
+}
+
+/**
+ * Tally's pill buttons: 58px for the one primary action, 52 at the bottom
+ * of a screen, 40 in cards and 34 inside rows.
+ */
 export function Button({
   children,
   onPress,
   variant = 'primary',
   size = 'lg',
-  icon,
+  icon: Icon,
+  iconRight: IconRight,
   loading = false,
   disabled = false,
+  wide = false,
   style,
+  colors: custom,
   accessibilityLabel,
+  haptic = true,
 }: {
   children: ReactNode
   onPress?: () => void
   variant?: Variant
-  size?: 'lg' | 'md'
-  icon?: ReactNode
+  size?: keyof typeof HEIGHT
+  icon?: IconComponent
+  iconRight?: IconComponent
   loading?: boolean
   disabled?: boolean
-  style?: ViewStyle
+  wide?: boolean
+  style?: StyleProp<ViewStyle>
+  /** Overrides the variant's fill and text colour. */
+  colors?: { bg: string; fg: string; border?: string }
   accessibilityLabel?: string
+  haptic?: boolean
 }) {
   const colors = useColors()
-  const fill = {
-    primary: { backgroundColor: colors.accent, borderColor: colors.accent, text: colors.onAccent },
-    outline: { backgroundColor: 'transparent', borderColor: colors.borderStrong, text: colors.text },
-    contrast: { backgroundColor: colors.contrast, borderColor: colors.contrast, text: colors.contrastText },
-    ghost: { backgroundColor: 'transparent', borderColor: 'transparent', text: colors.muted },
-  }[variant]
+  const press = usePressScale()
+  const fills: Record<Variant, { bg: string; fg: string; border?: string }> = {
+    primary: { bg: colors.accent, fg: colors.onAccent },
+    tonal: { bg: colors.accentSoft, fg: colors.accentInk },
+    neutral: { bg: colors.surface2, fg: colors.text },
+    outline: { bg: 'transparent', fg: colors.text, border: colors.surface3 },
+    contrast: { bg: colors.ink, fg: colors.onInk },
+    danger: { bg: colors.owe, fg: colors.onOwe },
+    dangerTonal: { bg: colors.oweSoft, fg: colors.owe },
+    green: { bg: colors.owedSoft, fg: colors.owed },
+  }
+  const fill = custom ?? fills[variant]
   const inactive = disabled || loading
+  const iconSize = size === 'xl' || size === 'lg' ? 20 : 17
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled: inactive, busy: loading }}
-      disabled={inactive}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        size === 'lg' ? styles.lg : styles.md,
-        { backgroundColor: fill.backgroundColor, borderColor: fill.borderColor },
-        (pressed || disabled) && { opacity: disabled ? 0.5 : 0.85 },
-        style,
-      ]}
-    >
-      {loading ? (
-        <ActivityIndicator color={fill.text} />
-      ) : (
-        <View style={styles.row}>
-          {icon}
-          <Text size={size === 'lg' ? 16 : 14} weight={500} style={{ color: fill.text }}>
-            {children}
-          </Text>
-        </View>
-      )}
-    </Pressable>
+    <Animated.View style={[press.style, wide && styles.wide, style]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityState={{ disabled: inactive, busy: loading }}
+        disabled={inactive}
+        onPress={() => {
+          if (haptic) tick()
+          onPress?.()
+        }}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        style={[
+          styles.base,
+          {
+            height: HEIGHT[size],
+            paddingHorizontal: PAD[size],
+            backgroundColor: fill.bg,
+            borderWidth: fill.border ? 1.5 : 0,
+            borderColor: fill.border,
+            opacity: disabled ? 0.45 : 1,
+          },
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator color={fill.fg} />
+        ) : (
+          <View style={styles.row}>
+            {Icon ? <Icon color={fill.fg} size={iconSize} /> : null}
+            <Text weight={800} size={FONT[size]} lineHeight={FONT[size] + 4} color={fill.fg} numberOfLines={1}>
+              {children}
+            </Text>
+            {IconRight ? <IconRight color={fill.fg} size={iconSize} /> : null}
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
+  )
+}
+
+/** A round 44px icon button: bare, filled (`surface`) or neutral (`surface2`). */
+export function IconButton({
+  icon: Icon,
+  onPress,
+  label,
+  tone = 'bare',
+  size = 44,
+  iconSize = 22,
+  color,
+  bg,
+  dot = false,
+  disabled,
+}: {
+  icon: IconComponent
+  onPress?: () => void
+  label: string
+  tone?: 'bare' | 'filled' | 'neutral'
+  size?: number
+  iconSize?: number
+  color?: string
+  bg?: string
+  dot?: boolean
+  disabled?: boolean
+}) {
+  const colors = useColors()
+  const press = usePressScale(0.9)
+  const background =
+    bg ?? (tone === 'filled' ? colors.surface : tone === 'neutral' ? colors.surface2 : 'transparent')
+  return (
+    <Animated.View style={press.style}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        disabled={disabled}
+        onPress={() => {
+          tick()
+          onPress?.()
+        }}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        hitSlop={4}
+        style={[
+          styles.icon,
+          { width: size, height: size, borderRadius: size / 2, backgroundColor: background, opacity: disabled ? 0.4 : 1 },
+        ]}
+      >
+        <Icon color={color ?? colors.text} size={iconSize} />
+        {dot ? (
+          <View style={[styles.dot, { backgroundColor: colors.owe, borderColor: tone === 'filled' ? colors.surface : colors.bg }]} />
+        ) : null}
+      </Pressable>
+    </Animated.View>
   )
 }
 
 const styles = StyleSheet.create({
-  base: {
-    borderWidth: 1,
-    borderRadius: radius.button,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lg: { height: 48, paddingHorizontal: 20 },
-  md: { height: 40, paddingHorizontal: 16 },
+  base: { borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  wide: { alignSelf: 'stretch' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  icon: { alignItems: 'center', justifyContent: 'center' },
+  dot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2.5,
+  },
 })

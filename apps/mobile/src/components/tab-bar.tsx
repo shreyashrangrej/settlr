@@ -1,26 +1,51 @@
 import type { Tabs } from 'expo-router'
-import type { ComponentProps, ComponentType } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { useRouter } from 'expo-router'
+import { useEffect, useRef, type ComponentProps } from 'react'
+import { Animated, Pressable, StyleSheet, View } from 'react-native'
 
-import { AssistantIcon, FriendsIcon, GroupsIcon, HomeIcon, PersonalIcon } from '@/components/icons'
+import { usePressScale } from '@/components/button'
+import { Icons, type IconComponent } from '@/components/icons'
 import { Text } from '@/components/text'
-import { useColors } from '@/theme'
+import { tick } from '@/lib/haptics'
+import { useColors, useIsDark, useReduceMotion } from '@/theme'
 
 type BottomTabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0]
-type IconComponent = ComponentType<{ color: string; strokeWidth?: number }>
 
-// Keyed by route name in src/app/(tabs).
-const TABS: Record<string, { label: string; Icon: IconComponent }> = {
-  index: { label: 'Home', Icon: HomeIcon },
-  groups: { label: 'Groups', Icon: GroupsIcon },
-  friends: { label: 'Friends', Icon: FriendsIcon },
-  personal: { label: 'Personal', Icon: PersonalIcon },
-  assistant: { label: 'Assistant', Icon: AssistantIcon },
+// Keyed by route name in src/app/(tabs). Add sits in the middle.
+const TABS: Record<string, { label: string; icon: IconComponent }> = {
+  index: { label: 'Home', icon: Icons.home },
+  groups: { label: 'Groups', icon: Icons.users },
+  friends: { label: 'Friends', icon: Icons.user },
+  spending: { label: 'Spending', icon: Icons.pie },
 }
 
-/** The flat bottom bar from the Android mocks: a 3px accent bar over the active tab. */
+/**
+ * The floating bar from the mocks: 60px tall, 12px off the edges, the
+ * active tab in a violet pill, and the violet + in the middle that opens
+ * Add expense.
+ */
 export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
   const colors = useColors()
+  const isDark = useIsDark()
+  const router = useRouter()
+  const add = usePressScale(0.92)
+
+  const items = state.routes.filter((route) => TABS[route.name])
+  const half = Math.ceil(items.length / 2)
+
+  const tab = (route: (typeof state.routes)[number]) => {
+    const meta = TABS[route.name]!
+    const index = state.routes.indexOf(route)
+    const active = state.index === index
+    const onPress = () => {
+      const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
+      if (!active && !event.defaultPrevented) {
+        tick()
+        navigateToTab(route.key)
+      }
+    }
+    return <TabItem key={route.key} label={meta.label} icon={meta.icon} active={active} onPress={onPress} />
+  }
 
   return (
     <View
@@ -28,61 +53,111 @@ export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarPr
       style={[
         styles.bar,
         {
-          backgroundColor: colors.bgSidebar,
-          borderTopColor: colors.surface2,
-          paddingBottom: Math.max(insets.bottom, 8),
+          bottom: insets.bottom + 14,
+          backgroundColor: colors.nav,
+          borderColor: colors.navLine,
+          shadowOpacity: isDark ? 0.5 : 0.12,
         },
       ]}
     >
-      {state.routes.map((route, index) => {
-        const tab = TABS[route.name]
-        if (!tab) return null
-        const active = state.index === index
-        const color = active ? colors.accent : colors.muted
-        const onPress = () => {
-          const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
-          if (!active && !event.defaultPrevented) navigateToTab(route.key)
-        }
-        return (
-          <Pressable
-            key={route.key}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: active }}
-            accessibilityLabel={tab.label}
-            onPress={onPress}
-            style={styles.tab}
-          >
-            {active && <View style={[styles.indicator, { backgroundColor: colors.accent }]} />}
-            <tab.Icon color={color} strokeWidth={active ? 2 : 1.8} />
-            <Text size={12} weight={500} style={{ color }}>
-              {tab.label}
-            </Text>
-          </Pressable>
-        )
-      })}
+      {items.slice(0, half).map(tab)}
+      <Animated.View style={[styles.addCell, add.style]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add expense"
+          onPress={() => {
+            tick()
+            router.push('/add')
+          }}
+          onPressIn={add.onPressIn}
+          onPressOut={add.onPressOut}
+          style={[
+            styles.add,
+            { backgroundColor: colors.accent, shadowOpacity: isDark ? 0 : 0.28, elevation: isDark ? 0 : 6 },
+          ]}
+        >
+          <Icons.plus color={colors.onAccent} size={22} />
+        </Pressable>
+      </Animated.View>
+      {items.slice(half).map(tab)}
     </View>
+  )
+}
+
+function TabItem({
+  label,
+  icon: Icon,
+  active,
+  onPress,
+}: {
+  label: string
+  icon: IconComponent
+  active: boolean
+  onPress: () => void
+}) {
+  const colors = useColors()
+  const reduce = useReduceMotion()
+  const width = useRef(new Animated.Value(active ? 1 : 0)).current
+  useEffect(() => {
+    Animated.timing(width, { toValue: active ? 1 : 0, duration: reduce ? 0 : 250, useNativeDriver: false }).start()
+  }, [active, reduce, width])
+  const color = active ? colors.accentInk : colors.faint
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={styles.item}
+    >
+      <Animated.View
+        style={[
+          styles.pill,
+          {
+            width: width.interpolate({ inputRange: [0, 1], outputRange: [40, 48] }),
+            backgroundColor: width.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['transparent', colors.accentSoft],
+            }),
+          },
+        ]}
+      >
+        <Icon color={color} size={20} />
+      </Animated.View>
+      <Text weight={active ? 800 : 600} size={11} lineHeight={14} color={color}>
+        {label}
+      </Text>
+    </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
   bar: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    height: 60,
+    paddingHorizontal: 4,
+    borderRadius: 22,
+    borderWidth: 1,
     flexDirection: 'row',
-    borderTopWidth: 1,
-    minHeight: 72,
+    alignItems: 'center',
+    shadowColor: '#141228',
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
   },
-  tab: {
-    flex: 1,
-    minHeight: 64,
+  item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, height: 56 },
+  pill: { height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  addCell: { flex: 1, alignItems: 'center' },
+  add: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-  },
-  indicator: {
-    position: 'absolute',
-    top: -1,
-    width: 32,
-    height: 3,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
+    shadowColor: '#4A2BE0',
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
 })

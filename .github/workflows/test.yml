@@ -22,7 +22,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
-      - name: Backend tests
+      - name: Unit tests (backend and Android app)
         run: pnpm test
       - name: Install Chromium
         run: pnpm --filter web exec playwright install --with-deps chromium
@@ -39,4 +39,6 @@ jobs:
             apps/web/playwright-report
             apps/web/test-results
             apps/web/e2e/.state/backend.log
+            apps/mobile/playwright-report
+            apps/mobile/test-results
           retention-days: 7

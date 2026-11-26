@@ -1,32 +1,93 @@
 import { Text as RNText, type TextProps as RNTextProps, type TextStyle } from 'react-native'
 
-import { fonts, textRoles, useColors, type Colors, type FontWeight } from '@/theme'
+import { fonts, useColors, type Colors, type FontWeight } from '@/theme'
+
+type ColorToken = Exclude<keyof Colors, 'hues'>
 
 export type TextProps = RNTextProps & {
-  /** 400 (default), 500, 600 or 700. */
+  /** 500, 600, 700 (default) or 800. */
   weight?: FontWeight
-  /** Tabular figures, for numbers and amounts. */
+  /** Bricolage Grotesque, for titles and big figures. */
+  display?: boolean
+  /** Tabular figures, for amounts. */
   tabular?: boolean
-  /** Font size; T3's roles are in `textRoles` (body is 16). */
   size?: number
-  /** A colour token; defaults to `text`. */
-  color?: keyof Colors
+  lineHeight?: number
+  /** A colour token (defaults to `text`), or any colour string. */
+  color?: ColorToken | (string & {})
+  /** Letter spacing in em, like the mocks (-0.03 for titles). */
+  tracking?: number
+  align?: TextStyle['textAlign']
 }
 
-// Line heights of T3 Code's mobile type roles, by font size.
-const LINE_HEIGHT: Partial<Record<number, number>> = Object.fromEntries(
-  Object.values(textRoles).map((role) => [role.size, role.lineHeight]),
-)
-
-/** Text in DM Sans, coloured from the theme. */
-export function Text({ weight = 400, tabular, size = 16, color = 'text', style, ...props }: TextProps) {
+/** Manrope text (or Bricolage with `display`), coloured from the theme. */
+export function Text({
+  weight = 600,
+  display,
+  tabular,
+  size = 15,
+  lineHeight,
+  color = 'text',
+  tracking,
+  align,
+  style,
+  ...props
+}: TextProps) {
   const colors = useColors()
   const base: TextStyle = {
-    fontFamily: fonts.sans[weight],
+    fontFamily: (display ? fonts.display : fonts.sans)[weight],
     fontSize: size,
-    lineHeight: LINE_HEIGHT[size] ?? Math.round(size * 1.3),
-    color: colors[color],
+    lineHeight: lineHeight ?? Math.round(size * (display ? 1.18 : 1.38)),
+    color: color in colors ? (colors[color as ColorToken] as string) : color,
     fontVariant: tabular ? ['tabular-nums'] : undefined,
+    letterSpacing: tracking !== undefined ? tracking * size : undefined,
+    textAlign: align,
+    includeFontPadding: false,
   }
   return <RNText {...props} style={[base, style]} />
+}
+
+/** The screen title: Bricolage 700, 32/38. */
+export function Title({ children, style, ...props }: TextProps) {
+  return (
+    <Text
+      accessibilityRole="header"
+      display
+      weight={700}
+      size={32}
+      lineHeight={38}
+      tracking={-0.03}
+      style={style}
+      {...props}
+    >
+      {children}
+    </Text>
+  )
+}
+
+/** Section headline: Manrope 750, 17/24. */
+export function Headline({ children, ...props }: TextProps) {
+  return (
+    <Text accessibilityRole="header" weight={800} size={17} lineHeight={24} tracking={-0.01} {...props}>
+      {children}
+    </Text>
+  )
+}
+
+/** Supporting text: 13/18 muted. */
+export function Sub({ children, ...props }: TextProps) {
+  return (
+    <Text weight={500} size={13} lineHeight={18} color="muted" {...props}>
+      {children}
+    </Text>
+  )
+}
+
+/** The small label above amounts: 12/16 faint. */
+export function Label({ children, ...props }: TextProps) {
+  return (
+    <Text weight={600} size={12} lineHeight={16} color="faint" {...props}>
+      {children}
+    </Text>
+  )
 }

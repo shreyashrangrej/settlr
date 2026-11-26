@@ -1,14 +1,31 @@
-import { useColorScheme } from 'react-native'
+import { useEffect, useState } from 'react'
+import { AccessibilityInfo, useColorScheme } from 'react-native'
+
+import { usePrefs } from '@/lib/prefs'
 
 import { dark, light, type Colors } from './tokens'
 
 export * from './tokens'
 
-/** The palette for the phone's light or dark setting (dark when unknown). */
-export function useColors(): Colors {
-  return useColorScheme() === 'light' ? light : dark
+/** Dark when the viewer picked it in Profile, or the phone is set to dark. */
+export function useIsDark() {
+  const scheme = useColorScheme()
+  const { theme } = usePrefs()
+  return theme === 'system' ? scheme === 'dark' : theme === 'dark'
 }
 
-export function useIsDark() {
-  return useColorScheme() !== 'light'
+export function useColors(): Colors {
+  return useIsDark() ? dark : light
+}
+
+/** Android's Remove animations, or the Reduce motion switch in Profile. */
+export function useReduceMotion() {
+  const { reduceMotion } = usePrefs()
+  const [system, setSystem] = useState(false)
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setSystem)
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setSystem)
+    return () => sub.remove()
+  }, [])
+  return reduceMotion || system
 }

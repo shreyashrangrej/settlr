@@ -53,6 +53,10 @@ how a feature is shown to work. Every new feature or bug fix comes with:
   new account, `otherUser` a second one, `createGroup`, `addExpense`). Find
   elements by role and label, scoped to `getByRole('main')` or the
   `dialog` (the top bar repeats some buttons).
+- **For the Android app**: unit tests of its logic in
+  `apps/mobile/src/lib/*.test.ts` and a browser test of the flow in
+  `apps/mobile/e2e/*.spec.ts` (its web build at a phone's size; helpers in
+  `apps/mobile/e2e/fixtures.ts`).
 
 Run both and fix failures before pushing; when one fails, read the
 screenshot and `error-context.md` in `apps/web/test-results/`. In the final
@@ -124,26 +128,38 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `development/` for people working on it), ordered by each folder's
   `meta.json`; MDX components are registered in `components/mdx.tsx`.
 
-- `apps/mobile/`: the Android app, Expo (SDK 58) with Expo Router,
-  built in phases (the plan is in Notion). `src/app/` routes (`(tabs)/`
-  holds Home, Groups, Friends, Personal, Assistant), `src/theme/` the
-  `DESIGN.md` tokens for dark and light (`useColors()` follows the phone),
-  `src/components/` (`Text` picks the DM Sans family per weight, since
-  Android ignores `fontWeight` for custom fonts; `Button`, `TabBar`,
-  `Screen`, `icons` (Lucide via `lucide-react-native`)), `src/lib/convex.ts` and `src/lib/auth-client.ts`
-  (Better Auth's `expoClient`, session in `expo-secure-store`). Sign-in
-  is `sign-in.tsx` and `verify.tsx`; the root layout guards routes with
-  `Stack.Protected` on the session, so signing in or out needs no
-  navigation. Imports use `@/` for its `src/`. It
-  must keep running in Expo Go, so add packages with `npx expo install`
-  and only use native modules Expo Go ships. `.env.local` has
+- `apps/mobile/`: the Android app, Expo (SDK 58) with Expo Router, in
+  the Tally design language of `design/android-redesign/` (its reference:
+  violet on cool paper, Bricolage Grotesque figures, Manrope text, light
+  and dark). `src/app/` routes: `(tabs)/` holds Home, Groups, Friends and
+  Spending (the bar's middle + opens `add`, the amount-first Add expense
+  sheet that also edits); pushed screens are `groups/new`,
+  `groups/[groupId]` (+ `/balances`), `friends/new`, `friends/[friendId]`,
+  `expense` (any kind, by `kind`/`id`/`parent`), `settle` and `settled`,
+  `notifications`, `profile`, `budget`, `assistant`; signed out:
+  `welcome`, `sign-in`, `verify`. `src/theme/` the Tally tokens
+  (`useColors()` follows the phone unless Profile picks a theme),
+  `src/components/` (`Text` picks the Manrope or Bricolage family per
+  weight, since Android ignores `fontWeight` for custom fonts; `Button`,
+  `Chip`, `Segmented`, `Card`, `Row`, `Avatar`, `Tile`, `Badge`, `Sheet`,
+  `toast()`, `confirm()`, `TabBar`, `Keypad`, `SlideToConfirm`, `icons`
+  (Lucide via `lucide-react-native`)), `src/lib/` (unit-tested logic:
+  `balances`, `expense-form`, `keypad`, `format`; `prefs.ts` settings kept
+  on the phone in secure storage; `convex.ts`; `auth-client.ts`, Better
+  Auth's `expoClient`, session in `expo-secure-store`). The root layout
+  guards routes with `Stack.Protected` on the session, so signing in or
+  out needs no navigation. Imports use `@/` for its `src/`. It must keep
+  running in Expo Go, so add packages with `npx expo install` and only use
+  native modules Expo Go ships (motion is RN `Animated`). `.env.local` has
   `EXPO_PUBLIC_CONVEX_URL`, `EXPO_PUBLIC_CONVEX_SITE_URL` and
   `EXPO_PUBLIC_SITE_URL` (auth goes through the web app's origin, since
-  Google returns there). Check with
-  `pnpm --filter mobile typecheck` and `pnpm --filter mobile
-  export:android`; `pnpm build` doesn't build it, and release APKs are
-  built on GitHub Actions (no EAS). The Android mockups in
-  `design/screens/android/` are its reference. Docs:
+  Google returns there). Check with `pnpm --filter mobile typecheck`,
+  `pnpm --filter mobile test` (Vitest, `src/lib/*.test.ts`), `pnpm --filter
+  mobile e2e` (Playwright on its web build at phone size, against the e2e
+  backend; use the `seen`/`button` helpers, since screens behind the front
+  one stay in the page) and `pnpm --filter mobile export:android`
+  (`--no-bytecode` on ARM); `pnpm build` doesn't build it, and release APKs
+  are built on GitHub Actions (no EAS). Docs:
   `development/mobile-app.mdx`.
 - `design/`: the design handoff the UI follows. `DESIGN.md` has the tokens
   and component notes; `screens/*.html` are static mockups (web dashboard,

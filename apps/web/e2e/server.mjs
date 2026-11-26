@@ -6,7 +6,9 @@
 // Playwright runs this as its webServer (see playwright.config.ts) and stops
 // it afterwards; `pnpm --filter web e2e:server` runs it by hand so repeated
 // test runs can reuse it. `E2E_DEV=1` serves with `next dev` instead of a
-// production build (faster to start, slower per page).
+// production build (faster to start, slower per page). `E2E_BACKEND_ONLY=1`
+// starts just the Convex backend: the Android app's browser tests
+// (apps/mobile/e2e) need nothing else.
 
 import { execFileSync, spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
@@ -189,7 +191,8 @@ async function startWeb() {
 mkdirSync(STATE_DIR, { recursive: true })
 try {
   await startBackend()
-  await startWeb()
+  if (process.env.E2E_BACKEND_ONLY === '1') log(`backend ready on ${E2E.convexUrl}`)
+  else await startWeb()
 } catch (error) {
   console.error(error)
   stopAll()

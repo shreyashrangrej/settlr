@@ -9,8 +9,8 @@ each, and both run before anything is pushed.
 
 | Command (from the repo root) | Runs | Takes |
 | --- | --- | --- |
-| `pnpm test` | Backend tests (Vitest + `convex-test`) | About a second |
-| `pnpm test:e2e` | Browser tests (Playwright) | About 2 minutes from cold, seconds against a running test server |
+| `pnpm test` | Backend tests (Vitest + `convex-test`) and the Android app's unit tests (Vitest) | A few seconds |
+| `pnpm test:e2e` | Browser tests (Playwright) of the web app, then of the Android app | A few minutes from cold, seconds against a running test server |
 
 ## Backend tests
 
@@ -112,9 +112,43 @@ Playwright saves a screenshot, the page's accessibility tree
 trace with `pnpm --filter web exec playwright show-trace <path>/trace.zip`.
 The backend's own log is `apps/web/e2e/.state/backend.log`.
 
+## The Android app
+
+The Android app (`apps/mobile`) has two kinds of tests of its own.
+
+**Unit tests**, `apps/mobile/src/lib/*.test.ts` (Vitest), cover the plain
+logic the screens use: Home's sums of balances, Add expense's splits and the
+arguments it sends to Convex, the amount keypad, money and date formatting,
+the guessed category and the saved settings.
+
+**Browser tests**, `apps/mobile/e2e/*.spec.ts` (Playwright), run the app's
+own screens, built for the web with `react-native-web`, in Chromium at a
+Pixel 7's size. `apps/mobile/e2e/server.mjs`, which Playwright starts:
+
+1. starts the same throwaway Convex backend as the web tests
+   (`apps/web/e2e/server.mjs` with `E2E_BACKEND_ONLY=1`), or reuses one
+   that's running,
+2. exports the app for the web into `apps/mobile/dist-e2e`, pointed at it,
+3. serves it on http://localhost:3200 and forwards `/api/auth/*` to the
+   backend the way the web app's auth route does, so sign-in cookies are
+   first-party.
+
+The helpers in `apps/mobile/e2e/fixtures.ts`: `test` with `user` (a new
+signed-in account, through Welcome and the code), `createGroup`,
+`fillExpense` and `typeAmount` (the keypad), `slide` (Slide to record), and
+`seen(page, text)` / `button(page, name)`. Use those two rather than plain
+`getByText`: on the web, the screens behind the one in front stay in the
+page (pushed ones hidden, other tabs `inert`), and they only match what's
+in front.
+
+Turbo runs the Android browser tests after the web ones, since both use the
+same ports. While writing them, keep a server running with
+`pnpm --filter mobile e2e:server` (restart it after changing the app, which
+it builds once).
+
 ## CI
 
-`.github/workflows/test.yml` runs the type check, both test suites and the
+`.github/workflows/test.yml` runs the type check, the unit and browser tests of both apps and the
 docs build on every push to `main` and on pull requests (the browser tests
 include a production build of the web app), and uploads the Playwright
-report, screenshots and traces when a browser test fails.
+reports, screenshots and traces (of both apps) when a browser test fails.

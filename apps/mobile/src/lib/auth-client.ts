@@ -73,3 +73,12 @@ export async function signOut() {
   const { error } = await authClient.signOut()
   throwIfError(error)
 }
+
+/** Renames the signed-in user (Convex picks the new name up on its next token). */
+export async function updateName(name: string) {
+  const { error } = await authClient.updateUser({ name })
+  throwIfError(error)
+}
+
+/** The web app's origin: MCP connector URL, docs links. */
+export const SITE_URL = baseURL
