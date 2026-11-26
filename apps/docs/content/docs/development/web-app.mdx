@@ -66,6 +66,11 @@ export function FriendsView() {
 | `/receipts/[source]/[expenseId]` | server | The receipt's URL and its expense are prefetched; images show inline, PDFs in the browser's viewer |
 | `/groups/[groupId]/insights`, `/notifications` | data on the server, UI in the browser | The UI uses the viewer's locale, time zone and clock, so it renders in `<ClientOnly>` |
 | `/assistant` | server | Only whether the assistant is set up is prefetched; the conversation lives in the browser |
+| `/recurring`, `/trash`, `/inbox`, `/recap` | server | Prefetched like the other signed-in pages |
+| `/groups/[groupId]/activity` | browser | Times are shown in the viewer's time zone |
+| `/groups/import` | server shell | The Splitwise file is read in the browser |
+| `/join/[token]` | server, then browser | Signed out: the sign-in form, coming back here. Signed in: pick who you are and join |
+| `/share/[token]` | browser | Public read-only group page (no sign-in) |
 | `/settings` | browser | Preferences live in localStorage |
 | `/connect` | server | OAuth step for MCP clients: sign in, then approve the app |
 | `/api/health` | route handler | JSON liveness probe |

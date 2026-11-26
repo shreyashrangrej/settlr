@@ -19,7 +19,8 @@ and, converted to JSON Schema, tells the model what to send.
 | `add_group_expense` | `api.groups.addExpense` |
 | `create_group` | `api.groups.create` |
 | `add_friend` | `api.friends.create` |
-| `search_expenses` | reads through `internal.assistant.search` |
+| `search_expenses` | reads through `internal.assistant.search` (with your share by category and by month) |
+| `budget_status` | `api.budgets.list` and `api.budgets.monthSpending` |
 | `update_expense` | `api.personal.update`, `api.friends.updateExpense` or `api.groups.updateExpense` |
 | `record_payment` | `api.friends.addPayment` or `api.groups.addPayment` |
 | `delete_expense` | `api.personal.remove`, `api.friends.removeEntry` or `api.groups.removeExpense` |
@@ -53,7 +54,9 @@ viewer's local date and default currency:
    expenses added, updated and found, payments recorded, groups and friends
    created, and deletions to confirm.
 
-The history is trimmed to the last 12 messages, and each message's length is
+Each finished turn is saved with `api.chats.append` (`assistantChats` and
+`assistantMessages`), so the page can reopen a conversation. The history is
+trimmed to the last 12 messages, and each message's length is
 capped. Each reply's **memo** (the expenses it was about, by ref, so "make
 that 60" works) goes back to the model as a separate system message after
 that reply, not inside it; models copy what's in their own earlier replies,

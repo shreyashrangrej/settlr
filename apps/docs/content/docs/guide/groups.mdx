@@ -21,14 +21,26 @@ expense dialog as everywhere else in Settlr (editing an expense from its
 category, date and optional receipt like any other, plus:
 
 - **Paid by**: the member who paid.
-- **Split among**: the members who share it. It's split **equally** between
-  them, to the cent. When the amount doesn't divide evenly, the leftover
-  cents go to the first members in the group's order, so the shares always
-  add up to the total.
+- **Split**: who shares it, and how:
+  - **Equally** between the members you tick, to the cent. When the amount
+    doesn't divide evenly, the leftover cents go to the first members in
+    the group's order, so the shares always add up to the total.
+  - **Amounts**: type what each person owes; they must add up to the total.
+  - **%**: percentages that add up to 100.
+  - **Shares**: weights, like 2 for a couple and 1 for one person.
+  - **Items**: list the bill's lines and tick who had each; tax, tip or a
+    discount is spread in proportion to what each person had.
 
 Group expenses are always in the group's currency. As you fill it in, the
 dialog shows each member's share and your balance in the group before and
-after the expense.
+after the expense. If you paid in another currency, tick **Paid in another
+currency**, enter what you paid and the rate (**Get rate** fetches the
+European Central Bank's rate for that day); the converted amount is what's
+split.
+
+Expenses can also carry **tags**, be filled in from a receipt photo
+(**Fill from receipt**), and **repeat** (the **Doesn't repeat** chip; see
+[Recurring expenses](/docs/guide/recurring)).
 
 ![Adding a group expense: amount, category, who paid, and who it's split between](/screenshots/group-expense.png)
 
@@ -88,3 +100,33 @@ accepted a friend request. A linked member:
 - is notified when they're added, and when expenses or payments involve them.
 
 Only the owner can edit or delete the group itself.
+
+## Invite people
+
+From the group's **⋯** menu, the owner can turn on a **join link**. Anyone
+who opens it signs in and joins, either as a member already in the list
+(keeping that member's expenses and balance) or as a new member. Turning the
+link off, or making a new one, stops the old link working.
+
+## Share a read-only view
+
+The **⋯** menu also has a **read-only link**: a page with the balances, the
+settle-up plan and the latest expenses that anyone can open without signing
+in. Nobody can change anything there.
+
+## Activity and comments
+
+**Activity** lists everything that happened in the group: expenses added,
+edited, deleted and restored, payments, comments and people joining. Each
+expense has a comment thread (row menu → **Comments**); people who are part
+of the expense are told about new comments.
+
+## Budget, export and archive
+
+- **Set a budget** (owner): a total for the group, like a trip budget. The
+  group page shows how much is left.
+- **Export CSV**: every expense and payment in the group as a spreadsheet.
+- **Archive** (owner): once everyone is settled up, move the group under
+  *Archived* on the groups page. Unarchive it at any time.
+
+Deleted expenses go to the [Trash](/docs/guide/trash) for 30 days.

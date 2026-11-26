@@ -23,6 +23,8 @@ pnpm exec convex env set SITE_URL=https://settlr.example.com
 | `RESEND_API_KEY` | No | Emails sign-in codes; without it they're only logged |
 | `AUTH_EMAIL_FROM` | No | Sender for sign-in emails (default `Settlr <onboarding@resend.dev>`) |
 | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | No | The chat assistant, off until both are set. The model must support tool calling |
+| `OPENROUTER_VISION_MODEL` | No | The model that reads receipt photos ("Fill from receipt"); falls back to `OPENROUTER_MODEL`, which then must accept images |
+| `INBOUND_EMAIL_DOMAIN`, `INBOUND_EMAIL_SECRET` | No | The email inbox, off until both are set. Each user gets `<token>@INBOUND_EMAIL_DOMAIN`; your email provider posts each email as JSON (`to`, `from`, `subject`, `text`, or Resend's `data` wrapper) to `<CONVEX_SITE_URL>/inbound-email` with the secret in an `x-inbound-secret` header |
 
 <Callout title="Testing sign-in locally">
   Request a code for `delivered@resend.dev` (Resend's test address), then

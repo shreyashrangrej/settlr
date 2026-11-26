@@ -50,9 +50,18 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 
 - `convex/`: the Convex backend, where all app data lives. `schema.ts`
   (friends, friendEntries, groups, groupExpenses, groupPayments,
-  personalExpenses, receipts, budgets, notifications), `friends.ts`, `groups.ts`,
+  personalExpenses, receipts, budgets, notifications, profiles, activity,
+  comments, trash, recurring, assistantChats/assistantMessages, inboxItems),
+  `friends.ts`, `groups.ts` (also invite/share links, activity, comments,
+  payment confirmation, archive, group budget),
   `personal.ts`, `budgets.ts`, `notifications.ts`, `receipts.ts` (queries
-  and mutations), `expenses.ts` (`month`: every expense you're part of in
+  and mutations), `trash.ts` (deleted expenses, restorable for 30 days),
+  `recurring.ts` (templates a daily cron in `crons.ts` turns into expenses),
+  `profiles.ts` (UPI id, weekly digest, inbox address), `imports.ts`
+  (Splitwise), `exports.ts` (CSV rows), `chats.ts` (saved assistant chats),
+  `inbox.ts` (forwarded emails, `/inbound-email` in `http.ts`), `scan.ts`
+  (receipt photo → form fields), `fx.ts` (exchange rates), `digest.ts` and
+  `notifyEmail.ts` (emails), `expenses.ts` (`month`: every expense you're part of in
   a month, across groups, friends and personal, for `/expenses` and the
   dashboard's recent list), `assistant.ts` (the `/assistant` chat: an action that
   calls OpenRouter with tool calling, plus the internal queries its search
@@ -66,7 +75,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   over MCP for Claude/ChatGPT: `handle` answers one JSON-RPC request as the
   caller, deleting is a real tool marked destructive; plus the connected
   apps for Settings), and `lib/` (`requireUser`, value checks in `input.ts`,
-  balance math in `ledger.ts`, receipt attach/delete in `receipts.ts`, enum
+  balance math in `ledger.ts` (unequal splits: `groupExpenses.split.owed`,
+  resolved by `groupSplit.ts` with the shared math in
+  `packages/shared/src/split.ts`), receipt attach/delete in `receipts.ts`, enum
   validators). `auth.ts` is the Better Auth instance
   (email OTP + Google, `@better-auth/expo` for the Android app with
   `settlr://` always trusted, plus Better Auth's `mcp` OAuth plugin and the
@@ -81,8 +92,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 - `packages/shared/src/`: `@settlr/shared`, TypeScript source used by the
   web app and Convex. `schemas.ts` (`@settlr/shared/schemas`: currencies,
   categories and the zod schemas shared by search params and forms, with
-  the limits `convex/lib/input.ts` also checks) and `format.ts`
-  (`@settlr/shared/format`: money and date formatting). The web app
+  the limits `convex/lib/input.ts` also checks), `format.ts`
+  (`@settlr/shared/format`: money and date formatting), `split.ts`
+  (`@settlr/shared/split`: split math) and `csv.ts` (`@settlr/shared/csv`). The web app
   compiles it through `transpilePackages`; add new files to its `exports`.
 - `apps/docs/`: the documentation site (Fumadocs on Next.js). Pages are
   MDX in `content/docs` (`guide/` for people using the app,
@@ -113,8 +125,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 - `design/`: the design handoff the UI follows. `DESIGN.md` has the tokens
   and component notes; `screens/*.html` are static mockups (web dashboard,
   add-expense, assistant, and three mobile screens). Their data is sample
-  data: things in them the backend doesn't have (UPI, reminders, upcoming
-  bills, group budgets, exact/percent splits, saved chats, undo) aren't built.
+  data. UPI, reminders, upcoming bills, group budgets, exact/percent splits,
+  saved chats and undo are now built on the web (not in the Android app yet).
 - `src/app/`: the App Router. `layout.tsx` is the root document (reads the
   auth session, renders `<Providers>` and the `<AppShell>`), `page.tsx` the
   landing hero. `(app)/` is the signed-in area: its layout redirects to `/`
@@ -359,8 +371,10 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   key, sign-in codes are only logged: read them with
   `pnpm exec convex logs`. The assistant needs `OPENROUTER_API_KEY` and
   `OPENROUTER_MODEL` (an OpenRouter model slug that supports tool calling);
-  without them `/assistant` says it isn't set up. Set values with the
-  `NAME=value` form.
+  without them `/assistant` says it isn't set up. Receipt scanning uses
+  `OPENROUTER_VISION_MODEL` (falls back to `OPENROUTER_MODEL`); the email
+  inbox needs `INBOUND_EMAIL_DOMAIN` and `INBOUND_EMAIL_SECRET`. Set values
+  with the `NAME=value` form.
 - MCP OAuth: the issuer is `SITE_URL`, so test MCP clients against that
   origin. The token exchange calls the Convex plugin's `getToken` endpoint
   with a stand-in session (`mcpBridge` in `convex/auth.ts`), which leans on

@@ -106,9 +106,47 @@ unattached a day after upload. Index: `by_storageId`.
 `userId`, `kind`, `actorName`, `read`, plus optional `description`,
 `amountCents`, `currency`, `friendId`, `groupId` and `groupName`. Kinds:
 `friend_expense`, `friend_payment`, `friend_entry_updated`,
-`group_expense`, `group_expense_updated`, `group_payment`, `group_added`
-and `request_accepted`. Amounts are from the recipient's side. Indexes:
-`by_userId`, `by_userId_and_read`.
+`group_expense`, `group_expense_updated`, `group_payment`, `group_added`,
+`request_accepted`, `reminder`, `payment_confirmed`, `payment_rejected`,
+`comment` and `group_joined`. Amounts are from the recipient's side.
+Indexes: `by_userId`, `by_userId_and_read`.
+
+### Splits, currencies and tags on expenses
+
+- `groupExpenses.split` (optional): an unequal split. `mode` is `exact`,
+  `percent`, `shares` or `items`; `owed` maps member id to cents and always
+  adds up to the amount; `inputs` (cents, basis points or counts) and
+  `items`/`extraCents` keep what was typed so it can be edited. Convex
+  recomputes `owed` from them (`lib/groupSplit.ts`, with the math in
+  `packages/shared/src/split.ts`). Without it, the expense is split equally
+  between `splitAmong`.
+- `groupExpenses.original` (optional): the amount and currency actually
+  paid, and the rate used to convert it into the group's currency.
+- `friendEntries` expenses: `split` can be `exact`, with `owedCents` what the
+  person who didn't pay owes.
+- `tags` (optional, up to 5, lowercase) on personal, friend and group
+  expenses; `recurringId` on expenses a recurring template added.
+- Payments: `recordedBy` and `unconfirmed` (friend entries and
+  `groupPayments`) for payments waiting for the recipient to confirm.
+
+### New tables
+
+- `profiles`: per-user settings other people or the server need: `upiId`,
+  `weeklyDigest`, `inboxToken`.
+- `activity`: a group's log (`by_groupId`), written in the same mutation as
+  each change.
+- `comments`: on group expenses (`by_expenseId`).
+- `trash`: deleted expenses for 30 days, as the fields needed to put them
+  back (`item` is a union by kind). A daily cron purges old rows and their
+  receipts.
+- `recurring`: templates a daily cron (`crons.ts`) turns into expenses on
+  `nextDate`, as their owner (`by_paused_and_nextDate`).
+- `assistantChats` and `assistantMessages`: saved assistant conversations.
+- `inboxItems`: forwarded emails and the draft expense read from each.
+
+`groups` also gained `archived`, `inviteToken`, `shareToken` (indexed) and
+`budgetCents`; `friends` gained `upiId` and `lastRemindedAt`; `budgets`
+gained `byCategory`.
 
 ## Linked friends
 
