@@ -147,9 +147,11 @@ button { font-family: inherit; cursor: pointer; }
 /* ---------- Chrome ---------- */
 .topbar { display: flex; align-items: center; gap: 2px; height: 60px; padding: 0 8px; }
 .topbar .tt { flex: 1; min-width: 0; font: 750 18px/24px var(--sans); letter-spacing: -.01em; padding-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Floating, slim bar: 60px tall, 12px off the edges, labels at 11px. */
-.nav { position: absolute; left: 12px; right: 12px; bottom: 14px; z-index: 20; height: 60px; padding: 0 4px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; border-radius: 22px; background: var(--surface); box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgba(20,18,40,.10); }
-.dark .nav { background: var(--surface-2); box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgba(0,0,0,.45); }
+/* Floating glass bar: content scrolls behind it, blurred. 60px tall, 12px off the edges. */
+.scr:has(> .nav) > .scroll { bottom: 0 !important; }
+.scr:has(> .nav) > .scroll::after { content: ""; display: block; height: 84px; }
+.nav { position: absolute; left: 12px; right: 12px; bottom: 14px; z-index: 20; height: 60px; padding: 0 4px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; border-radius: 22px; background: rgba(255,255,255,.62); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), 0 0 0 1px rgba(20,18,40,.06), 0 10px 30px rgba(20,18,40,.12); }
+.dark .nav { background: rgba(33,33,43,.55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 10px 30px rgba(0,0,0,.5); }
 .nav-i { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--faint); font: 650 11px/14px var(--sans); }
 .nav-i .pill { width: 40px; height: 26px; border-radius: 13px; display: flex; align-items: center; justify-content: center; transition: background .25s var(--ease), width .25s var(--ease); }
 .nav-i .ic { width: 20px; height: 20px; }
