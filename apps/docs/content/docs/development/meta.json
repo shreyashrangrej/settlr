@@ -10,6 +10,7 @@
     "web-app",
     "mobile-app",
     "environment",
+    "testing",
     "deployment",
     "writing-docs"
   ]

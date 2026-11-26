@@ -22,6 +22,8 @@ pnpm dev:docs         # the docs, http://localhost:3001
 pnpm dev:mobile       # the Android app in Expo Go (scan the QR code)
 pnpm dev:convex       # push packages/backend/convex to the dev deployment on every change (run alongside dev)
 pnpm typecheck        # every workspace (web/docs: next typegen && tsc --noEmit)
+pnpm test             # backend tests (Vitest + convex-test), about a second
+pnpm test:e2e         # browser tests (Playwright) against a throwaway local backend
 pnpm build            # builds apps/web and apps/docs
 pnpm start            # run the web app's production build
 ```
@@ -30,11 +32,32 @@ One workspace: `pnpm --filter web build`, `pnpm --filter docs dev`. Run
 the Convex CLI (`pnpm exec convex ...`) from `packages/backend`, where its
 `.env.local` (`CONVEX_DEPLOYMENT`) is.
 
-There is no test suite or linter yet. Before committing, run
-`pnpm typecheck && pnpm build`. The build is also what enforces the
+Before committing, run `pnpm typecheck && pnpm test && pnpm test:e2e &&
+pnpm build`; don't push with a failing test. The build is also what enforces the
 server/client boundaries (`server-only` imports, client functions called
-from server components). When a change alters what the app does or how it's
+from server components). There's no linter yet. When a change alters what the app does or how it's
 built, update the matching page in `apps/docs/content/docs` too.
+
+## Testing (required for every feature)
+
+The user doesn't test changes by hand in a browser, so automated tests are
+how a feature is shown to work. Every new feature or bug fix comes with:
+
+- **Backend tests** in `packages/backend/convex/<module>.test.ts`
+  (`convex-test`; helpers in `convex/test.setup.ts`: `setup()`,
+  `as(t, 'Alice')`). Cover the rules, not only the happy path: the
+  numbers (balances, splits, totals after edits and deletes), bad input
+  refused, and someone else's data unreadable and unchangeable.
+- **A browser test** of the feature's main flow in `apps/web/e2e/*.spec.ts`
+  (Playwright; helpers in `e2e/fixtures.ts`: the `user` fixture is a signed-in
+  new account, `otherUser` a second one, `createGroup`, `addExpense`). Find
+  elements by role and label, scoped to `getByRole('main')` or the
+  `dialog` (the top bar repeats some buttons).
+
+Run both and fix failures before pushing; when one fails, read the
+screenshot and `error-context.md` in `apps/web/test-results/`. In the final
+message, say which tests were added and that they pass. A bug fix gets a
+test that fails without the fix. Docs: `development/testing.mdx`.
 
 ## Git workflow
 
@@ -426,6 +449,17 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   remove it. Don't re-run `shadcn init`: it would overwrite the theme in
   `styles.css`. The `data-horizontal`/`data-vertical` variants that init
   would add are defined there by hand.
+- Browser tests (`apps/web/e2e/server.mjs`) run the open-source Convex
+  backend binary (pinned `BACKEND_VERSION`, downloaded once into
+  `apps/web/e2e/.state`) on ports 3310/3311 and the app on 3100, built into
+  `.next-e2e` (`distDir` comes from `NEXT_DIST_DIR`; Next adds that folder to
+  `tsconfig.json`'s `include`, which is expected). A running test server is
+  reused (`pnpm --filter web e2e:server`); restart it after changing
+  `convex/`. Sign-in codes are read from its `verification` table by
+  `e2e/admin.ts`.
+- `pnpm-workspace.yaml` overrides `rolldown` to 1.3.3 because 1.3.4 (needed
+  by Vite, which Vitest uses) was published without its tarball. Drop the
+  override once a later rolldown release installs.
 - Add packages to the workspace that uses them (`pnpm --filter web add
   <pkg>`), not the root. After adding packages while `pnpm dev` is
   running, restart it.

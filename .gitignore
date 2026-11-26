@@ -13,3 +13,9 @@ todos.json
 .netlify
 .env*
 .turbo
+
+# Browser tests (apps/web/e2e)
+.next-e2e
+apps/web/e2e/.state
+test-results
+playwright-report

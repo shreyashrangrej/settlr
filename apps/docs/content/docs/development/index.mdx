@@ -88,6 +88,8 @@ workspaces that define it.
 | `pnpm dev:docs` | These docs on [localhost:3001](http://localhost:3001) |
 | `pnpm dev:convex` | `convex dev`: pushes `packages/backend/convex` to your dev deployment on every change |
 | `pnpm typecheck` | Type-checks every workspace |
+| `pnpm test` | The backend tests ([Testing](/docs/development/testing)) |
+| `pnpm test:e2e` | The browser tests, against a throwaway local backend |
 | `pnpm build` | Builds the web app and the docs |
 | `pnpm start` | Serves the web app's production build |
 
@@ -96,16 +98,17 @@ To run a script in one workspace, filter it:
 
 ## Before you push
 
-There's no test suite or linter yet. Run:
+Run the type check, the tests and the build:
 
 ```bash
-pnpm typecheck && pnpm build
+pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 ```
 
+`pnpm test` runs the backend tests and `pnpm test:e2e` the browser tests;
+a new feature comes with both (see [Testing](/docs/development/testing)).
 The build also enforces the server/client boundaries: a `server-only`
 import reaching a client bundle, or a server component calling a function
-from a `'use client'` module, fails it. Then try the change in the browser,
-in dark mode and at phone width.
+from a `'use client'` module, fails it. There's no linter yet.
 
 ## Calling Convex functions as a test user
 

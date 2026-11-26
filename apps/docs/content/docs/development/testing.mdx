@@ -1,0 +1,120 @@
+---
+title: Testing
+description: Backend tests with convex-test, browser tests with Playwright against a throwaway backend.
+icon: FlaskConical
+---
+
+Settlr has two kinds of automated tests. Every new feature gets some of
+each, and both run before anything is pushed.
+
+| Command (from the repo root) | Runs | Takes |
+| --- | --- | --- |
+| `pnpm test` | Backend tests (Vitest + `convex-test`) | About a second |
+| `pnpm test:e2e` | Browser tests (Playwright) | About 2 minutes from cold, seconds against a running test server |
+
+## Backend tests
+
+`packages/backend/convex/*.test.ts`. [`convex-test`](https://docs.convex.dev/testing/convex-test)
+runs the real queries and mutations against an in-memory Convex in the
+edge runtime, so there's no deployment, no browser and no sign-in. This is
+where most tests belong: balances, splits, settling up, the trash, and who
+can see or change what.
+
+```ts
+import { api } from './_generated/api'
+import { as, setup, today } from './test.setup'
+
+test('someone outside the group can’t see it', async () => {
+  const t = setup()
+  const groupId = await as(t, 'Alice').mutation(api.groups.create, {
+    name: 'Goa trip',
+    currency: 'INR',
+    members: ['Bob'],
+  })
+  expect(await as(t, 'Mallory').query(api.groups.get, { groupId })).toBeNull()
+})
+```
+
+`test.setup.ts` has the helpers: `setup()` makes a fresh backend, and
+`as(t, 'Alice')` signs in a test user (it sets the identity's
+`tokenIdentifier`, name and email, which is what `requireUser` reads).
+Test a feature's rules as well as its happy path: the wrong user is
+refused, bad values throw, and totals stay right after edits and deletes.
+
+The Convex CLI skips files with more than one dot in their name, so test
+files are never deployed. `pnpm --filter @settlr/backend test:watch` reruns
+them as you save.
+
+## Browser tests
+
+`apps/web/e2e/*.spec.ts`. Playwright drives a headless Chrome through the
+real app: the sign-in form, dialogs and live updates. Keep these to a
+feature's main flow; the detailed cases go in the backend tests.
+
+They never touch the dev deployment. `apps/web/e2e/server.mjs`, which
+Playwright starts for you:
+
+1. downloads the open-source Convex backend once (a pinned version, into
+   `apps/web/e2e/.state`),
+2. starts it on ports 3310/3311 with an empty database, sets `SITE_URL`,
+   `BETTER_AUTH_SECRET` and `TRUSTED_ORIGINS`, and deploys
+   `packages/backend/convex` to it,
+3. builds the web app against it into `.next-e2e` (so `pnpm dev` and
+   `pnpm build` are left alone) and serves it on http://localhost:3100.
+
+There's no `RESEND_API_KEY` there, so sign-in codes stay in Better Auth's
+`verification` table, and `e2e/admin.ts` reads them. The helpers in
+`e2e/fixtures.ts`:
+
+| Helper | Does |
+| --- | --- |
+| `test` with `user` | Gives the test a page signed in as a new account |
+| `otherUser(browser, 'Bob')` | A second account in its own browser context |
+| `signIn(page, email)` | Signs in through the login form, filling in the name step for new accounts |
+| `createGroup(page, name, members)` | Creates a group through the form |
+| `addExpense(page, amount, description)` | Adds an expense from an expense page's "Add expense" button |
+
+```ts
+import { addExpense, createGroup, expect, test } from './fixtures'
+
+test('split an expense', async ({ user: { page } }) => {
+  await createGroup(page, 'Goa trip', ['Bob', 'Cara'])
+  await addExpense(page, '90', 'Dinner')
+  await expect(
+    page.getByRole('main').getByRole('region', { name: 'Your balance' }),
+  ).toContainText('+$60.00')
+})
+```
+
+Every account is new (`uniqueEmail`), so tests can run in parallel and
+against a server that's already up. Find elements the way people do, by
+role and label (`getByRole`, `getByLabel`), and scope them to
+`getByRole('main')` or the `dialog`, since the top bar repeats some
+buttons ("Add expense" is also the "New" menu).
+
+### Running them faster
+
+The cold start is mostly the production build. While you write tests,
+start the test server once and leave it running; `pnpm test:e2e` reuses it:
+
+```bash
+pnpm --filter web e2e:server             # production build
+E2E_DEV=1 pnpm --filter web e2e:server   # next dev: starts at once, compiles pages on first visit
+```
+
+Restart it after changing `convex/` (it deploys once, at start) and, for a
+production build, after changing the app.
+
+### When one fails
+
+Playwright saves a screenshot, the page's accessibility tree
+(`error-context.md`) and a trace under `apps/web/test-results/`. Open the
+trace with `pnpm --filter web exec playwright show-trace <path>/trace.zip`.
+The backend's own log is `apps/web/e2e/.state/backend.log`.
+
+## CI
+
+`.github/workflows/test.yml` runs the type check, both test suites and the
+docs build on every push to `main` and on pull requests (the browser tests
+include a production build of the web app), and uploads the Playwright
+report, screenshots and traces when a browser test fails.
