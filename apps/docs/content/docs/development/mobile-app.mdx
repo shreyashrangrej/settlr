@@ -104,8 +104,30 @@ pnpm --filter mobile export:android   # bundles the app the way a release build 
 
 `export:android` compiles to Hermes bytecode with an x86 binary; on an ARM
 machine add `--no-bytecode` to check the bundle. `pnpm build` doesn't build
-the mobile app. Release APKs are built on GitHub Actions.
+the mobile app.
 [Testing](/docs/development/testing#the-android-app) explains the tests.
+
+## Release an APK
+
+`.github/workflows/android.yml` builds an installable APK on GitHub Actions,
+without EAS: `expo prebuild` generates the native project and Gradle builds
+it. Push a tag to release one:
+
+```bash
+git tag v1.0.1 && git push origin v1.0.1
+```
+
+The APK (`settlr-v1.0.1.apk`) is attached to a GitHub release of that tag.
+**Run workflow** on the Actions tab builds one from any branch as a
+downloadable artifact instead. Bump `version` in `apps/mobile/app.json` to
+match the tag.
+
+The app's URLs come from the repository's Actions variables
+`EXPO_PUBLIC_CONVEX_URL`, `EXPO_PUBLIC_CONVEX_SITE_URL` and
+`EXPO_PUBLIC_SITE_URL` (the same values as `.env.local`). The build is
+signed with the Expo template's debug key: fine for installing by hand,
+not for the Play Store. A signed build opens Google sign-in through the
+`settlr://` scheme, which the backend always trusts.
 
 ## Layout
 
