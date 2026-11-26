@@ -18,18 +18,23 @@ import {
   settleUp,
   shares,
 } from './lib/ledger'
+import { logActivity } from './lib/activity'
+import { resolveSplit } from './lib/groupSplit'
 import { notify } from './lib/notify'
+import { upiIds } from './lib/profile'
 import { attachReceipt, deleteReceipt } from './lib/receipts'
-import { category, currency } from './lib/validators'
+import { newToken } from './lib/tokens'
+import { category, currency, groupSplitInput, original } from './lib/validators'
 
-const MAX_GROUPS = 200
-const MAX_MEMBERS = 20
+export const MAX_GROUPS = 200
+export const MAX_MEMBERS = 20
 
 type Member = Doc<'groups'>['members'][number]
+type User = Awaited<ReturnType<typeof requireUser>>
 
 // The Settlr user a member is: linked members have one, and the owner's
 // member is the owner.
-function memberUserId(group: Doc<'groups'>, member: Member) {
+export function memberUserId(group: Doc<'groups'>, member: Member) {
   return member.userId ?? (member.id === group.meMemberId ? group.userId : undefined)
 }
 
@@ -47,7 +52,7 @@ export async function findGroup(ctx: QueryCtx, userId: string, groupId: string) 
   return group && viewerMemberId(group, userId) !== null ? group : null
 }
 
-async function requireGroup(ctx: QueryCtx, userId: string, groupId: string) {
+export async function requireGroup(ctx: QueryCtx, userId: string, groupId: string) {
   const group = await findGroup(ctx, userId, groupId)
   if (!group) throw new ConvexError('That group doesn’t exist.')
   return group
@@ -69,7 +74,7 @@ function myNet(group: Doc<'groups'>, userId: string) {
 }
 
 // Keeps the groupMembers index in step with the linked members.
-async function syncMemberships(ctx: MutationCtx, group: Doc<'groups'>) {
+export async function syncMemberships(ctx: MutationCtx, group: Doc<'groups'>) {
   const wanted = new Set(
     group.members.map((m) => m.userId).filter((id): id is string => Boolean(id)),
   )
@@ -125,6 +130,7 @@ export const list = query({
       totalCents: group.totalCents,
       myNetCents: myNet(group, userId),
       isOwner: group.userId === userId,
+      archived: group.archived ?? false,
     }))
   },
 })
@@ -146,19 +152,32 @@ export const get = query({
         .take(500)
       for (const f of friends) if (f.linkedUserId) friendByUser.set(f.linkedUserId, f._id)
     }
+    const upi = await upiIds(
+      ctx,
+      group.members.flatMap((m) => memberUserId(group, m) ?? []),
+    )
     return {
       id: group._id,
       name: group.name,
       currency: group.currency,
       isOwner,
+      archived: group.archived ?? false,
+      budgetCents: group.budgetCents ?? null,
+      // Only the owner manages the links.
+      inviteToken: isOwner ? (group.inviteToken ?? null) : null,
+      shareToken: isOwner ? (group.shareToken ?? null) : null,
       // The viewer's own member, whoever they are.
       meMemberId: viewerMemberId(group, userId) ?? group.meMemberId,
-      members: group.members.map(({ userId: memberUser, ...m }) => ({
-        ...m,
-        netCents: memberNet(m),
-        linked: Boolean(memberUser) || m.id === group.meMemberId,
-        friendId: memberUser ? (friendByUser.get(memberUser) ?? null) : null,
-      })),
+      members: group.members.map(({ userId: memberUser, ...m }) => {
+        const settlrUser = memberUser ?? (m.id === group.meMemberId ? group.userId : undefined)
+        return {
+          ...m,
+          netCents: memberNet(m),
+          linked: Boolean(memberUser) || m.id === group.meMemberId,
+          friendId: memberUser ? (friendByUser.get(memberUser) ?? null) : null,
+          upiId: settlrUser ? (upi.get(settlrUser) ?? null) : null,
+        }
+      }),
       settlements: settleUp(group.members),
       expenseCount: group.expenseCount,
       totalCents: group.totalCents,
@@ -244,6 +263,11 @@ export const expenses = query({
         amountCents: e.amountCents,
         paidBy: e.paidBy,
         splitAmong: e.splitAmong,
+        splitMode: e.split?.mode ?? ('equal' as const),
+        owed: Object.fromEntries(shares(e, group.members.map((m) => m.id))),
+        original: e.original ?? null,
+        tags: e.tags ?? [],
+        recurring: e.recurringId !== undefined,
         category: e.category,
         date: e.date,
         receiptId: e.receiptId ?? null,
@@ -268,6 +292,9 @@ export const expense = query({
       amountCents: expense.amountCents,
       paidBy: expense.paidBy,
       splitAmong: expense.splitAmong,
+      split: expense.split ?? null,
+      original: expense.original ?? null,
+      tags: expense.tags ?? [],
       category: expense.category,
       date: expense.date,
       receiptId: expense.receiptId ?? null,
@@ -290,12 +317,16 @@ export const payments = query({
       .withIndex('by_groupId_and_date', (q) => q.eq('groupId', group._id))
       .order('desc')
       .take(RECENT_PAYMENTS)
+    const me = viewerMemberId(group, userId)
     return rows.map((p) => ({
       id: p._id,
       from: p.from,
       to: p.to,
       amountCents: p.amountCents,
       date: p.date,
+      unconfirmed: p.unconfirmed ?? false,
+      // The recipient confirms a payment someone else recorded.
+      canConfirm: Boolean(p.unconfirmed) && p.to === me && p.recordedBy !== userId,
     }))
   },
 })
@@ -542,6 +573,11 @@ export const deleteExpenses = internalMutation({
     for (const row of batch) {
       await ctx.db.delete('groupExpenses', row._id)
       if (row.receiptId) await deleteReceipt(ctx, row.receiptId)
+      const comments = await ctx.db
+        .query('comments')
+        .withIndex('by_expenseId', (q) => q.eq('expenseId', row._id))
+        .take(200)
+      for (const c of comments) await ctx.db.delete('comments', c._id)
     }
     if (batch.length === 200) {
       await ctx.scheduler.runAfter(0, internal.groups.deleteExpenses, args)
@@ -555,6 +591,16 @@ export const deleteExpenses = internalMutation({
     for (const row of payments) await ctx.db.delete('groupPayments', row._id)
     if (payments.length === 200) {
       await ctx.scheduler.runAfter(0, internal.groups.deleteExpenses, args)
+      return null
+    }
+    // Then the activity log.
+    const activity = await ctx.db
+      .query('activity')
+      .withIndex('by_groupId', (q) => q.eq('groupId', args.groupId))
+      .take(200)
+    for (const row of activity) await ctx.db.delete('activity', row._id)
+    if (activity.length === 200) {
+      await ctx.scheduler.runAfter(0, internal.groups.deleteExpenses, args)
     }
     return null
   },
@@ -567,43 +613,71 @@ const expenseFields = {
   splitAmong: v.array(v.string()),
   category,
   date: v.string(),
+  // Absent: split equally between `splitAmong`.
+  split: v.optional(groupSplitInput),
+  original: v.optional(original),
+  tags: v.optional(v.array(v.string())),
+}
+
+type ExpenseInput = {
+  description: string
+  amountCents: number
+  paidBy: string
+  splitAmong: Array<string>
+  category: Doc<'groupExpenses'>['category']
+  date: string
+  split?: typeof groupSplitInput.type
+  original?: typeof original.type
+  tags?: Array<string>
 }
 
 // Checks an expense's fields against the group and cleans them up.
-function checkExpense(
-  group: Doc<'groups'>,
-  args: {
-    description: string
-    amountCents: number
-    paidBy: string
-    splitAmong: Array<string>
-    category: Doc<'groupExpenses'>['category']
-    date: string
-  },
-) {
-  const memberIds = new Set(group.members.map((m) => m.id))
-  const splitAmong = [...new Set(args.splitAmong)]
+export function checkExpense(group: Doc<'groups'>, args: ExpenseInput) {
+  const order = group.members.map((m) => m.id)
+  const memberIds = new Set(order)
   if (!memberIds.has(args.paidBy)) {
     throw new ConvexError('The payer is not a member of this group.')
   }
-  if (splitAmong.length === 0) {
-    throw new ConvexError('Split between at least one person.')
+  const amountCents = input.amount(args.amountCents)
+  let splitAmong = [...new Set(args.splitAmong)]
+  let split: Doc<'groupExpenses'>['split']
+  if (args.split) {
+    const resolved = resolveSplit(order, amountCents, args.split)
+    split = resolved.split
+    splitAmong = resolved.splitAmong
+  } else {
+    if (splitAmong.length === 0) {
+      throw new ConvexError('Split between at least one person.')
+    }
+    if (!splitAmong.every((id) => memberIds.has(id))) {
+      throw new ConvexError('Expenses can only be split between group members.')
+    }
   }
-  if (!splitAmong.every((id) => memberIds.has(id))) {
-    throw new ConvexError('Expenses can only be split between group members.')
+  if (args.original) {
+    const o = args.original
+    if (o.currency === group.currency) {
+      throw new ConvexError('The original currency is already the group’s currency.')
+    }
+    input.amount(o.amountCents)
+    if (!Number.isFinite(o.rate) || o.rate <= 0 || o.rate > 1_000_000) {
+      throw new ConvexError('Enter a valid exchange rate.')
+    }
   }
   return {
     groupId: group._id,
     description: input.text(args.description, 'Description', 80),
-    amountCents: input.amount(args.amountCents),
+    amountCents,
     paidBy: args.paidBy,
     splitAmong,
+    split,
+    original: args.original,
+    tags: input.tags(args.tags),
     category: args.category,
     date: input.isoDate(args.date),
   }
 }
 
-type ExpenseEffect = Pick<Doc<'groupExpenses'>, 'amountCents' | 'paidBy' | 'splitAmong'>
+type ExpenseEffect = Pick<Doc<'groupExpenses'>, 'amountCents' | 'paidBy' | 'splitAmong' | 'split'>
 
 // What an expense means for one member: what they paid minus their share.
 function memberEffect(group: Doc<'groups'>, expense: ExpenseEffect, memberId: string) {
@@ -615,6 +689,55 @@ function isPartOf(expense: ExpenseEffect, memberId: string) {
   return expense.paidBy === memberId || expense.splitAmong.includes(memberId)
 }
 
+type NewGroupExpense = Omit<Doc<'groupExpenses'>, '_id' | '_creationTime'>
+
+/**
+ * Inserts a checked expense, updates the group's totals and tells everyone
+ * on Settlr who's part of it. Shared by the form, recurring expenses, the
+ * Splitwise import and restoring from the trash.
+ */
+export async function insertGroupExpense(
+  ctx: MutationCtx,
+  me: User,
+  group: Doc<'groups'>,
+  expense: NewGroupExpense,
+  { quiet = false, restored = false } = {},
+) {
+  const expenseId = await ctx.db.insert('groupExpenses', expense)
+  await ctx.db.patch('groups', group._id, {
+    ...applyGroupExpense(group, expense, 1),
+    lastExpenseAt: Date.now(),
+  })
+  await logActivity(ctx, {
+    groupId: group._id,
+    actorName: me.name,
+    kind: restored ? 'expense_restored' : 'expense_added',
+    description: expense.description,
+    amountCents: expense.amountCents,
+    expenseId,
+  })
+  if (quiet) return expenseId
+
+  // Tell everyone on Settlr who's part of it (except whoever added it)
+  // what it means for them: paid minus their share.
+  for (const member of group.members) {
+    const memberUser = memberUserId(group, member)
+    if (!memberUser || memberUser === me.userId) continue
+    if (!isPartOf(expense, member.id)) continue
+    await notify(ctx, {
+      userId: memberUser,
+      kind: 'group_expense',
+      actorName: me.name,
+      description: expense.description,
+      amountCents: memberEffect(group, expense, member.id),
+      currency: group.currency,
+      groupId: group._id,
+      groupName: group.name,
+    })
+  }
+  return expenseId
+}
+
 export const addExpense = mutation({
   args: { groupId: v.id('groups'), ...expenseFields, receiptId: v.optional(v.id('receipts')) },
   handler: async (ctx, args) => {
@@ -624,30 +747,7 @@ export const addExpense = mutation({
       ...checkExpense(group, args),
       receiptId: await attachReceipt(ctx, me.userId, args.receiptId),
     }
-    const expenseId = await ctx.db.insert('groupExpenses', expense)
-    await ctx.db.patch('groups', group._id, {
-      ...applyGroupExpense(group, expense, 1),
-      lastExpenseAt: Date.now(),
-    })
-
-    // Tell everyone on Settlr who's part of it (except whoever added it)
-    // what it means for them: paid minus their share.
-    for (const member of group.members) {
-      const memberUser = memberUserId(group, member)
-      if (!memberUser || memberUser === me.userId) continue
-      if (!isPartOf(expense, member.id)) continue
-      await notify(ctx, {
-        userId: memberUser,
-        kind: 'group_expense',
-        actorName: me.name,
-        description: expense.description,
-        amountCents: memberEffect(group, expense, member.id),
-        currency: group.currency,
-        groupId: group._id,
-        groupName: group.name,
-      })
-    }
-    return expenseId
+    return await insertGroupExpense(ctx, me, group, expense)
   },
 })
 
@@ -669,10 +769,22 @@ export const updateExpense = mutation({
     const next = {
       ...checkExpense(group, args),
       receiptId: await attachReceipt(ctx, me.userId, args.receiptId, old.receiptId),
+      recurringId: old.recurringId,
     }
     await ctx.db.replace('groupExpenses', old._id, next)
     const without = { ...group, ...applyGroupExpense(group, old, -1) }
     await ctx.db.patch('groups', group._id, applyGroupExpense(without, next, 1))
+    await logActivity(ctx, {
+      groupId: group._id,
+      actorName: me.name,
+      kind: 'expense_updated',
+      description:
+        old.amountCents !== next.amountCents
+          ? `${next.description} (was ${old.amountCents / 100})`
+          : next.description,
+      amountCents: next.amountCents,
+      expenseId: old._id,
+    })
 
     // Tell everyone on Settlr who was or is part of it where they stand now.
     for (const member of group.members) {
@@ -694,23 +806,61 @@ export const updateExpense = mutation({
   },
 })
 
+/**
+ * Deletes an expense into the trash (restorable for 30 days; returns the
+ * trash row for the toast's Undo). Its comments go with it.
+ */
 export const removeExpense = mutation({
   args: { expenseId: v.id('groupExpenses') },
-  handler: async (ctx, args) => {
-    const { userId } = await requireUser(ctx)
+  handler: async (ctx, args): Promise<Id<'trash'>> => {
+    const me = await requireUser(ctx)
     const expense = await ctx.db.get('groupExpenses', args.expenseId)
-    const group = expense ? await findGroup(ctx, userId, expense.groupId) : null
+    const group = expense ? await findGroup(ctx, me.userId, expense.groupId) : null
     if (!expense || !group) throw new ConvexError('That expense doesn’t exist.')
     await ctx.db.delete('groupExpenses', expense._id)
     await ctx.db.patch('groups', group._id, applyGroupExpense(group, expense, -1))
-    if (expense.receiptId) await deleteReceipt(ctx, expense.receiptId)
-    return null
+    const comments = await ctx.db
+      .query('comments')
+      .withIndex('by_expenseId', (q) => q.eq('expenseId', expense._id))
+      .take(500)
+    for (const c of comments) await ctx.db.delete('comments', c._id)
+    await logActivity(ctx, {
+      groupId: group._id,
+      actorName: me.name,
+      kind: 'expense_deleted',
+      description: expense.description,
+      amountCents: expense.amountCents,
+    })
+    return await ctx.db.insert('trash', {
+      userId: me.userId,
+      description: expense.description,
+      amountCents: expense.amountCents,
+      currency: group.currency,
+      where: group.name,
+      item: {
+        kind: 'group',
+        groupId: group._id,
+        expense: {
+          description: expense.description,
+          amountCents: expense.amountCents,
+          paidBy: expense.paidBy,
+          splitAmong: expense.splitAmong,
+          category: expense.category,
+          date: expense.date,
+          receiptId: expense.receiptId,
+          split: expense.split,
+          original: expense.original,
+          tags: expense.tags,
+        },
+      },
+    })
   },
 })
 
 /**
  * Records a settle-up payment from one member to another. Any member can,
- * like adding an expense.
+ * like adding an expense. A linked recipient who didn't record it is asked
+ * to confirm it.
  */
 export const addPayment = mutation({
   args: {
@@ -723,58 +873,432 @@ export const addPayment = mutation({
   handler: async (ctx, args) => {
     const me = await requireUser(ctx)
     const group = await requireGroup(ctx, me.userId, args.groupId)
-    const memberIds = new Set(group.members.map((m) => m.id))
-    if (!memberIds.has(args.from) || !memberIds.has(args.to)) {
-      throw new ConvexError('Payments can only be between group members.')
-    }
-    if (args.from === args.to) {
-      throw new ConvexError('Pick two different people.')
-    }
-    const payment = {
-      groupId: group._id,
-      from: args.from,
-      to: args.to,
-      amountCents: input.amount(args.amountCents),
-      date: input.isoDate(args.date),
-    }
-    const paymentId = await ctx.db.insert('groupPayments', payment)
-    await ctx.db.patch('groups', group._id, applyGroupPayment(group, payment, 1))
+    return await insertGroupPayment(ctx, me, group, args)
+  },
+})
 
-    // Tell the payer and the recipient (if they're on Settlr and didn't
-    // record it themselves).
-    const nameOf = (id: string) => group.members.find((m) => m.id === id)?.name ?? 'Someone'
-    for (const member of group.members) {
-      if (member.id !== payment.from && member.id !== payment.to) continue
-      const memberUser = memberUserId(group, member)
-      if (!memberUser || memberUser === me.userId) continue
+export async function insertGroupPayment(
+  ctx: MutationCtx,
+  me: User,
+  group: Doc<'groups'>,
+  args: { from: string; to: string; amountCents: number; date: string },
+) {
+  const memberIds = new Set(group.members.map((m) => m.id))
+  if (!memberIds.has(args.from) || !memberIds.has(args.to)) {
+    throw new ConvexError('Payments can only be between group members.')
+  }
+  if (args.from === args.to) {
+    throw new ConvexError('Pick two different people.')
+  }
+  const recipient = group.members.find((m) => m.id === args.to)!
+  const recipientUser = memberUserId(group, recipient)
+  const payment = {
+    groupId: group._id,
+    from: args.from,
+    to: args.to,
+    amountCents: input.amount(args.amountCents),
+    date: input.isoDate(args.date),
+    recordedBy: me.userId,
+    unconfirmed: recipientUser !== undefined && recipientUser !== me.userId ? true : undefined,
+  }
+  const paymentId = await ctx.db.insert('groupPayments', payment)
+  await ctx.db.patch('groups', group._id, applyGroupPayment(group, payment, 1))
+
+  const nameOf = (id: string) => group.members.find((m) => m.id === id)?.name ?? 'Someone'
+  await logActivity(ctx, {
+    groupId: group._id,
+    actorName: me.name,
+    kind: 'payment_added',
+    description: `${nameOf(payment.from)} paid ${nameOf(payment.to)}`,
+    amountCents: payment.amountCents,
+  })
+
+  // Tell the payer and the recipient (if they're on Settlr and didn't
+  // record it themselves).
+  for (const member of group.members) {
+    if (member.id !== payment.from && member.id !== payment.to) continue
+    const memberUser = memberUserId(group, member)
+    if (!memberUser || memberUser === me.userId) continue
+    await notify(ctx, {
+      userId: memberUser,
+      kind: 'group_payment',
+      actorName: me.name,
+      description:
+        member.id === payment.to
+          ? `${nameOf(payment.from)} paid you${payment.unconfirmed ? ' (confirm it in the group)' : ''}`
+          : `You paid ${nameOf(payment.to)}`,
+      amountCents: payment.amountCents,
+      currency: group.currency,
+      groupId: group._id,
+      groupName: group.name,
+    })
+  }
+  return paymentId
+}
+
+async function requirePayment(ctx: QueryCtx, userId: string, paymentId: Id<'groupPayments'>) {
+  const payment = await ctx.db.get('groupPayments', paymentId)
+  const group = payment ? await findGroup(ctx, userId, payment.groupId) : null
+  if (!payment || !group) throw new ConvexError('That payment doesn’t exist.')
+  return { payment, group }
+}
+
+/** Deletes a settle-up payment, putting the balances back. */
+export const removePayment = mutation({
+  args: { paymentId: v.id('groupPayments') },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const { payment, group } = await requirePayment(ctx, me.userId, args.paymentId)
+    await ctx.db.delete('groupPayments', payment._id)
+    await ctx.db.patch('groups', group._id, applyGroupPayment(group, payment, -1))
+    await logActivity(ctx, {
+      groupId: group._id,
+      actorName: me.name,
+      kind: 'payment_deleted',
+      description: 'Deleted a payment',
+      amountCents: payment.amountCents,
+    })
+    return null
+  },
+})
+
+/**
+ * The recipient answers a payment someone else recorded: confirming keeps
+ * it, rejecting ("I didn't get it") deletes it. The recorder is told.
+ */
+export const answerPayment = mutation({
+  args: { paymentId: v.id('groupPayments'), confirm: v.boolean() },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const { payment, group } = await requirePayment(ctx, me.userId, args.paymentId)
+    if (!payment.unconfirmed || viewerMemberId(group, me.userId) !== payment.to) {
+      throw new ConvexError('Only the person who got this payment can confirm it.')
+    }
+    if (args.confirm) {
+      await ctx.db.patch('groupPayments', payment._id, { unconfirmed: undefined })
+    } else {
+      await ctx.db.delete('groupPayments', payment._id)
+      await ctx.db.patch('groups', group._id, applyGroupPayment(group, payment, -1))
+    }
+    await logActivity(ctx, {
+      groupId: group._id,
+      actorName: me.name,
+      kind: args.confirm ? 'payment_confirmed' : 'payment_deleted',
+      description: args.confirm ? 'Confirmed a payment' : 'Said a payment never arrived',
+      amountCents: payment.amountCents,
+    })
+    if (payment.recordedBy && payment.recordedBy !== me.userId) {
       await notify(ctx, {
-        userId: memberUser,
-        kind: 'group_payment',
+        userId: payment.recordedBy,
+        kind: args.confirm ? 'payment_confirmed' : 'payment_rejected',
         actorName: me.name,
-        description:
-          member.id === payment.to
-            ? `${nameOf(payment.from)} paid you`
-            : `You paid ${nameOf(payment.to)}`,
         amountCents: payment.amountCents,
         currency: group.currency,
         groupId: group._id,
         groupName: group.name,
       })
     }
-    return paymentId
+    return null
   },
 })
 
-/** Deletes a settle-up payment, putting the balances back. */
-export const removePayment = mutation({
-  args: { paymentId: v.id('groupPayments') },
+/** Reminds a linked member who owes money in the group (you must be owed). */
+export const remindMember = mutation({
+  args: { groupId: v.id('groups'), memberId: v.string() },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const group = await requireGroup(ctx, me.userId, args.groupId)
+    const meId = viewerMemberId(group, me.userId)
+    const plan = settleUp(group.members).find(
+      (s) => s.from === args.memberId && s.to === meId,
+    )
+    if (!plan) throw new ConvexError('They don’t owe you anything here.')
+    const member = group.members.find((m) => m.id === args.memberId)!
+    const memberUser = memberUserId(group, member)
+    if (!memberUser) {
+      throw new ConvexError(`${member.name} isn’t on Settlr, so they can’t get a reminder.`)
+    }
+    await notify(ctx, {
+      userId: memberUser,
+      kind: 'reminder',
+      actorName: me.name,
+      description: `You owe ${me.name} in ${group.name}`,
+      amountCents: plan.amountCents,
+      currency: group.currency,
+      groupId: group._id,
+      groupName: group.name,
+    })
+    return null
+  },
+})
+
+/** Archives or unarchives a group (owner only). It must be settled to archive. */
+export const setArchived = mutation({
+  args: { groupId: v.id('groups'), archived: v.boolean() },
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx)
-    const payment = await ctx.db.get('groupPayments', args.paymentId)
-    const group = payment ? await findGroup(ctx, userId, payment.groupId) : null
-    if (!payment || !group) throw new ConvexError('That payment doesn’t exist.')
-    await ctx.db.delete('groupPayments', payment._id)
-    await ctx.db.patch('groups', group._id, applyGroupPayment(group, payment, -1))
+    const group = await requireOwnedGroup(ctx, userId, args.groupId)
+    if (args.archived && group.members.some((m) => memberNet(m) !== 0)) {
+      throw new ConvexError('Settle up everyone before archiving the group.')
+    }
+    await ctx.db.patch('groups', group._id, { archived: args.archived || undefined })
+    return null
+  },
+})
+
+/** Sets or clears the group's total budget (owner only). */
+export const setBudget = mutation({
+  args: { groupId: v.id('groups'), budgetCents: v.union(v.number(), v.null()) },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const group = await requireOwnedGroup(ctx, userId, args.groupId)
+    await ctx.db.patch('groups', group._id, {
+      budgetCents: args.budgetCents === null ? undefined : input.amount(args.budgetCents),
+    })
+    return null
+  },
+})
+
+/**
+ * Turns the join link or the read-only share link on (a new token, so an
+ * old link stops working) or off. Owner only.
+ */
+export const setLink = mutation({
+  args: {
+    groupId: v.id('groups'),
+    link: v.union(v.literal('invite'), v.literal('share')),
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const group = await requireOwnedGroup(ctx, userId, args.groupId)
+    const token = args.enabled ? newToken() : undefined
+    await ctx.db.patch(
+      'groups',
+      group._id,
+      args.link === 'invite' ? { inviteToken: token } : { shareToken: token },
+    )
+    return token ?? null
+  },
+})
+
+async function groupByInvite(ctx: QueryCtx, token: string) {
+  if (!/^[0-9a-f]{32}$/.test(token)) return null
+  return await ctx.db
+    .query('groups')
+    .withIndex('by_inviteToken', (q) => q.eq('inviteToken', token))
+    .unique()
+}
+
+/** What the join page shows: the group and which members are free to claim. */
+export const invite = query({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const group = await groupByInvite(ctx, args.token)
+    if (!group) return null
+    return {
+      groupId: group._id,
+      name: group.name,
+      currency: group.currency,
+      alreadyMember: viewerMemberId(group, userId) !== null,
+      // Members nobody has claimed yet (not the owner, not linked).
+      open: group.members
+        .filter((m) => !memberUserId(group, m))
+        .map((m) => ({ id: m.id, name: m.name })),
+      full: group.members.length >= MAX_MEMBERS,
+    }
+  },
+})
+
+/**
+ * Joins a group through its invite link: as one of the unclaimed members
+ * (keeping their history), or as a new member under your name.
+ */
+export const join = mutation({
+  args: { token: v.string(), memberId: v.union(v.string(), v.null()) },
+  handler: async (ctx, args): Promise<Id<'groups'>> => {
+    const me = await requireUser(ctx)
+    const group = await groupByInvite(ctx, args.token)
+    if (!group) throw new ConvexError('This invite link no longer works. Ask for a new one.')
+    if (viewerMemberId(group, me.userId) !== null) return group._id
+    let members: Array<Member>
+    let joinedAs: string
+    if (args.memberId) {
+      const member = group.members.find((m) => m.id === args.memberId)
+      if (!member || memberUserId(group, member)) {
+        throw new ConvexError('Someone has already joined as that member.')
+      }
+      members = group.members.map((m) => (m.id === member.id ? { ...m, userId: me.userId } : m))
+      joinedAs = member.name
+    } else {
+      if (group.members.length >= MAX_MEMBERS) {
+        throw new ConvexError(`A group can have up to ${MAX_MEMBERS} members.`)
+      }
+      let name = me.name
+      const taken = new Set(group.members.map((m) => m.name.toLowerCase()))
+      for (let n = 2; taken.has(name.toLowerCase()); n++) name = `${me.name} ${n}`
+      const next = Math.max(0, ...group.members.map((m) => Number(m.id.slice(1)) || 0)) + 1
+      members = [
+        ...group.members,
+        { id: `m${next}`, name, paidCents: 0, owedCents: 0, userId: me.userId },
+      ]
+      joinedAs = name
+    }
+    await ctx.db.patch('groups', group._id, { members })
+    await syncMemberships(ctx, (await ctx.db.get('groups', group._id))!)
+    await logActivity(ctx, {
+      groupId: group._id,
+      actorName: me.name,
+      kind: 'member_joined',
+      description: joinedAs === me.name ? 'Joined the group' : `Joined as ${joinedAs}`,
+    })
+    await notify(ctx, {
+      userId: group.userId,
+      kind: 'group_joined',
+      actorName: me.name,
+      description: joinedAs === me.name ? undefined : `as ${joinedAs}`,
+      groupId: group._id,
+      groupName: group.name,
+    })
+    return group._id
+  },
+})
+
+/**
+ * The public, read-only view of a group behind its share link: balances,
+ * the settle-up plan and the latest expenses. No sign-in needed.
+ */
+export const shared = query({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    if (!/^[0-9a-f]{32}$/.test(args.token)) return null
+    const group = await ctx.db
+      .query('groups')
+      .withIndex('by_shareToken', (q) => q.eq('shareToken', args.token))
+      .unique()
+    if (!group) return null
+    const order = group.members.map((m) => m.id)
+    const expenses = await ctx.db
+      .query('groupExpenses')
+      .withIndex('by_groupId_and_date', (q) => q.eq('groupId', group._id))
+      .order('desc')
+      .take(100)
+    return {
+      name: group.name,
+      currency: group.currency,
+      totalCents: group.totalCents,
+      expenseCount: group.expenseCount,
+      members: group.members.map((m) => ({ id: m.id, name: m.name, netCents: memberNet(m) })),
+      settlements: settleUp(group.members),
+      expenses: expenses.map((e) => ({
+        id: e._id,
+        description: e.description,
+        amountCents: e.amountCents,
+        paidBy: e.paidBy,
+        category: e.category,
+        date: e.date,
+        owed: Object.fromEntries(shares(e, order)),
+      })),
+    }
+  },
+})
+
+/** A group's activity log, newest first. */
+export const activity = query({
+  args: { groupId: v.string(), limit: v.number() },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const group = await findGroup(ctx, userId, args.groupId)
+    if (!group) return []
+    const rows = await ctx.db
+      .query('activity')
+      .withIndex('by_groupId', (q) => q.eq('groupId', group._id))
+      .order('desc')
+      .take(input.listLimit(args.limit))
+    return rows.map((a) => ({
+      id: a._id,
+      at: a._creationTime,
+      actorName: a.actorName,
+      kind: a.kind,
+      description: a.description,
+      amountCents: a.amountCents ?? null,
+      expenseId: a.expenseId ?? null,
+    }))
+  },
+})
+
+/** Comments on a group expense, oldest first. */
+export const comments = query({
+  args: { expenseId: v.string() },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const id = ctx.db.normalizeId('groupExpenses', args.expenseId)
+    const expense = id ? await ctx.db.get('groupExpenses', id) : null
+    const group = expense ? await findGroup(ctx, userId, expense.groupId) : null
+    if (!expense || !group) return []
+    const rows = await ctx.db
+      .query('comments')
+      .withIndex('by_expenseId', (q) => q.eq('expenseId', expense._id))
+      .take(200)
+    return rows.map((c) => ({
+      id: c._id,
+      at: c._creationTime,
+      name: c.name,
+      body: c.body,
+      mine: c.userId === userId,
+    }))
+  },
+})
+
+export const addComment = mutation({
+  args: { expenseId: v.id('groupExpenses'), body: v.string() },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const expense = await ctx.db.get('groupExpenses', args.expenseId)
+    const group = expense ? await findGroup(ctx, me.userId, expense.groupId) : null
+    if (!expense || !group) throw new ConvexError('That expense doesn’t exist.')
+    const body = input.text(args.body, 'Comment', 500)
+    await ctx.db.insert('comments', {
+      groupId: group._id,
+      expenseId: expense._id,
+      userId: me.userId,
+      name: me.name,
+      body,
+    })
+    await logActivity(ctx, {
+      groupId: group._id,
+      actorName: me.name,
+      kind: 'comment',
+      description: `On “${expense.description}”: ${body.slice(0, 80)}`,
+      expenseId: expense._id,
+    })
+    // Tell whoever's part of it.
+    for (const member of group.members) {
+      const memberUser = memberUserId(group, member)
+      if (!memberUser || memberUser === me.userId || !isPartOf(expense, member.id)) continue
+      await notify(ctx, {
+        userId: memberUser,
+        kind: 'comment',
+        actorName: me.name,
+        description: `On “${expense.description}”: ${body.slice(0, 120)}`,
+        groupId: group._id,
+        groupName: group.name,
+      })
+    }
+    return null
+  },
+})
+
+export const removeComment = mutation({
+  args: { commentId: v.id('comments') },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const comment = await ctx.db.get('comments', args.commentId)
+    if (!comment || comment.userId !== userId) {
+      throw new ConvexError('You can only delete your own comments.')
+    }
+    await ctx.db.delete('comments', comment._id)
     return null
   },
 })

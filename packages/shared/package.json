@@ -4,7 +4,9 @@
   "type": "module",
   "exports": {
     "./schemas": "./src/schemas.ts",
-    "./format": "./src/format.ts"
+    "./format": "./src/format.ts",
+    "./split": "./src/split.ts",
+    "./csv": "./src/csv.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

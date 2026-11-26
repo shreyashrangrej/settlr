@@ -3,7 +3,7 @@ import { ConvexError, v } from 'convex/values'
 import { formatMoney } from '@settlr/shared/format'
 import type { Currency } from '@settlr/shared/schemas'
 import { internal } from './_generated/api'
-import type { Id } from './_generated/dataModel'
+import type { Doc, Id } from './_generated/dataModel'
 import { action, env, internalQuery, query } from './_generated/server'
 import { findGroup, myGroups, viewerMemberId } from './groups'
 import {
@@ -24,7 +24,7 @@ import {
 } from './lib/expenseView'
 import * as input from './lib/input'
 import { complete, type ChatMessage } from './lib/openrouter'
-import { category, currency } from './lib/validators'
+import { category, currency, type GroupSplitInput } from './lib/validators'
 
 // The assistant (/assistant): people describe what they want in their own
 // words ("Add tea personal expense 50", "What did I spend on food this
@@ -210,12 +210,25 @@ export const search = internalQuery({
       row.myShareCents += e.myShareCents
       totals.set(e.currency, row)
     }
+    // Your share broken down by category and by month, for spending questions.
+    const breakdown = (key: (e: ExpenseView) => string) => {
+      const map = new Map<string, { key: string; currency: Currency; myShareCents: number }>()
+      for (const e of found) {
+        const k = `${e.currency}:${key(e)}`
+        const row = map.get(k) ?? { key: key(e), currency: e.currency, myShareCents: 0 }
+        row.myShareCents += e.myShareCents
+        map.set(k, row)
+      }
+      return [...map.values()].sort((a, b) => b.myShareCents - a.myShareCents).slice(0, 24)
+    }
     return {
       expenses: found.slice(0, input.listLimit(Math.min(args.limit, 50))),
       count: found.length,
       totals: [...totals]
         .map(([currency, row]) => ({ currency, ...row }))
         .sort((a, b) => b.cents - a.cents),
+      byCategory: breakdown((e) => e.category),
+      byMonth: breakdown((e) => e.date.slice(0, 7)),
       capped,
     }
   },
@@ -228,6 +241,7 @@ export type ExpenseDetail =
       id: Id<'personalExpenses'>
       view: ExpenseView
       receiptId: Id<'receipts'> | null
+      tags?: Array<string>
     }
   | {
       kind: 'friend'
@@ -235,7 +249,9 @@ export type ExpenseDetail =
       view: ExpenseView
       receiptId: Id<'receipts'> | null
       paidBy: 'me' | 'friend'
-      split: 'equal' | 'full'
+      split: 'equal' | 'full' | 'exact'
+      owedCents?: number
+      tags?: Array<string>
     }
   | {
       kind: 'group'
@@ -244,6 +260,9 @@ export type ExpenseDetail =
       receiptId: Id<'receipts'> | null
       paidBy: string
       splitAmong: Array<string>
+      split?: GroupSplitInput
+      original?: Doc<'groupExpenses'>['original']
+      tags?: Array<string>
       meMemberId: string
       members: Array<{ id: string; name: string }>
     }
@@ -260,7 +279,13 @@ export const expense = internalQuery({
       const id = ctx.db.normalizeId('personalExpenses', ref.id)
       const e = id ? await ctx.db.get('personalExpenses', id) : null
       if (!e || e.userId !== userId) return null
-      return { kind: 'personal', id: e._id, view: personalView(e), receiptId: e.receiptId ?? null }
+      return {
+        kind: 'personal',
+        id: e._id,
+        view: personalView(e),
+        receiptId: e.receiptId ?? null,
+        tags: e.tags,
+      }
     }
 
     if (ref.kind === 'friend') {
@@ -276,6 +301,8 @@ export const expense = internalQuery({
         receiptId: e.receiptId ?? null,
         paidBy: e.paidBy,
         split: e.split,
+        owedCents: e.owedCents,
+        tags: e.tags,
       }
     }
 
@@ -291,6 +318,16 @@ export const expense = internalQuery({
       receiptId: e.receiptId ?? null,
       paidBy: e.paidBy,
       splitAmong: e.splitAmong,
+      split: e.split
+        ? {
+            mode: e.split.mode,
+            inputs: e.split.inputs,
+            items: e.split.items,
+            extraCents: e.split.extraCents,
+          }
+        : undefined,
+      original: e.original,
+      tags: e.tags,
       meMemberId: me,
       members: group.members.map((m) => ({ id: m.id, name: m.name })),
     }
@@ -348,6 +385,8 @@ Finding (search_expenses):
 - Use it for any question about their expenses or spending: lists, totals, "how much did I spend on...". Turn periods into date_from/date_to ("this month" is from the 1st to today).
 - "amount" is the whole expense; "your_share" is what it cost the user. When they ask what they spent, use your_share totals.
 - The app shows the matching expenses under your reply, so answer in a sentence or two (how many, the totals) instead of listing them all.
+- Results include your_share_by_category and your_share_by_month: use them for "where did my money go", "which category is biggest" or comparing months (search the whole span, e.g. two months, then compare).
+- budget_status answers questions about budgets: how much is left, which category is over.
 
 Changing and deleting:
 - You need the expense's ref: take it from earlier in the conversation, or call search_expenses first. If more than one expense fits and it's unclear which one they mean, ask. Never guess.

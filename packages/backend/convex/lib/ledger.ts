@@ -2,39 +2,45 @@ import type { Doc } from '../_generated/dataModel'
 
 // Balance math. Everything is integer cents.
 
+export type FriendSplit = 'equal' | 'full' | 'exact'
+
 type FriendEntry = Pick<
   Doc<'friendEntries'>,
   'kind' | 'amountCents' | 'paidBy'
-> & { split?: 'equal' | 'full' }
+> & { split?: FriendSplit; owedCents?: number }
+
+/**
+ * What the person who didn't pay owes on a one-on-one expense: half
+ * (rounded down, so the payer absorbs an odd cent), all of it, or the exact
+ * amount entered.
+ */
+export function otherOwes(entry: { amountCents: number; split: FriendSplit; owedCents?: number }) {
+  if (entry.split === 'equal') return Math.floor(entry.amountCents / 2)
+  if (entry.split === 'exact') return Math.min(entry.owedCents ?? 0, entry.amountCents)
+  return entry.amountCents
+}
 
 /**
  * How much an entry changes what the friend owes you (positive: they owe
- * you more). On an equal split the payer absorbs an odd cent.
+ * you more).
  */
 export function friendDelta(entry: FriendEntry) {
   const owedByOther =
-    entry.kind === 'expense' && entry.split === 'equal'
-      ? Math.floor(entry.amountCents / 2)
+    entry.kind === 'expense' && entry.split
+      ? otherOwes({ amountCents: entry.amountCents, split: entry.split, owedCents: entry.owedCents })
       : entry.amountCents
   return entry.paidBy === 'me' ? owedByOther : -owedByOther
 }
 
-/**
- * Your own share of a one-on-one expense (what it cost you): the non-payer
- * owes half rounded down on an equal split, or everything when owed in full.
- */
+/** Your own share of a one-on-one expense (what it cost you). */
 export function myFriendShare(entry: {
   amountCents: number
   paidBy: 'me' | 'friend'
-  split: 'equal' | 'full'
+  split: FriendSplit
+  owedCents?: number
 }) {
-  const otherOwes =
-    entry.split === 'equal' ? Math.floor(entry.amountCents / 2) : entry.amountCents
-  return entry.paidBy === 'me'
-    ? entry.amountCents - otherOwes
-    : entry.split === 'equal'
-      ? Math.floor(entry.amountCents / 2)
-      : entry.amountCents
+  const owed = otherOwes(entry)
+  return entry.paidBy === 'me' ? entry.amountCents - owed : owed
 }
 
 export function addToBalance(
@@ -50,17 +56,22 @@ export function addToBalance(
 type Group = Doc<'groups'>
 type GroupExpense = Pick<
   Doc<'groupExpenses'>,
-  'amountCents' | 'paidBy' | 'splitAmong' | 'category' | 'date'
+  'amountCents' | 'paidBy' | 'splitAmong' | 'category' | 'date' | 'split'
 >
 
 /**
- * Splits an amount equally in integer cents. Leftover cents go to the first
- * participants (in group member order) so shares always sum to the total.
+ * What each member owes for an expense, in integer cents: the stored split
+ * when it was split unequally, otherwise equal shares where leftover cents
+ * go to the first participants (in group member order), so shares always
+ * sum to the total.
  */
 export function shares(
-  expense: Pick<GroupExpense, 'amountCents' | 'splitAmong'>,
+  expense: Pick<GroupExpense, 'amountCents' | 'splitAmong' | 'split'>,
   memberOrder: Array<string>,
 ) {
+  if (expense.split) {
+    return new Map(Object.entries(expense.split.owed).filter(([, cents]) => cents > 0))
+  }
   const participants = [...expense.splitAmong].sort(
     (a, b) => memberOrder.indexOf(a) - memberOrder.indexOf(b),
   )

@@ -4,7 +4,7 @@ import type { Doc, Id } from './_generated/dataModel'
 import { mutation, query, type QueryCtx } from './_generated/server'
 import { requireUser } from './lib/auth'
 import * as input from './lib/input'
-import { attachReceipt, deleteReceipt } from './lib/receipts'
+import { attachReceipt } from './lib/receipts'
 import { category, currency } from './lib/validators'
 
 // Enough for any realistic month; the page says so if a month has more.
@@ -62,6 +62,8 @@ export const month = query({
         category: e.category,
         date: e.date,
         receiptId: e.receiptId ?? null,
+        tags: e.tags ?? [],
+        recurring: e.recurringId !== undefined,
       })),
       truncated: rows.length > MAX_PER_MONTH,
       totals: [...totals]
@@ -78,6 +80,7 @@ const fields = {
   currency,
   category,
   date: v.string(),
+  tags: v.optional(v.array(v.string())),
 }
 
 async function requireExpense(ctx: QueryCtx, userId: string, expenseId: Id<'personalExpenses'>) {
@@ -100,6 +103,7 @@ export const add = mutation({
       category: args.category,
       date: input.isoDate(args.date),
       receiptId: await attachReceipt(ctx, userId, args.receiptId),
+      tags: input.tags(args.tags),
     })
   },
 })
@@ -121,18 +125,36 @@ export const update = mutation({
       category: args.category,
       date: input.isoDate(args.date),
       receiptId: await attachReceipt(ctx, userId, args.receiptId, expense.receiptId),
+      tags: input.tags(args.tags),
     })
     return null
   },
 })
 
+/** Deletes an expense into the trash; returns the trash row for Undo. */
 export const remove = mutation({
   args: { expenseId: v.id('personalExpenses') },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<Id<'trash'>> => {
     const { userId } = await requireUser(ctx)
     const expense = await requireExpense(ctx, userId, args.expenseId)
     await ctx.db.delete('personalExpenses', expense._id)
-    if (expense.receiptId) await deleteReceipt(ctx, expense.receiptId)
-    return null
+    return await ctx.db.insert('trash', {
+      userId,
+      description: expense.description,
+      amountCents: expense.amountCents,
+      currency: expense.currency,
+      item: {
+        kind: 'personal',
+        expense: {
+          description: expense.description,
+          amountCents: expense.amountCents,
+          currency: expense.currency,
+          category: expense.category,
+          date: expense.date,
+          receiptId: expense.receiptId,
+          tags: expense.tags,
+        },
+      },
+    })
   },
 })

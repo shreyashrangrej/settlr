@@ -49,3 +49,31 @@ function otpHtml(otp: string) {
   </body>
 </html>`
 }
+
+/**
+ * Sends any email through Resend, or logs it when RESEND_API_KEY isn't set.
+ * Throws when Resend rejects it.
+ */
+export async function sendEmail(email: { to: string; subject: string; text: string; html: string }) {
+  if (!env.RESEND_API_KEY) {
+    console.warn(`[email] RESEND_API_KEY is not set. Would send "${email.subject}" to ${email.to}.`)
+    return
+  }
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: env.AUTH_EMAIL_FROM ?? 'Settlr <onboarding@resend.dev>',
+      to: [email.to],
+      subject: email.subject,
+      text: email.text,
+      html: email.html,
+    }),
+  })
+  if (!response.ok) {
+    throw new Error(`Resend rejected the email (${response.status}): ${await response.text()}`)
+  }
+}

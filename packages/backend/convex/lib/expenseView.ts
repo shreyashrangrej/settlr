@@ -62,7 +62,7 @@ export function friendView(e: FriendExpense, friend: Pick<Doc<'friends'>, 'name'
     date: e.date,
     with: friend.name,
     detail: `${e.paidBy === 'me' ? 'You' : friend.name} paid, ${
-      e.split === 'equal' ? 'split equally' : 'owed in full'
+      e.split === 'equal' ? 'split equally' : e.split === 'exact' ? 'split by amount' : 'owed in full'
     }`,
     myShareCents: myFriendShare(e),
     href: `/friends/${e.friendId}`,
@@ -88,9 +88,9 @@ export function groupView(
     category: e.category,
     date: e.date,
     with: group.name,
-    detail: `${payer.charAt(0).toUpperCase()}${payer.slice(1)} paid, split between ${
-      everyone ? 'everyone' : e.splitAmong.map(name).join(', ')
-    }`,
+    detail: `${payer.charAt(0).toUpperCase()}${payer.slice(1)} paid, split ${
+      e.split ? `by ${e.split.mode === 'items' ? 'item' : e.split.mode} ` : ''
+    }between ${everyone ? 'everyone' : e.splitAmong.map(name).join(', ')}`,
     myShareCents: shares(e, group.members.map((m) => m.id)).get(meMemberId) ?? 0,
     href: `/groups/${group._id}`,
   }

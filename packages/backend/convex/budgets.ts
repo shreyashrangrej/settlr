@@ -1,11 +1,11 @@
-import { v } from 'convex/values'
+import { ConvexError, v } from 'convex/values'
 
 import type { Doc } from './_generated/dataModel'
 import { mutation, query } from './_generated/server'
 import { requireUser } from './lib/auth'
 import * as input from './lib/input'
 import { myFriendShare, shares } from './lib/ledger'
-import { currency } from './lib/validators'
+import { category, currency } from './lib/validators'
 
 // Monthly budgets for what you spend: your personal expenses plus your share
 // of expenses with friends and in groups. There are only a handful of
@@ -30,10 +30,19 @@ export const monthSpending = query({
     const month = input.isoMonth(args.month)
     const from = `${month}-01`
     const to = `${nextMonth(month)}-01`
-    const totals = new Map<Currency, { personal: number; friends: number; groups: number }>()
-    const add = (c: Currency, key: 'personal' | 'friends' | 'groups', cents: number) => {
-      const row = totals.get(c) ?? { personal: 0, friends: 0, groups: 0 }
+    const totals = new Map<
+      Currency,
+      { personal: number; friends: number; groups: number; byCategory: Record<string, number> }
+    >()
+    const add = (
+      c: Currency,
+      key: 'personal' | 'friends' | 'groups',
+      cents: number,
+      category: string,
+    ) => {
+      const row = totals.get(c) ?? { personal: 0, friends: 0, groups: 0, byCategory: {} }
       row[key] += cents
+      row.byCategory[category] = (row.byCategory[category] ?? 0) + cents
       totals.set(c, row)
     }
 
@@ -43,7 +52,7 @@ export const monthSpending = query({
         q.eq('userId', userId).gte('date', from).lt('date', to),
       )
       .take(2000)
-    for (const e of personal) add(e.currency, 'personal', e.amountCents)
+    for (const e of personal) add(e.currency, 'personal', e.amountCents, e.category)
 
     const friendEntries = await ctx.db
       .query('friendEntries')
@@ -52,7 +61,7 @@ export const monthSpending = query({
       )
       .take(2000)
     for (const e of friendEntries) {
-      if (e.kind === 'expense') add(e.currency, 'friends', myFriendShare(e))
+      if (e.kind === 'expense') add(e.currency, 'friends', myFriendShare(e), e.category)
     }
 
     // Every group you're in, as owner or linked member.
@@ -81,7 +90,7 @@ export const monthSpending = query({
         .take(500)
       for (const e of expenses) {
         const mine = shares(e, order).get(me)
-        if (mine) add(group.currency, 'groups', mine)
+        if (mine) add(group.currency, 'groups', mine, e.category)
       }
     }
 
@@ -104,7 +113,11 @@ export const list = query({
       .query('budgets')
       .withIndex('by_userId_and_currency', (q) => q.eq('userId', userId))
       .take(20)
-    return rows.map((row) => ({ currency: row.currency, amountCents: row.amountCents }))
+    return rows.map((row) => ({
+      currency: row.currency,
+      amountCents: row.amountCents,
+      byCategory: row.byCategory ?? {},
+    }))
   },
 })
 
@@ -140,6 +153,29 @@ export const remove = mutation({
       )
       .unique()
     if (existing) await ctx.db.delete('budgets', existing._id)
+    return null
+  },
+})
+
+/**
+ * Sets (or with null, clears) a limit for one category inside a currency's
+ * budget. The monthly budget must exist first.
+ */
+export const setCategory = mutation({
+  args: { currency, category, amountCents: v.union(v.number(), v.null()) },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const existing = await ctx.db
+      .query('budgets')
+      .withIndex('by_userId_and_currency', (q) =>
+        q.eq('userId', userId).eq('currency', args.currency),
+      )
+      .unique()
+    if (!existing) throw new ConvexError(`Set a monthly ${args.currency} budget first.`)
+    const byCategory = { ...(existing.byCategory ?? {}) }
+    if (args.amountCents === null) delete byCategory[args.category]
+    else byCategory[args.category] = input.amount(args.amountCents)
+    await ctx.db.patch('budgets', existing._id, { byCategory })
     return null
   },
 })

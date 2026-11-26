@@ -115,11 +115,13 @@ export const allExpensesSearchDefaults = {
   ...monthSearchDefaults,
   ...expenseFilterDefaults,
   source: 'all',
+  tag: '',
   limit: LIST_STEP,
 } as const
 export const allExpensesSearchSchema = monthSearchSchema.extend({
   ...expenseFilterFields,
   source: z.enum(['all', ...EXPENSE_SOURCES]).default('all').catch('all'),
+  tag: z.string().trim().max(24).default('').catch(''),
   limit,
 })
 export type AllExpensesSearch = z.infer<typeof allExpensesSearchSchema>
@@ -186,6 +188,11 @@ export const editGroupInput = z.object({
     ),
 })
 
+const tags = z.array(z.string().max(24, 'Keep each tag under 24 characters')).max(5, 'Use at most 5 tags')
+
+export const FREQUENCIES = ['weekly', 'monthly', 'yearly'] as const
+export type Frequency = (typeof FREQUENCIES)[number]
+
 export const addExpenseInput = z.object({
   description,
   amountCents,
@@ -193,6 +200,7 @@ export const addExpenseInput = z.object({
   splitAmong: z.array(id).min(1, 'Split between at least one person'),
   category: z.enum(CATEGORIES),
   date: isoDate,
+  tags: tags.optional(),
 })
 export type AddExpenseInput = z.infer<typeof addExpenseInput>
 
@@ -211,8 +219,11 @@ export const friendExpenseInput = z.object({
   currency: z.enum(CURRENCIES),
   category: z.enum(CATEGORIES),
   paidBy: z.enum(['me', 'friend']),
-  split: z.enum(['equal', 'full']),
+  split: z.enum(['equal', 'full', 'exact']),
+  // With 'exact': what the person who didn't pay owes.
+  owedCents: z.number().int().min(0).optional(),
   date: isoDate,
+  tags: tags.optional(),
 })
 
 export type FriendExpenseInput = z.infer<typeof friendExpenseInput>
@@ -232,6 +243,7 @@ export const personalExpenseInput = z.object({
   currency: z.enum(CURRENCIES),
   category: z.enum(CATEGORIES),
   date: isoDate,
+  tags: tags.optional(),
 })
 export type PersonalExpenseInput = z.infer<typeof personalExpenseInput>
 

@@ -28,6 +28,14 @@ const app = defineApp({
     // model, which must support tool calling. It's off until both are set.
     OPENROUTER_API_KEY: v.optional(v.string()),
     OPENROUTER_MODEL: v.optional(v.string()),
+    // Receipt scanning sends the photo to this OpenRouter model (it must
+    // accept images). Falls back to OPENROUTER_MODEL.
+    OPENROUTER_VISION_MODEL: v.optional(v.string()),
+    // Forwarded emails: each user gets <token>@INBOUND_EMAIL_DOMAIN, and the
+    // email provider posts them to /inbound-email with this secret in the
+    // `x-inbound-secret` header. The inbox is off until both are set.
+    INBOUND_EMAIL_DOMAIN: v.optional(v.string()),
+    INBOUND_EMAIL_SECRET: v.optional(v.string()),
   },
 })
 

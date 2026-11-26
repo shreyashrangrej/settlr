@@ -45,6 +45,7 @@ type Item = {
   /** Where it lives: the group or friend (null for personal). */
   where: { id: string; name: string } | null
   hasReceipt: boolean
+  tags: Array<string>
   _creationTime: number
 }
 
@@ -68,6 +69,8 @@ export const month = query({
     sort: v.union(v.literal('date'), v.literal('amount')),
     order: v.union(v.literal('desc'), v.literal('asc')),
     limit: v.number(),
+    // Only expenses with this tag ('' for any).
+    tag: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx)
@@ -99,6 +102,7 @@ export const month = query({
         paidBy: 'You',
         where: null,
         hasReceipt: e.receiptId !== undefined,
+        tags: e.tags ?? [],
         _creationTime: e._creationTime,
       })
     }
@@ -133,6 +137,7 @@ export const month = query({
         paidBy: e.paidBy === 'me' ? 'You' : friend.name,
         where: { id: friend._id, name: friend.name },
         hasReceipt: e.receiptId !== undefined,
+        tags: e.tags ?? [],
         _creationTime: e._creationTime,
       })
     }
@@ -177,6 +182,7 @@ export const month = query({
           paidBy: e.paidBy === me ? 'You' : (names.get(e.paidBy) ?? 'Someone'),
           where: { id: group._id, name: group.name },
           hasReceipt: e.receiptId !== undefined,
+          tags: e.tags ?? [],
           _creationTime: e._creationTime,
         })
       }
@@ -213,13 +219,17 @@ export const month = query({
     }
 
     const q = args.q.trim().toLowerCase().slice(0, 100)
+    const tag = args.tag?.trim().toLowerCase() ?? ''
     const dir = args.order === 'asc' ? 1 : -1
     const matches = all
       .filter(
         (item) =>
           (args.source === 'all' || item.source === args.source) &&
           (args.category === 'all' || item.category === args.category) &&
-          (!q || item.description.toLowerCase().includes(q)),
+          (!tag || item.tags.includes(tag)) &&
+          (!q ||
+            item.description.toLowerCase().includes(q) ||
+            item.tags.some((t) => t.includes(q.replace(/^#/, '')))),
       )
       .sort((a, b) =>
         args.sort === 'amount'
@@ -237,6 +247,7 @@ export const month = query({
         .map(([currency, row]) => ({ currency, ...row }))
         .sort((a, b) => b.share - a.share),
       byCategory: [...byCategory.values()].sort((a, b) => b.cents - a.cents),
+      tags: [...new Set(all.flatMap((item) => item.tags))].sort(),
       truncated,
     }
   },

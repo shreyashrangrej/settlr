@@ -12,15 +12,20 @@ import {
 import { requireUser } from './lib/auth'
 import { flip, linkedCounterpart, mirrorEntry, type NewEntry } from './lib/friendship'
 import * as input from './lib/input'
-import { addToBalance, friendDelta, myFriendShare } from './lib/ledger'
+import { addToBalance, friendDelta, myFriendShare, settleUp } from './lib/ledger'
 import { notify } from './lib/notify'
+import { profileOf } from './lib/profile'
 import { attachReceipt, deleteReceipt } from './lib/receipts'
 import { category, currency } from './lib/validators'
+import { findGroup, insertGroupPayment, myGroups, viewerMemberId } from './groups'
 
 const MAX_FRIENDS = 500
 const paidBy = v.union(v.literal('me'), v.literal('friend'))
+const split = v.union(v.literal('equal'), v.literal('full'), v.literal('exact'))
+// One reminder a day per friend.
+const REMIND_EVERY_MS = 20 * 60 * 60 * 1000
 
-type User = Awaited<ReturnType<typeof requireUser>>
+export type User = Awaited<ReturnType<typeof requireUser>>
 
 // The caller's friend, or null if the id is malformed, missing or someone
 // else's. Taking a string (not v.id) lets pages turn bad URLs into a 404.
@@ -30,7 +35,7 @@ async function findFriend(ctx: QueryCtx, userId: string, friendId: string) {
   return friend && friend.userId === userId ? friend : null
 }
 
-async function requireFriend(ctx: QueryCtx, userId: string, friendId: string) {
+export async function requireFriend(ctx: QueryCtx, userId: string, friendId: string) {
   const friend = await findFriend(ctx, userId, friendId)
   if (!friend) throw new ConvexError('That friend doesn’t exist.')
   return friend
@@ -73,7 +78,58 @@ export const get = query({
   handler: async (ctx, args) => {
     const { userId } = await requireUser(ctx)
     const friend = await findFriend(ctx, userId, args.friendId)
-    return friend ? toFriend(friend) : null
+    if (!friend) return null
+    // A linked friend's own UPI id wins over the one you typed in.
+    const theirProfile = friend.linkedUserId ? await profileOf(ctx, friend.linkedUserId) : null
+    return {
+      ...toFriend(friend),
+      upiId: theirProfile?.upiId ?? friend.upiId ?? null,
+      ownUpiId: friend.upiId ?? null,
+      canRemindAt: (friend.lastRemindedAt ?? 0) + REMIND_EVERY_MS,
+    }
+  },
+})
+
+/**
+ * Where you stand with a linked friend across everything: your one-on-one
+ * balance plus, for each group you're both in, what the settle-up plan has
+ * one of you paying the other. Positive: they owe you.
+ */
+export const overview = query({
+  args: { friendId: v.string() },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const friend = await findFriend(ctx, userId, args.friendId)
+    if (!friend) return null
+    const groups: Array<{
+      groupId: Id<'groups'>
+      name: string
+      currency: Doc<'groups'>['currency']
+      cents: number
+    }> = []
+    if (friend.linkedUserId) {
+      for (const group of await myGroups(ctx, userId)) {
+        const me = viewerMemberId(group, userId)
+        const them = viewerMemberId(group, friend.linkedUserId)
+        if (!me || !them) continue
+        let cents = 0
+        for (const s of settleUp(group.members)) {
+          if (s.from === them && s.to === me) cents += s.amountCents
+          if (s.from === me && s.to === them) cents -= s.amountCents
+        }
+        if (cents !== 0) {
+          groups.push({ groupId: group._id, name: group.name, currency: group.currency, cents })
+        }
+      }
+    }
+    const totals: Record<string, number> = { ...friend.balances }
+    for (const g of groups) totals[g.currency] = (totals[g.currency] ?? 0) + g.cents
+    return {
+      linked: Boolean(friend.linkedUserId),
+      direct: friend.balances,
+      groups,
+      totals: Object.fromEntries(Object.entries(totals).filter(([, c]) => c !== 0)),
+    }
   },
 })
 
@@ -190,6 +246,11 @@ export const entries = query({
           ...entry,
           id: entry._id,
           effectCents: friendDelta(entry),
+          // You received it and someone else said they paid it.
+          canConfirm:
+            entry.kind === 'payment' &&
+            Boolean(entry.unconfirmed) &&
+            entry.recordedBy !== userId,
         })),
       hasMore: rows.length > limit,
     }
@@ -357,14 +418,40 @@ export const clearMirrors = internalMutation({
   },
 })
 
+// The amount and split of a one-on-one expense, checked.
+export function checkSplit(args: {
+  amountCents: number
+  split: 'equal' | 'full' | 'exact'
+  owedCents?: number
+}) {
+  const amountCents = input.amount(args.amountCents)
+  if (args.split !== 'exact') return { amountCents, split: args.split, owedCents: undefined }
+  const owed = args.owedCents ?? -1
+  if (!Number.isInteger(owed) || owed < 0 || owed > amountCents) {
+    throw new ConvexError('What they owe must be between zero and the amount.')
+  }
+  return { amountCents, split: args.split, owedCents: owed }
+}
+
 // Records an entry in your ledger and, if you're linked, in theirs (with a
 // notification saying what it means for them).
-async function record(
+export async function record(
   ctx: MutationCtx,
   me: User,
   friend: Doc<'friends'>,
-  entry: NewEntry,
+  input: NewEntry,
 ) {
+  const counterpartFirst = await linkedCounterpart(ctx, friend)
+  // A payment you say you made to a linked friend waits for them to
+  // confirm it (the balance moves now; rejecting it moves it back).
+  const entry: NewEntry =
+    input.kind === 'payment'
+      ? {
+          ...input,
+          recordedBy: me.userId,
+          unconfirmed: counterpartFirst && input.paidBy === 'me' ? true : undefined,
+        }
+      : input
   const entryId = await ctx.db.insert('friendEntries', entry)
   const now = Date.now()
   await ctx.db.patch('friends', friend._id, {
@@ -384,7 +471,12 @@ async function record(
     userId: counterpart.userId,
     kind: entry.kind === 'expense' ? 'friend_expense' : 'friend_payment',
     actorName: me.name,
-    description: entry.kind === 'expense' ? entry.description : entry.note,
+    description:
+      entry.kind === 'expense'
+        ? entry.description
+        : entry.unconfirmed
+          ? `${entry.note ? `${entry.note} · ` : ''}Confirm you got it`
+          : entry.note,
     amountCents: theirDelta,
     currency: entry.currency,
     friendId: counterpart._id,
@@ -400,9 +492,12 @@ export const addExpense = mutation({
     currency,
     category,
     paidBy,
-    split: v.union(v.literal('equal'), v.literal('full')),
+    split,
+    // With split 'exact': what the person who didn't pay owes.
+    owedCents: v.optional(v.number()),
     date: v.string(),
     receiptId: v.optional(v.id('receipts')),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args): Promise<Id<'friendEntries'>> => {
     const me = await requireUser(ctx)
@@ -413,13 +508,13 @@ export const addExpense = mutation({
       userId: me.userId,
       friendId: friend._id,
       description: input.text(args.description, 'Description', 80),
-      amountCents: input.amount(args.amountCents),
+      ...checkSplit(args),
       currency: args.currency,
       category: args.category,
       paidBy: args.paidBy,
-      split: args.split,
       date: input.isoDate(args.date),
       receiptId,
+      tags: input.tags(args.tags),
     })
   },
 })
@@ -516,9 +611,11 @@ export const updateExpense = mutation({
     currency,
     category,
     paidBy,
-    split: v.union(v.literal('equal'), v.literal('full')),
+    split,
+    owedCents: v.optional(v.number()),
     date: v.string(),
     receiptId: v.union(v.id('receipts'), v.null()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const me = await requireUser(ctx)
@@ -529,14 +626,15 @@ export const updateExpense = mutation({
       userId: entry.userId,
       friendId: entry.friendId,
       description: input.text(args.description, 'Description', 80),
-      amountCents: input.amount(args.amountCents),
+      ...checkSplit(args),
       currency: args.currency,
       category: args.category,
       paidBy: args.paidBy,
-      split: args.split,
       date: input.isoDate(args.date),
       mirrorId: entry.mirrorId,
       receiptId: await attachReceipt(ctx, me.userId, args.receiptId, entry.receiptId),
+      tags: input.tags(args.tags),
+      recurringId: entry.recurringId,
     })
     return null
   },
@@ -566,37 +664,212 @@ export const updatePayment = mutation({
       note: input.optionalText(args.note, 'Note', 80),
       date: input.isoDate(args.date),
       mirrorId: entry.mirrorId,
+      recordedBy: entry.recordedBy,
+      unconfirmed: entry.unconfirmed,
     })
     return null
   },
 })
 
-/** Deletes an entry, and its twin in a linked friend's ledger. */
-export const removeEntry = mutation({
-  args: { entryId: v.id('friendEntries') },
-  handler: async (ctx, args) => {
-    const { userId } = await requireUser(ctx)
-    const entry = await requireEntry(ctx, userId, args.entryId)
-    const friend = await requireFriend(ctx, userId, entry.friendId)
-    await ctx.db.delete('friendEntries', entry._id)
+// Deletes an entry and its twin in a linked friend's ledger, moving both
+// balances back. Receipts are left to the caller.
+async function deleteEntryPair(ctx: MutationCtx, entry: Doc<'friendEntries'>) {
+  const friend = await ctx.db.get('friends', entry.friendId)
+  await ctx.db.delete('friendEntries', entry._id)
+  if (friend) {
     await ctx.db.patch('friends', friend._id, {
       balances: addToBalance(friend.balances, entry.currency, -friendDelta(entry)),
     })
-
-    const twin = await twinOf(ctx, entry)
-    if (twin) {
-      const theirFriend = await ctx.db.get('friends', twin.friendId)
-      await ctx.db.delete('friendEntries', twin._id)
-      if (theirFriend) {
-        await ctx.db.patch('friends', theirFriend._id, {
-          balances: addToBalance(theirFriend.balances, twin.currency, -friendDelta(twin)),
-        })
-      }
+  }
+  const twin = await twinOf(ctx, entry)
+  if (twin) {
+    const theirFriend = await ctx.db.get('friends', twin.friendId)
+    await ctx.db.delete('friendEntries', twin._id)
+    if (theirFriend) {
+      await ctx.db.patch('friends', theirFriend._id, {
+        balances: addToBalance(theirFriend.balances, twin.currency, -friendDelta(twin)),
+      })
     }
-    // The twin (now gone too) shared the receipt.
-    if (entry.kind === 'expense' && entry.receiptId) {
-      await deleteReceipt(ctx, entry.receiptId)
+  }
+}
+
+/**
+ * Deletes an entry, and its twin in a linked friend's ledger. An expense
+ * goes to your trash (restorable for 30 days; its trash row is returned for
+ * the toast's Undo); a payment is deleted outright.
+ */
+export const removeEntry = mutation({
+  args: { entryId: v.id('friendEntries') },
+  handler: async (ctx, args): Promise<Id<'trash'> | null> => {
+    const { userId } = await requireUser(ctx)
+    const entry = await requireEntry(ctx, userId, args.entryId)
+    const friend = await requireFriend(ctx, userId, entry.friendId)
+    await deleteEntryPair(ctx, entry)
+    if (entry.kind !== 'expense') return null
+    return await ctx.db.insert('trash', {
+      userId,
+      description: entry.description,
+      amountCents: entry.amountCents,
+      currency: entry.currency,
+      where: friend.name,
+      item: {
+        kind: 'friend',
+        friendId: friend._id,
+        expense: {
+          description: entry.description,
+          amountCents: entry.amountCents,
+          currency: entry.currency,
+          category: entry.category,
+          paidBy: entry.paidBy,
+          split: entry.split,
+          owedCents: entry.owedCents,
+          date: entry.date,
+          receiptId: entry.receiptId,
+          tags: entry.tags,
+        },
+      },
+    })
+  },
+})
+
+/**
+ * The friend who got a payment answers it: confirming keeps it, rejecting
+ * ("I never got it") deletes it from both ledgers. They're told either way.
+ */
+export const answerPayment = mutation({
+  args: { entryId: v.id('friendEntries'), confirm: v.boolean() },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const entry = await requireEntry(ctx, me.userId, args.entryId)
+    if (entry.kind !== 'payment' || !entry.unconfirmed || entry.recordedBy === me.userId) {
+      throw new ConvexError('There’s nothing to confirm on that entry.')
+    }
+    const twin = await twinOf(ctx, entry)
+    if (args.confirm) {
+      await ctx.db.patch('friendEntries', entry._id, { unconfirmed: undefined })
+      if (twin) await ctx.db.patch('friendEntries', twin._id, { unconfirmed: undefined })
+    } else {
+      await deleteEntryPair(ctx, entry)
+    }
+    if (twin) {
+      await notify(ctx, {
+        userId: twin.userId,
+        kind: args.confirm ? 'payment_confirmed' : 'payment_rejected',
+        actorName: me.name,
+        amountCents: entry.amountCents,
+        currency: entry.currency,
+        friendId: twin.friendId,
+      })
     }
     return null
+  },
+})
+
+/**
+ * Reminds a friend who owes you: a notification if they're linked, an email
+ * if they're not but you have their address. Once a day at most.
+ */
+export const remind = mutation({
+  args: { friendId: v.id('friends') },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const friend = await requireFriend(ctx, me.userId, args.friendId)
+    const owed = Object.entries(friend.balances).filter(([, cents]) => cents > 0)
+    if (owed.length === 0) throw new ConvexError(`${friend.name} doesn’t owe you anything.`)
+    const now = Date.now()
+    if ((friend.lastRemindedAt ?? 0) + REMIND_EVERY_MS > now) {
+      throw new ConvexError(`You already reminded ${friend.name} today.`)
+    }
+    const counterpart = await linkedCounterpart(ctx, friend)
+    if (counterpart) {
+      for (const [code, cents] of owed) {
+        await notify(ctx, {
+          userId: counterpart.userId,
+          kind: 'reminder',
+          actorName: me.name,
+          description: `You owe ${me.name}`,
+          amountCents: cents,
+          currency: code as Doc<'friendEntries'>['currency'],
+          friendId: counterpart._id,
+        })
+      }
+    } else if (friend.email) {
+      await ctx.scheduler.runAfter(0, internal.notifyEmail.reminder, {
+        to: friend.email,
+        fromName: me.name,
+        friendName: friend.name,
+        amounts: owed.map(([code, cents]) => ({
+          currency: code as Doc<'friendEntries'>['currency'],
+          cents,
+        })),
+      })
+    } else {
+      throw new ConvexError(`Add ${friend.name}’s email, or connect with them, to send a reminder.`)
+    }
+    await ctx.db.patch('friends', friend._id, { lastRemindedAt: now })
+    return counterpart ? 'notification' : 'email'
+  },
+})
+
+/** Saves the UPI id you pay this friend at (when they haven't set their own). */
+export const setUpi = mutation({
+  args: { friendId: v.id('friends'), upiId: v.union(v.string(), v.null()) },
+  handler: async (ctx, args) => {
+    const { userId } = await requireUser(ctx)
+    const friend = await requireFriend(ctx, userId, args.friendId)
+    await ctx.db.patch('friends', friend._id, {
+      upiId: args.upiId === null ? undefined : input.upiId(args.upiId),
+    })
+    return null
+  },
+})
+
+/**
+ * Settles everything with a linked friend in one currency: a payment in your
+ * one-on-one ledger for that balance, and one in each shared group for what
+ * the settle-up plan has between you. Payments you make wait for them to
+ * confirm, like any other.
+ */
+export const settleEverything = mutation({
+  args: { friendId: v.id('friends'), currency, date: v.string() },
+  handler: async (ctx, args) => {
+    const me = await requireUser(ctx)
+    const friend = await requireFriend(ctx, me.userId, args.friendId)
+    const date = input.isoDate(args.date)
+    let count = 0
+    const direct = friend.balances[args.currency] ?? 0
+    if (direct !== 0) {
+      await record(ctx, me, friend, {
+        kind: 'payment',
+        userId: me.userId,
+        friendId: friend._id,
+        amountCents: Math.abs(direct),
+        currency: args.currency,
+        // They owe you: they paid you. You owe them: you paid them.
+        paidBy: direct > 0 ? 'friend' : 'me',
+        note: 'Settled everything',
+        date,
+      })
+      count++
+    }
+    if (friend.linkedUserId) {
+      for (const group of await myGroups(ctx, me.userId)) {
+        if (group.currency !== args.currency) continue
+        const mine = viewerMemberId(group, me.userId)
+        const theirs = viewerMemberId(group, friend.linkedUserId)
+        if (!mine || !theirs) continue
+        for (const s of settleUp(group.members)) {
+          const between =
+            (s.from === mine && s.to === theirs) || (s.from === theirs && s.to === mine)
+          if (!between) continue
+          const fresh = await findGroup(ctx, me.userId, group._id)
+          if (!fresh) continue
+          await insertGroupPayment(ctx, me, fresh, { ...s, date })
+          count++
+        }
+      }
+    }
+    if (count === 0) throw new ConvexError('You’re already settled up.')
+    return count
   },
 })

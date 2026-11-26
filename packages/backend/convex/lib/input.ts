@@ -59,3 +59,31 @@ export function email(value: string | undefined) {
 export function listLimit(limit: number) {
   return Math.min(Math.max(Math.floor(limit), 1), 500)
 }
+
+// Free-form labels on an expense: up to 5, each up to 24 characters,
+// lowercased and without duplicates.
+export function tags(values: Array<string> | undefined) {
+  if (!values) return undefined
+  const cleaned = [
+    ...new Set(
+      values
+        .map((t) => t.trim().toLowerCase().replace(/^#/, '').replace(/\s+/g, '-'))
+        .filter(Boolean),
+    ),
+  ]
+  if (cleaned.length > 5) throw new ConvexError('Use at most 5 tags.')
+  for (const tag of cleaned) {
+    if (tag.length > 24) throw new ConvexError('Keep each tag under 24 characters.')
+  }
+  return cleaned.length ? cleaned : undefined
+}
+
+// A UPI virtual payment address: name@bank.
+export function upiId(value: string | undefined) {
+  const trimmed = value?.trim()
+  if (!trimmed) return undefined
+  if (!/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z][a-zA-Z0-9.\-]{1,64}$/.test(trimmed)) {
+    throw new ConvexError('Enter a UPI id like name@bank.')
+  }
+  return trimmed
+}

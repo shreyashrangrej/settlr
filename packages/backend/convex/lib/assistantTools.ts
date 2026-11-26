@@ -35,6 +35,8 @@ export type SearchResult = {
   // Every match, of which `expenses` are the newest.
   count: number
   totals: Totals
+  byCategory: Array<{ key: string; currency: Currency; myShareCents: number }>
+  byMonth: Array<{ key: string; currency: Currency; myShareCents: number }>
   // The search stopped early; there may be more matches.
   capped: boolean
 }
@@ -233,6 +235,13 @@ export const tools = {
         ),
       date: fields.date,
       note: z.string().trim().max(80).optional().describe('Friend payments only, e.g. "UPI"'),
+    }),
+  },
+  budget_status: {
+    description:
+      'The user’s monthly budgets (overall and per category) against what they’ve spent in a month (their share of personal, friend and group expenses). Use it for questions like "am I over budget?" or "how much budget is left?".',
+    args: z.object({
+      month: z.string().regex(/^\d{4}-\d{2}$/).describe('YYYY-MM'),
     }),
   },
   delete_expense: {
@@ -671,13 +680,29 @@ export async function runTool(
             total: formatMoney(t.cents, t.currency),
             your_share: formatMoney(t.myShareCents, t.currency),
           })),
+          your_share_by_category: found.byCategory.map((r) => ({
+            category: r.key,
+            your_share: formatMoney(r.myShareCents, r.currency),
+          })),
+          your_share_by_month: found.byMonth.map((r) => ({
+            month: r.key,
+            your_share: formatMoney(r.myShareCents, r.currency),
+          })),
           expenses: found.expenses.map(forModel),
           note:
             found.count > found.expenses.length
               ? `Listing the newest ${found.expenses.length} of ${found.count}.`
               : undefined,
         },
-        events: [{ type: 'found', ...found }],
+        events: [
+          {
+            type: 'found',
+            expenses: found.expenses,
+            count: found.count,
+            totals: found.totals,
+            capped: found.capped,
+          },
+        ],
       }
     }
 
@@ -704,6 +729,7 @@ export async function runTool(
           ...common,
           currency: a.currency ?? before.currency,
           receiptId: current.receiptId,
+          tags: current.tags,
         })
       } else if (current.kind === 'friend') {
         if (a.split_among) return fail('A friend expense is split with one friend, not members.')
@@ -720,7 +746,13 @@ export async function runTool(
           currency: a.currency ?? before.currency,
           paidBy,
           split: a.split ?? current.split,
+          // An exact split keeps what the other person owes, capped at the amount.
+          owedCents:
+            (a.split ?? current.split) === 'exact'
+              ? Math.min(current.owedCents ?? 0, common.amountCents)
+              : undefined,
           receiptId: current.receiptId,
+          tags: current.tags,
         })
       } else {
         if (a.split) return fail('Group expenses are split equally between chosen members.')
@@ -738,11 +770,26 @@ export async function runTool(
           ? memberIds(find, a.split_among)
           : current.splitAmong
         if (typeof splitAmong === 'string') return fail(splitAmong)
+        // A custom split stays unless new people are named; exact amounts
+        // and itemised bills can't follow a new total.
+        const keepSplit = current.split && !a.split_among?.length ? current.split : undefined
+        if (
+          keepSplit &&
+          common.amountCents !== before.amountCents &&
+          (keepSplit.mode === 'exact' || keepSplit.mode === 'items')
+        ) {
+          return fail(
+            'This expense is split by exact amounts or items, so change its amount in the app.',
+          )
+        }
         await ctx.runMutation(api.groups.updateExpense, {
           expenseId: current.id,
           ...common,
           paidBy: payer.id,
           splitAmong,
+          split: keepSplit,
+          original: common.amountCents === before.amountCents ? current.original : undefined,
+          tags: current.tags,
           receiptId: current.receiptId,
         })
       }
@@ -758,6 +805,40 @@ export async function runTool(
       const parsed = tools[name].args.safeParse(rawArgs)
       if (!parsed.success) return fail(z.prettifyError(parsed.error))
       return await recordPayment(ctx, context, defaults, parsed.data)
+    }
+
+    case 'budget_status': {
+      const parsed = tools[name].args.safeParse(rawArgs)
+      if (!parsed.success) return fail(z.prettifyError(parsed.error))
+      const budgets = await ctx.runQuery(api.budgets.list, {})
+      const spending = await ctx.runQuery(api.budgets.monthSpending, { month: parsed.data.month })
+      const currencies = new Set([...budgets.map((b) => b.currency), ...spending.map((s) => s.currency)])
+      return {
+        result: {
+          ok: true,
+          month: parsed.data.month,
+          currencies: [...currencies].map((code) => {
+            const budget = budgets.find((b) => b.currency === code)
+            const spent = spending.find((s) => s.currency === code)
+            const by = spent?.byCategory ?? {}
+            return {
+              currency: code,
+              spent: formatMoney(spent?.total ?? 0, code),
+              budget: budget ? formatMoney(budget.amountCents, code) : null,
+              left: budget ? formatMoney(budget.amountCents - (spent?.total ?? 0), code) : null,
+              categories: Object.entries(by).map(([category, cents]) => ({
+                category,
+                spent: formatMoney(cents, code),
+                limit:
+                  budget?.byCategory[category] !== undefined
+                    ? formatMoney(budget.byCategory[category], code)
+                    : null,
+              })),
+            }
+          }),
+        },
+        events: [],
+      }
     }
 
     case 'delete_expense': {
