@@ -1,4 +1,4 @@
-import { button, createGroup, expect, fillExpense, seen, slide, test } from './fixtures'
+import { button, createGroup, expect, fillExpense, seen, slide, test, typeAmount } from './fixtures'
 
 test('a group: add an expense on the keypad, see the balance, settle up', async ({ user: { page } }) => {
   await createGroup(page, 'Goa Trip', ['Priya', 'Rohan'])
@@ -57,4 +57,75 @@ test('a group expense split by shares', async ({ user: { page } }) => {
   await expect(seen(page, 'Split by shares · 2 people')).toBeVisible()
   await expect(seen(page, '₹200')).toBeVisible()
   await expect(seen(page, '₹100', true)).toBeVisible()
+})
+
+test('editing a group expense changes it in place; one deleted meanwhile isn’t saved again', async ({ user: { page } }) => {
+  await createGroup(page, 'Flat 4B', ['Ira'])
+  await button(page, 'Add expense to Flat 4B').click()
+  await fillExpense(page, '300', 'Groceries for the flat')
+  await button(page, 'Add expense').click()
+  await expect(seen(page, 'You paid ₹300 · 2 people')).toBeVisible()
+
+  // ₹300 → ₹3,000: the same row changes and Ira owes half.
+  await seen(page, 'Groceries for the flat').click()
+  await page.waitForURL(/\/expense\?/)
+  const expenseUrl = page.url()
+  await button(page, 'Edit').click()
+  await expect(seen(page, 'Edit expense', true)).toBeVisible()
+  await typeAmount(page, '0')
+  await button(page, 'Save changes').click()
+  await expect(seen(page, '₹3,000', true)).toBeVisible()
+  await button(page, 'Back to Flat 4B').click()
+  await expect(seen(page, 'You paid ₹3,000 · 2 people')).toBeVisible()
+  await expect(page.getByText(/^You paid ₹/).filter({ visible: true })).toHaveCount(1)
+  await expect(seen(page, '₹1,500', true)).toBeVisible()
+
+  // Deleted in another tab while the edit is open: Save refuses instead of adding a copy.
+  await seen(page, 'Groceries for the flat').click()
+  await button(page, 'Edit').click()
+  await expect(seen(page, 'Edit expense', true)).toBeVisible()
+  const other = await page.context().newPage()
+  await other.goto(expenseUrl)
+  await button(other, 'Delete').click()
+  await other.getByRole('alert').getByRole('button', { name: 'Delete' }).click()
+  await expect(seen(other, 'Deleted. It’s in Trash for 30 days.')).toBeVisible()
+  await button(page, 'Save changes').click()
+  await expect(seen(page, 'This expense isn’t there any more. It may have been deleted.')).toBeVisible()
+  await other.goto(`/groups/${new URL(expenseUrl).searchParams.get('parent')}`)
+  await expect(seen(other, 'Nobody owes you anything here')).toBeVisible()
+  await expect(other.getByText(/^You paid ₹/).filter({ visible: true })).toHaveCount(0)
+})
+
+test('a group that is still loading is never reported as added', async ({ user: { page } }) => {
+  await createGroup(page, 'Goa Trip', ['Priya'])
+
+  // Hold the backend's replies, so the group picked below stays loading.
+  let hold = false
+  const held: Array<string | Buffer> = []
+  let release = () => {}
+  await page.routeWebSocket(/\/sync$/, (ws) => {
+    const server = ws.connectToServer()
+    ws.onMessage((message) => server.send(message))
+    server.onMessage((message) => (hold ? held.push(message) : ws.send(message)))
+    release = () => {
+      hold = false
+      for (const message of held.splice(0)) ws.send(message)
+    }
+  })
+  await page.goto('/')
+  await expect(button(page, 'Profile and settings')).toBeVisible()
+
+  await button(page, 'Add expense').click()
+  hold = true
+  await button(page, 'Where it goes: Personal').click()
+  await page.getByLabel('Where does it go?').getByText('Goa Trip', { exact: true }).click()
+  await expect(button(page, 'Where it goes: Goa Trip')).toBeVisible()
+  await fillExpense(page, '600', 'Taxi to the airport')
+  await button(page, 'Add expense').click()
+  await expect(seen(page, 'Still loading the group. Try again in a moment.')).toBeVisible()
+
+  release()
+  await expect(seen(page, 'you lend ₹300')).toBeVisible()
+  await button(page, 'Add expense').click()
+  await expect(seen(page, 'Expense added to Goa Trip')).toBeVisible()
 })

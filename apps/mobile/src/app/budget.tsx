@@ -17,7 +17,7 @@ import { Badge, CategoryTile } from '@/components/tiles'
 import { useRun } from '@/lib/actions'
 import { CATEGORY_HUE } from '@/lib/category'
 import { currencySymbol, localIsoDate, money, monthName } from '@/lib/format'
-import { amountCents, centsToAmount } from '@/lib/keypad'
+import { amountCents, centsToAmount, cleanAmount } from '@/lib/keypad'
 import { usePrefs } from '@/lib/prefs'
 import { useColors } from '@/theme'
 
@@ -262,7 +262,7 @@ function AmountSheet({
           label={`Amount in ${currency}`}
           value={text}
           onChangeText={(t) => {
-            setText(t.replace(/[^0-9.]/g, ''))
+            setText(cleanAmount(t))
             setError(null)
           }}
           keyboardType="decimal-pad"

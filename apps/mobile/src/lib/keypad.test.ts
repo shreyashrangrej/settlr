@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { amountCents, centsToAmount, displayAmount, pressKey, type Key } from './keypad'
+import { amountCents, centsToAmount, cleanAmount, displayAmount, pressKey, type Key } from './keypad'
 
 function type(keys: Array<Key>, start = '') {
   return keys.reduce(pressKey, start)
@@ -35,8 +35,17 @@ describe('the amount keypad', () => {
     expect(amountCents('4.')).toBe(400)
   })
 
-  it('stops at 8 whole digits (the backend caps amounts)', () => {
-    expect(type(['1', '2', '3', '4', '5', '6', '7', '8', '9'])).toBe('12345678')
+  it('stops at the largest amount the backend takes, 1,000,000.00', () => {
+    expect(type(['1', '0', '0', '0', '0', '0', '0', '0'])).toBe('1000000')
+    expect(type(['1', '0', '0', '0', '0', '0', '0', '.', '5'])).toBe('1000000.')
+    expect(type(['9', '9', '9', '9', '9', '9', '.', '9', '9'])).toBe('999999.99')
+  })
+
+  it('reads a typed decimal comma as the point, never as 100 times the amount', () => {
+    expect(amountCents(cleanAmount('12,50'))).toBe(1250)
+    expect(amountCents(cleanAmount('₹ 300'))).toBe(300_00)
+    // Commas as thousands separators come out invalid (0), not wrong.
+    expect(amountCents(cleanAmount('1,250.50'))).toBe(0)
   })
 
   it('groups digits for display, the Indian way for rupees', () => {

@@ -48,7 +48,7 @@ import {
 } from '@/lib/expense-form'
 import { currencySymbol, dateChip, firstName, localIsoDate, money, signedMoney } from '@/lib/format'
 import { thud } from '@/lib/haptics'
-import { amountCents, centsToAmount, displayAmount, pressKey, type Key } from '@/lib/keypad'
+import { amountCents, centsToAmount, cleanAmount, displayAmount, pressKey, type Key } from '@/lib/keypad'
 import { setPrefs, usePrefs, type Target } from '@/lib/prefs'
 import { fonts, useColors } from '@/theme'
 
@@ -243,6 +243,9 @@ function AddExpenseScreenForm() {
     if (cents <= 0) return setError('Type an amount first.')
     if (!desc) return setError('Say what it was for.')
     if (problem) return setError(problem)
+    // Without these, nothing would be sent and it would still say "added".
+    if (target.kind === 'group' && !groupSplit) return setError('Still loading the group. Try again in a moment.')
+    if (editing && !existing) return setError('This expense isn’t there any more. It may have been deleted.')
     const common = { description: desc, amountCents: cents, category, date }
     setPending(true)
     try {
@@ -524,8 +527,6 @@ type Existing =
       currency?: undefined
       receiptId: string | null
       saved: Parameters<typeof splitFromSaved>[0]
-      owed: Record<string, number>
-      paidBy: string
     }
 
 /** The expense being edited, read from wherever it lives. */
@@ -541,12 +542,6 @@ function useEditing(params: Params, editing: boolean): Existing | null {
   const groupExpense = useQuery(
     api.groups.expense,
     editing && params.kind === 'group' && params.parent && params.edit ? { groupId: params.parent, expenseId: params.edit } : 'skip',
-  )
-  const groupList = useQuery(
-    api.groups.expenses,
-    editing && params.kind === 'group' && params.parent
-      ? { groupId: params.parent, q: '', category: 'all', paidBy: '', sort: 'date', order: 'desc', limit: 500 }
-      : 'skip',
   )
   if (!editing) return null
   if (params.kind === 'personal') {
@@ -569,7 +564,6 @@ function useEditing(params: Params, editing: boolean): Existing | null {
     }
   }
   if (params.kind === 'group' && groupExpense) {
-    const owed = groupList?.items.find((i) => i.id === params.edit)?.owed ?? {}
     return {
       kind: 'group',
       id: groupExpense.id,
@@ -583,8 +577,6 @@ function useEditing(params: Params, editing: boolean): Existing | null {
         splitAmong: groupExpense.splitAmong,
         split: groupExpense.split ? { mode: groupExpense.split.mode, inputs: groupExpense.split.inputs, owed: groupExpense.split.owed } : null,
       },
-      owed,
-      paidBy: groupExpense.paidBy,
     }
   }
   return null
@@ -722,7 +714,7 @@ function GroupSplitSheet({
   description: string
   split: GroupSplit
   onChange: (split: GroupSplit) => void
-  editing: { owed: Record<string, number>; paidBy: string; amountCents: number } | null
+  editing: { saved: Parameters<typeof splitFromSaved>[0]; amountCents: number } | null
 }) {
   const colors = useColors()
   const order = members.map((m) => m.id)
@@ -733,7 +725,9 @@ function GroupSplitSheet({
   // Your balance before this expense (without its old version when editing).
   const before =
     (me?.netCents ?? 0) -
-    (editing ? (editing.paidBy === meId ? editing.amountCents : 0) - (editing.owed[meId] ?? 0) : 0)
+    (editing
+      ? effectFor(meId, editing.saved.paidBy, editing.amountCents, groupOwed(splitFromSaved(editing.saved, order), editing.amountCents, order))
+      : 0)
   const after = before + effectFor(meId, split.payer, amountCents, owed)
 
   function setMode(next: GroupMode) {
@@ -991,7 +985,7 @@ function AmountBox({ currency, cents, onChange, label }: { currency: Currency; c
         accessibilityLabel={label}
         value={text}
         onChangeText={(t) => {
-          const clean = t.replace(/[^0-9.]/g, '')
+          const clean = cleanAmount(t)
           setText(clean)
           onChange(amountCents(clean))
         }}

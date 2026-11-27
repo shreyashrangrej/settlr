@@ -1,3 +1,4 @@
+import { MAX_AMOUNT_CENTS } from '@settlr/shared/schemas'
 import { ConvexError } from 'convex/values'
 
 // Argument validators only check types. These check the values, with the
@@ -20,9 +21,10 @@ export function optionalText(value: string | undefined, label: string, max: numb
 
 // Integer minor units, never floats.
 export function amount(cents: number) {
-  if (!Number.isInteger(cents) || cents <= 0 || cents > 100_000_000) {
+  if (!Number.isInteger(cents) || cents <= 0) {
     throw new ConvexError('Enter an amount greater than zero.')
   }
+  if (cents > MAX_AMOUNT_CENTS) throw new ConvexError('Amounts can be at most 1,000,000.00.')
   return cents
 }
 

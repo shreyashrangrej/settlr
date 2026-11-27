@@ -20,7 +20,7 @@ import { Avatar, Badge } from '@/components/tiles'
 import { errorText } from '@/lib/actions'
 import { currencySymbol, dateChip, firstName, localIsoDate, money } from '@/lib/format'
 import { thud } from '@/lib/haptics'
-import { amountCents, centsToAmount } from '@/lib/keypad'
+import { amountCents, centsToAmount, cleanAmount } from '@/lib/keypad'
 import { fonts, useColors, useReduceMotion } from '@/theme'
 
 type Params = {
@@ -314,7 +314,7 @@ function SettleBody({
               ref={input}
               accessibilityLabel="Amount paid"
               value={typed}
-              onChangeText={(t) => setTyped(t.replace(/[^0-9.]/g, ''))}
+              onChangeText={(t) => setTyped(cleanAmount(t))}
               keyboardType="decimal-pad"
               autoFocus={owedCents === 0}
               placeholder="0"

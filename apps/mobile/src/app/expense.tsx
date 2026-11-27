@@ -19,6 +19,7 @@ import { Label, Sub, Text } from '@/components/text'
 import { Avatar, Badge, Tile } from '@/components/tiles'
 import { errorText, useRun } from '@/lib/actions'
 import { CATEGORY_HUE } from '@/lib/category'
+import { friendOwed } from '@/lib/expense-form'
 import { dateChip, firstName, localIsoDate, money, timeAgo } from '@/lib/format'
 import { fonts, useColors } from '@/theme'
 
@@ -331,10 +332,6 @@ function useDetail(params: Params): Detail | null | undefined {
   const isGroup = params.kind === 'group' && params.parent
   const group = useQuery(api.groups.get, isGroup ? { groupId: params.parent! } : 'skip')
   const groupExpense = useQuery(api.groups.expense, isGroup ? { groupId: params.parent!, expenseId: params.id } : 'skip')
-  const listed = useQuery(
-    api.groups.expenses,
-    isGroup ? { groupId: params.parent!, q: '', category: 'all', paidBy: '', sort: 'date', order: 'desc', limit: 500 } : 'skip',
-  )
   const friend = useQuery(api.friends.get, params.kind === 'friend' && params.parent ? { friendId: params.parent } : 'skip')
   const entries = useQuery(
     api.friends.entries,
@@ -348,10 +345,9 @@ function useDetail(params: Params): Detail | null | undefined {
     if (group === undefined || groupExpense === undefined) return undefined
     if (!group || !groupExpense) return null
     const order = group.members.map((m) => m.id)
+    // The same rule as the backend's shares(): the saved split, or equal shares.
     const owed: Record<string, number> =
-      listed?.items.find((i) => i.id === params.id)?.owed ??
-      groupExpense.split?.owed ??
-      Object.fromEntries(equalSplit(groupExpense.amountCents, groupExpense.splitAmong, order))
+      groupExpense.split?.owed ?? Object.fromEntries(equalSplit(groupExpense.amountCents, groupExpense.splitAmong, order))
     const person = (id: string, share = 0): Person => ({
       id,
       name: group.members.find((m) => m.id === id)?.name ?? 'Former member',
@@ -383,7 +379,7 @@ function useDetail(params: Params): Detail | null | undefined {
     if (friend === undefined || entries === undefined) return undefined
     const e = entries.items.find((i) => i.id === params.id)
     if (!friend || !e || e.kind !== 'expense') return null
-    const theirShare = e.split === 'equal' ? Math.floor(e.amountCents / 2) : e.split === 'exact' ? Math.min(e.owedCents ?? 0, e.amountCents) : e.amountCents
+    const theirShare = friendOwed({ paidBy: e.paidBy, split: e.split, owedCents: e.owedCents ?? 0 }, e.amountCents)
     const payerIsMe = e.paidBy === 'me'
     const mine = payerIsMe ? e.amountCents - theirShare : theirShare
     const theirs = e.amountCents - mine

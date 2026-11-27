@@ -30,6 +30,11 @@ describe('personal expenses', () => {
     await expect(alice.mutation(api.personal.add, { ...coffee, amountCents: 4.5 })).rejects.toThrow(
       'greater than zero',
     )
+    // Too large says so, instead of "greater than zero".
+    await expect(
+      alice.mutation(api.personal.add, { ...coffee, amountCents: 100_000_001 }),
+    ).rejects.toThrow('at most 1,000,000.00')
+    await alice.mutation(api.personal.add, { ...coffee, amountCents: 100_000_000 })
     await expect(alice.mutation(api.personal.add, { ...coffee, date: '2026-02-30' })).rejects.toThrow(
       'valid date',
     )

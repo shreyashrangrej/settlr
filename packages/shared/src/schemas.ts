@@ -25,12 +25,14 @@ export const MAX_LIST_LIMIT = 500
 
 const id = z.string().trim().min(1).max(64)
 const isoDate = z.iso.date('Pick a date')
+/** The largest amount anything takes: 1,000,000.00. */
+export const MAX_AMOUNT_CENTS = 100_000_000
 // Integer minor units (cents); never floats for money.
 const amountCents = z
   .number()
   .int()
   .positive('Amount must be greater than zero')
-  .max(100_000_000, 'That amount is too large')
+  .max(MAX_AMOUNT_CENTS, 'That amount is too large')
 const description = z.string().trim().min(1, 'Describe the expense').max(80)
 // Search params arrive as strings, so the number is coerced.
 const limit = z.coerce
