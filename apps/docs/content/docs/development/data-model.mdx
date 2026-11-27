@@ -12,7 +12,7 @@ need a Settlr account, but can be linked to one.
 Better Auth keeps its own tables (users, sessions, OAuth clients and
 tokens) in the `betterAuth` Convex component, separate from these.
 
-## Tables
+## Friends
 
 ### `friends`
 
@@ -25,18 +25,24 @@ A person you share one-on-one expenses with.
 | `lastActivityAt` | For sorting the list |
 | `linkedUserId?`, `counterpartId?` | Set once a friend request is accepted: the friend's user id and their row for you |
 | `request?` | `pending` or `declined` while a request from this row is unanswered |
+| `upiId?` | Their UPI id, for **Pay with UPI** when they aren't linked |
+| `lastRemindedAt?` | When you last reminded them, so reminders go at most once a day |
 
 Indexes: `by_userId`, `by_userId_and_lastActivityAt`.
 
 ### `friendEntries`
 
-The one-on-one ledger: a union of two kinds.
+The one-on-one ledger: a union of two kinds, told apart by `kind`.
 
 - **`expense`**: `description`, `amountCents`, `currency`, `category`,
-  `paidBy` (`me` or `friend`), `split` (`equal` or `full`), `date`, optional
-  `receiptId`.
-- **`payment`**: `amountCents`, `currency`, `paidBy`, optional `note`,
-  `date`.
+  `paidBy` (`me` or `friend`), `split`, `date`, optional `tags`,
+  `receiptId` and `recurringId`. `split` is `equal` (each owes half),
+  `full` (the other person owes all of it) or `exact` (the other person
+  owes `owedCents`).
+- **`payment`**: `amountCents`, `currency`, `paidBy` (who handed the money
+  over), optional `note`, `date`, and `recordedBy` and `unconfirmed` for a
+  payment the other person recorded and the recipient hasn't confirmed yet.
+  Balances already count an unconfirmed payment; rejecting it deletes it.
 
 Both carry `userId`, `friendId` and an optional `mirrorId`. Indexes:
 `by_friendId_and_date`, `by_friendId_and_amountCents`, `by_userId_and_date`,
@@ -47,10 +53,13 @@ out.
 
 ### `friendRequests`
 
-Sent from a friend row with an email, and matched to the recipient **by
-email**, so it waits for someone who hasn't signed up yet. Status is
+Sent from a friend row with an email (`fromUserId`, `fromName`,
+`fromEmail`, `fromFriendId`, `toEmail`), and matched to the recipient **by
+email**, so it waits for someone who hasn't signed up yet. `status` is
 `pending`, `accepted` or `declined`. Indexes: `by_toEmail_and_status`,
 `by_fromFriendId`.
+
+## Groups
 
 ### `groups`
 
@@ -62,8 +71,11 @@ email**, so it waits for someone who hasn't signed up yet. Status is
 | `expenseCount`, `totalCents` | Running totals |
 | `byCategory`, `byMonth` | Category → cents and `YYYY-MM` → cents, for insights |
 | `lastExpenseAt?` | For sorting |
+| `archived?` | Moved under *Archived*, out of the active list and the dashboard's totals |
+| `inviteToken?`, `shareToken?` | The secrets in the join link and the read-only link; absent while a link is off |
+| `budgetCents?` | A budget for the whole group, in its currency |
 
-Index: `by_userId`.
+Indexes: `by_userId`, `by_inviteToken`, `by_shareToken`.
 
 ### `groupMembers`
 
@@ -72,8 +84,23 @@ can find the groups they're in. Indexes: `by_userId`, `by_groupId`.
 
 ### `groupExpenses`
 
-`groupId`, `description`, `amountCents`, `paidBy` (a member id),
-`splitAmong` (member ids), `category`, `date`, optional `receiptId`.
+| Field | Notes |
+| --- | --- |
+| `groupId`, `description`, `amountCents`, `category`, `date` | Amounts are in the group's currency |
+| `paidBy`, `splitAmong` | A member id, and the ids of everyone with a share |
+| `split?` | An unequal split (below). Without it, the expense is split equally between `splitAmong` |
+| `original?` | Paid in another currency: `{ amountCents, currency, rate }`, the amount as paid and the rate used to convert it |
+| `tags?`, `receiptId?`, `recurringId?` | As on the other expenses |
+
+`split` holds `mode` (`exact`, `percent`, `shares` or `items`) and `owed`
+(member id → cents, always adding up to the amount), plus what was typed so
+the form can edit it again: `inputs` (cents, basis points or counts per
+member), or `items` (each line's name, amount and who had it) and
+`extraCents` (tax and tip, negative for a discount). Convex works `owed`
+out itself from those inputs (`lib/groupSplit.ts`, see
+[Balances](/docs/development/balances#unequal-splits)) and never trusts a
+client's sums.
+
 Indexes: `by_groupId_and_date`, `by_groupId_and_amountCents`, and the
 `search_description` search index (filterable by `groupId`, `category` and
 `paidBy`) that backs the group page's search.
@@ -81,25 +108,83 @@ Indexes: `by_groupId_and_date`, `by_groupId_and_amountCents`, and the
 ### `groupPayments`
 
 A settle-up payment between two members: `groupId`, `from`, `to` (member
-ids), `amountCents`, `date`. It changes the members' `settledCents`, not
-the group's spending totals. Index: `by_groupId_and_date`.
+ids), `amountCents`, `date`, plus `recordedBy` and `unconfirmed` (only
+asked of a linked recipient who didn't record it). It changes the members'
+`settledCents`, not the group's spending totals. Index:
+`by_groupId_and_date`.
+
+### `activity`
+
+A group's log, written in the same mutation as each change: `groupId`,
+`actorName`, `kind` (`expense_added`, `expense_updated`, `expense_deleted`,
+`expense_restored`, `payment_added`, `payment_deleted`,
+`payment_confirmed`, `member_joined`, `comment`, `group_updated`),
+`description`, and optional `amountCents` and `expenseId`. Index:
+`by_groupId`.
+
+### `comments`
+
+Comments on a group expense, oldest first: `groupId`, `expenseId`,
+`userId`, `name`, `body`. Index: `by_expenseId`.
+
+## Personal spending and budgets
 
 ### `personalExpenses`
 
 `userId`, `description`, `amountCents`, `currency`, `category`, `date`,
-optional `receiptId`. Index: `by_userId_and_date`.
+optional `tags`, `receiptId` and `recurringId`. Index:
+`by_userId_and_date`.
 
 ### `budgets`
 
-One per user and currency: `userId`, `currency`, `amountCents`. Index:
-`by_userId_and_currency`.
+One per user and currency, applying to every month: `userId`, `currency`,
+`amountCents`, and optional `byCategory` (category → cents) for the
+category limits. Index: `by_userId_and_currency`.
+
+### `recurring`
+
+A template that a daily cron (`crons.ts`, `recurring.processDue`) turns
+into an expense on `nextDate`, as its owner, then moves `nextDate` on.
+
+| Field | Notes |
+| --- | --- |
+| `userId`, `userName` | Who set it up; the expenses are added as them |
+| `kind`, `friendId?`, `groupId?` | `personal`, `friend` or `group`, and where it goes |
+| `description`, `amountCents`, `currency`, `category` | The expense to add |
+| `paidBy?`, `split?`, `splitAmong?` | `me`/`friend` and `equal`/`full` with a friend; a member id and the members sharing it in a group |
+| `frequency` | `weekly`, `monthly` or `yearly` |
+| `anchorDay` | The day of the month it was set up on, so one set up on the 31st lands on the last day of shorter months and goes back to the 31st after |
+| `nextDate`, `paused` | The next due date, and whether it's paused |
+
+Indexes: `by_userId`, `by_paused_and_nextDate` (what the cron reads).
+
+### `trash`
+
+A deleted expense, kept for 30 days: `userId`, the `description`,
+`amountCents`, `currency` and `where` to list it, and `item`, a union by
+`kind` (`personal`, `friend` with its `friendId`, `group` with its
+`groupId`) holding the fields needed to add it back. Restoring goes
+through the same code that adds an expense, so balances and totals move
+back too. A daily cron (`trash.purgeExpired`) deletes rows older than 30
+days, and their receipts. Index: `by_userId`.
+
+## Files, people and messages
 
 ### `receipts`
 
 A file in Convex storage: `userId`, `storageId`, `fileName`, `contentType`,
 `size`, `attached`. It starts unattached; saving an expense attaches it, and
-it's deleted with that expense. A scheduled function deletes receipts still
+it's deleted with that expense: when its trash row is deleted for good,
+after 30 days or from the Trash page. A scheduled function deletes receipts still
 unattached a day after upload. Index: `by_storageId`.
+
+### `profiles`
+
+Per-user settings other people or the server need, unlike the
+preferences kept in the browser or on the phone: `userId`, `name`,
+`email`, and optional `upiId`, `weeklyDigest` and `inboxToken` (the
+forwarding address is `<inboxToken>@INBOUND_EMAIL_DOMAIN`). Indexes:
+`by_userId`, `by_inboxToken`, `by_weeklyDigest`.
 
 ### `notifications`
 
@@ -111,42 +196,20 @@ unattached a day after upload. Index: `by_storageId`.
 `comment` and `group_joined`. Amounts are from the recipient's side.
 Indexes: `by_userId`, `by_userId_and_read`.
 
-### Splits, currencies and tags on expenses
+### `inboxItems`
 
-- `groupExpenses.split` (optional): an unequal split. `mode` is `exact`,
-  `percent`, `shares` or `items`; `owed` maps member id to cents and always
-  adds up to the amount; `inputs` (cents, basis points or counts) and
-  `items`/`extraCents` keep what was typed so it can be edited. Convex
-  recomputes `owed` from them (`lib/groupSplit.ts`, with the math in
-  `packages/shared/src/split.ts`). Without it, the expense is split equally
-  between `splitAmong`.
-- `groupExpenses.original` (optional): the amount and currency actually
-  paid, and the rate used to convert it into the group's currency.
-- `friendEntries` expenses: `split` can be `exact`, with `owedCents` what the
-  person who didn't pay owes.
-- `tags` (optional, up to 5, lowercase) on personal, friend and group
-  expenses; `recurringId` on expenses a recurring template added.
-- Payments: `recordedBy` and `unconfirmed` (friend entries and
-  `groupPayments`) for payments waiting for the recipient to confirm.
+A forwarded email: `userId`, `from`, `subject`, `snippet`, `status`
+(`new`, `added` or `dismissed`) and the `draft` expense read from it
+(`description`, and the `amountCents`, `currency`, `category` and `date`
+when they were found). Index: `by_userId_and_status`.
 
-### New tables
+### `assistantChats` and `assistantMessages`
 
-- `profiles`: per-user settings other people or the server need: `upiId`,
-  `weeklyDigest`, `inboxToken`.
-- `activity`: a group's log (`by_groupId`), written in the same mutation as
-  each change.
-- `comments`: on group expenses (`by_expenseId`).
-- `trash`: deleted expenses for 30 days, as the fields needed to put them
-  back (`item` is a union by kind). A daily cron purges old rows and their
-  receipts.
-- `recurring`: templates a daily cron (`crons.ts`) turns into expenses on
-  `nextDate`, as their owner (`by_paused_and_nextDate`).
-- `assistantChats` and `assistantMessages`: saved assistant conversations.
-- `inboxItems`: forwarded emails and the draft expense read from each.
-
-`groups` also gained `archived`, `inviteToken`, `shareToken` (indexed) and
-`budgetCents`; `friends` gained `upiId` and `lastRemindedAt`; `budgets`
-gained `byCategory`.
+Saved assistant conversations. A chat has `userId`, `title` and
+`updatedAt` (index `by_userId_and_updatedAt`); each message has `chatId`,
+`role` (`user` or `assistant`), `content`, and on replies the `memo` sent
+back to the model and the `events` shown under it, as JSON (index
+`by_chatId`).
 
 ## Linked friends
 
@@ -156,22 +219,26 @@ other. From then on every entry is **mirrored**: it's written once in each
 ledger, from that person's side (`paidBy: 'me'` in one is
 `paidBy: 'friend'` in the other), and `mirrorId` pairs the twins. Each user
 still only reads their own rows. The twins share one receipt.
+`lib/friendship.ts` writes and updates the twins.
 
 Deleting a friend deletes your rows; the other person keeps theirs as an
 unlinked friend.
 
 ## Linked group members
 
-A group belongs to its owner. Linking a member to a friend's account sets
-`members[].userId` and adds a `groupMembers` row, which is how that user's
-queries find the group. Linked members can read the group and add expenses
-and payments; only the owner can change or delete the group.
+A group belongs to its owner. Linking a member to a friend's account, or
+someone joining through the invite link, sets `members[].userId` and adds a
+`groupMembers` row, which is how that user's queries find the group.
+Linked members can read the group and add expenses and payments; only the
+owner can change or delete the group.
 
 ## Conventions
 
 - Dates are `YYYY-MM-DD` strings, months `YYYY-MM`.
 - Money is integer cents (`amountCents`), checked by `input.amount`: a
   positive integer up to 100,000,000.
+- Tags (`input.tags`): up to 5 per expense, each up to 24 characters,
+  stored lowercase with spaces as hyphens and without duplicates.
 - Lists that grow with "Show more" take a `limit`, clamped to 1–500.
 - Queries use indexes (`withIndex`) rather than filters, and cap how much
   they read (`take`).

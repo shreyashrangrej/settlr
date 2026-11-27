@@ -26,7 +26,7 @@ workspaces:
       <File name="convex/: the Convex backend (@settlr/backend)" />
     </Folder>
     <Folder name="shared">
-      <File name="src/: zod schemas and formatting (@settlr/shared)" />
+      <File name="src/: zod schemas, formatting, split math and CSV (@settlr/shared)" />
     </Folder>
   </Folder>
   <Folder name="design">
@@ -48,11 +48,17 @@ workspaces:
   app imports its generated API as
   `@settlr/backend/convex/_generated/api` (and `.../dataModel` for types).
   `convex/_generated/` is written by `convex dev` and committed.
-- **`@settlr/shared`** is TypeScript source used on both sides: `schemas`
+- **`@settlr/shared`** is TypeScript source used on every side: `schemas`
   (the currencies, categories and zod schemas for forms and search params,
-  with the same limits the backend checks) and `format` (money and date
-  formatting). The web app compiles it through `transpilePackages`; Convex
-  bundles it with the functions.
+  with the same limits the backend checks), `format` (money and date
+  formatting), `split` (the split math the forms preview and Convex
+  re-checks) and `csv`. Each file is an entry in its `package.json`
+  `exports`, so add new ones there. The web app compiles it through
+  `transpilePackages`; Convex bundles it with the functions, and Metro
+  with the Android app.
+- **`apps/mobile`** talks to the same Convex deployment as the web app, so
+  a change on one shows up live on the other. See
+  [Mobile app](/docs/development/mobile-app).
 
 ## Request flow
 
@@ -63,6 +69,9 @@ Browser ──(WebSocket: live queries, mutations)──────────
             │
             └─ /api/auth/*  ──proxy──▶ Better Auth inside Convex (HTTP routes)
             └─ /api/mcp     ──token exchange, then api.mcp.handle──▶ Convex
+
+Android app ──(WebSocket)──────────────────────────────────▶ Convex
+   └─ sign-in ──▶ the web app's /api/auth/* ──proxy──▶ Better Auth
 ```
 
 1. A **server page** (`page.tsx`) gets the user's Convex JWT from the Better
@@ -74,22 +83,37 @@ Browser ──(WebSocket: live queries, mutations)──────────
    Convex subscription. Mutations (`useConvexMutation`) update every open
    page and tab without refetching or `router.refresh()`.
 
+The Android app has no server of its own: it reads with Convex's
+`useQuery` and writes with `useMutation` straight over the WebSocket, and
+signs in through the web app's auth route (see
+[Authentication](/docs/development/auth#the-android-app)).
+
 ## Backend modules
 
 | File | What it holds |
 | --- | --- |
 | `schema.ts` | Tables and indexes (see [Data model](/docs/development/data-model)) |
-| `friends.ts` | Friends, one-on-one expenses and payments, friend requests |
-| `groups.ts` | Groups, members, group expenses and payments |
+| `friends.ts` | Friends, one-on-one expenses and payments, friend requests, reminders, payment confirmation, settling everything with a friend |
+| `groups.ts` | Groups, members, group expenses and payments, invite and share links, activity, comments, archive, the group budget |
 | `personal.ts` | Personal expenses by month |
-| `budgets.ts` | Budgets and the month's spending across everything |
+| `expenses.ts` | `month`: every expense you're part of in a month, across groups, friends and personal (the All expenses page and the dashboard's recent list) |
+| `budgets.ts` | Budgets, category limits and the month's spending across everything |
 | `notifications.ts` | Notifications, accepting and declining friend requests |
 | `receipts.ts` | Receipt uploads and viewing |
-| `assistant.ts` | The chat assistant (an action calling OpenRouter) |
+| `trash.ts` | Deleted expenses: list, restore, delete for good, and the daily purge |
+| `recurring.ts` | Recurring templates, upcoming bills, and `processDue`, which the daily cron runs |
+| `profiles.ts` | Account settings kept on the server: UPI id, weekly digest, inbox address |
+| `imports.ts`, `exports.ts` | Importing a Splitwise group (parsed in the browser), and the rows for CSV exports |
+| `inbox.ts` | Forwarded emails: the `/inbound-email` HTTP action and the Inbox page |
+| `scan.ts` | "Fill from receipt": reads a receipt photo with a vision model |
+| `fx.ts` | Exchange rates for expenses paid in another currency (the ECB's, via frankfurter.app) |
+| `digest.ts`, `notifyEmail.ts`, `email.ts` | The weekly digest, reminder emails, and sending email through Resend (sign-in codes too) |
+| `assistant.ts`, `chats.ts` | The chat assistant (an action calling OpenRouter), and saved chats |
 | `mcp.ts` | The same tools over MCP, and the connected apps |
-| `auth.ts`, `auth.config.ts`, `http.ts` | Better Auth running inside Convex |
+| `crons.ts` | Daily: recurring expenses and emptying the trash. Mondays: the weekly digest |
+| `auth.ts`, `auth.config.ts`, `http.ts` | Better Auth running inside Convex; `http.ts` also mounts `/inbound-email` |
 | `convex.config.ts` | The Better Auth component and the typed environment variables |
-| `lib/` | `requireUser`, value checks (`input.ts`), balance math (`ledger.ts`), receipts, the assistant's tools |
+| `lib/` | `requireUser` (`auth.ts`), value checks (`input.ts`), enum validators (`validators.ts`), balance math (`ledger.ts`), unequal group splits (`groupSplit.ts`), mirrored friend ledgers (`friendship.ts`), receipts, notifications and group activity, the assistant's tools and OpenRouter client, reading expenses from photos and emails (`extract.ts`), link tokens |
 
 ## Principles
 

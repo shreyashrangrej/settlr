@@ -61,6 +61,21 @@ Build it locally with:
 pnpm --filter docs build
 ```
 
+## Android app
+
+Vercel doesn't build the Android app. A tag like `v1.0.1` runs
+`.github/workflows/android.yml` on GitHub Actions, which builds an APK and
+attaches it to a GitHub release of the tag; the app's URLs come from the
+repository's `EXPO_PUBLIC_*` Actions variables. See
+[Release an APK](/docs/development/mobile-app#release-an-apk).
+
+## Continuous integration
+
+`.github/workflows/test.yml` runs the type check, the tests and the docs
+build on every push to `main` and on pull requests (see
+[Testing](/docs/development/testing#ci)). It doesn't gate Vercel: a push to
+`main` deploys even while the workflow is still running.
+
 ## Health check
 
 `GET /api/health` on the web app returns a JSON liveness response, for load

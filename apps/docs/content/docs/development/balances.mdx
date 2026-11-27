@@ -4,33 +4,43 @@ description: How Settlr splits amounts, keeps running totals and plans the fewes
 icon: Scale
 ---
 
-All of the balance math is in `packages/backend/convex/lib/ledger.ts`, and
-all of it is integer cents.
+The balance math is in `packages/backend/convex/lib/ledger.ts`, and the
+split math for unequal group splits in `packages/shared/src/split.ts`
+(`@settlr/shared/split`), which the forms use for their live preview and
+Convex uses to check what it stores. All of it is integer cents.
 
 ## Friends
 
-`friendDelta(entry)` is how much an entry changes what the friend owes you
-(positive: they owe you more):
+`otherOwes(expense)` is what the person who didn't pay owes:
 
-- An **equal** expense: the non-payer owes `floor(amount / 2)`, so the payer
-  absorbs an odd cent.
-- A **full** expense or a **payment**: the whole amount.
-- The sign is `+` when you paid (`paidBy: 'me'`) and `−` when they did.
+- an **equal** expense: `floor(amount / 2)`, so the payer absorbs an odd
+  cent;
+- a **full** expense: the whole amount;
+- an **exact** expense: `owedCents`, the amount typed in the dialog's "by
+  amount" split (never more than the expense).
+
+`friendDelta(entry)` is how much an entry changes what the friend owes you
+(positive: they owe you more): `otherOwes` for an expense, the whole amount
+for a payment, with `+` when you paid (`paidBy: 'me'`) and `−` when they
+did.
 
 The result is added to `friends.balances[currency]` in the same mutation that
 writes the entry; a currency whose balance reaches zero is removed from the
 record. Editing an entry applies the old entry's delta negatively and the
 new one's positively.
 
-`myFriendShare(entry)` is what an expense cost you, which the
-[budget](/docs/guide/budget) and the assistant's "your share" use.
+`myFriendShare(entry)` is what an expense cost you (the amount less
+`otherOwes` when you paid, `otherOwes` when they did), which the
+[budget](/docs/guide/budget), All expenses and the assistant's "your share"
+use.
 
 ## Groups
 
-`shares(expense, memberOrder)` splits an expense equally between
-`splitAmong`. The base share is `floor(amount / n)`; the leftover cents go
-one each to the first participants in group-member order, so shares always
-sum to the total.
+`shares(expense, memberOrder)` is what each member owes for an expense.
+When the expense has a stored `split`, that's its `owed` map. Otherwise
+it's split equally between `splitAmong`: the base share is
+`floor(amount / n)`, and the leftover cents go one each to the first
+participants in group-member order, so shares always sum to the total.
 
 `applyGroupExpense(group, expense, sign)` returns the group's new totals
 after adding (`sign = 1`) or removing (`sign = -1`) an expense:
@@ -42,6 +52,32 @@ after adding (`sign = 1`) or removing (`sign = -1`) an expense:
 Editing an expense removes the old version and adds the new one. Callers
 patch the result onto the group in the same mutation, so the totals can
 never disagree with the expenses.
+
+### Unequal splits
+
+The expense dialog sends a `split` with the `mode` and what was typed,
+never the shares themselves. `resolveSplit` in `lib/groupSplit.ts` checks it
+against the group's members and works out `owed`:
+
+| Mode | Typed per member | Rule |
+| --- | --- | --- |
+| `exact` | cents | Taken as typed; they must add up to the amount |
+| `percent` | basis points (1% = 100) | Must add up to 100% (10,000) |
+| `shares` | a weight, up to 1,000 | Any weights, like 2 for a couple and 1 for one person |
+| `items` | each line's amount and who had it | Each line is split equally between the people who had it, then `extraCents` (tax and tip, negative for a discount) is spread in proportion to those subtotals. Up to 50 lines, and the lines plus the extra must equal the amount |
+
+Percentages, shares and items go through `proportional(total, weights)`:
+each member gets the floor of their exact share, and the leftover cents go
+one each to the largest remainders, ties to the member who comes first in
+the group, so `owed` always adds up to the amount. `splitProblem` says
+what's wrong (percentages that don't reach 100, shares that don't add up
+to the total); the form shows it, and Convex refuses the same cases. Only
+members with a share end up in `splitAmong`.
+
+An expense paid in another currency is converted to the group's currency
+before any of this: the dialog multiplies by the rate and rounds to the
+cent, and Convex checks the rate and keeps the amount and rate as paid in
+`original`. The converted amount is what's split.
 
 ### Payments
 
@@ -58,7 +94,10 @@ memberNet = paidCents - owedCents + (settledCents ?? 0)
 `settleUp(members)` is greedy: it repeatedly matches the biggest debtor with
 the biggest creditor and records a transfer of the smaller of the two
 amounts. Each transfer clears at least one person, so a group of *n* members
-needs at most *n − 1* payments.
+needs at most *n − 1* payments. Settling everything with a friend
+(`friends.settleEverything`) works in one currency: it records a payment
+for your one-on-one balance, and the plan's transfers between the two of
+you in each group you share in that currency.
 
 ```ts
 // Ann paid 90 for three people; Ben and Cat owe 30 each.
@@ -76,4 +115,6 @@ settleUp([
 `budgets.monthSpending` totals a month per currency from three sources:
 personal expenses, `myFriendShare` of friend expenses, and your `shares`
 entry of the expenses in every group you're in (as owner or linked member).
-Payments are left out because they aren't spending.
+Payments are left out because they aren't spending. `expenses.month`, the
+All expenses page's list, reads the same three sources and works out your
+share of each expense the same way.

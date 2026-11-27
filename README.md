@@ -28,6 +28,9 @@ Track shared expenses with friends, flatmates and trips, then settle up with the
 | 🧾 **Receipts** | Attach a photo or PDF to any expense |
 | ✨ **Assistant** | "Taxi 600 in the Goa trip, paid by Priya": add, find and edit expenses in plain language |
 | 🔌 **MCP server** | Use Settlr from Claude, ChatGPT and other MCP clients, signed in with OAuth |
+| 🔁 **Bills and settling up** | Recurring expenses, Pay with UPI, reminders, payment confirmations, and a trash with undo |
+| 📦 **Bring your data** | Import a Splitwise group, export CSV, and forward receipts to your own inbox address |
+| 📱 **Android app** | The same account on your phone: [download the APK](https://github.com/shreyashrangrej/settlr/releases/latest) |
 
 ## Quick start
 
@@ -47,7 +50,7 @@ Then add the deployment's URLs to `apps/web/.env.local` and set `SITE_URL` and
 | Path | What's there |
 | --- | --- |
 | [`apps/web`](apps/web) | The app: Next.js 16 App Router, shadcn/ui on Base UI, Tailwind 4 |
-| [`apps/mobile`](apps/mobile) | The Android app: Expo and Expo Router (in progress) |
+| [`apps/mobile`](apps/mobile) | The Android app: Expo and Expo Router, released as an APK from GitHub Actions |
 | [`apps/docs`](apps/docs) | The docs site, built with Fumadocs |
 | [`packages/backend`](packages/backend) | The Convex backend: data, functions and Better Auth |
 | [`packages/shared`](packages/shared) | Zod schemas and formatting used by the app and the backend |
@@ -58,12 +61,13 @@ Then add the deployment's URLs to `apps/web/.env.local` and set `SITE_URL` and
 | `pnpm dev` / `pnpm dev:docs` | Run the app (`:3000`) or the docs (`:3001`) |
 | `pnpm dev:mobile` | Run the Android app in Expo Go |
 | `pnpm dev:convex` | Push the backend to your dev deployment on every change |
+| `pnpm test` / `pnpm test:e2e` | Backend and unit tests, or the browser tests against a throwaway backend |
 | `pnpm typecheck` / `pnpm build` | Check or build every workspace |
 
 ## Learn more
 
-- [Using Settlr](https://settlr-docs.vercel.app/docs/guide/getting-started): friends, groups, budgets, the assistant and AI apps
-- [Architecture](https://settlr-docs.vercel.app/docs/development/architecture), [data model](https://settlr-docs.vercel.app/docs/development/data-model) and [deployment](https://settlr-docs.vercel.app/docs/development/deployment)
+- [Using Settlr](https://settlr-docs.vercel.app/docs/guide/getting-started): friends, groups, budgets, the assistant, AI apps and the [Android app](https://settlr-docs.vercel.app/docs/guide/android)
+- [Architecture](https://settlr-docs.vercel.app/docs/development/architecture), [data model](https://settlr-docs.vercel.app/docs/development/data-model), [testing](https://settlr-docs.vercel.app/docs/development/testing), the [mobile app](https://settlr-docs.vercel.app/docs/development/mobile-app) and [deployment](https://settlr-docs.vercel.app/docs/development/deployment)
 - [Contributing](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md)
 
 ## License

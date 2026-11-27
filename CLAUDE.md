@@ -172,7 +172,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   and component notes; `screens/*.html` are static mockups (web dashboard,
   add-expense, assistant, and three mobile screens). Their data is sample
   data. UPI, reminders, upcoming bills, group budgets, exact/percent splits,
-  saved chats and undo are now built on the web (not in the Android app yet).
+  saved chats and undo are built on the web, and all but saved chats in the
+  Android app. `android-redesign/` holds the Android app's Tally boards
+  (`*.dc.html`, `settlr.css`).
 - `src/app/`: the App Router. `layout.tsx` is the root document (reads the
   auth session, renders `<Providers>` and the `<AppShell>`), `page.tsx` the
   landing page (the hero beside `LoginForm`, then the sections in

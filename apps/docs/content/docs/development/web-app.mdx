@@ -13,7 +13,7 @@ use the `#/` alias for `apps/web/src`.
 | --- | --- |
 | `src/app/` | Routes. `layout.tsx` is the root document; `(app)/` is the signed-in area |
 | `src/server/` | Server-only code; every file imports `server-only` |
-| `src/lib/` | Isomorphic helpers: `types`, `search`, `preferences`, `theme`, `utils` |
+| `src/lib/` | Isomorphic helpers: `types`, `search` (`parseSearch`, `searchHref`), `preferences` (localStorage), `theme` (appearance), `dashboard` (the recent-expenses args its page and view share), `auth-client`, `errors` (`errorMessage`), `export` (CSV downloads), `splitwise` (parses a Splitwise export), `sidebar` (the collapse cookie), `site` (`DOCS_URL`), `utils` (`cn`) |
 | `src/components/` | App components |
 | `src/components/ui/` | shadcn/ui components built on Base UI |
 | `src/styles.css` | Design tokens from `design/DESIGN.md` (Gr8r Studio's design system) |
@@ -61,8 +61,9 @@ export function FriendsView() {
 | Route | Rendering | Why |
 | --- | --- | --- |
 | `/` (landing page) | server | Marketing page and sign-in form (`components/landing.tsx`). Signed-in visitors are redirected to `/dashboard` |
-| `/dashboard`, `/friends`, `/personal`, `/budget`, `/expenses` | server | Queries are prefetched with the visitor's token, so the first HTML is complete |
+| `/dashboard`, `/friends`, `/groups`, `/personal`, `/budget`, `/expenses` | server | Queries are prefetched with the visitor's token, so the first HTML is complete |
 | `/groups/[groupId]`, `/friends/[friendId]` | server | Shareable, filterable URLs render fully on the server |
+| `/groups/new`, `/groups/[groupId]/edit` | server | The forms render with neutral defaults; the default currency (localStorage) is applied after hydration. Editing prefetches your friends, for linking members |
 | `/receipts/[source]/[expenseId]` | server | The receipt's URL and its expense are prefetched; images show inline, PDFs in the browser's viewer |
 | `/groups/[groupId]/insights`, `/notifications` | data on the server, UI in the browser | The UI uses the viewer's locale, time zone and clock, so it renders in `<ClientOnly>` |
 | `/assistant` | server | Only whether the assistant is set up is prefetched; the conversation lives in the browser |
@@ -137,8 +138,13 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
   (`themeInitScript` in `src/lib/theme.ts`) sets `data-accent` (Gr8r's
   accents: blue, violet, teal, rose, graphite; none means indigo), which
   swaps `--acc-l`/`--acc-d` and so `--accent` (`primary`), and
-  `data-motion="reduce"`. Settings → Appearance changes them; theme and
-  accent changes cross-fade through a view transition.
+  `data-frame="plain"` (the frame takes the page's colour instead of the
+  accent) and `data-motion="reduce"`. Settings → Appearance changes them,
+  and the top bar's `ThemeToggle` and the account menu switch light and
+  dark. Accent, frame and motion changes cross-fade through a view
+  transition; a theme change from a control calls
+  `applyTheme(choice, originOf(event))`, which wipes the new theme in as a
+  circle growing from that control.
 - Motion follows Gr8r's `motion.css`, as Tailwind utilities from
   `styles.css`: `animate-rise-in`, `animate-fade-in`, `animate-grow-x` (a
   bar growing from `origin-left`) and `animate-pop` (springs in) run when
@@ -163,14 +169,25 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
   with 6px corners, 10px cards with no shadow, solid menus on a soft long
   shadow, and a dense type scale (`text-sm` is the 13.5px body, `text-ui`
   12.5px for buttons and tabs, `text-2xl` the 23px page title).
-- The shell is Gr8r's: a 252px sidebar (a 52px rail when collapsed) with
-  uppercase section labels, a 46px top bar with the breadcrumb, the bell,
-  **New** and the account menu, and pages centred at up to 1160px. Below
-  `lg` the sidebar is a drawer and a tab bar runs along the bottom. From
-  `lg` the shell is inset: the sidebar and the top bar form one frame in
-  the sidebar colour, and the page sits in a rounded panel below the bar
+- The shell (`components/app-shell.tsx`) is Gr8r's: a 252px sidebar (a
+  52px rail when collapsed with Ctrl/⌘+B, remembered in the
+  `settlr_sidebar` cookie so the server renders the right width) with
+  uppercase section labels, a 46px top bar with the breadcrumb, the
+  light/dark switch, the bell, **New** and the account menu, and pages
+  centred at up to 1160px. Below `lg` the sidebar is a drawer and a tab
+  bar runs along the bottom (with **More** opening the drawer). From `lg`
+  the shell is inset: the sidebar and the top bar form one frame painted
+  with `frame-art` (a deep shade of the accent, or the page's colour with
+  the plain frame), and the page sits in a rounded panel below the bar
   that scrolls on its own, so `sticky` offsets and `scrollIntoView` work
-  against that panel. The bar stays in view.
+  against that panel. The bar stays in view. On phones the window scrolls
+  instead, so anchors need `scroll-mt-15` to clear the sticky top bar.
+- Signed out, `components/site-header.tsx` is the top bar: no border,
+  see-through at the top of the page and frosted once it scrolls. The
+  landing page (`app/page.tsx` and the sections in
+  `components/landing.tsx`) runs edge to edge with `-mx-(--gutter)`, using
+  the gutter `.app-shell` exposes. Its still of a group page is drawn with
+  the app's tokens, so it follows the theme and accent.
 - Money is green (`positive`, owed to you) or red (`destructive`, you owe),
   always with a word or a sign, in the UI font with tabular figures
   (`tabular-nums`).
