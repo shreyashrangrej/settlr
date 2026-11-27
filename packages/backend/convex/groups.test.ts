@@ -229,6 +229,83 @@ describe('invite links', () => {
     expect(net(group)).toEqual({ m1: 60_000, m2: -30_000, m3: -30_000 })
   })
 
+  test('the owner editing the group keeps whoever joined by the link', async () => {
+    const t = setup()
+    const { alice, groupId } = await tripGroup(t)
+    const token = (await alice.mutation(api.groups.setLink, {
+      groupId,
+      link: 'invite',
+      enabled: true,
+    }))!
+    const bob = as(t, 'Bob')
+    await bob.mutation(api.groups.join, { token, memberId: 'm2' })
+
+    // What the edit form sends for Bob, who isn't Alice's friend: no friendId.
+    const members = [
+      { id: 'm1', name: 'Alice' },
+      { id: 'm2', name: 'Bob' },
+      { id: 'm3', name: 'Cara' },
+    ]
+    await alice.mutation(api.groups.update, { groupId, name: 'Goa 2026', currency: 'INR', members })
+    expect((await bob.query(api.groups.get, { groupId }))!.name).toBe('Goa 2026')
+
+    // Choosing "Not on Settlr" (null) still unlinks him.
+    await alice.mutation(api.groups.update, {
+      groupId,
+      name: 'Goa 2026',
+      currency: 'INR',
+      members: members.map((m) => ({ ...m, friendId: null })),
+    })
+    expect(await bob.query(api.groups.get, { groupId })).toBeNull()
+  })
+
+  test('someone who joins after a member left doesn’t inherit their expenses', async () => {
+    const t = setup()
+    const { alice, groupId } = await tripGroup(t)
+    const expenseId = await alice.mutation(api.groups.addExpense, {
+      groupId,
+      ...expense({ amountCents: 3000, splitAmong: ['m1', 'm3'] }),
+    })
+    const trashId = await alice.mutation(api.groups.removeExpense, { expenseId })
+    // Cara (m3) leaves, Dave arrives.
+    const keep = [
+      { id: 'm1', name: 'Alice' },
+      { id: 'm2', name: 'Bob' },
+    ]
+    await alice.mutation(api.groups.update, { groupId, name: 'Goa trip', currency: 'INR', members: keep })
+    await alice.mutation(api.groups.update, {
+      groupId,
+      name: 'Goa trip',
+      currency: 'INR',
+      members: [...keep, { name: 'Dave' }],
+    })
+    const dave = (await alice.query(api.groups.get, { groupId }))!.members.find(
+      (m) => m.name === 'Dave',
+    )!
+    expect(dave.id).not.toBe('m3')
+    await expect(alice.mutation(api.trash.restore, { trashId })).rejects.toThrow('left the group')
+  })
+
+  test('a member who owes can be reminded once a day', async () => {
+    const t = setup()
+    const { alice, groupId } = await tripGroup(t)
+    await alice.mutation(api.groups.addExpense, { groupId, ...expense() })
+    const token = (await alice.mutation(api.groups.setLink, {
+      groupId,
+      link: 'invite',
+      enabled: true,
+    }))!
+    const bob = as(t, 'Bob')
+    await bob.mutation(api.groups.join, { token, memberId: 'm2' })
+
+    await alice.mutation(api.groups.remindMember, { groupId, memberId: 'm2' })
+    await expect(
+      alice.mutation(api.groups.remindMember, { groupId, memberId: 'm2' }),
+    ).rejects.toThrow('already reminded today')
+    const { items } = await bob.query(api.notifications.list, {})
+    expect(items.filter((n) => n.kind === 'reminder')).toHaveLength(1)
+  })
+
   test('a disabled link stops working', async () => {
     const t = setup()
     const { alice, groupId } = await tripGroup(t)

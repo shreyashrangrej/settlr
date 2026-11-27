@@ -1,6 +1,4 @@
 import { toCsv } from '@settlr/shared/csv'
-import { formatMoney } from '@settlr/shared/format'
-import type { Currency } from '@settlr/shared/schemas'
 import type { FunctionReturnType } from 'convex/server'
 
 import type { api } from '@settlr/backend/convex/_generated/api'
@@ -34,12 +32,4 @@ export function downloadCsv(rows: ExportRows, filename: string) {
   link.click()
   link.remove()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-export function totalLine(rows: ExportRows) {
-  const totals = new Map<string, number>()
-  for (const r of rows) {
-    if (r.shareCents !== null) totals.set(r.currency, (totals.get(r.currency) ?? 0) + r.shareCents)
-  }
-  return [...totals].map(([c, cents]) => formatMoney(cents, c as Currency)).join(' + ')
 }

@@ -10,6 +10,7 @@ import { myFriendShare, shares } from './lib/ledger'
 // of between two dates (inclusive), oldest first. The browser turns them
 // into a file.
 
+// Each source reads one more than this, so `truncated` sees when it's over.
 const MAX_ROWS = 5000
 
 export const range = query({
@@ -36,7 +37,7 @@ export const range = query({
       const personal = await ctx.db
         .query('personalExpenses')
         .withIndex('by_userId_and_date', (q) => q.eq('userId', userId).gte('date', from).lte('date', to))
-        .take(MAX_ROWS)
+        .take(MAX_ROWS + 1)
       for (const e of personal) {
         rows.push({
           date: e.date,
@@ -54,7 +55,7 @@ export const range = query({
       const entries = await ctx.db
         .query('friendEntries')
         .withIndex('by_userId_and_date', (q) => q.eq('userId', userId).gte('date', from).lte('date', to))
-        .take(MAX_ROWS)
+        .take(MAX_ROWS + 1)
       const names = new Map<string, string>()
       for (const e of entries) {
         if (!names.has(e.friendId)) {
@@ -88,7 +89,7 @@ export const range = query({
       const expenses = await ctx.db
         .query('groupExpenses')
         .withIndex('by_groupId_and_date', (q) => q.eq('groupId', group._id).gte('date', from).lte('date', to))
-        .take(MAX_ROWS)
+        .take(MAX_ROWS + 1)
       for (const e of expenses) {
         rows.push({
           date: e.date,
@@ -106,7 +107,7 @@ export const range = query({
       const payments = await ctx.db
         .query('groupPayments')
         .withIndex('by_groupId_and_date', (q) => q.eq('groupId', group._id).gte('date', from).lte('date', to))
-        .take(MAX_ROWS)
+        .take(MAX_ROWS + 1)
       for (const p of payments) {
         rows.push({
           date: p.date,

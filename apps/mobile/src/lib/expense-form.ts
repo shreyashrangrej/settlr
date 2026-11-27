@@ -1,5 +1,11 @@
 import type { Category, Currency } from '@settlr/shared/schemas'
-import { computeSplit, equalSplit, splitProblem } from '@settlr/shared/split'
+import {
+  computeSplit,
+  equalSplit,
+  friendEffect as effectOf,
+  otherOwes,
+  splitProblem,
+} from '@settlr/shared/split'
 
 // The Add expense screen's split state and what it sends to Convex, kept
 // free of React so the rules are tested on their own (expense-form.test.ts).
@@ -69,16 +75,12 @@ export function groupSplitLabel(split: GroupSplit, amountCents: number, order: A
 
 /** What the other person owes for a friend expense, from the payer's side. */
 export function friendOwed(split: FriendSplit, amountCents: number) {
-  if (split.split === 'full') return amountCents
-  if (split.split === 'exact') return split.owedCents
-  // The payer keeps the odd cent, as the backend does.
-  return Math.floor(amountCents / 2)
+  return otherOwes({ ...split, amountCents })
 }
 
 /** The friend expense's effect on your balance with them (positive: they owe you). */
 export function friendEffect(split: FriendSplit, amountCents: number) {
-  const owed = friendOwed(split, amountCents)
-  return split.paidBy === 'me' ? owed : -owed
+  return effectOf({ ...split, amountCents })
 }
 
 export function friendSplitProblem(split: FriendSplit, amountCents: number) {

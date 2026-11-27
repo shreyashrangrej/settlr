@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 
 import { api } from './_generated/api'
 import { as, setup, today } from './test.setup'
+import { REMINDER_EMAILS_PER_DAY } from './usage'
 
 const dinner = {
   description: 'Dinner',
@@ -156,5 +157,54 @@ describe('linked friends', () => {
         split: 'equal',
       }),
     ).rejects.toThrow('doesn’t exist')
+  })
+
+  test('changing a confirmed payment asks for confirmation again', async () => {
+    const t = setup()
+    const alice = as(t, 'Alice')
+    const bob = as(t, 'Bob')
+    const friendId = await alice.mutation(api.friends.create, { name: 'Bob', email: 'bob@example.com' })
+    const { requests } = await bob.query(api.notifications.list, {})
+    const bobSideId = await bob.mutation(api.notifications.acceptRequest, {
+      requestId: requests[0].id,
+    })
+    const list = { q: '', category: 'all', paidBy: '', sort: 'date', order: 'desc', limit: 10 } as const
+    const payment = { amountCents: 100, currency: 'USD' as const, paidBy: 'me' as const, date: today() }
+    await alice.mutation(api.friends.addPayment, { friendId, ...payment })
+    const [bobsCopy] = (await bob.query(api.friends.entries, { friendId: bobSideId, ...list })).items
+    await bob.mutation(api.friends.answerPayment, { entryId: bobsCopy.id, confirm: true })
+
+    const [alicesCopy] = (await alice.query(api.friends.entries, { friendId, ...list })).items
+    // A new note alone keeps it confirmed; a new amount doesn't.
+    await alice.mutation(api.friends.updatePayment, { entryId: alicesCopy.id, ...payment, note: 'Cash' })
+    expect((await bob.query(api.friends.entries, { friendId: bobSideId, ...list })).items[0]).toMatchObject({
+      canConfirm: false,
+    })
+    await alice.mutation(api.friends.updatePayment, {
+      entryId: alicesCopy.id,
+      ...payment,
+      amountCents: 100_000,
+    })
+    expect((await bob.query(api.friends.entries, { friendId: bobSideId, ...list })).items[0]).toMatchObject({
+      amountCents: 100_000,
+      canConfirm: true,
+    })
+  })
+})
+
+describe('reminders', () => {
+  test('reminder emails to friends who aren’t on Settlr are capped per day', async () => {
+    const t = setup()
+    const alice = as(t, 'Alice')
+    const remind = async (n: number) => {
+      const friendId = await alice.mutation(api.friends.create, {
+        name: `Friend ${n}`,
+        email: `friend${n}@example.com`,
+      })
+      await alice.mutation(api.friends.addExpense, { friendId, ...dinner, paidBy: 'me', split: 'full' })
+      return await alice.mutation(api.friends.remind, { friendId })
+    }
+    for (let n = 1; n <= REMINDER_EMAILS_PER_DAY; n++) expect(await remind(n)).toBe('email')
+    await expect(remind(REMINDER_EMAILS_PER_DAY + 1)).rejects.toThrow('reminders a day')
   })
 })

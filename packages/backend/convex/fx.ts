@@ -16,7 +16,7 @@ export const rate = action({
     const url = `https://api.frankfurter.app/${day}?from=${args.from}&to=${args.to}`
     let body: { rates?: Record<string, number>; date?: string }
     try {
-      const response = await fetch(url)
+      const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
       if (!response.ok) throw new Error(String(response.status))
       body = (await response.json()) as typeof body
     } catch {

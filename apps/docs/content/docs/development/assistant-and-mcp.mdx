@@ -44,7 +44,9 @@ cents. Expenses are referred to by a `ref` returned from `search_expenses`.
 `api.assistant.send` is an action that takes the recent conversation, the
 viewer's local date and default currency:
 
-1. It loads the caller's friends and groups (`internal.assistant.context`)
+1. It counts the message against the caller's 100 AI uses a day
+   (`internal.usage.ai`, shared with receipt scanning), then loads the
+   caller's friends and groups (`internal.assistant.context`)
    and builds a system prompt with their names, today's date and the
    default currency.
 2. It calls the model on [OpenRouter](https://openrouter.ai)

@@ -13,17 +13,16 @@ import { requireUser } from './lib/auth'
 import { flip, linkedCounterpart, mirrorEntry, type NewEntry } from './lib/friendship'
 import * as input from './lib/input'
 import { addToBalance, friendDelta, myFriendShare, settleUp } from './lib/ledger'
-import { notify } from './lib/notify'
+import { REMIND_EVERY_MS, notify } from './lib/notify'
 import { profileOf } from './lib/profile'
 import { attachReceipt, deleteReceipt } from './lib/receipts'
 import { category, currency } from './lib/validators'
 import { findGroup, insertGroupPayment, myGroups, viewerMemberId } from './groups'
+import { DAY, REMINDER_EMAILS_PER_DAY, withinLimit } from './usage'
 
 const MAX_FRIENDS = 500
 const paidBy = v.union(v.literal('me'), v.literal('friend'))
 const split = v.union(v.literal('equal'), v.literal('full'), v.literal('exact'))
-// One reminder a day per friend.
-const REMIND_EVERY_MS = 20 * 60 * 60 * 1000
 
 export type User = Awaited<ReturnType<typeof requireUser>>
 
@@ -654,18 +653,26 @@ export const updatePayment = mutation({
     const me = await requireUser(ctx)
     const entry = await requireEntry(ctx, me.userId, args.entryId)
     if (entry.kind !== 'payment') throw new ConvexError('That entry is an expense.')
+    const amountCents = input.amount(args.amountCents)
+    // A new amount, currency or direction is a new claim: like a payment
+    // just recorded, it waits for the linked friend if you say you paid.
+    const changed =
+      amountCents !== entry.amountCents ||
+      args.currency !== entry.currency ||
+      args.paidBy !== entry.paidBy
+    const linked = changed && (await twinOf(ctx, entry)) !== null
     await replaceEntry(ctx, me, entry, {
       kind: 'payment',
       userId: entry.userId,
       friendId: entry.friendId,
-      amountCents: input.amount(args.amountCents),
+      amountCents,
       currency: args.currency,
       paidBy: args.paidBy,
       note: input.optionalText(args.note, 'Note', 80),
       date: input.isoDate(args.date),
       mirrorId: entry.mirrorId,
-      recordedBy: entry.recordedBy,
-      unconfirmed: entry.unconfirmed,
+      recordedBy: changed ? me.userId : entry.recordedBy,
+      unconfirmed: changed ? (linked && args.paidBy === 'me') || undefined : entry.unconfirmed,
     })
     return null
   },
@@ -795,6 +802,10 @@ export const remind = mutation({
         })
       }
     } else if (friend.email) {
+      // The address is whatever you typed, so cap how many go out.
+      if (!(await withinLimit(ctx, `reminder-email:${me.userId}`, REMINDER_EMAILS_PER_DAY, DAY))) {
+        throw new ConvexError(`You can email up to ${REMINDER_EMAILS_PER_DAY} reminders a day.`)
+      }
       await ctx.scheduler.runAfter(0, internal.notifyEmail.reminder, {
         to: friend.email,
         fromName: me.name,

@@ -471,6 +471,7 @@ export const send = action({
     const today = input.isoDate(args.today)
     const history = args.messages.slice(-MAX_HISTORY)
     if (history.at(-1)?.role !== 'user') throw new ConvexError('Type a message.')
+    await ctx.runMutation(internal.usage.ai, {})
     const messages: Array<ChatMessage> = [
       { role: 'system', content: systemPrompt(context, today, args.currency) },
       ...history.flatMap((m): Array<ChatMessage> => {

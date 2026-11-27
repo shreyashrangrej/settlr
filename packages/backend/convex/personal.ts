@@ -1,5 +1,6 @@
 import { ConvexError, v } from 'convex/values'
 
+import { shiftMonth } from '@settlr/shared/format'
 import type { Doc, Id } from './_generated/dataModel'
 import { mutation, query, type QueryCtx } from './_generated/server'
 import { requireUser } from './lib/auth'
@@ -9,13 +10,6 @@ import { category, currency } from './lib/validators'
 
 // Enough for any realistic month; the page says so if a month has more.
 const MAX_PER_MONTH = 1000
-
-function nextMonth(month: string) {
-  const [year, m] = month.split('-').map(Number)
-  return m === 12
-    ? `${year + 1}-01`
-    : `${year}-${String(m + 1).padStart(2, '0')}`
-}
 
 /** One month of the caller's own spending, newest first, with totals. */
 export const month = query({
@@ -29,7 +23,7 @@ export const month = query({
         q
           .eq('userId', userId)
           .gte('date', `${month}-01`)
-          .lt('date', `${nextMonth(month)}-01`),
+          .lt('date', `${shiftMonth(month, 1)}-01`),
       )
       .order('desc')
       .take(MAX_PER_MONTH + 1)

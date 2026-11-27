@@ -39,6 +39,30 @@ export function proportional(
   return result
 }
 
+export type FriendSplit = 'equal' | 'full' | 'exact'
+
+/**
+ * What the person who didn't pay owes on a one-on-one expense: half
+ * (rounded down, so the payer absorbs an odd cent), all of it, or the exact
+ * amount entered.
+ */
+export function otherOwes(expense: { amountCents: number; split: FriendSplit; owedCents?: number }) {
+  if (expense.split === 'equal') return Math.floor(expense.amountCents / 2)
+  if (expense.split === 'exact') return Math.min(expense.owedCents ?? 0, expense.amountCents)
+  return expense.amountCents
+}
+
+/** How a one-on-one expense moves what the friend owes you (positive: they owe you more). */
+export function friendEffect(expense: {
+  amountCents: number
+  paidBy: 'me' | 'friend'
+  split: FriendSplit
+  owedCents?: number
+}) {
+  const owed = otherOwes(expense)
+  return expense.paidBy === 'me' ? owed : -owed
+}
+
 /** Equal shares between `memberIds` (sorted into `order`). */
 export function equalSplit(total: number, memberIds: Array<string>, order: Array<string>) {
   const participants = order.filter((id) => memberIds.includes(id))

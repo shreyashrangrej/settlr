@@ -78,12 +78,15 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 - `convex/`: the Convex backend, where all app data lives. `schema.ts`
   (friends, friendEntries, groups, groupExpenses, groupPayments,
   personalExpenses, receipts, budgets, notifications, profiles, activity,
-  comments, trash, recurring, assistantChats/assistantMessages, inboxItems),
+  comments, trash, recurring, assistantChats/assistantMessages, inboxItems,
+  usage),
   `friends.ts`, `groups.ts` (also invite/share links, activity, comments,
   payment confirmation, archive, group budget),
   `personal.ts`, `budgets.ts`, `notifications.ts`, `receipts.ts` (queries
   and mutations), `trash.ts` (deleted expenses, restorable for 30 days),
   `recurring.ts` (templates a daily cron in `crons.ts` turns into expenses),
+  `usage.ts` (caps: 100 AI calls a day per user, 20 reminder emails a day,
+  5 sign-in codes an hour per address),
   `profiles.ts` (UPI id, weekly digest, inbox address), `imports.ts`
   (Splitwise), `exports.ts` (CSV rows), `chats.ts` (saved assistant chats),
   `inbox.ts` (forwarded emails, `/inbound-email` in `http.ts`), `scan.ts`

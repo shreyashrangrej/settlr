@@ -165,7 +165,6 @@ export const createGroupInput = z.object({
       'Member names must be unique',
     ),
 })
-export type CreateGroupInput = z.infer<typeof createGroupInput>
 
 // The whole member list after editing: members with an `id` are kept (and
 // may be renamed), those without are new, and anyone missing is removed.
@@ -204,7 +203,6 @@ export const addExpenseInput = z.object({
   date: isoDate,
   tags: tags.optional(),
 })
-export type AddExpenseInput = z.infer<typeof addExpenseInput>
 
 export const addFriendInput = z.object({
   name: z.string().trim().min(1, 'Enter their name').max(60),
@@ -228,7 +226,6 @@ export const friendExpenseInput = z.object({
   tags: tags.optional(),
 })
 
-export type FriendExpenseInput = z.infer<typeof friendExpenseInput>
 
 export const friendPaymentInput = z.object({
   amountCents,
@@ -247,7 +244,6 @@ export const personalExpenseInput = z.object({
   date: isoDate,
   tags: tags.optional(),
 })
-export type PersonalExpenseInput = z.infer<typeof personalExpenseInput>
 
 // --- Forms ----------------------------------------------------------------
 

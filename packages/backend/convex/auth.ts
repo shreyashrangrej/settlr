@@ -12,7 +12,7 @@ import { betterAuth, type BetterAuthOptions } from 'better-auth/minimal'
 import { mcp } from 'better-auth/plugins'
 import { emailOTP } from 'better-auth/plugins/email-otp'
 
-import { components } from './_generated/api'
+import { components, internal } from './_generated/api'
 import type { DataModel } from './_generated/dataModel'
 import { env, query } from './_generated/server'
 import authConfig from './auth.config'
@@ -229,6 +229,13 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         otpLength: 6,
         expiresIn: 5 * 60,
         async sendVerificationOTP({ email, otp }) {
+          // shortcut: capped per address only. Better Auth's per-IP limits (3 codes
+          // a minute) would block people sharing a carrier IP; add a looser one
+          // (`rateLimit` with `storage: 'database'`) if codes get sprayed at many addresses.
+          if ('runMutation' in ctx && !(await ctx.runMutation(internal.usage.signInCode, { email }))) {
+            console.warn(`[auth] Too many sign-in codes for ${email} this hour; not sending.`)
+            return
+          }
           await sendSignInCode({ to: email, otp })
         },
       }),

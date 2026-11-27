@@ -1,7 +1,9 @@
 import { v } from 'convex/values'
 
+import { shiftMonth } from '@settlr/shared/format'
 import type { Doc } from './_generated/dataModel'
-import { query } from './_generated/server'
+import { query, type QueryCtx } from './_generated/server'
+import { myGroups, viewerMemberId } from './groups'
 import { requireUser } from './lib/auth'
 import * as input from './lib/input'
 import { myFriendShare, shares } from './lib/ledger'
@@ -10,8 +12,8 @@ import { category } from './lib/validators'
 // Every expense you're part of in one list (the /expenses page): your
 // personal expenses, expenses with friends and expenses in your groups,
 // one month at a time. Settle-up payments aren't expenses, so they're left
-// out. Like `budgets.monthSpending`, it reads the month from each source
-// (bounded per source) and merges them here.
+// out. `monthItems` reads the month from each source (bounded per source);
+// `budgets.monthSpending` adds up the same items.
 
 type Currency = Doc<'personalExpenses'>['currency']
 type Category = Doc<'personalExpenses'>['category']
@@ -20,15 +22,9 @@ type Source = 'group' | 'friend' | 'personal'
 // Per-source read caps for one month.
 const MAX_PERSONAL = 2000
 const MAX_FRIEND_ENTRIES = 2000
-const MAX_GROUPS = 200
 const MAX_PER_GROUP = 500
 
-function nextMonth(month: string) {
-  const [year, m] = month.split('-').map(Number)
-  return m === 12 ? `${year + 1}-01` : `${year}-${String(m + 1).padStart(2, '0')}`
-}
-
-type Item = {
+export type MonthItem = {
   /** Unique across sources, e.g. `group:<id>`. */
   key: string
   source: Source
@@ -47,6 +43,108 @@ type Item = {
   hasReceipt: boolean
   tags: Array<string>
   _creationTime: number
+}
+
+/** Your expenses in `month` (YYYY-MM) from every source, with your share of each. */
+export async function monthItems(ctx: QueryCtx, userId: string, month: string) {
+  const from = `${month}-01`
+  const to = `${shiftMonth(month, 1)}-01`
+  const all: Array<MonthItem> = []
+  let truncated = false
+
+  const personal = await ctx.db
+    .query('personalExpenses')
+    .withIndex('by_userId_and_date', (q) =>
+      q.eq('userId', userId).gte('date', from).lt('date', to),
+    )
+    .take(MAX_PERSONAL + 1)
+  truncated ||= personal.length > MAX_PERSONAL
+  for (const e of personal.slice(0, MAX_PERSONAL)) {
+    all.push({
+      key: `personal:${e._id}`,
+      source: 'personal',
+      id: e._id,
+      description: e.description,
+      category: e.category,
+      date: e.date,
+      currency: e.currency,
+      amountCents: e.amountCents,
+      shareCents: e.amountCents,
+      paidBy: 'You',
+      where: null,
+      hasReceipt: e.receiptId !== undefined,
+      tags: e.tags ?? [],
+      _creationTime: e._creationTime,
+    })
+  }
+
+  const entries = await ctx.db
+    .query('friendEntries')
+    .withIndex('by_userId_and_date', (q) =>
+      q.eq('userId', userId).gte('date', from).lt('date', to),
+    )
+    .take(MAX_FRIEND_ENTRIES + 1)
+  truncated ||= entries.length > MAX_FRIEND_ENTRIES
+  const friendIds = [...new Set(entries.map((e) => e.friendId))]
+  const friends = new Map(
+    (await Promise.all(friendIds.map((id) => ctx.db.get('friends', id))))
+      .filter((f) => f !== null)
+      .map((f) => [f._id, f]),
+  )
+  for (const e of entries.slice(0, MAX_FRIEND_ENTRIES)) {
+    if (e.kind !== 'expense') continue
+    const friend = friends.get(e.friendId)
+    if (!friend) continue
+    all.push({
+      key: `friend:${e._id}`,
+      source: 'friend',
+      id: e._id,
+      description: e.description,
+      category: e.category,
+      date: e.date,
+      currency: e.currency,
+      amountCents: e.amountCents,
+      shareCents: myFriendShare(e),
+      paidBy: e.paidBy === 'me' ? 'You' : friend.name,
+      where: { id: friend._id, name: friend.name },
+      hasReceipt: e.receiptId !== undefined,
+      tags: e.tags ?? [],
+      _creationTime: e._creationTime,
+    })
+  }
+
+  for (const group of await myGroups(ctx, userId)) {
+    const me = viewerMemberId(group, userId)
+    if (!me) continue
+    const order = group.members.map((m) => m.id)
+    const names = new Map(group.members.map((m) => [m.id, m.name]))
+    const expenses = await ctx.db
+      .query('groupExpenses')
+      .withIndex('by_groupId_and_date', (q) =>
+        q.eq('groupId', group._id).gte('date', from).lt('date', to),
+      )
+      .take(MAX_PER_GROUP + 1)
+    truncated ||= expenses.length > MAX_PER_GROUP
+    for (const e of expenses.slice(0, MAX_PER_GROUP)) {
+      all.push({
+        key: `group:${e._id}`,
+        source: 'group',
+        id: e._id,
+        description: e.description,
+        category: e.category,
+        date: e.date,
+        currency: group.currency,
+        amountCents: e.amountCents,
+        shareCents: shares(e, order).get(me) ?? 0,
+        paidBy: e.paidBy === me ? 'You' : (names.get(e.paidBy) ?? 'Someone'),
+        where: { id: group._id, name: group.name },
+        hasReceipt: e.receiptId !== undefined,
+        tags: e.tags ?? [],
+        _creationTime: e._creationTime,
+      })
+    }
+  }
+  return { items: all, truncated }
 }
 
 /**
@@ -76,117 +174,7 @@ export const month = query({
     const { userId } = await requireUser(ctx)
     const month = input.isoMonth(args.month)
     const limit = input.listLimit(args.limit)
-    const from = `${month}-01`
-    const to = `${nextMonth(month)}-01`
-    const all: Array<Item> = []
-    let truncated = false
-
-    const personal = await ctx.db
-      .query('personalExpenses')
-      .withIndex('by_userId_and_date', (q) =>
-        q.eq('userId', userId).gte('date', from).lt('date', to),
-      )
-      .take(MAX_PERSONAL + 1)
-    truncated ||= personal.length > MAX_PERSONAL
-    for (const e of personal.slice(0, MAX_PERSONAL)) {
-      all.push({
-        key: `personal:${e._id}`,
-        source: 'personal',
-        id: e._id,
-        description: e.description,
-        category: e.category,
-        date: e.date,
-        currency: e.currency,
-        amountCents: e.amountCents,
-        shareCents: e.amountCents,
-        paidBy: 'You',
-        where: null,
-        hasReceipt: e.receiptId !== undefined,
-        tags: e.tags ?? [],
-        _creationTime: e._creationTime,
-      })
-    }
-
-    const entries = await ctx.db
-      .query('friendEntries')
-      .withIndex('by_userId_and_date', (q) =>
-        q.eq('userId', userId).gte('date', from).lt('date', to),
-      )
-      .take(MAX_FRIEND_ENTRIES + 1)
-    truncated ||= entries.length > MAX_FRIEND_ENTRIES
-    const friendIds = [...new Set(entries.map((e) => e.friendId))]
-    const friends = new Map(
-      (await Promise.all(friendIds.map((id) => ctx.db.get('friends', id))))
-        .filter((f) => f !== null)
-        .map((f) => [f._id, f]),
-    )
-    for (const e of entries.slice(0, MAX_FRIEND_ENTRIES)) {
-      if (e.kind !== 'expense') continue
-      const friend = friends.get(e.friendId)
-      if (!friend) continue
-      all.push({
-        key: `friend:${e._id}`,
-        source: 'friend',
-        id: e._id,
-        description: e.description,
-        category: e.category,
-        date: e.date,
-        currency: e.currency,
-        amountCents: e.amountCents,
-        shareCents: myFriendShare(e),
-        paidBy: e.paidBy === 'me' ? 'You' : friend.name,
-        where: { id: friend._id, name: friend.name },
-        hasReceipt: e.receiptId !== undefined,
-        tags: e.tags ?? [],
-        _creationTime: e._creationTime,
-      })
-    }
-
-    // Every group you're in, as owner or linked member.
-    const owned = await ctx.db
-      .query('groups')
-      .withIndex('by_userId', (q) => q.eq('userId', userId))
-      .take(MAX_GROUPS)
-    const memberships = await ctx.db
-      .query('groupMembers')
-      .withIndex('by_userId', (q) => q.eq('userId', userId))
-      .take(MAX_GROUPS)
-    const joined = await Promise.all(memberships.map((m) => ctx.db.get('groups', m.groupId)))
-    for (const group of [...owned, ...joined]) {
-      if (!group) continue
-      const me =
-        group.userId === userId
-          ? group.meMemberId
-          : group.members.find((m) => m.userId === userId)?.id
-      if (!me) continue
-      const order = group.members.map((m) => m.id)
-      const names = new Map(group.members.map((m) => [m.id, m.name]))
-      const expenses = await ctx.db
-        .query('groupExpenses')
-        .withIndex('by_groupId_and_date', (q) =>
-          q.eq('groupId', group._id).gte('date', from).lt('date', to),
-        )
-        .take(MAX_PER_GROUP + 1)
-      truncated ||= expenses.length > MAX_PER_GROUP
-      for (const e of expenses.slice(0, MAX_PER_GROUP)) {
-        all.push({
-          key: `group:${e._id}`,
-          source: 'group',
-          id: e._id,
-          description: e.description,
-          category: e.category,
-          date: e.date,
-          currency: group.currency,
-          amountCents: e.amountCents,
-          shareCents: shares(e, order).get(me) ?? 0,
-          paidBy: e.paidBy === me ? 'You' : (names.get(e.paidBy) ?? 'Someone'),
-          where: { id: group._id, name: group.name },
-          hasReceipt: e.receiptId !== undefined,
-          tags: e.tags ?? [],
-          _creationTime: e._creationTime,
-        })
-      }
-    }
+    const { items: all, truncated } = await monthItems(ctx, userId, month)
 
     // Month totals (your share), per currency and source, and by category.
     const totals = new Map<

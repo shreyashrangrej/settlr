@@ -47,6 +47,7 @@ import type * as receipts from "../receipts.js";
 import type * as recurring from "../recurring.js";
 import type * as scan from "../scan.js";
 import type * as trash from "../trash.js";
+import type * as usage from "../usage.js";
 
 import type {
   ApiFromModules,
@@ -94,6 +95,7 @@ declare const fullApi: ApiFromModules<{
   recurring: typeof recurring;
   scan: typeof scan;
   trash: typeof trash;
+  usage: typeof usage;
 }>;
 
 /**

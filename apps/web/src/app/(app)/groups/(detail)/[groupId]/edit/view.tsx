@@ -77,6 +77,9 @@ type MemberRow = {
 }
 
 const NOT_LINKED = 'none'
+// A member on Settlr who isn't one of your connected friends (they joined
+// through the invite link): saving leaves their account as it is.
+const KEEP_LINK = 'keep'
 
 const MAX_MEMBERS = 20
 
@@ -88,12 +91,17 @@ function EditGroupForm({ group }: { group: Group }) {
   })
   const [name, setName] = useState(group.name)
   const [currency, setCurrency] = useState<Currency>(group.currency)
+  const keptLinks = new Set(
+    group.members
+      .filter((m) => m.linked && !m.friendId && m.id !== group.meMemberId)
+      .map((m) => m.id),
+  )
   const [members, setMembers] = useState<Array<MemberRow>>(() =>
     group.members.map((m) => ({
       key: m.id,
       id: m.id,
       name: m.name,
-      friendId: m.friendId,
+      friendId: keptLinks.has(m.id) ? KEEP_LINK : m.friendId,
     })),
   )
   const { data: friends } = useSuspenseQuery(convexQuery(api.friends.list, {}))
@@ -141,7 +149,7 @@ function EditGroupForm({ group }: { group: Group }) {
         ...parsed.data,
         members: parsed.data.members.map((m) => ({
           ...m,
-          friendId: m.friendId as Id<'friends'> | null,
+          friendId: m.friendId === KEEP_LINK ? undefined : (m.friendId as Id<'friends'> | null),
         })),
       })
     ) {
@@ -233,7 +241,11 @@ function EditGroupForm({ group }: { group: Group }) {
                           aria-label={`${member.name || 'Member'}’s Settlr account`}
                           className="w-40 shrink-0"
                           value={member.friendId ?? NOT_LINKED}
-                          options={accountOptions}
+                          options={
+                            member.id && keptLinks.has(member.id)
+                              ? [{ value: KEEP_LINK, label: 'On Settlr' }, ...accountOptions]
+                              : accountOptions
+                          }
                           onChange={(value) =>
                             setMembers((current) =>
                               current.map((m) => {

@@ -52,5 +52,15 @@ test('a friend joins through the invite link and both see live balances', async 
   const main = page.getByRole('main')
   await expect(main.getByRole('cell', { name: /Cleaning/ }).first()).toBeVisible()
   await expect(main.getByRole('region', { name: 'Your balance' })).toContainText('+$50.00')
+
+  // Alice renames the group; Bob (not her friend, so shown as "On Settlr")
+  // stays in it.
+  await page.goto(`${page.url()}/edit`)
+  await expect(main.getByRole('combobox', { name: 'Bob’s Settlr account' })).toContainText('On Settlr')
+  await main.getByLabel('Name').fill('Flat 4B (2026)')
+  await main.getByRole('button', { name: 'Save changes' }).click()
+  await expect(main.getByRole('heading', { name: 'Flat 4B (2026)' })).toBeVisible()
+  await bob.page.reload()
+  await expect(bobMain.getByRole('heading', { name: 'Flat 4B (2026)' })).toBeVisible()
   await bob.close()
 })

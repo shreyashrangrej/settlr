@@ -20,7 +20,7 @@ import {
 } from './lib/ledger'
 import { logActivity } from './lib/activity'
 import { resolveSplit } from './lib/groupSplit'
-import { notify } from './lib/notify'
+import { REMIND_EVERY_MS, notify } from './lib/notify'
 import { upiIds } from './lib/profile'
 import { attachReceipt, deleteReceipt } from './lib/receipts'
 import { newToken } from './lib/tokens'
@@ -65,6 +65,12 @@ async function requireOwnedGroup(ctx: QueryCtx, userId: string, groupId: string)
     throw new ConvexError('Only the person who created this group can change it.')
   }
   return group
+}
+
+// Ids are never reused: a deleted expense in the trash or a recurring
+// template may still name a member who has left.
+function newMemberId() {
+  return `m${newToken(4)}`
 }
 
 function myNet(group: Doc<'groups'>, userId: string) {
@@ -398,8 +404,9 @@ export const update = mutation({
       v.object({
         id: v.optional(v.string()),
         name: v.string(),
-        // Link this member to one of your connected friends' accounts; null
-        // or absent leaves them unlinked.
+        // Link this member to one of your connected friends' accounts, or
+        // null to unlink them. Absent keeps their current link (people who
+        // joined through the invite link aren't your friends).
         friendId: v.optional(v.union(v.id('friends'), v.null())),
       }),
     ),
@@ -489,31 +496,32 @@ export const update = mutation({
     )
     const usedUsers = new Set<string>()
 
-    // New ids continue after the highest one in use.
-    let nextNumber =
-      Math.max(0, ...group.members.map((m) => Number(m.id.slice(1)) || 0)) + 1
     const members = args.members.map((member): Member => {
       const isOwner = member.id === group.meMemberId
       const memberName = isOwner
         ? current.get(member.id!)!.name
         : input.text(member.name, 'Member name', 40)
+      const base =
+        member.id !== undefined
+          ? current.get(member.id)!
+          : { id: newMemberId(), paidCents: 0, owedCents: 0 }
       let memberUser: string | undefined
-      if (!isOwner && member.friendId) {
+      if (!isOwner && member.friendId === undefined) {
+        memberUser = (base as Member).userId
+      } else if (!isOwner && member.friendId) {
         memberUser = linkedUserOf.get(member.friendId)
         if (!memberUser) {
           throw new ConvexError(
             `${memberName} can only be linked to a friend who has accepted your friend request.`,
           )
         }
+      }
+      if (memberUser) {
         if (usedUsers.has(memberUser)) {
-          throw new ConvexError('The same friend is linked to two members.')
+          throw new ConvexError('The same person is linked to two members.')
         }
         usedUsers.add(memberUser)
       }
-      const base =
-        member.id !== undefined
-          ? current.get(member.id)!
-          : { id: `m${nextNumber++}`, paidCents: 0, owedCents: 0 }
       const { userId: _, ...rest } = base as Member
       return memberUser
         ? { ...rest, name: memberName, userId: memberUser }
@@ -1021,6 +1029,15 @@ export const remindMember = mutation({
     if (!memberUser) {
       throw new ConvexError(`${member.name} isn’t on Settlr, so they can’t get a reminder.`)
     }
+    const recent = await ctx.db
+      .query('notifications')
+      .withIndex('by_userId', (q) =>
+        q.eq('userId', memberUser).gt('_creationTime', Date.now() - REMIND_EVERY_MS),
+      )
+      .take(200)
+    if (recent.some((n) => n.kind === 'reminder' && n.groupId === group._id)) {
+      throw new ConvexError(`${member.name} was already reminded today.`)
+    }
     await notify(ctx, {
       userId: memberUser,
       kind: 'reminder',
@@ -1141,10 +1158,9 @@ export const join = mutation({
       let name = me.name
       const taken = new Set(group.members.map((m) => m.name.toLowerCase()))
       for (let n = 2; taken.has(name.toLowerCase()); n++) name = `${me.name} ${n}`
-      const next = Math.max(0, ...group.members.map((m) => Number(m.id.slice(1)) || 0)) + 1
       members = [
         ...group.members,
-        { id: `m${next}`, name, paidCents: 0, owedCents: 0, userId: me.userId },
+        { id: newMemberId(), name, paidCents: 0, owedCents: 0, userId: me.userId },
       ]
       joinedAs = name
     }

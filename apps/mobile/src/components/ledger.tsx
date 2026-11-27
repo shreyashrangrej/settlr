@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native'
 import { Button } from '@/components/button'
 import { Icons } from '@/components/icons'
 import { Row, RowEnd } from '@/components/surfaces'
-import { Label, Sub, Text } from '@/components/text'
+import { Label, Text } from '@/components/text'
 import { Avatar, Badge, CategoryTile, GroupTile, Tile } from '@/components/tiles'
 import { stanceLabel, type BalanceRow } from '@/lib/balances'
 import { money, shortDate } from '@/lib/format'
@@ -187,10 +187,6 @@ export function PaymentTile({ incoming }: { incoming: boolean }) {
       icon={incoming ? Icons.in : Icons.out}
     />
   )
-}
-
-export function Muted({ children }: { children: string }) {
-  return <Sub>{children}</Sub>
 }
 
 const styles = StyleSheet.create({

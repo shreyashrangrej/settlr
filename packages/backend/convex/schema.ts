@@ -440,4 +440,13 @@ export default defineSchema({
       }),
     ),
   }).index('by_userId_and_status', ['userId', 'status']),
+
+  // Caps on things that cost money or reach other people's inboxes (see
+  // usage.ts): how often `key` ("ai:<userId>", "signin:<email>", ...) was
+  // used in the window that started at `windowStart`. One row per key.
+  usage: defineTable({
+    key: v.string(),
+    windowStart: v.number(),
+    count: v.number(),
+  }).index('by_key', ['key']),
 })

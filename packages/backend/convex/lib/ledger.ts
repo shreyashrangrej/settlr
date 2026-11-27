@@ -1,24 +1,14 @@
+import { equalSplit, otherOwes, type FriendSplit } from '@settlr/shared/split'
+
 import type { Doc } from '../_generated/dataModel'
 
-// Balance math. Everything is integer cents.
-
-export type FriendSplit = 'equal' | 'full' | 'exact'
+// Balance math. Everything is integer cents. The rules the forms preview
+// too (friend splits, equal shares) live in @settlr/shared/split.
 
 type FriendEntry = Pick<
   Doc<'friendEntries'>,
   'kind' | 'amountCents' | 'paidBy'
 > & { split?: FriendSplit; owedCents?: number }
-
-/**
- * What the person who didn't pay owes on a one-on-one expense: half
- * (rounded down, so the payer absorbs an odd cent), all of it, or the exact
- * amount entered.
- */
-export function otherOwes(entry: { amountCents: number; split: FriendSplit; owedCents?: number }) {
-  if (entry.split === 'equal') return Math.floor(entry.amountCents / 2)
-  if (entry.split === 'exact') return Math.min(entry.owedCents ?? 0, entry.amountCents)
-  return entry.amountCents
-}
 
 /**
  * How much an entry changes what the friend owes you (positive: they owe
@@ -72,17 +62,7 @@ export function shares(
   if (expense.split) {
     return new Map(Object.entries(expense.split.owed).filter(([, cents]) => cents > 0))
   }
-  const participants = [...expense.splitAmong].sort(
-    (a, b) => memberOrder.indexOf(a) - memberOrder.indexOf(b),
-  )
-  const base = Math.floor(expense.amountCents / participants.length)
-  const remainder = expense.amountCents - base * participants.length
-  return new Map(
-    participants.map((memberId, i) => [
-      memberId,
-      base + (i < remainder ? 1 : 0),
-    ]),
-  )
+  return equalSplit(expense.amountCents, expense.splitAmong, memberOrder)
 }
 
 /**

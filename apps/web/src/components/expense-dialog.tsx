@@ -70,16 +70,16 @@ import {
   MAX_ITEMS,
   computeSplit,
   equalSplit,
+  friendEffect,
   itemisedSplit,
   splitProblem,
+  type FriendSplit as FriendSplitMode,
   type SplitMode,
 } from '@settlr/shared/split'
 import { api } from '@settlr/backend/convex/_generated/api'
 
 export type PersonalExpense = PersonalMonth['items'][number]
 export type FriendExpense = Extract<FriendEntry, { kind: 'expense' }>
-
-type FriendSplitMode = 'equal' | 'full' | 'exact'
 
 /**
  * Where an expense lives, and the expense when editing one: just yours, one
@@ -148,24 +148,6 @@ export function useFriendCurrency(friend: Friend, initial?: Currency) {
     if (!initial && !fromBalance) setCurrency(readPreferences().defaultCurrency)
   }, [initial, fromBalance])
   return [currency, setCurrency] as const
-}
-
-// How a one-on-one expense moves what the friend owes you (`friendDelta` in
-// convex/lib/ledger.ts): on an equal split the payer absorbs an odd cent;
-// by amount, the other one owes what was typed.
-function friendEffect(expense: {
-  amountCents: number
-  paidBy: 'me' | 'friend'
-  split: FriendSplitMode
-  owedCents?: number
-}) {
-  const owedByOther =
-    expense.split === 'equal'
-      ? Math.floor(expense.amountCents / 2)
-      : expense.split === 'exact'
-        ? (expense.owedCents ?? 0)
-        : expense.amountCents
-  return expense.paidBy === 'me' ? owedByOther : -owedByOther
 }
 
 const SPLIT_MODES: Array<{ value: SplitMode; label: string; hint: string }> = [

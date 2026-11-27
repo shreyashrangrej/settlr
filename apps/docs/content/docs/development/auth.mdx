@@ -14,7 +14,16 @@ Configured in `packages/backend/convex/auth.ts`:
 
 - **Email one-time codes** (the `emailOTP` plugin): 6 digits, valid for 5
   minutes. `convex/email.ts` sends them with Resend's HTTP API when
-  `RESEND_API_KEY` is set, and otherwise logs them.
+  `RESEND_API_KEY` is set, and otherwise logs them. At most 5 go to one
+  address an hour (`usage.signInCode` in `convex/usage.ts`); past that the
+  form still says a code was sent, but none is.
+
+Better Auth's own per-IP **rate limits** are effectively off: they only turn
+on when `NODE_ENV` is `production`, and their default store is memory, which
+Convex doesn't keep between requests. Turning them on (`rateLimit: { enabled:
+true, storage: 'database' }`) applies 3 sign-in codes a minute per IP, which
+blocks people sharing an IP (mobile carriers, offices) and the browser
+tests, which all sign in from one.
 - **Google**, enabled only when both `GOOGLE_CLIENT_ID` and
   `GOOGLE_CLIENT_SECRET` are set. Account linking is on, so Google and an
   email code for the same verified address are one account.
@@ -94,8 +103,10 @@ AI apps connect through Better Auth's `mcp` plugin plus Settlr's own
   </Step>
   <Step>
     The client trades the code at `/mcp/token` (PKCE is required).
-    `mcpBridge` rejects codes that haven't been approved yet, and after a
-    refresh it deletes the old token pair, so refresh tokens are single-use.
+    `mcpBridge` rejects codes that haven't been approved yet (it reads Better
+    Auth's stored code, so `apps/web/e2e/mcp.spec.ts` checks it on every run),
+    and after a refresh it deletes the old token pair, so refresh tokens are
+    single-use.
     Refresh tokens last 30 days.
   </Step>
   <Step>

@@ -27,6 +27,7 @@ export const receipt = action({
     if (!found.isImage || !found.url) {
       throw new ConvexError('Only photos can be read. Fill a PDF in by hand.')
     }
+    await ctx.runMutation(internal.usage.ai, {})
     return await extractExpense(
       [
         { type: 'text', text: 'Here is the receipt.' },
