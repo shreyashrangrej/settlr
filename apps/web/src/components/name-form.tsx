@@ -10,8 +10,10 @@ import { Card } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
 import { Field, FieldError, FieldLabel } from '#/components/ui/field'
 import { Spinner } from '#/components/ui/spinner'
+import { authCardStyle } from '#/components/login-form'
 import { updateName } from '#/lib/auth-client'
 import { NAME_MAX_LENGTH, profileName } from '@settlr/shared/schemas'
+import { cn } from '#/lib/utils'
 
 // Shown in place of every page until a new email-code account gives its
 // name. Google accounts already have one.
@@ -47,16 +49,16 @@ export function NameForm({ email }: { email: string }) {
 
   return (
     <div className="grid place-items-center py-12">
-      <Card className="w-full max-w-md gap-6 p-6">
-        <header className="grid gap-4">
+      <Card className={cn(authCardStyle, 'w-full max-w-md animate-rise-in gap-6 px-6 pt-8 pb-6 sm:px-8 sm:pt-9 sm:pb-8')}>
+        <header className="grid justify-items-center gap-5 text-center">
           <span
             aria-hidden="true"
-            className="grid size-11 place-items-center rounded-lg border border-highlight-border bg-highlight text-primary"
+            className="grid size-11 animate-pop place-items-center rounded-full bg-primary-soft text-primary shadow-[0_0_0_5px_color-mix(in_srgb,var(--accent)_5%,transparent)]"
           >
             <UserRound className="size-5" />
           </span>
           <div className="grid gap-1.5">
-            <h1 className="m-0 text-xl leading-snug font-semibold">
+            <h1 className="m-0 text-[1.375rem] leading-tight font-semibold tracking-[-0.025em]">
               What’s your name?
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -65,7 +67,7 @@ export function NameForm({ email }: { email: string }) {
                 <>
                   {' '}
                   You’re signed in as{' '}
-                  <span className="font-medium break-all text-foreground">
+                  <span className="font-medium break-words text-foreground">
                     {email}
                   </span>
                   .
@@ -89,16 +91,13 @@ export function NameForm({ email }: { email: string }) {
               onChange={(e) => setName(e.target.value)}
               aria-invalid={fieldError ? true : undefined}
               aria-describedby={fieldError ? 'profile-name-error' : undefined}
+              className="sm:h-9"
             />
             {fieldError && (
               <FieldError id="profile-name-error">{fieldError}</FieldError>
             )}
           </Field>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={pending}
-          >
+          <Button type="submit" size="lg" className="w-full" disabled={pending}>
             {pending && <Spinner />}
             Continue
           </Button>

@@ -3,14 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
-import {
-  ArrowLeft,
-  CircleAlert,
-  Mail,
-  MailCheck,
-  ReceiptText,
-} from 'lucide-react'
+import { ArrowLeft, ArrowRight, CircleAlert, Mail, MailCheck, RotateCw } from 'lucide-react'
 
+import { LogoMark } from '#/components/brand'
 import { useSession } from '#/components/providers'
 import { Alert, AlertDescription } from '#/components/ui/alert'
 import { Button } from '#/components/ui/button'
@@ -22,7 +17,6 @@ import {
   InputOTPSlot,
 } from '#/components/ui/input-otp'
 import { Label } from '#/components/ui/label'
-import { Separator } from '#/components/ui/separator'
 import { Spinner } from '#/components/ui/spinner'
 import {
   authClient,
@@ -34,6 +28,11 @@ import { OTP_LENGTH, emailOtpRequest, emailOtpVerify } from '@settlr/shared/sche
 import { cn } from '#/lib/utils'
 
 const RESEND_COOLDOWN_S = 30
+
+// A card that floats over the page: Gr8r's dialog radius, and a long soft
+// shadow under it. The name step after sign-up (name-form.tsx) shares it.
+export const authCardStyle =
+  'rounded-2xl shadow-[0_1px_2px_rgb(28_25_20/4%),0_24px_64px_-28px_rgb(28_25_20/28%)] dark:shadow-[0_24px_64px_-28px_rgb(0_0_0/70%)]'
 
 type Step = 'email' | 'code'
 type Pending = 'google' | 'send' | 'verify' | null
@@ -128,7 +127,7 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
   // Signed in: the home route is redirecting to the dashboard.
   if (isAuthenticated || session) {
     return (
-      <Card className={cn('items-center gap-3 p-6 py-10', className)}>
+      <Card className={cn(authCardStyle, 'items-center gap-3 px-6 py-16', className)}>
         <Spinner className="size-5 text-primary" />
         <p className="text-sm text-muted-foreground">Signing you in…</p>
       </Card>
@@ -136,175 +135,172 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
   }
 
   return (
-    <Card className={cn('gap-0 overflow-hidden py-0', className)}>
-      <div className="grid gap-6 p-6">
-        <header className="grid gap-4">
-          <span
-            aria-hidden="true"
-            className="grid size-11 place-items-center rounded-lg border border-highlight-border bg-highlight text-primary"
-          >
-            {step === 'email' ? (
-              <ReceiptText className="size-5" />
-            ) : (
-              <MailCheck className="size-5" />
-            )}
-          </span>
-          {step === 'email' ? (
-            <div className="grid gap-1.5">
-              <h2 className="m-0 text-xl leading-snug font-semibold">
-                Sign in to Settlr
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                No password needed. Use Google, or get a one-time code by email.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-1.5">
-              <h2 className="m-0 text-xl leading-snug font-semibold">
-                Check your inbox
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                We sent a {OTP_LENGTH}-digit code to{' '}
-                <span className="font-medium break-all text-foreground">
-                  {email.trim()}
-                </span>
-                . It expires in 5 minutes.
-              </p>
-            </div>
-          )}
-        </header>
-
+    <Card className={cn(authCardStyle, 'relative isolate gap-0 p-0', className)}>
+      {/* A faint wash of the accent from the top edge, behind the header. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-44 bg-[radial-gradient(ellipse_75%_100%_at_50%_0%,var(--accent-soft),transparent_80%)]"
+      />
+      {/* Keyed by the step, so each step rises in as it replaces the last. */}
+      <div key={step} className="grid animate-rise-in gap-6 px-6 pt-8 pb-6 sm:px-8 sm:pt-9 sm:pb-8">
         {step === 'email' ? (
-          <div className="grid gap-5">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              disabled={busy}
-              onClick={() => run('google', () => signInWithGoogle(next))}
-            >
-              {pending === 'google' ? (
-                <Spinner />
-              ) : (
-                <GoogleLogo />
-              )}
-              Continue with Google
-            </Button>
-
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <Separator className="flex-1" />
-              or use your email
-              <Separator className="flex-1" />
-            </div>
-
-            <form noValidate onSubmit={requestCode} className="grid gap-3">
-              <div className="grid gap-2">
-                <Label htmlFor="login-email">Email</Label>
-                <div className="relative">
-                  <Mail
-                    aria-hidden="true"
-                    className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-                  />
-                  <Input
-                    id="login-email"
-                    name="email"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-9"
-                    aria-invalid={fieldError ? true : undefined}
-                    aria-describedby={fieldError ? 'login-email-error' : undefined}
-                  />
-                </div>
-                {fieldError && (
-                  <p id="login-email-error" className="text-sm text-destructive">
-                    {fieldError}
-                  </p>
-                )}
+          <>
+            <header className="grid justify-items-center gap-5 text-center">
+              <LogoMark className="size-11 rounded-[11px] shadow-[0_0_0_5px_var(--accent-soft),0_10px_24px_-10px_var(--accent)]" />
+              <div className="grid gap-1.5">
+                <h2 className="m-0 text-[1.375rem] leading-tight font-semibold tracking-[-0.025em]">
+                  Welcome to Settlr
+                </h2>
+                <p className="text-sm text-balance text-muted-foreground">
+                  Sign in or create an account. No password needed.
+                </p>
               </div>
+            </header>
+
+            <div className="grid gap-5">
               <Button
-                type="submit"
+                type="button"
+                variant="outline"
+                size="lg"
                 className="w-full"
                 disabled={busy}
+                onClick={() => run('google', () => signInWithGoogle(next))}
               >
-                {pending === 'send' && <Spinner />}
-                Email me a code
+                {pending === 'google' ? <Spinner /> : <GoogleLogo />}
+                Continue with Google
               </Button>
-            </form>
-          </div>
-        ) : (
-          <form
-            noValidate
-            onSubmit={(e) => {
-              e.preventDefault()
-              void verifyCode(otp)
-            }}
-            className="grid gap-5"
-          >
-            <div className="grid justify-items-center gap-2">
-              <InputOTP
-                maxLength={OTP_LENGTH}
-                pattern={REGEXP_ONLY_DIGITS}
-                value={otp}
-                onChange={setOtp}
-                onComplete={(code: string) => void verifyCode(code)}
-                autoFocus
-                autoComplete="one-time-code"
-                aria-label="One-time code"
-                disabled={pending === 'verify'}
-                aria-invalid={fieldError ? true : undefined}
-              >
-                <InputOTPGroup className="gap-2">
-                  {Array.from({ length: OTP_LENGTH }, (_, i) => (
-                    <InputOTPSlot
-                      key={i}
-                      index={i}
-                      aria-invalid={fieldError ? true : undefined}
-                      className="size-12 rounded-lg border bg-field font-mono text-lg font-medium first:rounded-lg last:rounded-lg"
+
+              <div className="flex items-center gap-3 text-xs text-faint">
+                <span className="h-px flex-1 bg-border" />
+                or
+                <span className="h-px flex-1 bg-border" />
+              </div>
+
+              <form noValidate onSubmit={requestCode} className="grid gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="login-email">Email</Label>
+                  <div className="relative">
+                    <Mail
+                      aria-hidden="true"
+                      className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-dim"
                     />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-              {fieldError && (
-                <p className="text-sm text-destructive">{fieldError}</p>
-              )}
+                    {/* The large control size (36px), to match the buttons. */}
+                    <Input
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-9 sm:h-9"
+                      aria-invalid={fieldError ? true : undefined}
+                      aria-describedby={fieldError ? 'login-email-error' : undefined}
+                    />
+                  </div>
+                  {fieldError && (
+                    <p id="login-email-error" className="text-xs text-destructive">
+                      {fieldError}
+                    </p>
+                  )}
+                </div>
+                <Button type="submit" size="lg" className="w-full" disabled={busy}>
+                  {pending === 'send' && <Spinner />}
+                  Email me a code
+                  {pending !== 'send' && <ArrowRight />}
+                </Button>
+              </form>
             </div>
+          </>
+        ) : (
+          <>
+            <header className="grid justify-items-center gap-5 text-center">
+              <span
+                aria-hidden="true"
+                className="grid size-11 animate-pop place-items-center rounded-full bg-primary-soft text-primary shadow-[0_0_0_5px_color-mix(in_srgb,var(--accent)_5%,transparent)]"
+              >
+                <MailCheck className="size-5" />
+              </span>
+              <div className="grid gap-1.5">
+                <h2 className="m-0 text-[1.375rem] leading-tight font-semibold tracking-[-0.025em]">
+                  Check your inbox
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Enter the {OTP_LENGTH}-digit code we sent to
+                  <br />
+                  <span className="font-medium break-words text-foreground">{email.trim()}</span>
+                </p>
+              </div>
+            </header>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={busy || otp.length < OTP_LENGTH}
+            <form
+              noValidate
+              onSubmit={(e) => {
+                e.preventDefault()
+                void verifyCode(otp)
+              }}
+              className="grid gap-4"
             >
-              {pending === 'verify' && <Spinner />}
-              Verify and sign in
-            </Button>
+              <div className="grid gap-2">
+                <InputOTP
+                  maxLength={OTP_LENGTH}
+                  pattern={REGEXP_ONLY_DIGITS}
+                  value={otp}
+                  onChange={setOtp}
+                  onComplete={(code: string) => void verifyCode(code)}
+                  autoFocus
+                  autoComplete="one-time-code"
+                  aria-label="One-time code"
+                  disabled={pending === 'verify'}
+                  aria-invalid={fieldError ? true : undefined}
+                  containerClassName="w-full"
+                >
+                  <InputOTPGroup className="grid w-full grid-cols-6 gap-2">
+                    {Array.from({ length: OTP_LENGTH }, (_, i) => (
+                      <InputOTPSlot
+                        key={i}
+                        index={i}
+                        aria-invalid={fieldError ? true : undefined}
+                        className="h-12 w-full rounded-lg border text-xl font-semibold tabular-nums first:rounded-lg last:rounded-lg"
+                      />
+                    ))}
+                  </InputOTPGroup>
+                </InputOTP>
+                {fieldError && (
+                  <p className="text-center text-xs text-destructive">{fieldError}</p>
+                )}
+              </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
               <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="-ml-2 text-muted-foreground"
-                onClick={changeEmail}
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={busy || otp.length < OTP_LENGTH}
               >
-                <ArrowLeft />
-                Different email
+                {pending === 'verify' && <Spinner />}
+                Verify and sign in
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="-mr-2 text-muted-foreground"
-                disabled={busy || resendIn > 0}
-                onClick={() => void requestCode()}
-              >
-                {resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend code'}
-              </Button>
-            </div>
-          </form>
+
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Button type="button" variant="ghost" size="sm" className="-ml-2" onClick={changeEmail}>
+                  <ArrowLeft />
+                  Different email
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="-mr-2"
+                  disabled={busy || resendIn > 0}
+                  onClick={() => void requestCode()}
+                >
+                  <RotateCw />
+                  {resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend code'}
+                </Button>
+              </div>
+            </form>
+          </>
         )}
 
         {error && (
@@ -315,6 +311,11 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
         )}
       </div>
 
+      <p className="border-t bg-sunken px-6 py-3.5 text-center text-xs text-faint sm:px-8">
+        {step === 'email'
+          ? 'New to Settlr? Signing in creates your account.'
+          : 'Expires in 5 minutes. Not there? Check your spam folder.'}
+      </p>
     </Card>
   )
 }

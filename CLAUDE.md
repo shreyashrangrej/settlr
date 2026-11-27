@@ -175,7 +175,10 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   saved chats and undo are now built on the web (not in the Android app yet).
 - `src/app/`: the App Router. `layout.tsx` is the root document (reads the
   auth session, renders `<Providers>` and the `<AppShell>`), `page.tsx` the
-  landing hero. `(app)/` is the signed-in area: its layout redirects to `/`
+  landing page (the hero beside `LoginForm`, then the sections in
+  `src/components/landing.tsx`: a still of a group page drawn with the
+  tokens, the feature cards, a closing call to action and the footer; it
+  runs edge to edge with `-mx-(--gutter)`). `(app)/` is the signed-in area: its layout redirects to `/`
   when signed out, and the dashboard, all expenses (`expenses/`), friends,
   groups, personal, budget, notifications and receipt viewer pages live
   under it. Each page is a
@@ -241,7 +244,8 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   bell, "New" menu and account on
   every width;
   below `lg` the sidebar is a drawer and a tab bar runs along the bottom;
-  `site-header.tsx` is the signed-out top bar), `app-nav.tsx` (the
+  `site-header.tsx` is the signed-out top bar: no border, see-through at
+  the top of the page and frosted once it scrolls), `app-nav.tsx` (the
   list of sections), `add-menu.tsx` ("Add expense" menu), `brand.tsx`
   (logo), `robot-icon.ts` (`RobotIcon`, the AI Assistant's icon: a Lucide
   icon made with `createLucideIcon`, whose `.robot-eye`s can blink), `category.tsx` (category icons and colours, `groupColor`),
@@ -269,7 +273,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `skeleton-shimmer`, `kbd`, `stagger` and `frame-art` utilities, Gr8r's motion
   (`animate-rise-in`, `animate-fade-in`, `animate-grow-x`, `animate-pop`,
   `ease-out-quint`, `ease-spring`; reduced motion, from the system or
-  `data-motion="reduce"`, cuts them all to 1ms), and the landing hero's CSS. Use
+  `data-motion="reduce"`, cuts them all to 1ms). Use
   the tokens, not hex values; category, group and avatar colours are the
   label hues, drawn with `labelTint`/`avatarTint` from `category.tsx`.
 - Auth on the web side: `src/lib/auth-client.ts` (browser client and the

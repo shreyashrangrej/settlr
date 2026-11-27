@@ -60,7 +60,7 @@ export function FriendsView() {
 
 | Route | Rendering | Why |
 | --- | --- | --- |
-| `/` (landing hero) | server | Marketing page and sign-in form. Signed-in visitors are redirected to `/dashboard` |
+| `/` (landing page) | server | Marketing page and sign-in form (`components/landing.tsx`). Signed-in visitors are redirected to `/dashboard` |
 | `/dashboard`, `/friends`, `/personal`, `/budget`, `/expenses` | server | Queries are prefetched with the visitor's token, so the first HTML is complete |
 | `/groups/[groupId]`, `/friends/[friendId]` | server | Shareable, filterable URLs render fully on the server |
 | `/receipts/[source]/[expenseId]` | server | The receipt's URL and its expense are prefetched; images show inline, PDFs in the browser's viewer |
