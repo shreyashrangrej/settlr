@@ -21,7 +21,7 @@ import {
 import { AccountMenu } from '#/components/account-menu'
 import { AddMenu } from '#/components/add-menu'
 import { APP_SECTIONS, sectionFor } from '#/components/app-nav'
-import { LogoMark } from '#/components/brand'
+import { LogoMark, Wordmark } from '#/components/brand'
 import { groupColor, labelTint } from '#/components/category'
 import { NavLink } from '#/components/nav-link'
 import { NotificationBell } from '#/components/notification-bell'
@@ -199,7 +199,7 @@ function SidebarContent({ collapsed, onToggle }: { collapsed: boolean; onToggle?
           )}
         >
           <LogoMark className="size-5.5" />
-          {!collapsed && <span className="truncate text-sm font-semibold">Settlr</span>}
+          {!collapsed && <Wordmark className="text-sm" />}
         </Link>
         {onToggle && !collapsed && (
           <Button

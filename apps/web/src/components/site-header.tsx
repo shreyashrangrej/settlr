@@ -4,19 +4,19 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 import { AccountMenu } from '#/components/account-menu'
-import { Logo } from '#/components/brand'
+import { GitHubMark, Logo } from '#/components/brand'
 import { NavLink } from '#/components/nav-link'
 import { useSession } from '#/components/providers'
 import { ThemeToggle } from '#/components/theme-toggle'
 import { buttonVariants } from '#/components/ui/button'
-import { DOCS_URL } from '#/lib/site'
+import { DOCS_URL, REPO_URL } from '#/lib/site'
 import { cn } from '#/lib/utils'
 
 /**
  * The top bar of the signed-out pages (and of the "what's your name" step):
- * logo, docs, settings, theme and, once signed in, the account menu. The signed-in
- * app has the sidebar instead (see app-shell.tsx). It has no edge: at the top
- * of the page it's see-through (the home page's backdrop runs up behind it),
+ * logo, docs, the source on GitHub, settings, theme and, once signed in, the
+ * account menu. The signed-in app has the sidebar instead (see
+ * app-shell.tsx). It has no edge: at the top of the page it's see-through,
  * and once the page scrolls under it, it frosts over with a soft shadow.
  */
 export function SiteHeader() {
@@ -38,6 +38,16 @@ export function SiteHeader() {
             className={cn(buttonVariants({ variant: 'ghost' }), 'text-muted-foreground no-underline')}
           >
             Docs
+          </a>
+          {/* Not on phones, where the bar is short of room; the home page
+              links to the source in its hero and footer anyway. */}
+          <a
+            href={REPO_URL}
+            aria-label="Source code on GitHub"
+            className={cn(buttonVariants({ variant: 'ghost' }), 'text-muted-foreground no-underline max-sm:hidden')}
+          >
+            <GitHubMark className="sm:size-3.5" />
+            GitHub
           </a>
           {!user && (
             <NavLink

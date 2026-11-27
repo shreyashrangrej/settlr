@@ -4,26 +4,21 @@ import {
   Bell,
   Check,
   ChevronDown,
-  Coins,
-  Handshake,
   LayoutDashboard,
   PiggyBank,
   Plus,
   QrCode,
   ReceiptText,
-  Scale,
   ScanLine,
-  Split,
   User,
   Users,
   Wallet,
-  type LucideIcon,
 } from 'lucide-react'
 
-import { Logo, LogoMark } from '#/components/brand'
+import { GitHubMark, Logo, LogoMark, Wordmark } from '#/components/brand'
 import { CategoryIcon, avatarTint, labelTint } from '#/components/category'
 import { RobotIcon } from '#/components/robot-icon'
-import { DOCS_URL } from '#/lib/site'
+import { DOCS_URL, REPO_URL } from '#/lib/site'
 import { cn } from '#/lib/utils'
 import { formatWholeMoney } from '@settlr/shared/format'
 import type { Category } from '@settlr/shared/schemas'
@@ -32,7 +27,8 @@ import type { Category } from '@settlr/shared/schemas'
 // form beside the hero copy). Everything here is static, server-rendered
 // markup: the product preview and the feature visuals are drawn with the
 // app's own tokens, so they follow the theme and the accent, and they use
-// one made-up trip whose numbers add up (see GOA below).
+// one made-up trip whose numbers add up (see GOA below). The page keeps to
+// plain surfaces: no glows, gradients or patterned backdrops.
 
 /** The home page's section width, inside the signed-out gutter. */
 export const LANDING_WIDTH = 'mx-auto w-full max-w-6xl px-(--gutter)'
@@ -119,49 +115,29 @@ function Money({ rupees, className }: { rupees: number; className?: string }) {
 // ---------------------------------------------------------------------------
 // Hero copy
 
-const FACTS: Array<{ icon: LucideIcon; label: string }> = [
-  { icon: Scale, label: 'Fair to the cent' },
-  { icon: Coins, label: 'Six currencies' },
-  { icon: QrCode, label: 'Pay back over UPI' },
-]
-
-/** The headline, the pitch and three facts, beside the sign-in form. */
+/** The headline, the pitch and the source code, beside the sign-in form. */
 export function HeroCopy() {
   return (
-    <div className="grid justify-items-start gap-6 lg:gap-7">
-      <a
-        href={`${DOCS_URL}/guide/assistant`}
-        className="group inline-flex animate-rise-in items-center gap-2 rounded-full border bg-card py-1 pr-2.5 pl-1 text-xs font-medium text-muted-foreground no-underline shadow-xs transition-colors duration-140 hover:border-input hover:text-foreground"
-      >
-        <span className="grid size-5 place-items-center rounded-full bg-primary-soft text-primary">
-          <RobotIcon className="size-3.5" />
-        </span>
-        Add expenses just by typing them
-        <ArrowRight className="size-3 text-dim transition-transform duration-140 group-hover:translate-x-0.5" />
-      </a>
-
+    <div className="grid justify-items-start gap-6">
       <h1
         id="hero-title"
-        className="m-0 animate-rise-in text-[clamp(2.75rem,6.4vw,4.75rem)] leading-[0.98] font-semibold tracking-[-0.045em] text-balance [animation-delay:50ms]"
+        className="m-0 animate-rise-in text-[clamp(2.5rem,5.6vw,4.25rem)] leading-[1.02] font-semibold tracking-[-0.04em] text-balance"
       >
-        Split costs.
-        <br />
-        <span className="text-primary">Stay friends.</span>
+        Shared expenses, settled.
       </h1>
 
-      <p className="max-w-[34rem] animate-rise-in text-lg leading-relaxed text-muted-foreground [animation-delay:100ms] sm:text-xl sm:leading-relaxed">
-        Settlr keeps one shared tab for trips, flats and dinners, then works out the fewest
-        payments to get everyone square.
+      <p className="max-w-[34rem] animate-rise-in text-lg leading-relaxed text-muted-foreground [animation-delay:60ms] sm:text-xl sm:leading-relaxed">
+        Keep one tab for a trip, a flat or a dinner out. Settlr works out who owes whom, and the
+        fewest payments that square everyone up.
       </p>
 
-      <ul className="flex animate-rise-in flex-wrap gap-x-5 gap-y-2.5 text-sm text-muted-foreground [animation-delay:150ms]">
-        {FACTS.map(({ icon: Icon, label }) => (
-          <li key={label} className="flex items-center gap-2">
-            <Icon aria-hidden="true" className="size-4 text-dim" />
-            {label}
-          </li>
-        ))}
-      </ul>
+      <div className="flex animate-rise-in flex-wrap items-center gap-x-4 gap-y-3 [animation-delay:120ms]">
+        <a href={REPO_URL} className={outlineLink}>
+          <GitHubMark />
+          View the source
+        </a>
+        <span className="text-sm text-muted-foreground">Free and open source, MIT licence</span>
+      </div>
     </div>
   )
 }
@@ -182,7 +158,7 @@ function PreviewSidebar() {
     <div className="hidden w-52 shrink-0 flex-col gap-4 p-2.5 md:flex">
       <span className="flex h-9 items-center gap-2 px-1.5">
         <LogoMark className="size-6" />
-        <span className="text-sm font-semibold">settlr</span>
+        <Wordmark className="text-sm" />
       </span>
       <div className="grid gap-0.5">
         <span className={sideRow}>
@@ -367,15 +343,10 @@ function PreviewAside() {
  */
 export function AppPreview() {
   return (
-    <figure className="relative m-0">
-      {/* The accent glows faintly from behind the window. */}
+    <figure className="m-0">
       <div
         aria-hidden="true"
-        className="absolute inset-x-[8%] -top-8 -z-10 h-3/4 rounded-full bg-primary/20 blur-3xl dark:bg-primary/12"
-      />
-      <div
-        aria-hidden="true"
-        className="flex overflow-hidden rounded-2xl border frame-art shadow-[0_40px_100px_-40px_rgb(28_25_20/45%)] select-none dark:shadow-[0_40px_100px_-30px_rgb(0_0_0/80%)]"
+        className="flex overflow-hidden rounded-2xl border frame-art shadow-[0_24px_60px_-36px_rgb(28_25_20/40%)] select-none dark:shadow-[0_24px_60px_-30px_rgb(0_0_0/70%)]"
       >
         <PreviewSidebar />
         <div className="flex min-w-0 flex-1 flex-col px-1.5 pb-1.5 md:pr-2 md:pb-2 md:pl-0">
@@ -434,16 +405,12 @@ export function AppPreview() {
 // Features
 
 function Feature({
-  icon: Icon,
-  hue,
   title,
   children,
   visual,
   wide = false,
   className,
 }: {
-  icon: LucideIcon
-  hue: string
   title: string
   children: React.ReactNode
   visual: React.ReactNode
@@ -454,7 +421,7 @@ function Feature({
   return (
     <article
       className={cn(
-        'group/feature flex flex-col overflow-hidden rounded-xl border bg-card transition-[border-color,translate] duration-200 ease-out-quint hover:-translate-y-0.5 hover:border-input',
+        'flex flex-col overflow-hidden rounded-xl border bg-card',
         wide && 'md:col-span-2 lg:flex-row',
         className,
       )}
@@ -464,20 +431,15 @@ function Feature({
         className={cn(
           // One height for the narrow cards, so their titles line up across a
           // row; the wide ones grow to fit their bigger visuals.
-          'relative grid place-items-center overflow-hidden border-b bg-sunken px-5 py-6',
+          'grid place-items-center overflow-hidden border-b bg-sunken px-5 py-6',
           wide ? 'min-h-44' : 'h-44',
-          // A faint dot grid, as behind the hero.
-          'bg-[radial-gradient(var(--border)_1px,transparent_1px)] [background-size:16px_16px]',
           wide && 'lg:order-last lg:w-[55%] lg:border-b-0 lg:border-l',
         )}
       >
         {visual}
       </div>
-      <div className={cn('grid content-start gap-2 p-5', wide && 'lg:flex-1 lg:content-center lg:p-7')}>
-        <span className="grid size-8 place-items-center rounded-lg" style={labelTint(hue)}>
-          <Icon aria-hidden="true" className="size-4" />
-        </span>
-        <h3 className="m-0 mt-1 text-base font-semibold">{title}</h3>
+      <div className={cn('grid content-start gap-1.5 p-5', wide && 'lg:flex-1 lg:content-center lg:p-7')}>
+        <h3 className="m-0 text-base font-semibold">{title}</h3>
         <p className="text-sm leading-relaxed text-muted-foreground">{children}</p>
       </div>
     </article>
@@ -487,7 +449,7 @@ function Feature({
 /** A small floating surface inside a feature's visual. */
 function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={cn('w-full rounded-xl border bg-card p-3 shadow-[0_8px_24px_-12px_rgb(28_25_20/18%)] dark:shadow-none', className)}>
+    <div className={cn('w-full rounded-xl border bg-card p-3', className)}>
       {children}
     </div>
   )
@@ -675,42 +637,29 @@ function UpiVisual() {
 export function FeatureGrid() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <Feature wide icon={Split} hue="var(--violet)" title="Split it any way" visual={<SplitVisual />}>
+      <Feature wide title="Split it any way" visual={<SplitVisual />}>
         Equally, by exact amounts, by percentage or by shares, for groups of up to 20. Every
         split adds up to the cent, and you see everyone’s part before you save.
       </Feature>
-      <Feature
-        icon={ArrowLeftRight}
-        hue="var(--green)"
-        title="The fewest payments"
-        visual={<SettleVisual />}
-      >
+      <Feature title="The fewest payments" visual={<SettleVisual />}>
         Settlr nets out who owes whom and plans the fewest transfers that get everyone square.
       </Feature>
-      <Feature icon={Handshake} hue="var(--rose)" title="Friends, one-on-one" visual={<FriendsVisual />}>
+      <Feature title="Friends, one-on-one" visual={<FriendsVisual />}>
         A running tab with each friend, in any of six currencies, shared with them once they
         accept.
       </Feature>
-      <Feature
-        wide
-        icon={RobotIcon}
-        hue="var(--blue)"
-        title="Just tell the assistant"
-        visual={<AssistantVisual />}
-      >
+      <Feature wide title="Just tell the assistant" visual={<AssistantVisual />}>
         Type what you spent and who shared it, and the assistant adds it. Find and fix expenses
         the same way, here or from Claude and ChatGPT.
       </Feature>
-      <Feature icon={PiggyBank} hue="var(--amber)" title="Your own budget" visual={<BudgetVisual />}>
+      <Feature title="Your own budget" visual={<BudgetVisual />}>
         Personal spending by month and category, against a budget that counts your share of
         everything.
       </Feature>
-      <Feature icon={ReceiptText} hue="var(--orange)" title="Receipts, read for you" visual={<ReceiptVisual />}>
+      <Feature title="Receipts, read for you" visual={<ReceiptVisual />}>
         Attach a photo or PDF to any expense, or let Settlr fill in the form from the receipt.
       </Feature>
       <Feature
-        icon={QrCode}
-        hue="var(--teal)"
         title="Pay back over UPI"
         visual={<UpiVisual />}
         className="md:col-span-2 lg:col-span-1"
@@ -722,36 +671,54 @@ export function FeatureGrid() {
 }
 
 // ---------------------------------------------------------------------------
-// Closing call to action and footer
+// Open source and footer
 
-/** The last section: back up to the sign-in form, or off to the guide. */
-export function ClosingCta() {
+const SETUP: Array<{ command: string; note?: string }> = [
+  { command: `git clone ${REPO_URL}` },
+  { command: 'cd settlr && pnpm install' },
+  { command: 'pnpm dev:convex', note: 'your own Convex backend' },
+  { command: 'pnpm dev', note: 'http://localhost:3000' },
+]
+// The comments line up, a little past the longest command that has one.
+const NOTE_COLUMN = Math.max(...SETUP.map((line) => (line.note ? line.command.length : 0))) + 3
+
+/** Where the code lives, and how to run your own copy (as in the README). */
+export function OpenSource() {
   return (
-    <div className="relative isolate overflow-hidden rounded-2xl border frame-art px-6 py-14 text-center sm:px-10 sm:py-16">
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[radial-gradient(var(--border-strong)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_60%_70%_at_50%_50%,#000_20%,transparent_100%)]"
-      />
-      <LogoMark className="mx-auto size-11" />
-      <h2
-        id="cta-title"
-        className="m-0 mt-5 text-[clamp(1.75rem,3.6vw,2.5rem)] leading-tight font-semibold tracking-[-0.035em] text-balance"
-      >
-        Start your first shared tab
-      </h2>
-      <p className="mx-auto mt-3 max-w-md text-base leading-relaxed text-muted-foreground">
-        Sign in with Google or an email code. There’s no password, and a new account takes
-        seconds.
-      </p>
-      <div className="mt-7 flex flex-wrap justify-center gap-2.5">
-        <a href="#sign-in" className={primaryLink}>
-          Get started
-          <ArrowRight />
-        </a>
-        <a href={`${DOCS_URL}/guide/getting-started`} className={outlineLink}>
-          Read the guide
-        </a>
+    <div className="grid gap-8 rounded-xl border bg-card p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-center lg:gap-12 lg:p-10">
+      <div className="grid justify-items-start gap-3">
+        <h2
+          id="source-title"
+          className="m-0 text-[clamp(1.5rem,3vw,2rem)] leading-tight font-semibold tracking-[-0.03em] text-balance"
+        >
+          Open source, all of it
+        </h2>
+        <p className="text-base leading-relaxed text-muted-foreground">
+          The web app, the Android app, the backend and the docs are on GitHub under the MIT
+          licence. Read how the balances are worked out, report a bug, send a pull request, or
+          run your own copy on a free Convex account.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2.5">
+          <a href={REPO_URL} className={primaryLink}>
+            <GitHubMark />
+            View on GitHub
+          </a>
+          <a href={`${DOCS_URL}/development`} className={outlineLink}>
+            Run your own copy
+          </a>
+        </div>
       </div>
+      <pre className="m-0 overflow-x-auto rounded-lg border bg-sunken px-4 py-3.5 font-mono text-ui leading-relaxed">
+        <code>
+          {SETUP.map(({ command, note }) => (
+            <span key={command} className="block whitespace-pre">
+              <span className="text-faint select-none">$ </span>
+              {command}
+              {note && <span className="text-faint">{`${' '.repeat(NOTE_COLUMN - command.length)}# ${note}`}</span>}
+            </span>
+          ))}
+        </code>
+      </pre>
     </div>
   )
 }
@@ -760,6 +727,8 @@ export function LandingFooter() {
   const links = [
     { href: `${DOCS_URL}/guide/getting-started`, label: 'Guide' },
     { href: `${DOCS_URL}/development`, label: 'Developers' },
+    { href: REPO_URL, label: 'GitHub' },
+    { href: `${REPO_URL}/blob/main/LICENSE`, label: 'MIT licence' },
     { href: '/settings', label: 'Settings' },
   ]
   return (
@@ -770,10 +739,7 @@ export function LandingFooter() {
           'flex flex-wrap items-center justify-between gap-x-6 gap-y-4 py-8 text-sm text-muted-foreground',
         )}
       >
-        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <Logo />
-          <span className="text-faint">Split costs. Stay friends.</span>
-        </span>
+        <Logo />
         <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2">
           {links.map((link) => (
             <a
@@ -784,7 +750,6 @@ export function LandingFooter() {
               {link.label}
             </a>
           ))}
-          <span className="text-faint">MIT licensed</span>
         </nav>
       </div>
     </footer>

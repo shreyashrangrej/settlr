@@ -3,22 +3,32 @@ import { expect, test, uniqueEmail } from './fixtures'
 // Every other test signs in through this page's form (`signIn` in
 // fixtures.ts); these cover the page around it and the form's own steps.
 
-test('the home page introduces Settlr and leads to the sign-in form', async ({ page }) => {
+test('the home page introduces Settlr and says where its source is', async ({ page }) => {
   await page.goto('/')
   const main = page.getByRole('main')
+  const repo = 'https://github.com/shreyashrangrej/settlr'
 
-  await expect(main.getByRole('heading', { level: 1 })).toHaveText(/Split costs\.\s*Stay friends\./)
+  await expect(main.getByRole('heading', { level: 1 })).toHaveText('Shared expenses, settled.')
+  await expect(page).toHaveTitle('Settlr · Shared expenses, settled')
   await expect(main.getByRole('heading', { name: 'Welcome to Settlr' })).toBeVisible()
   // The product preview is described by its caption, not read row by row.
   await expect(main.getByRole('figure', { name: /A group in Settlr for a trip to Goa/ })).toBeAttached()
-  await expect(main.getByRole('heading', { name: 'Everything a shared tab needs' })).toBeVisible()
+  await expect(main.getByRole('heading', { name: 'What Settlr does' })).toBeVisible()
   await expect(main.getByRole('heading', { level: 3 })).toHaveCount(7)
 
-  // "Get started", at the bottom, goes back up to the form.
-  const email = main.getByLabel('Email')
-  await main.getByRole('link', { name: 'Get started' }).click()
-  await expect(page).toHaveURL(/#sign-in$/)
-  await expect(email).toBeInViewport()
+  // The logo reads "Settlr by EntApex".
+  const bar = page.getByRole('banner')
+  await expect(bar.getByRole('link', { name: 'Settlr, home' })).toHaveText('Settlr by EntApex')
+
+  // It's open source: the hero, the open-source section, the top bar and the
+  // footer all link to the repository.
+  await expect(main.getByRole('link', { name: 'View the source' })).toHaveAttribute('href', repo)
+  const source = main.getByRole('region', { name: 'Open source, all of it' })
+  await expect(source.getByRole('link', { name: 'View on GitHub' })).toHaveAttribute('href', repo)
+  await expect(source.getByText(`git clone ${repo}`)).toBeVisible()
+  await expect(bar.getByRole('link', { name: 'Source code on GitHub' })).toHaveAttribute('href', repo)
+  const footer = main.getByRole('navigation', { name: 'Footer' })
+  await expect(footer.getByRole('link', { name: 'MIT licence' })).toHaveAttribute('href', `${repo}/blob/main/LICENSE`)
 })
 
 test('the sign-in form checks the address, then asks for the code', async ({ page }) => {

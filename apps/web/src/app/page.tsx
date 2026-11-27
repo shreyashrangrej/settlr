@@ -3,17 +3,17 @@ import { redirect } from 'next/navigation'
 
 import {
   AppPreview,
-  ClosingCta,
   FeatureGrid,
   HeroCopy,
   LANDING_WIDTH,
   LandingFooter,
+  OpenSource,
 } from '#/components/landing'
 import { LoginForm } from '#/components/login-form'
 import { cn } from '#/lib/utils'
 import { getAuthSession } from '#/server/auth.server'
 
-export const metadata: Metadata = { title: 'Settlr · Split costs. Stay friends.' }
+export const metadata: Metadata = { title: 'Settlr · Shared expenses, settled' }
 
 // The landing page and sign-in form, fully rendered on the server.
 // Signed-in visitors go straight to their dashboard.
@@ -21,18 +21,10 @@ export default async function HomePage() {
   if ((await getAuthSession()).user) redirect('/dashboard')
   return (
     // Full width: cancels the signed-out <main>'s gutter and padding (the
-    // `app-shell` rule in styles.css), so section backgrounds reach the
+    // `app-shell` rule in styles.css), so the footer's rule reaches the
     // edges; each section puts the gutter back inside.
     <div className="-mx-(--gutter) -mt-4 -mb-12">
-      <section aria-labelledby="hero-title" className="relative isolate">
-        {/* A dot grid that fades out from the middle, and the accent's glow
-            behind the form. It starts at the top of the window, behind the
-            see-through top bar (h-12) and main's top padding, so there's no
-            seam under the bar. */}
-        <div aria-hidden="true" className="absolute inset-x-0 -top-12 bottom-0 -z-10 overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(var(--border-strong)_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_30%,#000_25%,transparent_100%)]" />
-          <div className="absolute top-[-12rem] right-[-6rem] size-[42rem] rounded-full bg-primary/12 blur-3xl dark:bg-primary/10" />
-        </div>
+      <section aria-labelledby="hero-title">
         <div
           className={cn(
             LANDING_WIDTH,
@@ -40,8 +32,7 @@ export default async function HomePage() {
           )}
         >
           <HeroCopy />
-          {/* The closing "Get started" links here. */}
-          <div id="sign-in" className="w-full max-w-[25rem] scroll-mt-20 justify-self-center lg:justify-self-end">
+          <div className="w-full max-w-[25rem] justify-self-center lg:justify-self-end">
             <LoginForm className="animate-rise-in [animation-delay:120ms]" />
           </div>
         </div>
@@ -51,24 +42,23 @@ export default async function HomePage() {
       </section>
 
       <section aria-labelledby="features-title" className={cn(LANDING_WIDTH, 'py-20 sm:py-28')}>
-        <header className="mx-auto mb-10 grid max-w-2xl gap-3 text-center sm:mb-14">
-          <p className="text-sm font-medium text-primary">What’s inside</p>
+        <header className="mb-8 grid max-w-2xl gap-2 sm:mb-10">
           <h2
             id="features-title"
             className="m-0 text-[clamp(1.75rem,3.6vw,2.5rem)] leading-tight font-semibold tracking-[-0.035em] text-balance"
           >
-            Everything a shared tab needs
+            What Settlr does
           </h2>
           <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
             Groups for trips and flats, a running tab with each friend, and your own spending,
-            all in one place.
+            in one place.
           </p>
         </header>
         <FeatureGrid />
       </section>
 
-      <section aria-labelledby="cta-title" className={cn(LANDING_WIDTH, 'pb-20 sm:pb-28')}>
-        <ClosingCta />
+      <section aria-labelledby="source-title" className={cn(LANDING_WIDTH, 'pb-20 sm:pb-28')}>
+        <OpenSource />
       </section>
 
       <LandingFooter />

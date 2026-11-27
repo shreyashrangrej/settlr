@@ -4,7 +4,7 @@
 
 # Settlr
 
-**Split costs. Stay friends.**
+**Shared expenses, settled.**
 
 Track shared expenses with friends, flatmates and trips, then settle up with the fewest payments.
 

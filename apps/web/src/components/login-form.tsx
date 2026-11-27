@@ -135,18 +135,13 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
   }
 
   return (
-    <Card className={cn(authCardStyle, 'relative isolate gap-0 p-0', className)}>
-      {/* A faint wash of the accent from the top edge, behind the header. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-44 bg-[radial-gradient(ellipse_75%_100%_at_50%_0%,var(--accent-soft),transparent_80%)]"
-      />
+    <Card className={cn(authCardStyle, 'gap-0 p-0', className)}>
       {/* Keyed by the step, so each step rises in as it replaces the last. */}
       <div key={step} className="grid animate-rise-in gap-6 px-6 pt-8 pb-6 sm:px-8 sm:pt-9 sm:pb-8">
         {step === 'email' ? (
           <>
             <header className="grid justify-items-center gap-5 text-center">
-              <LogoMark className="size-11 rounded-[11px] shadow-[0_0_0_5px_var(--accent-soft),0_10px_24px_-10px_var(--accent)]" />
+              <LogoMark className="size-10" />
               <div className="grid gap-1.5">
                 <h2 className="m-0 text-[1.375rem] leading-tight font-semibold tracking-[-0.025em]">
                   Welcome to Settlr
