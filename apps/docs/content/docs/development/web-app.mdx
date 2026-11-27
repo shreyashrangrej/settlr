@@ -74,7 +74,7 @@ export function FriendsView() {
 | `/share/[token]` | browser | Public read-only group page (no sign-in) |
 | `/settings` | browser | Preferences live in localStorage |
 | `/connect` | server | OAuth step for MCP clients: sign in, then approve the app |
-| `/api/health` | route handler | JSON liveness probe |
+| `/api/health` | route handler | JSON liveness probe, with the build's commit |
 | `/api/mcp`, `/.well-known/oauth-*` | route handler | The MCP server and the OAuth discovery documents |
 
 ## Search params

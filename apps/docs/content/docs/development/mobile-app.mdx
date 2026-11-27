@@ -114,16 +114,34 @@ the mobile app.
 
 `.github/workflows/android.yml` builds an installable APK on GitHub Actions,
 without EAS: `expo prebuild` generates the native project and Gradle builds
-it. Push a tag to release one:
+it. Release one from an up-to-date `main` with:
 
 ```bash
-git tag v1.0.1 && git push origin v1.0.1
+pnpm release:android patch   # or minor, or major
 ```
 
-The APK (`settlr-v1.0.1.apk`) is attached to a GitHub release of that tag.
-**Run workflow** on the Actions tab builds one from any branch as a
-downloadable artifact instead. Bump `version` in `apps/mobile/app.json` to
-match the tag.
+`apps/mobile/scripts/release.mjs` bumps `version` in `apps/mobile/app.json`
+(1.0.1 to 1.0.2), commits it as "Android app 1.0.2", tags the commit
+`v1.0.2` and pushes both. It stops first if you're not on `main`, have
+uncommitted changes or are behind `origin/main`. It needs Node 22.18 or
+later.
+
+The tag starts the workflow, which checks the tag matches `app.json`, builds
+the APK (`settlr-v1.0.2.apk`) and attaches it to a GitHub release of the
+tag. The release notes list the commits since the previous release that
+touched `apps/mobile` or `packages/`, so write commit messages you'd be
+happy to read there. **Run workflow** on the Actions tab builds an APK from
+any branch as a downloadable artifact instead.
+
+`version` is the only number to change. Android's `versionCode`, which has
+to grow with every release or the APK won't install over the old one, is
+worked out from it in `app.config.ts`: 1.2.3 is 10203 (`src/lib/version.ts`,
+so minor and patch go up to 99). Profile shows the version.
+
+Installed APKs keep calling the backend after `main` moves on, since every
+push redeploys Convex. Keep changes to the public functions the app calls
+backwards compatible: add optional arguments and new functions, and remove
+old ones only once no release in use calls them.
 
 The app's URLs come from the repository's Actions variables
 `EXPO_PUBLIC_CONVEX_URL`, `EXPO_PUBLIC_CONVEX_SITE_URL` and

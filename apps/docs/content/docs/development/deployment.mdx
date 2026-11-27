@@ -63,11 +63,22 @@ pnpm --filter docs build
 
 ## Android app
 
-Vercel doesn't build the Android app. A tag like `v1.0.1` runs
-`.github/workflows/android.yml` on GitHub Actions, which builds an APK and
+Vercel doesn't build the Android app. `pnpm release:android patch` bumps its
+version and pushes a tag like `v1.0.2`, which runs
+`.github/workflows/android.yml` on GitHub Actions: it builds an APK and
 attaches it to a GitHub release of the tag; the app's URLs come from the
 repository's `EXPO_PUBLIC_*` Actions variables. See
 [Release an APK](/docs/development/mobile-app#release-an-apk).
+
+## Versions
+
+Only the Android app has a version number, since an installed APK stays on
+a phone after you ship. The web app, the backend and the docs have none:
+every push to `main` deploys them, so the commit is the version.
+`/api/health` returns it as `commit`, and the bottom of Settings links to it
+on GitHub. It's Vercel's `VERCEL_GIT_COMMIT_SHA`, or `git rev-parse HEAD`
+for a local build, baked in as `NEXT_PUBLIC_COMMIT_SHA` by
+`apps/web/next.config.ts`.
 
 ## Continuous integration
 
@@ -79,4 +90,5 @@ build on every push to `main` and on pull requests (see
 ## Health check
 
 `GET /api/health` on the web app returns a JSON liveness response, for load
-balancers and platform health checks.
+balancers and platform health checks: `{ "status": "ok", "commit": "…" }`,
+where `commit` is the build's commit (`null` when it isn't known).

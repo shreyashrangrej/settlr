@@ -33,6 +33,7 @@ import { Input } from '#/components/ui/input'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '#/components/ui/input-group'
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { readPreferences, writePreferences } from '#/lib/preferences'
+import { COMMIT_SHA, REPO_URL } from '#/lib/site'
 import {
   ACCENTS,
   applyAccent,
@@ -105,6 +106,17 @@ export function SettingsView() {
       </Card>
       <AccountCard />
       <AiAssistantsCard />
+      {COMMIT_SHA && (
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Settlr build{' '}
+          <a
+            href={`${REPO_URL}/commit/${COMMIT_SHA}`}
+            className="font-medium transition-colors duration-140 hover:text-foreground"
+          >
+            {COMMIT_SHA.slice(0, 7)}
+          </a>
+        </p>
+      )}
     </div>
   )
 }

@@ -16,8 +16,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "versionCode": 2
+      "predictiveBackGestureEnabled": false
     },
     "plugins": [
       "expo-router",

@@ -26,6 +26,7 @@ pnpm test             # backend tests (Vitest + convex-test), about a second
 pnpm test:e2e         # browser tests (Playwright) against a throwaway local backend
 pnpm build            # builds apps/web and apps/docs
 pnpm start            # run the web app's production build
+pnpm release:android patch   # release the Android app (or minor/major): bump, tag, push
 ```
 
 One workspace: `pnpm --filter web build`, `pnpm --filter docs dev`. Run
@@ -151,7 +152,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   (Android's press ripple, on every pressable; `pressedStyle()` is the web
   fallback), `toast()`, `confirm()`, `TabBar`, `Keypad`, `SlideToConfirm`, `icons`
   (Lucide via `lucide-react-native`)), `src/lib/` (unit-tested logic:
-  `balances`, `expense-form`, `keypad`, `format`; `prefs.ts` settings kept
+  `balances`, `expense-form`, `keypad`, `format`, `version`; `prefs.ts` settings kept
   on the phone in secure storage; `convex.ts`; `auth-client.ts`, Better
   Auth's `expoClient`, session in `expo-secure-store`). The root layout
   guards routes with `Stack.Protected` on the session, so signing in or
@@ -169,7 +170,11 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   backend; use the `seen`/`button` helpers, since screens behind the front
   one stay in the page) and `pnpm --filter mobile export:android`
   (`--no-bytecode` on ARM); `pnpm build` doesn't build it, and release APKs
-  are built on GitHub Actions (no EAS). Docs:
+  are built on GitHub Actions (no EAS): `pnpm release:android
+  patch|minor|major` (`scripts/release.mjs`) bumps `version` in `app.json`,
+  commits, tags `vX.Y.Z` and pushes, and the tag builds the APK.
+  `app.config.ts` works Android's `versionCode` out from `version`
+  (`src/lib/version.ts`), so never set it by hand. Docs:
   `development/mobile-app.mdx`.
 - `design/`: the design handoff the UI follows. `DESIGN.md` has the tokens
   and component notes; `screens/*.html` are static mockups (web dashboard,
@@ -497,6 +502,14 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 - `pnpm-workspace.yaml` overrides `rolldown` to 1.3.3 because 1.3.4 (needed
   by Vite, which Vitest uses) was published without its tarball. Drop the
   override once a later rolldown release installs.
+- Only the Android app has a version number. The web app, backend and docs
+  deploy from every push to `main`, so their version is the commit:
+  `NEXT_PUBLIC_COMMIT_SHA` (set in `apps/web/next.config.ts` from
+  `VERCEL_GIT_COMMIT_SHA` or git), returned by `/api/health` and shown at
+  the bottom of Settings. Installed APKs keep calling the latest backend, so
+  keep changes to public Convex functions backwards compatible (optional new
+  args, new functions; remove old ones only once no release in use calls
+  them).
 - Add packages to the workspace that uses them (`pnpm --filter web add
   <pkg>`), not the root. After adding packages while `pnpm dev` is
   running, restart it.
