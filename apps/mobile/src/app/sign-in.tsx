@@ -1,13 +1,14 @@
 import { emailOtpRequest } from '@settlr/shared/schemas'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Button } from '@/components/button'
 import { Field } from '@/components/controls'
 import { GoogleIcon, Icons } from '@/components/icons'
-import { TopBar } from '@/components/screen'
+import { StatusBarScrim, TopBar } from '@/components/screen'
 import { Rise } from '@/components/surfaces'
 import { Label, Sub, Title } from '@/components/text'
 import { Tile } from '@/components/tiles'
@@ -112,6 +113,7 @@ export default function SignInScreen() {
           </Button>
         </View>
       </ScrollView>
+      <StatusBarScrim color={colors.bg} />
     </KeyboardAvoidingView>
   )
 }

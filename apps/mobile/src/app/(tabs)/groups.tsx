@@ -8,6 +8,7 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { IconButton } from '@/components/button'
 import { Chip, ChipRow } from '@/components/controls'
 import { Icons } from '@/components/icons'
+import { pressedStyle, ripple } from '@/components/ripple'
 import { Screen, TabHeader } from '@/components/screen'
 import { Card, Empty, Rise, SkeletonRows } from '@/components/surfaces'
 import { Label, Sub, Text } from '@/components/text'
@@ -80,7 +81,8 @@ export default function GroupsScreen() {
             <Pressable
               accessibilityRole="button"
               onPress={() => router.push('/groups/new')}
-              style={({ pressed }) => [styles.create, { borderColor: colors.surface3, opacity: pressed ? 0.6 : 1 }]}
+              android_ripple={ripple(colors.text, { strength: 0.1 })}
+              style={({ pressed }) => [styles.create, { borderColor: colors.surface3 }, pressedStyle(pressed)]}
             >
               <Icons.plus color={colors.muted} size={18} />
               <Text weight={800} size={15} color="muted">
@@ -98,7 +100,8 @@ export default function GroupsScreen() {
                     key={group.id}
                     accessibilityRole="button"
                     onPress={() => router.push(`/groups/${group.id}`)}
-                    style={({ pressed }) => [styles.archived, { backgroundColor: colors.surface2, opacity: pressed ? 0.7 : 1 }]}
+                    android_ripple={ripple(colors.text, { strength: 0.1 })}
+                    style={({ pressed }) => [styles.archived, { backgroundColor: colors.surface2 }, pressedStyle(pressed, 0.7)]}
                   >
                     <GroupTile id={group.id} name={group.name} size={40} radius={14} />
                     <View style={styles.grow}>
@@ -174,6 +177,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    overflow: 'hidden',
   },
   archivedHead: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 12, paddingHorizontal: 4 },
   archived: {
@@ -183,5 +187,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 22,
+    overflow: 'hidden',
   },
 })

@@ -11,6 +11,7 @@ import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, TextInpu
 import { Button, IconButton } from '@/components/button'
 import { Chip } from '@/components/controls'
 import { Icons } from '@/components/icons'
+import { ripple } from '@/components/ripple'
 import { Sheet } from '@/components/overlay'
 import { SlideToConfirm } from '@/components/slider'
 import { Row } from '@/components/surfaces'
@@ -41,16 +42,24 @@ export default function SettleScreen() {
   const params = useLocalSearchParams<Params>()
   const [open, setOpen] = useState(true)
   const closing = useRef(false)
+  const after = useRef<(() => void) | undefined>(undefined)
 
+  // Slide the sheet away, then leave the route (or go where `then` says).
   function close(then?: () => void) {
     if (closing.current) return
     closing.current = true
+    after.current = then
     setOpen(false)
-    setTimeout(() => (then ? then() : router.back()), 240)
   }
 
   return (
-    <Sheet open={open} onClose={() => close()} height={0.88} label="Settle up">
+    <Sheet
+      open={open}
+      onClose={() => close()}
+      onClosed={() => (after.current ? after.current() : router.back())}
+      height={0.88}
+      label="Settle up"
+    >
       {params.kind === 'group' ? (
         <GroupSettle params={params} close={close} />
       ) : (
@@ -274,7 +283,14 @@ function SettleBody({
         <View style={styles.arrow}>
           <Flow />
           <Label>{verb}</Label>
-          <Pressable accessibilityRole="button" accessibilityLabel="Swap who paid" onPress={onSwap} hitSlop={8} style={[styles.swap, { backgroundColor: colors.surface2 }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Swap who paid"
+            onPress={onSwap}
+            hitSlop={8}
+            android_ripple={ripple(colors.text, { borderless: true, radius: 22 })}
+            style={[styles.swap, { backgroundColor: colors.surface2 }]}
+          >
             <Icons.swap color={colors.muted} size={15} />
           </Pressable>
         </View>

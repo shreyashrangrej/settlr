@@ -134,7 +134,7 @@ not for the Play Store. A signed build opens Google sign-in through the
 | Path | Contents |
 | --- | --- |
 | `src/app/` | Expo Router routes (the table above). `_layout.tsx` loads the fonts and saved settings, wraps everything in the Convex and Better Auth provider, guards the signed-in routes, and renders the snackbar and confirm dialog hosts |
-| `src/components/` | `text` (`Text`, `Title`, `Headline`, `Sub`, `Label`), `button` (`Button`, `IconButton`, `usePressScale`), `controls` (`Chip`, `ChipRow`, `Segmented`, `Switch`, `Checkbox`, `Field`, `StepButton`), `surfaces` (`Card`, `Row`, `Rows`, `RowEnd`, `Section`, `DayHeading`, `Rise`, `Bar`, `Skeleton`, `Empty`), `tiles` (`Avatar`, `AvatarStack`, `Tile`, `GroupTile`, `CategoryTile`, `Badge`), `overlay` (`Sheet`, `toast()`, `confirm()`), `screen` (`Screen`, `TabHeader`, `TopBar`), `tab-bar`, `keypad`, `slider` (Slide to record), `ring`, `ledger` (expense and balance rows shared by screens), `icons` (Lucide) |
+| `src/components/` | `text` (`Text`, `Title`, `Headline`, `Sub`, `Label`), `button` (`Button`, `IconButton`, `usePressScale`), `controls` (`Chip`, `ChipRow`, `Segmented`, `Switch`, `Checkbox`, `Field`, `StepButton`), `surfaces` (`Card`, `Row`, `Rows`, `RowEnd`, `Section`, `DayHeading`, `Rise`, `Bar`, `Skeleton`, `Empty`), `tiles` (`Avatar`, `AvatarStack`, `Tile`, `GroupTile`, `CategoryTile`, `Badge`), `overlay` (`Sheet`, `SheetPage`, `toast()`, `confirm()`), `screen` (`Screen`, `StatusBarScrim`, `TabHeader`, `TopBar`), `tab-bar`, `keypad`, `slider` (Slide to record), `ring`, `ledger` (expense and balance rows shared by screens), `icons` (Lucide) |
 | `src/theme/` | The Tally tokens for light and dark (`tokens.ts`: colours, label hues, radii, fonts), `useColors()`, `useIsDark()`, `useReduceMotion()` |
 | `src/lib/` | Plain logic with unit tests beside it: `balances.ts` (Home's sums), `expense-form.ts` (Add expense's splits and what it sends), `keypad.ts`, `format.ts`, `category.ts` (the guessed category), `prefs.ts` (settings kept on the phone); plus `convex.ts`, `auth-client.ts`, `me.ts`, `actions.ts` (`useRun`, `errorText`), `haptics.ts` |
 
@@ -160,10 +160,37 @@ Imports use the `@/` alias for `apps/mobile/src`.
   motion, where the last expense went) are in `src/lib/prefs.ts`, saved in
   secure storage. Account settings (UPI id, digest) go through
   `api.profiles`.
-- **Motion** uses React Native's `Animated` (Expo Go has no Reanimated
-  here): cards rise in (`Rise`), sheets slide up, presses scale. All of it
-  stops with Android's Remove animations or Profile's Reduce motion
-  (`useReduceMotion()`).
+- **Motion** uses React Native's `Animated` (Reanimated is installed only
+  because `react-native-keyboard-controller` runs on it): cards rise in
+  (`Rise`), sheets spring up, presses scale. Pushed
+  screens use the stack's `default` animation, Android's own (a short
+  slide with a quick fade, fully in view in about 130ms). Sheets (`Sheet`)
+  rise on a spring from just below their own height, carry a drag's speed,
+  and slide away in 200ms; a sheet route (`settle`, `friends/new`) leaves
+  in the sheet's `onClosed`. The full-page sheets, Add expense and New
+  group, are `transparentModal` routes with no native animation, wrapped in
+  `SheetPage`, which springs them up over a scrim and slides them down on
+  Back before the route goes. All of it stops with Android's Remove
+  animations or Profile's Reduce motion (`useReduceMotion()`).
+- **Press feedback**: every pressable has Android's native ripple
+  (`android_ripple`), from `ripple()`/`useRipple()` in
+  `components/ripple.ts`: drawn in the pressable's content colour (a dark
+  wash on paper, white on violet or red), clipped to its corners with
+  `overflow: 'hidden'`, borderless circles for bare icons, avatars and the
+  tab bar. The web build has no ripple, so `pressedStyle()` dims instead.
+- **Keyboard**: `react-native-keyboard-controller` (in Expo Go) follows the
+  keyboard frame by frame, so inputs ride up and down with it. The root
+  layout wraps the app in its `KeyboardProvider`; use its
+  `KeyboardAvoidingView`, never React Native's (which jumps once the
+  keyboard is open). It works inside sheets' `Modal`s too.
+- **Status bar**: the app draws edge to edge, so the status bar is
+  see-through. `Screen` paints a `StatusBarScrim` (the page's colour,
+  fading out below the bar) so content scrolls away under it; a screen
+  that scrolls without `Screen` renders one itself.
+- **App icon**: `assets/` holds the Settlr mark (the slash and two dots of
+  `Mark` in `icons.tsx`) in white on the brand violet: `icon.png`, the
+  adaptive icon's foreground, background and monochrome layers, the
+  splash image and the favicon.
 - **Feedback**: `useRun()` runs a mutation and shows failures in the
   snackbar; `toast()` shows a message (with an action such as Undo);
   `confirm()` asks before something destructive.

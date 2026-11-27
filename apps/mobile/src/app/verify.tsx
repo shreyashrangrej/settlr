@@ -2,13 +2,14 @@ import { emailOtpVerify, OTP_LENGTH } from '@settlr/shared/schemas'
 import * as Clipboard from 'expo-clipboard'
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useRef, useState, type ComponentRef } from 'react'
-import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Button } from '@/components/button'
 import { Chip } from '@/components/controls'
 import { Icons } from '@/components/icons'
-import { TopBar } from '@/components/screen'
+import { StatusBarScrim, TopBar } from '@/components/screen'
 import { Rise } from '@/components/surfaces'
 import { Sub, Text, Title } from '@/components/text'
 import { errorMessage, sendEmailOtp, verifyEmailOtp } from '@/lib/auth-client'
@@ -195,6 +196,7 @@ export default function VerifyScreen() {
           </Sub>
         </View>
       </ScrollView>
+      <StatusBarScrim color={colors.bg} />
     </KeyboardAvoidingView>
   )
 }

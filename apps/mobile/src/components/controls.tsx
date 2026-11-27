@@ -13,6 +13,7 @@ import {
 
 import { usePressScale } from '@/components/button'
 import { Icons, type IconComponent } from '@/components/icons'
+import { RIPPLES, useRipple } from '@/components/ripple'
 import { Text } from '@/components/text'
 import { tick } from '@/lib/haptics'
 import { fonts, useColors, useIsDark, useReduceMotion } from '@/theme'
@@ -51,6 +52,7 @@ export function Chip({
     accent: [colors.accentSoft, colors.accentInk],
     line: ['transparent', colors.text],
   }[tone] as [string, string]
+  const ripple = useRipple(fill[1])
   return (
     <Animated.View style={[press.style, style]}>
       <Pressable
@@ -59,6 +61,7 @@ export function Chip({
         accessibilityState={selected === undefined ? undefined : { selected }}
         aria-selected={selected}
         disabled={!onPress}
+        android_ripple={onPress ? ripple : undefined}
         onPress={() => {
           tick()
           onPress?.()
@@ -120,6 +123,7 @@ export function Segmented<T extends string>({
 }) {
   const colors = useColors()
   const isDark = useIsDark()
+  const ripple = useRipple(colors.text, { strength: 0.1 })
   return (
     <View
       accessibilityRole="tablist"
@@ -135,6 +139,7 @@ export function Segmented<T extends string>({
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
             aria-selected={on}
+            android_ripple={ripple}
             onPress={() => {
               if (!on) tick()
               onChange(option.value)
@@ -285,6 +290,7 @@ export function Field({
 /** A round − or + button for steppers. */
 export function StepButton({ icon: Icon, onPress, label }: { icon: IconComponent; onPress: () => void; label: string }) {
   const colors = useColors()
+  const ripple = useRipple(colors.text)
   return (
     <Pressable
       accessibilityRole="button"
@@ -294,7 +300,8 @@ export function StepButton({ icon: Icon, onPress, label }: { icon: IconComponent
         onPress()
       }}
       hitSlop={6}
-      style={({ pressed }) => [styles.step, { backgroundColor: pressed ? colors.surface3 : colors.surface2 }]}
+      android_ripple={ripple}
+      style={({ pressed }) => [styles.step, { backgroundColor: pressed && !RIPPLES ? colors.surface3 : colors.surface2 }]}
     >
       <Icon color={colors.text} size={18} />
     </Pressable>
@@ -308,11 +315,13 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingRight: 14,
     borderRadius: 999,
+    overflow: 'hidden',
   },
   seg: { flexDirection: 'row', padding: 4, borderRadius: 999, gap: 2 },
   segItem: {
     flex: 1,
     borderRadius: 999,
+    overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -347,5 +356,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 12,
   },
-  step: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  step: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 })

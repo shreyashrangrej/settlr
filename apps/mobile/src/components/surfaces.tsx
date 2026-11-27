@@ -11,6 +11,7 @@ import {
 
 import { Button } from '@/components/button'
 import { Icons, type IconComponent } from '@/components/icons'
+import { pressedStyle, useRipple } from '@/components/ripple'
 import { Headline, Label, Sub, Text } from '@/components/text'
 import { Tile } from '@/components/tiles'
 import { tick } from '@/lib/haptics'
@@ -32,6 +33,7 @@ export function Card({
 }) {
   const colors = useColors()
   const isDark = useIsDark()
+  const ripple = useRipple(undefined, { strength: 0.08 })
   const base = [
     styles.card,
     { backgroundColor: colors.surface },
@@ -44,11 +46,12 @@ export function Card({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      android_ripple={ripple}
       onPress={() => {
         tick()
         onPress()
       }}
-      style={({ pressed }) => [base, pressed && { opacity: 0.85 }]}
+      style={({ pressed }) => [base, pressedStyle(pressed, 0.85)]}
     >
       {children}
     </Pressable>
@@ -124,6 +127,7 @@ export function Row({
     </>
   )
   const rowStyle = [styles.row, { minHeight }, style]
+  const ripple = useRipple(undefined, { strength: 0.1 })
   if (!onPress) return <View style={rowStyle}>{body}</View>
   return (
     <Pressable
@@ -131,7 +135,8 @@ export function Row({
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+      android_ripple={ripple}
+      style={({ pressed }) => [rowStyle, pressedStyle(pressed)]}
     >
       {body}
     </Pressable>
@@ -322,7 +327,7 @@ export function Bar({ value, color, height = 8, track }: { value: number; color:
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 24 },
+  card: { borderRadius: 24, overflow: 'hidden' },
   padded: { padding: 18 },
   divider: { position: 'absolute', right: 16, top: 0, height: StyleSheet.hairlineWidth * 2 },
   row: {

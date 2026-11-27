@@ -16,6 +16,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
 import * as SystemUI from 'expo-system-ui'
 import { useEffect, useState } from 'react'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 
 import { DialogHost, ToastHost } from '@/components/overlay'
 import { authClient } from '@/lib/auth-client'
@@ -59,44 +60,53 @@ export default function RootLayout() {
   if (!ready) return null
 
   const sheet = { presentation: 'transparentModal', animation: 'none', contentStyle: { backgroundColor: 'transparent' } } as const
-  const up = { animation: 'slide_from_bottom', contentStyle: { backgroundColor: colors.surface } } as const
+  // Full pages that come up like a sheet: <SheetPage> animates them, so
+  // they spring up over the page below instead of Android's slow slide.
+  const up = sheet
 
   return (
-    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
-      {/* Signing in or out flips the guards, and the router moves to the
-          first screen that's allowed: the tabs or Welcome. */}
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'slide_from_right',
-          contentStyle: { backgroundColor: colors.bg },
-        }}
-      >
-        <Stack.Protected guard={signedIn}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="add" options={up} />
-          <Stack.Screen name="settle" options={sheet} />
-          <Stack.Screen name="settled" options={{ animation: 'fade' }} />
-          <Stack.Screen name="groups/new" options={up} />
-          <Stack.Screen name="groups/[groupId]/index" />
-          <Stack.Screen name="groups/[groupId]/balances" />
-          <Stack.Screen name="friends/new" options={sheet} />
-          <Stack.Screen name="friends/[friendId]" />
-          <Stack.Screen name="expense" />
-          <Stack.Screen name="notifications" />
-          <Stack.Screen name="profile" />
-          <Stack.Screen name="budget" />
-          <Stack.Screen name="assistant" />
-        </Stack.Protected>
-        <Stack.Protected guard={!signedIn}>
-          <Stack.Screen name="welcome" options={{ contentStyle: { backgroundColor: colors.hero } }} />
-          <Stack.Screen name="sign-in" />
-          <Stack.Screen name="verify" />
-        </Stack.Protected>
-      </Stack>
-      <ToastHost />
-      <DialogHost />
-    </ConvexBetterAuthProvider>
+    // KeyboardProvider tracks the keyboard frame by frame, so inputs ride up
+    // with it instead of jumping once it's open.
+    <KeyboardProvider>
+      <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        {/* Signing in or out flips the guards, and the router moves to the
+            first screen that's allowed: the tabs or Welcome. */}
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            // The platform's own push: on Android 13+ the new page slides in
+            // a tenth of the width and is fully visible in ~130ms, where
+            // slide_from_right drags the whole width over 400ms.
+            animation: 'default',
+            contentStyle: { backgroundColor: colors.bg },
+          }}
+        >
+          <Stack.Protected guard={signedIn}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="add" options={up} />
+            <Stack.Screen name="settle" options={sheet} />
+            <Stack.Screen name="settled" options={{ animation: 'fade' }} />
+            <Stack.Screen name="groups/new" options={up} />
+            <Stack.Screen name="groups/[groupId]/index" />
+            <Stack.Screen name="groups/[groupId]/balances" />
+            <Stack.Screen name="friends/new" options={sheet} />
+            <Stack.Screen name="friends/[friendId]" />
+            <Stack.Screen name="expense" />
+            <Stack.Screen name="notifications" />
+            <Stack.Screen name="profile" />
+            <Stack.Screen name="budget" />
+            <Stack.Screen name="assistant" />
+          </Stack.Protected>
+          <Stack.Protected guard={!signedIn}>
+            <Stack.Screen name="welcome" options={{ contentStyle: { backgroundColor: colors.hero } }} />
+            <Stack.Screen name="sign-in" />
+            <Stack.Screen name="verify" />
+          </Stack.Protected>
+        </Stack>
+        <ToastHost />
+        <DialogHost />
+      </ConvexBetterAuthProvider>
+    </KeyboardProvider>
   )
 }

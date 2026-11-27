@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 
 import type { IconComponent } from '@/components/icons'
+import { useRipple } from '@/components/ripple'
 import { Text } from '@/components/text'
 import { tick } from '@/lib/haptics'
 import { useColors, useReduceMotion } from '@/theme'
@@ -84,6 +85,7 @@ export function Button({
   const fill = custom ?? fills[variant]
   const inactive = disabled || loading
   const iconSize = size === 'xl' || size === 'lg' ? 20 : 17
+  const ripple = useRipple(fill.fg, { strength: 0.2 })
 
   return (
     <Animated.View style={[press.style, wide && styles.wide, style]}>
@@ -92,6 +94,7 @@ export function Button({
         accessibilityLabel={accessibilityLabel}
         accessibilityState={{ disabled: inactive, busy: loading }}
         disabled={inactive}
+        android_ripple={ripple}
         onPress={() => {
           if (haptic) tick()
           onPress?.()
@@ -154,12 +157,16 @@ export function IconButton({
   const press = usePressScale(0.9)
   const background =
     bg ?? (tone === 'filled' ? colors.surface : tone === 'neutral' ? colors.surface2 : 'transparent')
+  // A bare icon's ripple spreads as a circle a little past it.
+  const bare = background === 'transparent'
+  const ripple = useRipple(color ?? colors.text, { borderless: bare, radius: bare ? size / 2 + 2 : undefined })
   return (
     <Animated.View style={press.style}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
         disabled={disabled}
+        android_ripple={ripple}
         onPress={() => {
           tick()
           onPress?.()
@@ -170,6 +177,7 @@ export function IconButton({
         style={[
           styles.icon,
           { width: size, height: size, borderRadius: size / 2, backgroundColor: background, opacity: disabled ? 0.4 : 1 },
+          !bare && styles.clip,
         ]}
       >
         <Icon color={color ?? colors.text} size={iconSize} />
@@ -182,10 +190,11 @@ export function IconButton({
 }
 
 const styles = StyleSheet.create({
-  base: { borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  base: { borderRadius: 999, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   wide: { alignSelf: 'stretch' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   icon: { alignItems: 'center', justifyContent: 'center' },
+  clip: { overflow: 'hidden' },
   dot: {
     position: 'absolute',
     top: 8,

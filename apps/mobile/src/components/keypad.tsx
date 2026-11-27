@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { Animated, Pressable, StyleSheet, View } from 'react-native'
 
 import { Icons } from '@/components/icons'
+import { RIPPLES, useRipple } from '@/components/ripple'
 import { Text } from '@/components/text'
 import { tick } from '@/lib/haptics'
 import type { Key } from '@/lib/keypad'
@@ -28,6 +29,7 @@ function KeyButton({ value, onPress, height }: { value: Key; onPress: () => void
   const colors = useColors()
   const reduce = useReduceMotion()
   const scale = useRef(new Animated.Value(1)).current
+  const ripple = useRipple(colors.text, { strength: 0.12 })
   const to = (v: number) => {
     if (!reduce) Animated.spring(scale, { toValue: v, useNativeDriver: true, speed: 60, bounciness: 4 }).start()
   }
@@ -42,7 +44,8 @@ function KeyButton({ value, onPress, height }: { value: Key; onPress: () => void
         }}
         onPressIn={() => to(0.94)}
         onPressOut={() => to(1)}
-        style={({ pressed }) => [styles.key, { height, backgroundColor: pressed ? colors.surface3 : colors.key }]}
+        android_ripple={ripple}
+        style={({ pressed }) => [styles.key, { height, backgroundColor: pressed && !RIPPLES ? colors.surface3 : colors.key }]}
       >
         {value === 'del' ? (
           <Icons.del color={colors.text} size={24} />
@@ -60,5 +63,5 @@ const styles = StyleSheet.create({
   grid: { gap: 8 },
   row: { flexDirection: 'row', gap: 8 },
   cell: { flex: 1 },
-  key: { borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  key: { borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 })

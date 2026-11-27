@@ -9,6 +9,7 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { Button } from '@/components/button'
 import { Chip } from '@/components/controls'
 import { Icons, type IconComponent } from '@/components/icons'
+import { pressedStyle, ripple } from '@/components/ripple'
 import { Screen, TopBar } from '@/components/screen'
 import { Card, DayHeading, Empty, Rise, Rows, SkeletonRows } from '@/components/surfaces'
 import { Sub, Text, Title } from '@/components/text'
@@ -221,7 +222,8 @@ function NotificationRow({ item }: { item: Item }) {
       accessibilityRole={href ? 'button' : undefined}
       disabled={!href}
       onPress={() => href && router.push(href)}
-      style={({ pressed }) => [styles.item, pressed && { opacity: 0.6 }]}
+      android_ripple={href ? ripple(colors.text, { strength: 0.1 }) : undefined}
+      style={({ pressed }) => [styles.item, pressedStyle(pressed)]}
     >
       <View>
         <Avatar name={item.actorName} />

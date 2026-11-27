@@ -10,6 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg'
 
 import { IconButton } from '@/components/button'
 import { Icons } from '@/components/icons'
@@ -72,9 +73,39 @@ export function Screen({
       ) : (
         <View style={[styles.flex, { paddingTop: insets.top + 4 }, contentStyle]}>{children}</View>
       )}
+      {scroll ? <StatusBarScrim color={bg} /> : null}
       {footer ? (
         <View style={[styles.footer, { backgroundColor: bg, paddingBottom: insets.bottom + 14 }]}>{footer}</View>
       ) : null}
+    </View>
+  )
+}
+
+/** How far the scrim fades out below the status bar. */
+const SCRIM_FADE = 14
+
+/**
+ * The status bar is see-through (Android draws apps edge to edge), so a
+ * page that scrolls would slide its content under the clock and icons.
+ * This paints the page's colour behind the status bar, fading out just
+ * below it, so content scrolls away under a clean strip. Put it last in a
+ * full-screen container whose content scrolls.
+ */
+export function StatusBarScrim({ color }: { color: string }) {
+  const insets = useSafeAreaInsets()
+  if (insets.top === 0) return null
+  return (
+    <View pointerEvents="none" style={[styles.scrim, { height: insets.top + SCRIM_FADE }]}>
+      <View style={{ height: insets.top, backgroundColor: color }} />
+      <Svg width="100%" height={SCRIM_FADE}>
+        <Defs>
+          <LinearGradient id="statusBarFade" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={color} stopOpacity={1} />
+            <Stop offset="1" stopColor={color} stopOpacity={0} />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height={SCRIM_FADE} fill="url(#statusBarFade)" />
+      </Svg>
     </View>
   )
 }
@@ -131,6 +162,7 @@ export function TopBar({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   footer: { paddingHorizontal: 16, paddingTop: 12 },
+  scrim: { position: 'absolute', top: 0, left: 0, right: 0 },
   tabHeader: {
     flexDirection: 'row',
     alignItems: 'center',

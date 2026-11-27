@@ -2,7 +2,7 @@ import { api } from '@settlr/backend/convex/_generated/api'
 import { addFriendInput } from '@settlr/shared/schemas'
 import { useMutation } from 'convex/react'
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { Button } from '@/components/button'
@@ -26,12 +26,17 @@ export default function AddFriendSheet() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState<{ name?: string; email?: string }>({})
 
+  const after = useRef<(() => void) | undefined>(undefined)
+
+  // Slide the sheet away, then leave the route (and go on to `then`).
   function close(then?: () => void) {
+    after.current = then
     setOpen(false)
-    setTimeout(() => {
-      router.back()
-      then?.()
-    }, 240)
+  }
+
+  function closed() {
+    router.back()
+    after.current?.()
   }
 
   async function submit() {
@@ -51,7 +56,7 @@ export default function AddFriendSheet() {
 
   const who = firstName(name) || 'them'
   return (
-    <Sheet open={open} onClose={() => close()} label="Add a friend">
+    <Sheet open={open} onClose={() => close()} onClosed={closed} label="Add a friend">
       <View style={styles.head}>
         <Avatar name={name || '?'} size="xl" />
         <View style={styles.grow}>

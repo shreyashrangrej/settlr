@@ -142,13 +142,20 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   `src/components/` (`Text` picks the Manrope or Bricolage family per
   weight, since Android ignores `fontWeight` for custom fonts; `Button`,
   `Chip`, `Segmented`, `Card`, `Row`, `Avatar`, `Tile`, `Badge`, `Sheet`,
-  `toast()`, `confirm()`, `TabBar`, `Keypad`, `SlideToConfirm`, `icons`
+  `SheetPage` (Add expense and New group spring up over a scrim and slide
+  down on Back), `StatusBarScrim` (`Screen` paints it so content never
+  scrolls under the see-through status bar), `ripple()`/`useRipple()`
+  (Android's press ripple, on every pressable; `pressedStyle()` is the web
+  fallback), `toast()`, `confirm()`, `TabBar`, `Keypad`, `SlideToConfirm`, `icons`
   (Lucide via `lucide-react-native`)), `src/lib/` (unit-tested logic:
   `balances`, `expense-form`, `keypad`, `format`; `prefs.ts` settings kept
   on the phone in secure storage; `convex.ts`; `auth-client.ts`, Better
   Auth's `expoClient`, session in `expo-secure-store`). The root layout
   guards routes with `Stack.Protected` on the session, so signing in or
-  out needs no navigation. Imports use `@/` for its `src/`. It must keep
+  out needs no navigation; it also wraps the app in
+  `react-native-keyboard-controller`'s `KeyboardProvider`, so use that
+  library's `KeyboardAvoidingView` (inputs follow the keyboard smoothly),
+  not React Native's. Imports use `@/` for its `src/`. It must keep
   running in Expo Go, so add packages with `npx expo install` and only use
   native modules Expo Go ships (motion is RN `Animated`). `.env.local` has
   `EXPO_PUBLIC_CONVEX_URL`, `EXPO_PUBLIC_CONVEX_SITE_URL` and

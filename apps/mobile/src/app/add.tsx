@@ -4,7 +4,7 @@ import type { Id } from '@settlr/backend/convex/_generated/dataModel'
 import { categoryLabel } from '@settlr/shared/format'
 import { CATEGORIES, CURRENCIES, type Category, type Currency } from '@settlr/shared/schemas'
 import { useMutation, useQuery } from 'convex/react'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
 import {
   Platform,
@@ -20,8 +20,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button } from '@/components/button'
 import { Checkbox, Chip, Segmented, StepButton } from '@/components/controls'
 import { CATEGORY_ICON, Icons } from '@/components/icons'
+import { ripple } from '@/components/ripple'
 import { Keypad } from '@/components/keypad'
-import { Sheet, SheetTitle, toast } from '@/components/overlay'
+import { Sheet, SheetPage, SheetTitle, toast } from '@/components/overlay'
 import { TopBar } from '@/components/screen'
 import { Row } from '@/components/surfaces'
 import { Label, Sub, Text } from '@/components/text'
@@ -63,6 +64,14 @@ type Params = {
 
 /** Add (or edit) an expense: amount first on a big keypad, everything else a chip. */
 export default function AddExpenseScreen() {
+  return (
+    <SheetPage>
+      <AddExpenseScreenForm />
+    </SheetPage>
+  )
+}
+
+function AddExpenseScreenForm() {
   const colors = useColors()
   const insets = useSafeAreaInsets()
   const router = useRouter()
@@ -261,7 +270,7 @@ export default function AddExpenseScreen() {
       thud()
       if (!editing) setPrefs({ lastTarget: target })
       const where = target.kind === 'personal' ? 'your spending' : targetName
-      const href = target.kind === 'group' ? `/groups/${target.id}` : target.kind === 'friend' ? `/friends/${target.id}` : '/spending'
+      const href: Href = target.kind === 'group' ? `/groups/${target.id}` : target.kind === 'friend' ? `/friends/${target.id}` : '/spending'
       router.back()
       toast(editing ? 'Expense updated' : `Expense added to ${where}`, editing ? {} : { action: { label: 'View', onPress: () => router.push(href) } })
     } catch (err) {
@@ -329,7 +338,12 @@ export default function AddExpenseScreen() {
 
       <View style={styles.details}>
         <View style={[styles.descRow, { backgroundColor: colors.surface2 }]}>
-          <Pressable accessibilityRole="button" accessibilityLabel={`Category: ${categoryLabel(category)}`} onPress={() => setSheet('category')}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Category: ${categoryLabel(category)}`}
+            onPress={() => setSheet('category')}
+            android_ripple={ripple(colors.text, { borderless: true, radius: 26 })}
+          >
             <CategoryTile category={category} />
           </Pressable>
           <TextInput
@@ -343,7 +357,13 @@ export default function AddExpenseScreen() {
             returnKeyType="done"
             style={[styles.descInput, { color: colors.text }]}
           />
-          <Pressable accessibilityRole="button" accessibilityLabel="Change category" onPress={() => setSheet('category')} hitSlop={6}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Change category"
+            onPress={() => setSheet('category')}
+            android_ripple={ripple(colors.text, { borderless: true, radius: 44 })}
+            hitSlop={6}
+          >
             <Badge size="lg" bg={colors.surface} fg={colors.text} icon={categoryPicked ? undefined : Icons.spark}>
               {categoryLabel(category)}
             </Badge>
@@ -458,6 +478,7 @@ export default function AddExpenseScreen() {
                 setCategoryPicked(true)
                 setSheet(null)
               }}
+              android_ripple={ripple(colors.accentInk)}
               style={[styles.categoryCell, c === category && { backgroundColor: colors.accentSoft }]}
             >
               <Tile hue={CATEGORY_HUE[c]} size={50} radius={17} icon={Icons[CATEGORY_ICON[c]]} iconSize={24} />
@@ -740,6 +761,7 @@ function GroupSplitSheet({
               accessibilityState={{ selected: on }}
               accessibilityLabel={`Paid by ${name(m.id)}`}
               onPress={() => onChange({ ...split, payer: m.id })}
+              android_ripple={ripple(colors.accentInk, { borderless: true, radius: 34 })}
               style={styles.payer}
             >
               <View style={[styles.payerRing, on && { borderColor: colors.accent }]}>
@@ -901,6 +923,7 @@ function FriendSplitSheet({
               accessibilityState={{ selected: on }}
               accessibilityLabel={`Paid by ${who === 'me' ? 'you' : first}`}
               onPress={() => onChange({ ...split, paidBy: who })}
+              android_ripple={ripple(colors.accentInk, { borderless: true, radius: 34 })}
               style={styles.payer}
             >
               <View style={[styles.payerRing, on && { borderColor: colors.accent }]}>
@@ -995,7 +1018,7 @@ const styles = StyleSheet.create({
   keypad: { paddingHorizontal: 16, paddingTop: 14 },
   submit: { paddingHorizontal: 16, paddingTop: 12 },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, paddingVertical: 12 },
-  categoryCell: { width: '25%', alignItems: 'center', gap: 6, paddingVertical: 12, borderRadius: 18 },
+  categoryCell: { width: '25%', alignItems: 'center', gap: 6, paddingVertical: 12, borderRadius: 18, overflow: 'hidden' },
   search: { marginHorizontal: 16, marginTop: 14, marginBottom: 6, height: 50, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16 },
   searchInput: { flex: 1, fontFamily: fonts.sans[600], fontSize: 15 },
   groupLabel: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 4 },

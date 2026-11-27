@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button, IconButton, usePressScale } from '@/components/button'
 import { Chip, ChipRow } from '@/components/controls'
 import { Icons } from '@/components/icons'
+import { ripple } from '@/components/ripple'
 import { effectOf, openExpense } from '@/components/ledger'
 import { confirm, Sheet, SheetTitle, toast } from '@/components/overlay'
 import { Screen, TopBar } from '@/components/screen'
@@ -245,6 +246,7 @@ export default function GroupScreen() {
             }}
             onPressIn={fab.onPressIn}
             onPressOut={fab.onPressOut}
+            android_ripple={ripple(colors.onAccent, { strength: 0.24 })}
             style={[styles.fabInner, { backgroundColor: colors.accent, shadowColor: colors.accentInk }]}
           >
             <Icons.plus color={colors.onAccent} size={24} />
@@ -394,6 +396,7 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 10 },
     elevation: 10,
+    overflow: 'hidden',
   },
   menuActions: { borderTopWidth: StyleSheet.hairlineWidth * 2, paddingTop: 6 },
 })

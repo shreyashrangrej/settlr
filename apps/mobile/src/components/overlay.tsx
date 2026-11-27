@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import {
   Animated,
   Easing,
-  KeyboardAvoidingView,
   Modal,
   PanResponder,
   Pressable,
@@ -10,29 +9,44 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
+import { useNavigation } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Button } from '@/components/button'
 import { Icons, type IconComponent } from '@/components/icons'
+import { ripple } from '@/components/ripple'
 import { Sub, Text } from '@/components/text'
 import { Tile } from '@/components/tiles'
 import { useColors, useIsDark, useReduceMotion } from '@/theme'
 
-const EASE = Easing.bezier(0.22, 1, 0.36, 1)
+/**
+ * Sheets rise on a spring (no overshoot, so the bottom edge never lifts off
+ * the screen): fast to start, soft to land, and it carries the speed of a
+ * drag. About 250ms to look settled.
+ */
+const RISE = { stiffness: 340, damping: 36, mass: 1, overshootClamping: true, useNativeDriver: true } as const
+/** Leaving accelerates away (Material's emphasized accelerate). */
+const LEAVE = Easing.bezier(0.3, 0, 0.8, 0.15)
+export const SHEET_CLOSE_MS = 200
 
 /**
  * A bottom sheet over a scrim: 32px top corners, a grab handle you can drag
- * down to close, lifted above the keyboard.
+ * down to close, lifted above the keyboard. It rises from just below its own
+ * height (measured on first layout), so it moves from the first frame.
+ * `onClosed` runs once it has slid away, e.g. to leave a sheet's route.
  */
 export function Sheet({
   open,
   onClose,
+  onClosed,
   children,
   height,
   label,
 }: {
   open: boolean
   onClose: () => void
+  onClosed?: () => void
   children: ReactNode
   /** Fraction of the screen (0–1), or leave out to fit the content. */
   height?: number
@@ -43,24 +57,56 @@ export function Sheet({
   const { height: screen } = useWindowDimensions()
   const reduce = useReduceMotion()
   const [mounted, setMounted] = useState(open)
+  const [sheetHeight, setSheetHeight] = useState(screen)
   const y = useRef(new Animated.Value(screen)).current
   const fade = useRef(new Animated.Value(0)).current
   const drag = useRef(new Animated.Value(0)).current
+  const measured = useRef(0)
+  const waiting = useRef(false)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+  const onClosedRef = useRef(onClosed)
+  onClosedRef.current = onClosed
+
+  // Off-screen: just past the sheet's own height (plus its shadow).
+  const below = () => (measured.current || screen) + 32
+
+  function rise(velocity = 0) {
+    waiting.current = false
+    if (reduce) {
+      y.setValue(0)
+      fade.setValue(1)
+      return
+    }
+    y.setValue(below())
+    Animated.parallel([
+      Animated.spring(y, { ...RISE, toValue: 0, velocity }),
+      Animated.timing(fade, { toValue: 1, duration: 200, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]).start()
+  }
 
   useEffect(() => {
     if (open) {
-      setMounted(true)
       drag.setValue(0)
-      y.setValue(screen * 0.36)
-      Animated.parallel([
-        Animated.timing(y, { toValue: 0, duration: reduce ? 0 : 480, easing: EASE, useNativeDriver: true }),
-        Animated.timing(fade, { toValue: 1, duration: reduce ? 0 : 280, useNativeDriver: true }),
-      ]).start()
+      // Already laid out (reopened while closing): rise now; otherwise
+      // wait for the first layout to know how far to travel.
+      if (mounted && measured.current) rise()
+      else {
+        waiting.current = true
+        y.setValue(screen)
+        setMounted(true)
+      }
     } else if (mounted) {
+      waiting.current = false
+      const duration = reduce ? 0 : SHEET_CLOSE_MS
       Animated.parallel([
-        Animated.timing(y, { toValue: screen, duration: reduce ? 0 : 260, easing: EASE, useNativeDriver: true }),
-        Animated.timing(fade, { toValue: 0, duration: reduce ? 0 : 220, useNativeDriver: true }),
-      ]).start(() => setMounted(false))
+        Animated.timing(y, { toValue: below(), duration, easing: LEAVE, useNativeDriver: true }),
+        Animated.timing(fade, { toValue: 0, duration, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ]).start(({ finished }) => {
+        if (!finished) return
+        setMounted(false)
+        onClosedRef.current?.()
+      })
     }
     // `mounted` is read, not watched: closing starts from the open state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -68,27 +114,39 @@ export function Sheet({
 
   const pan = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 4 && Math.abs(g.dy) > Math.abs(g.dx),
       onPanResponderMove: (_, g) => drag.setValue(Math.max(0, g.dy)),
       onPanResponderRelease: (_, g) => {
-        if (g.dy > 120 || g.vy > 1.2) onCloseRef.current()
-        else Animated.spring(drag, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start()
+        const h = measured.current || screen
+        // A flick, or past a third of the way down, closes it.
+        if (g.vy > 0.9 || g.dy > Math.min(160, h / 3)) onCloseRef.current()
+        else Animated.spring(drag, { ...RISE, toValue: 0, velocity: -g.vy }).start()
       },
+      onPanResponderTerminate: () => Animated.spring(drag, { ...RISE, toValue: 0 }).start(),
     }),
   ).current
-  const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
 
   if (!mounted) return null
+  // The scrim lightens as the sheet is dragged down.
+  const scrimOpacity = Animated.multiply(
+    fade,
+    drag.interpolate({ inputRange: [0, sheetHeight], outputRange: [1, 0.15], extrapolate: 'clamp' }),
+  )
   return (
     <Modal transparent visible statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} animationType="none">
-      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim, opacity: fade }]}>
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim, opacity: scrimOpacity }]}>
         <Pressable accessibilityRole="button" accessibilityLabel="Close" style={StyleSheet.absoluteFill} onPress={onClose} />
       </Animated.View>
       <KeyboardAvoidingView behavior="padding" style={styles.sheetWrap} pointerEvents="box-none">
         <Animated.View
           accessibilityViewIsModal
           accessibilityLabel={label}
+          onLayout={(e) => {
+            const h = e.nativeEvent.layout.height
+            measured.current = h
+            if (Math.abs(h - sheetHeight) > 1) setSheetHeight(h)
+            if (waiting.current) rise()
+          }}
           style={[
             styles.sheet,
             {
@@ -107,6 +165,75 @@ export function Sheet({
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
+  )
+}
+
+/** The part of a stack screen's navigation that `SheetPage` uses. */
+type RemovableScreen = {
+  addListener: (
+    type: 'beforeRemove',
+    listener: (e: { data: { action: { type: string } }; preventDefault: () => void }) => void,
+  ) => () => void
+  dispatch: (action: { type: string }) => void
+}
+
+/**
+ * A full-screen page that comes up like a sheet (Add expense, New group).
+ * Its route is a `transparentModal` with no native animation, so the page
+ * below stays in view: this springs the page up over a fading scrim, and
+ * on Back (the close button, the system back, `router.back()`) slides it
+ * down before the route goes. Other ways of leaving (replace, dismiss) are
+ * left alone, since they navigate on at once.
+ */
+export function SheetPage({ children }: { children: ReactNode }) {
+  const colors = useColors()
+  const navigation = useNavigation<RemovableScreen>()
+  const { height: screen } = useWindowDimensions()
+  const reduce = useReduceMotion()
+  const y = useRef(new Animated.Value(reduce ? 0 : screen)).current
+  const leaving = useRef(false)
+  // Taps are off while it slides away (so Add can't be pressed twice).
+  const [gone, setGone] = useState(false)
+
+  useEffect(() => {
+    if (!reduce) Animated.spring(y, { ...RISE, toValue: 0 }).start()
+    // Rises once, on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', (e) => {
+        if (leaving.current || reduce || e.data.action.type !== 'GO_BACK') return
+        e.preventDefault()
+        leaving.current = true
+        setGone(true)
+        Animated.timing(y, { toValue: screen, duration: SHEET_CLOSE_MS + 20, easing: LEAVE, useNativeDriver: true }).start(() =>
+          navigation.dispatch(e.data.action),
+        )
+      }),
+    [navigation, reduce, screen, y],
+  )
+
+  return (
+    <View style={styles.flex}>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            backgroundColor: colors.scrim,
+            opacity: y.interpolate({ inputRange: [0, screen], outputRange: [1, 0], extrapolate: 'clamp' }),
+          },
+        ]}
+      />
+      <Animated.View
+        pointerEvents={gone ? 'none' : 'auto'}
+        style={[styles.flex, styles.page, { transform: [{ translateY: y }] }]}
+      >
+        {children}
+      </Animated.View>
+    </View>
   )
 }
 
@@ -197,6 +324,7 @@ export function ToastHost() {
               dismissToast()
             }}
             hitSlop={10}
+            android_ripple={ripple(colors.onInk, { borderless: true, radius: 28, strength: 0.2 })}
             style={styles.toastAction}
           >
             <Text weight={800} size={14} color={isDark ? '#4A2BE0' : '#CDB7FF'}>
@@ -286,6 +414,8 @@ export function DialogHost() {
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  page: { shadowColor: '#000', shadowOpacity: 0.22, shadowRadius: 24, elevation: 24 },
   sheetWrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
     borderTopLeftRadius: 32,

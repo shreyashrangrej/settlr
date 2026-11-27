@@ -9,6 +9,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { Button, IconButton } from '@/components/button'
 import { Field } from '@/components/controls'
 import { Icons, type IconComponent } from '@/components/icons'
+import { pressedStyle, ripple } from '@/components/ripple'
 import { BalanceRowView, MonthItemRow, SettleNextCard } from '@/components/ledger'
 import { Screen } from '@/components/screen'
 import { Bar, Card, Rise, Row, RowEnd, Rows, Section, SkeletonRows } from '@/components/surfaces'
@@ -73,7 +74,13 @@ export default function HomeScreen() {
           dot={Boolean(unread)}
           onPress={() => router.push('/notifications')}
         />
-        <Pressable accessibilityRole="button" accessibilityLabel="Profile and settings" onPress={() => router.push('/profile')} hitSlop={6}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Profile and settings"
+          onPress={() => router.push('/profile')}
+          android_ripple={ripple(colors.text, { borderless: true, radius: 24 })}
+          hitSlop={6}
+        >
           <Avatar name={me.name || me.email} me />
         </Pressable>
       </View>
@@ -250,9 +257,11 @@ function AskBar({ hint }: { hint: string }) {
       accessibilityRole="button"
       accessibilityLabel="Ask the assistant or add an expense"
       onPress={() => router.push('/assistant')}
+      android_ripple={ripple(colors.accent, { strength: 0.12 })}
       style={({ pressed }) => [
         styles.ask,
-        { backgroundColor: colors.surface, opacity: pressed ? 0.85 : 1 },
+        { backgroundColor: colors.surface },
+        pressedStyle(pressed, 0.85),
         cardShadow(isDark),
       ]}
     >
@@ -458,6 +467,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingLeft: 18,
     paddingRight: 7,
+    overflow: 'hidden',
   },
   mic: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   hero: { marginTop: 16, marginHorizontal: 16, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 18, borderRadius: 28 },

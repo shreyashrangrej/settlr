@@ -4,12 +4,14 @@ import { useAction, useMutation, useQuery } from 'convex/react'
 import type { FunctionReturnType } from 'convex/server'
 import { useRouter, type Href } from 'expo-router'
 import { useRef, useState, type ComponentRef } from 'react'
-import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Button, IconButton } from '@/components/button'
 import { Chip } from '@/components/controls'
 import { Icons } from '@/components/icons'
+import { ripple } from '@/components/ripple'
 import { openExpense } from '@/components/ledger'
 import { toast } from '@/components/overlay'
 import { Empty } from '@/components/surfaces'
@@ -256,7 +258,7 @@ function EventCard({ event }: { event: ChatEvent }) {
       return (
         <View style={card}>
           {event.expenses.slice(0, 5).map((e) => (
-            <Pressable key={e.ref} onPress={() => open(e)}>
+            <Pressable key={e.ref} onPress={() => open(e)} android_ripple={ripple(colors.text, { strength: 0.1 })}>
               <ExpenseLine expense={e} />
             </Pressable>
           ))}

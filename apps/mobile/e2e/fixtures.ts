@@ -47,6 +47,9 @@ export async function typeAmount(page: Page, amount: string) {
 
 /** Drags Slide to record all the way across. */
 export async function slide(page: Page, track: Locator) {
+  // Wait for the sheet to finish rising: a trial click waits until the
+  // track stops moving, without pressing it.
+  await track.click({ trial: true })
   const box = (await track.boundingBox())!
   const y = box.y + box.height / 2
   await page.mouse.move(box.x + 33, y)

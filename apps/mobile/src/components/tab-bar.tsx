@@ -5,6 +5,7 @@ import { Animated, Pressable, StyleSheet, View } from 'react-native'
 
 import { usePressScale } from '@/components/button'
 import { Icons, type IconComponent } from '@/components/icons'
+import { useRipple } from '@/components/ripple'
 import { Text } from '@/components/text'
 import { tick } from '@/lib/haptics'
 import { useColors, useIsDark, useReduceMotion } from '@/theme'
@@ -29,6 +30,7 @@ export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarPr
   const isDark = useIsDark()
   const router = useRouter()
   const add = usePressScale(0.92)
+  const addRipple = useRipple(colors.onAccent, { strength: 0.24 })
 
   const items = state.routes.filter((route) => TABS[route.name])
   const half = Math.ceil(items.length / 2)
@@ -71,6 +73,7 @@ export function TabBar({ state, emitter, navigateToTab, insets }: BottomTabBarPr
           }}
           onPressIn={add.onPressIn}
           onPressOut={add.onPressOut}
+          android_ripple={addRipple}
           style={[
             styles.add,
             { backgroundColor: colors.accent, shadowOpacity: isDark ? 0 : 0.28, elevation: isDark ? 0 : 6 },
@@ -102,12 +105,15 @@ function TabItem({
     Animated.timing(width, { toValue: active ? 1 : 0, duration: reduce ? 0 : 250, useNativeDriver: false }).start()
   }, [active, reduce, width])
   const color = active ? colors.accentInk : colors.faint
+  // Spreads as a circle around the icon, like Android's own nav bar.
+  const ripple = useRipple(colors.accentInk, { borderless: true, radius: 30, strength: 0.16 })
   return (
     <Pressable
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
       accessibilityLabel={label}
       onPress={onPress}
+      android_ripple={ripple}
       style={styles.item}
     >
       <Animated.View
@@ -154,6 +160,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 15,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#4A2BE0',

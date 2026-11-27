@@ -3,13 +3,15 @@ import { CURRENCIES, createGroupInput, type Currency } from '@settlr/shared/sche
 import { useMutation, useQuery } from 'convex/react'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Button, IconButton } from '@/components/button'
 import { Chip, ChipRow } from '@/components/controls'
 import { Icons } from '@/components/icons'
-import { TopBar } from '@/components/screen'
+import { SheetPage } from '@/components/overlay'
+import { StatusBarScrim, TopBar } from '@/components/screen'
 import { Rise, Row } from '@/components/surfaces'
 import { Label, Sub, Text } from '@/components/text'
 import { Avatar, Badge, Tile } from '@/components/tiles'
@@ -22,6 +24,14 @@ import { fonts, useColors } from '@/theme'
 const MAX_MEMBERS = 20
 
 export default function NewGroupScreen() {
+  return (
+    <SheetPage>
+      <NewGroupScreenForm />
+    </SheetPage>
+  )
+}
+
+function NewGroupScreenForm() {
   const colors = useColors()
   const insets = useSafeAreaInsets()
   const router = useRouter()
@@ -209,6 +219,7 @@ export default function NewGroupScreen() {
           Create group
         </Button>
       </View>
+      <StatusBarScrim color={colors.surface} />
     </KeyboardAvoidingView>
   )
 }
