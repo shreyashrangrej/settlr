@@ -177,7 +177,9 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   (`*.dc.html`, `settlr.css`).
 - `src/app/`: the App Router. `layout.tsx` is the root document (reads the
   auth session, renders `<Providers>` and the `<AppShell>`), `page.tsx` the
-  landing page (the hero beside `LoginForm`, then the sections in
+  landing page (the hero beside `LoginForm`, in `AuthCard`: a borderless
+  tray around a raised panel, with filled fields, shared by the name step
+  in `name-form.tsx`; then the sections in
   `src/components/landing.tsx`: a still of a group page drawn with the
   tokens, the feature cards, the open-source section (the GitHub link,
   `REPO_URL` in `src/lib/site.ts`, and the setup commands) and the footer;

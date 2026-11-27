@@ -3,13 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
-import { ArrowLeft, ArrowRight, CircleAlert, Mail, MailCheck, RotateCw } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CircleAlert, RotateCw } from 'lucide-react'
 
-import { LogoMark } from '#/components/brand'
 import { useSession } from '#/components/providers'
 import { Alert, AlertDescription } from '#/components/ui/alert'
 import { Button } from '#/components/ui/button'
-import { Card } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
 import {
   InputOTP,
@@ -29,10 +27,36 @@ import { cn } from '#/lib/utils'
 
 const RESEND_COOLDOWN_S = 30
 
-// A card that floats over the page: Gr8r's dialog radius, and a long soft
-// shadow under it. The name step after sign-up (name-form.tsx) shares it.
-export const authCardStyle =
-  'rounded-2xl shadow-[0_1px_2px_rgb(28_25_20/4%),0_24px_64px_-28px_rgb(28_25_20/28%)] dark:shadow-[0_24px_64px_-28px_rgb(0_0_0/70%)]'
+// The sign-in card has no edges: a soft tray (no border, wide corners)
+// holds the form on a raised panel, with a one-line note on the tray below
+// it. Its fields are filled rather than outlined: the border only shows on
+// focus (or an error). The name step after sign-up (name-form.tsx) shares
+// all of it.
+export function AuthCard({
+  children,
+  note,
+  className,
+}: {
+  children: React.ReactNode
+  /** A line on the tray under the panel. */
+  note?: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('rounded-[1.75rem] bg-muted p-1.5 dark:bg-sunken', className)}>
+      <div className="rounded-[1.375rem] bg-card px-6 py-7 shadow-[0_1px_2px_rgb(28_25_20/6%),0_12px_32px_-16px_rgb(28_25_20/22%)] sm:px-8 sm:py-8 dark:bg-muted dark:shadow-[inset_0_1px_0_rgb(255_255_255/5%),0_12px_32px_-16px_rgb(0_0_0/60%)]">
+        {children}
+      </div>
+      {note && <p className="px-6 pt-3 pb-2 text-center text-xs text-pretty text-muted-foreground">{note}</p>}
+    </div>
+  )
+}
+
+export const authHeadingStyle = 'm-0 text-[1.375rem] leading-tight font-semibold tracking-[-0.025em]'
+export const authInputStyle =
+  'h-10 border-transparent bg-muted text-base hover:border-transparent hover:bg-raised focus-visible:border-ring focus-visible:bg-field sm:h-10 sm:text-sm dark:bg-raised dark:hover:bg-[color-mix(in_oklab,var(--surface-3),var(--text)_5%)]'
+// The large buttons, at the fields' height.
+const authButtonStyle = 'h-10 w-full sm:h-10'
 
 type Step = 'email' | 'code'
 type Pending = 'google' | 'send' | 'verify' | null
@@ -127,37 +151,43 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
   // Signed in: the home route is redirecting to the dashboard.
   if (isAuthenticated || session) {
     return (
-      <Card className={cn(authCardStyle, 'items-center gap-3 px-6 py-16', className)}>
-        <Spinner className="size-5 text-primary" />
-        <p className="text-sm text-muted-foreground">Signing you in…</p>
-      </Card>
+      <AuthCard className={className}>
+        <p className="flex items-center justify-center gap-2.5 py-14 text-sm text-muted-foreground">
+          <Spinner className="size-4 text-primary" />
+          Signing you in…
+        </p>
+      </AuthCard>
     )
   }
 
   return (
-    <Card className={cn(authCardStyle, 'gap-0 p-0', className)}>
+    <AuthCard
+      className={className}
+      note={
+        step === 'email'
+          ? 'New to Settlr? Signing in creates your account.'
+          : 'Expires in 5 minutes. Not there? Check your spam folder.'
+      }
+    >
       {/* Keyed by the step, so each step rises in as it replaces the last. */}
-      <div key={step} className="grid animate-rise-in gap-6 px-6 pt-8 pb-6 sm:px-8 sm:pt-9 sm:pb-8">
+      <div key={step} className="grid animate-rise-in gap-7">
         {step === 'email' ? (
           <>
-            <header className="grid justify-items-center gap-5 text-center">
-              <LogoMark className="size-10" />
-              <div className="grid gap-1.5">
-                <h2 className="m-0 text-[1.375rem] leading-tight font-semibold tracking-[-0.025em]">
-                  Welcome to Settlr
-                </h2>
-                <p className="text-sm text-balance text-muted-foreground">
-                  Sign in or create an account. No password needed.
-                </p>
-              </div>
+            <header className="grid gap-1.5">
+              <h2 className={authHeadingStyle}>Sign in to Settlr</h2>
+              <p className="text-sm text-pretty text-muted-foreground">
+                No password needed: continue with Google, or we’ll email you a code.
+              </p>
             </header>
 
             <div className="grid gap-5">
               <Button
                 type="button"
-                variant="outline"
-                size="lg"
-                className="w-full"
+                variant="secondary"
+                className={cn(
+                  authButtonStyle,
+                  'dark:bg-raised dark:hover:bg-[color-mix(in_oklab,var(--surface-3),var(--text)_5%)]',
+                )}
                 disabled={busy}
                 onClick={() => run('google', () => signInWithGoogle(next))}
               >
@@ -166,41 +196,34 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
               </Button>
 
               <div className="flex items-center gap-3 text-xs text-faint">
-                <span className="h-px flex-1 bg-border" />
+                <span className="h-px flex-1 bg-divider dark:bg-raised" />
                 or
-                <span className="h-px flex-1 bg-border" />
+                <span className="h-px flex-1 bg-divider dark:bg-raised" />
               </div>
 
               <form noValidate onSubmit={requestCode} className="grid gap-3">
                 <div className="grid gap-2">
                   <Label htmlFor="login-email">Email</Label>
-                  <div className="relative">
-                    <Mail
-                      aria-hidden="true"
-                      className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-dim"
-                    />
-                    {/* The large control size (36px), to match the buttons. */}
-                    <Input
-                      id="login-email"
-                      name="email"
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-9 sm:h-9"
-                      aria-invalid={fieldError ? true : undefined}
-                      aria-describedby={fieldError ? 'login-email-error' : undefined}
-                    />
-                  </div>
+                  <Input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={authInputStyle}
+                    aria-invalid={fieldError ? true : undefined}
+                    aria-describedby={fieldError ? 'login-email-error' : undefined}
+                  />
                   {fieldError && (
                     <p id="login-email-error" className="text-xs text-destructive">
                       {fieldError}
                     </p>
                   )}
                 </div>
-                <Button type="submit" size="lg" className="w-full" disabled={busy}>
+                <Button type="submit" className={authButtonStyle} disabled={busy}>
                   {pending === 'send' && <Spinner />}
                   Email me a code
                   {pending !== 'send' && <ArrowRight />}
@@ -210,23 +233,12 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
           </>
         ) : (
           <>
-            <header className="grid justify-items-center gap-5 text-center">
-              <span
-                aria-hidden="true"
-                className="grid size-11 animate-pop place-items-center rounded-full bg-primary-soft text-primary shadow-[0_0_0_5px_color-mix(in_srgb,var(--accent)_5%,transparent)]"
-              >
-                <MailCheck className="size-5" />
-              </span>
-              <div className="grid gap-1.5">
-                <h2 className="m-0 text-[1.375rem] leading-tight font-semibold tracking-[-0.025em]">
-                  Check your inbox
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Enter the {OTP_LENGTH}-digit code we sent to
-                  <br />
-                  <span className="font-medium break-words text-foreground">{email.trim()}</span>
-                </p>
-              </div>
+            <header className="grid gap-1.5">
+              <h2 className={authHeadingStyle}>Check your inbox</h2>
+              <p className="text-sm text-pretty text-muted-foreground">
+                Enter the {OTP_LENGTH}-digit code we sent to{' '}
+                <span className="font-medium break-words text-foreground">{email.trim()}</span>.
+              </p>
             </header>
 
             <form
@@ -257,20 +269,17 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
                         key={i}
                         index={i}
                         aria-invalid={fieldError ? true : undefined}
-                        className="h-12 w-full rounded-lg border text-xl font-semibold tabular-nums first:rounded-lg last:rounded-lg"
+                        className="h-12 w-full rounded-lg border border-transparent bg-muted text-xl font-semibold tabular-nums first:rounded-lg first:border-l last:rounded-lg data-[active=true]:bg-field dark:bg-raised dark:data-[active=true]:bg-field"
                       />
                     ))}
                   </InputOTPGroup>
                 </InputOTP>
-                {fieldError && (
-                  <p className="text-center text-xs text-destructive">{fieldError}</p>
-                )}
+                {fieldError && <p className="text-xs text-destructive">{fieldError}</p>}
               </div>
 
               <Button
                 type="submit"
-                size="lg"
-                className="w-full"
+                className={authButtonStyle}
                 disabled={busy || otp.length < OTP_LENGTH}
               >
                 {pending === 'verify' && <Spinner />}
@@ -299,19 +308,13 @@ export function LoginForm({ className, next }: { className?: string; next?: stri
         )}
 
         {error && (
-          <Alert role="alert">
+          <Alert variant="destructive">
             <CircleAlert />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
       </div>
-
-      <p className="border-t bg-sunken px-6 py-3.5 text-center text-xs text-faint sm:px-8">
-        {step === 'email'
-          ? 'New to Settlr? Signing in creates your account.'
-          : 'Expires in 5 minutes. Not there? Check your spam folder.'}
-      </p>
-    </Card>
+    </AuthCard>
   )
 }
 

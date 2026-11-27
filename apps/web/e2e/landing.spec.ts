@@ -10,7 +10,7 @@ test('the home page introduces Settlr and says where its source is', async ({ pa
 
   await expect(main.getByRole('heading', { level: 1 })).toHaveText('Shared expenses, settled.')
   await expect(page).toHaveTitle('Settlr · Shared expenses, settled')
-  await expect(main.getByRole('heading', { name: 'Welcome to Settlr' })).toBeVisible()
+  await expect(main.getByRole('heading', { name: 'Sign in to Settlr' })).toBeVisible()
   // The product preview is described by its caption, not read row by row.
   await expect(main.getByRole('figure', { name: /A group in Settlr for a trip to Goa/ })).toBeAttached()
   await expect(main.getByRole('heading', { name: 'What Settlr does' })).toBeVisible()
@@ -56,12 +56,12 @@ test('the sign-in form checks the address, then asks for the code', async ({ pag
 
   // Going back keeps the address.
   await main.getByRole('button', { name: 'Different email' }).click()
-  await expect(main.getByRole('heading', { name: 'Welcome to Settlr' })).toBeVisible()
+  await expect(main.getByRole('heading', { name: 'Sign in to Settlr' })).toBeVisible()
   await expect(email).toHaveValue(address)
 })
 
 test('signed-in visitors go straight to their dashboard', async ({ user: { page } }) => {
   await page.goto('/')
   await page.waitForURL('**/dashboard')
-  await expect(page.getByRole('heading', { name: 'Welcome to Settlr' })).toBeHidden()
+  await expect(page.getByRole('heading', { name: 'Sign in to Settlr' })).toBeHidden()
 })

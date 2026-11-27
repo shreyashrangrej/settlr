@@ -189,7 +189,11 @@ progress bar shows. Nested pages pass `back={{ fallback, label }}` to
   the gutter `.app-shell` exposes. Its still of a group page is drawn with
   the app's tokens, so it follows the theme and accent; it keeps to plain
   surfaces (no glows, gradients or dot grids), and its open-source section
-  links to the repository (`REPO_URL` in `lib/site.ts`). The logo
+  links to the repository (`REPO_URL` in `lib/site.ts`). The sign-in form
+  (`components/login-form.tsx`) and the name step after it share
+  `AuthCard`: a soft tray with no border and wide corners, the form on a
+  raised panel inside it and a one-line note on the tray below; their
+  fields are filled, not outlined (`authInputStyle`). The logo
   (`components/brand.tsx`) is the mark with the wordmark "Settlr by
   EntApex", the maker's name smaller.
 - Money is green (`positive`, owed to you) or red (`destructive`, you owe),
