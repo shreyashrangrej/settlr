@@ -429,9 +429,11 @@ Paths under `src/` below are in `apps/web`; `convex/` is
 ## Gotchas
 
 - Convex deployment env vars (`pnpm exec convex env list`): `SITE_URL`
-  (the app origin: on the dev deployment, the Vercel site),
+  (the app origin: on the dev deployment, https://settlr.entapex.com, the
+  Vercel project's custom domain),
   `TRUSTED_ORIGINS` (other origins allowed to sign in, comma-separated; the
-  dev deployment has `http://localhost:3000,exp://`: email codes work on
+  dev deployment has `http://localhost:3000,exp://` and the old
+  `settlr-woad.vercel.app`, which APKs before the domain move still call: email codes work on
   localhost but Google sign-in returns to `SITE_URL`, and `exp://` lets
   Expo Go sign in), `BETTER_AUTH_SECRET`, and optional
   `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (Google sign-in is off until
@@ -465,7 +467,7 @@ Paths under `src/` below are in `apps/web`; `convex/` is
   finishes, so a `notFound()` there still responds 200 (with the not-found
   UI and a `noindex` tag).
 - Deployment: the Vercel project `settlr` is the dev environment, with
-  Root Directory `apps/web`. It's connected to GitHub and deploys every
+  Root Directory `apps/web`, served at https://settlr.entapex.com. It's connected to GitHub and deploys every
   push to `main` (other branches are off in `apps/web/vercel.json`). Its
   build (`buildCommand` in `apps/web/vercel.json`) runs `convex deploy` in
   `packages/backend` with `CONVEX_DEPLOY_KEY`, a deploy key for the dev
